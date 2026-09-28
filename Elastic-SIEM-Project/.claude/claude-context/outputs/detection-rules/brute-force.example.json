@@ -1,0 +1,39 @@
+{
+  "name": "Detección de ataques de fuerza bruta",
+  "description": "Detecta múltiples fallos de autenticación desde una misma IP (posible fuerza bruta SSH).",
+  "type": "threshold",
+  "language": "kuery",
+  "query": "tags:authentication_failure OR message:*Failed password* OR message:*authentication failure*",
+  "index": ["filebeat-*"],
+  "threshold": {
+    "field": ["host.ip"],
+    "value": 3
+  },
+  "interval": "5m",
+  "from": "now-6m",
+  "severity": "high",
+  "risk_score": 73,
+  "tags": ["brute-force", "authentication", "credential-access"],
+  "threat": [
+    {
+      "framework": "MITRE ATT&CK",
+      "tactic": {
+        "id": "TA0006",
+        "name": "Credential Access",
+        "reference": "https://attack.mitre.org/tactics/TA0006/"
+      },
+      "technique": [
+        {
+          "id": "T1110",
+          "name": "Brute Force",
+          "reference": "https://attack.mitre.org/techniques/T1110/"
+        }
+      ]
+    }
+  ],
+  "false_positives": [
+    "Usuarios que olvidaron su contraseña y reintentaron varias veces"
+  ],
+  "enabled": true,
+  "_note": "Ejemplo de detection-as-code. Importar en Kibana: Security > Rules > Import rules."
+}

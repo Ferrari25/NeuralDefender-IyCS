@@ -1,0 +1,523 @@
+{
+  "generated_at": "2026-09-26T02:34:53.135076+00:00",
+  "source": "siem_clean.json",
+  "incident_count": 3,
+  "incidents": [
+    {
+      "incident_id": "INC-SCAN-198.51.100.43-e3eb0144",
+      "source_ip": "198.51.100.43",
+      "classification": {
+        "attack_type": "port_scan",
+        "confidence": "alta",
+        "severity": "alta",
+        "false_positive_likelihood": "baja",
+        "rationale": "26 puertos distintos sondeados desde 198.51.100.43 (umbral 10); patrón de reconocimiento de red.",
+        "mitre_technique": "T1046",
+        "factores": [
+          "26 puerto(s) distinto(s) sondeado(s) (umbral: 10)",
+          "1 host(s) de destino distintos sondeados",
+          "Patrón de barrido secuencial de puertos, poco común en tráfico legítimo",
+          "Falso positivo: BAJA — salvo que la IP sea un scanner de vulnerabilidades autorizado"
+        ]
+      },
+      "recommended_actions": [
+        {
+          "orden": 1,
+          "accion": "Bloquear la IP que realiza el escaneo en el firewall",
+          "comando_sugerido": "sudo ufw deny from 198.51.100.43",
+          "comando_argv": [
+            "sudo",
+            "ufw",
+            "deny",
+            "from",
+            "198.51.100.43"
+          ],
+          "comando_explicacion": "Igual que en fuerza bruta: agrega una regla de firewall que descarta todo el tráfico de esa IP puntual, cortando el reconocimiento en curso.",
+          "responsable": "SOC",
+          "plazo": "inmediata",
+          "impacto": "alto",
+          "action_id": "INC-SCAN-198.51.100.43-e3eb0144-404ef6",
+          "status": "pending"
+        },
+        {
+          "orden": 2,
+          "accion": "Revisar qué servicios/puertos quedaron expuestos en el host objetivo",
+          "comando_sugerido": "sudo ss -tulnp",
+          "comando_argv": [
+            "sudo",
+            "ss",
+            "-tulnp"
+          ],
+          "comando_explicacion": "Lista los puertos TCP/UDP (-t/-u) en escucha (-l) en este host, con el proceso dueño de cada uno (-p) y sin resolver nombres (-n, más rápido). Es de solo lectura: sirve para ver exactamente qué encontró el atacante al escanear, antes de decidir qué cerrar.",
+          "responsable": "sysadmin",
+          "plazo": "24h",
+          "impacto": "medio",
+          "action_id": "INC-SCAN-198.51.100.43-e3eb0144-c0fb68",
+          "status": "pending"
+        },
+        {
+          "orden": 3,
+          "accion": "Cerrar puertos innecesarios y segmentar el host afectado",
+          "comando_sugerido": null,
+          "comando_argv": null,
+          "comando_explicacion": null,
+          "responsable": "sysadmin",
+          "plazo": "24h",
+          "impacto": "medio",
+          "action_id": "INC-SCAN-198.51.100.43-e3eb0144-456bc0",
+          "status": "pending"
+        },
+        {
+          "orden": 4,
+          "accion": "Desplegar IDS de red (Suricata) para visibilidad de futuros escaneos",
+          "comando_sugerido": null,
+          "comando_argv": null,
+          "comando_explicacion": null,
+          "responsable": "SOC",
+          "plazo": "48h",
+          "impacto": "bajo",
+          "action_id": "INC-SCAN-198.51.100.43-e3eb0144-eb2160",
+          "status": "pending"
+        }
+      ],
+      "first_seen": "2026-09-26T02:32:25.000Z",
+      "last_seen": "2026-09-26T02:32:50.000Z",
+      "event_count": 26,
+      "attacker_ips": [
+        "198.51.100.43"
+      ],
+      "victim_hosts": [
+        "172.18.0.5"
+      ],
+      "target_users": [],
+      "detection_source": "clasificador",
+      "rule_name": null,
+      "severity_siem": null,
+      "risk_score": null,
+      "log_event_count": 26,
+      "alert_event_count": 0,
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "sample_messages": [
+        "scan 198.51.100.43 -> 172.18.0.5 puertos [21, 22, 23, 25, 53, 80, 110, 135, 139, 143, 443, 445]"
+      ],
+      "evidence": [
+        {
+          "ts": "2026-09-26T02:32:25.000Z",
+          "detail": "probe → 172.18.0.5:21/tcp"
+        },
+        {
+          "ts": "2026-09-26T02:32:26.000Z",
+          "detail": "probe → 172.18.0.5:22/tcp"
+        },
+        {
+          "ts": "2026-09-26T02:32:27.000Z",
+          "detail": "probe → 172.18.0.5:23/tcp"
+        },
+        {
+          "ts": "2026-09-26T02:32:28.000Z",
+          "detail": "probe → 172.18.0.5:25/tcp"
+        },
+        {
+          "ts": "2026-09-26T02:32:29.000Z",
+          "detail": "probe → 172.18.0.5:53/tcp"
+        },
+        {
+          "ts": "2026-09-26T02:32:30.000Z",
+          "detail": "probe → 172.18.0.5:80/tcp"
+        },
+        {
+          "ts": "2026-09-26T02:32:31.000Z",
+          "detail": "probe → 172.18.0.5:110/tcp"
+        },
+        {
+          "ts": "2026-09-26T02:32:32.000Z",
+          "detail": "probe → 172.18.0.5:135/tcp"
+        },
+        {
+          "ts": "2026-09-26T02:32:33.000Z",
+          "detail": "probe → 172.18.0.5:139/tcp"
+        },
+        {
+          "ts": "2026-09-26T02:32:34.000Z",
+          "detail": "probe → 172.18.0.5:143/tcp"
+        },
+        {
+          "ts": "2026-09-26T02:32:35.000Z",
+          "detail": "probe → 172.18.0.5:443/tcp"
+        },
+        {
+          "ts": "2026-09-26T02:32:36.000Z",
+          "detail": "probe → 172.18.0.5:445/tcp"
+        }
+      ],
+      "analysis": {
+        "explicacion": "Se detectó un escaneo de 26 puertos distintos desde 198.51.100.43 contra 172.18.0.5.",
+        "metodologia": "Un escaneo de puertos (ej. Nmap) sondea servicios abiertos para mapear la superficie de ataque antes de un intento de intrusión.",
+        "contexto_riesgo": "Es típicamente la fase de reconocimiento previa a un ataque dirigido: revela qué servicios están expuestos y son atacables.",
+        "severidad_ajustada": "HIGH",
+        "accion_recomendada": "Bloquear la IP que realiza el escaneo en el firewall",
+        "falso_positivo_probabilidad": "LOW",
+        "referencias": [
+          "T1046"
+        ],
+        "_source": "fallback",
+        "contexto_historico": "Sin antecedentes previos para 198.51.100.43: es la primera vez que se registra actividad de esta IP.",
+        "contexto_campana": "Este incidente está vinculado a otro(s) 1 incidente(s) activo(s) (INC-PHISH-172.18.0.9-9fd151db) por compartir la IP 198.51.100.43. Tratarlos como una sola campaña, no como eventos aislados: la severidad real del conjunto puede ser mayor que la de cada incidente por separado."
+      },
+      "scanned_ports": [
+        21,
+        22,
+        23,
+        25,
+        53,
+        80,
+        110,
+        135,
+        139,
+        143,
+        443,
+        445,
+        993,
+        995,
+        1433,
+        1521,
+        2222,
+        3306,
+        3389,
+        5432,
+        5601,
+        6379,
+        8080,
+        8443,
+        9200,
+        9300
+      ],
+      "target_hosts": [
+        "172.18.0.5"
+      ],
+      "campaign_id": "CAMP-c082a1dc",
+      "related_incidents": [
+        "INC-PHISH-172.18.0.9-9fd151db"
+      ],
+      "campaign_shared_ips": [
+        "198.51.100.43"
+      ]
+    },
+    {
+      "incident_id": "INC-AUTH-172.18.0.7-3d230e85",
+      "source_ip": "172.18.0.7",
+      "classification": {
+        "attack_type": "ssh_brute_force",
+        "confidence": "alta",
+        "severity": "alta",
+        "false_positive_likelihood": "baja",
+        "rationale": "20 fallos de autenticación desde una misma IP superan el umbral de 20; patrón de fuerza bruta automatizada (T1110).",
+        "mitre_technique": "T1110",
+        "factores": [
+          "20 fallo(s) de autenticación registrados (umbral de fuerza bruta: 20)",
+          "Host(s) atacado(s): 172.18.0.3",
+          "Volumen muy por encima del umbral: descarta un error humano puntual",
+          "Falso positivo: BAJA — este volumen es infrecuente en tráfico legítimo"
+        ]
+      },
+      "recommended_actions": [
+        {
+          "orden": 1,
+          "accion": "Bloquear la IP atacante en el firewall perimetral",
+          "comando_sugerido": "sudo ufw deny from 172.18.0.7",
+          "comando_argv": [
+            "sudo",
+            "ufw",
+            "deny",
+            "from",
+            "172.18.0.7"
+          ],
+          "comando_explicacion": "Agrega una regla al firewall (UFW, sobre iptables) que descarta todo el tráfico entrante desde esa IP puntual. No afecta a ningún otro origen ni servicio; es reversible con 'ufw delete deny from <ip>'.",
+          "responsable": "SOC",
+          "plazo": "inmediata",
+          "impacto": "alto",
+          "action_id": "INC-AUTH-172.18.0.7-3d230e85-d0e38a",
+          "status": "pending"
+        },
+        {
+          "orden": 2,
+          "accion": "Verificar si hubo algún login EXITOSO desde la IP atacante",
+          "comando_sugerido": "grep 'Accepted password' /var/log/auth.log | grep 172.18.0.7",
+          "comando_argv": null,
+          "comando_explicacion": "Búsqueda de solo lectura sobre el log de autenticación del host: filtra las líneas de login aceptado y las cruza con la IP atacante. Si aparece algo, la fuerza bruta encontró la contraseña y hay que tratarlo como una cuenta comprometida, no solo como un intento fallido.",
+          "responsable": "sysadmin",
+          "plazo": "inmediata",
+          "impacto": "alto",
+          "action_id": "INC-AUTH-172.18.0.7-3d230e85-39b676",
+          "status": "pending"
+        },
+        {
+          "orden": 3,
+          "accion": "Forzar rotación de credenciales del usuario objetivo (testuser)",
+          "comando_sugerido": "sudo passwd testuser",
+          "comando_argv": [
+            "sudo",
+            "passwd",
+            "testuser"
+          ],
+          "comando_explicacion": "Inicia el cambio de contraseña del usuario atacado de forma interactiva. Invalida la contraseña anterior — importante sobre todo si el paso anterior mostró un login exitoso, porque esa contraseña ya quedó expuesta.",
+          "responsable": "sysadmin",
+          "plazo": "24h",
+          "impacto": "medio",
+          "action_id": "INC-AUTH-172.18.0.7-3d230e85-07f1d3",
+          "status": "pending"
+        },
+        {
+          "orden": 4,
+          "accion": "Habilitar rate-limiting / fail2ban en el servicio SSH",
+          "comando_sugerido": "sudo apt-get install -y fail2ban && sudo systemctl enable --now fail2ban",
+          "comando_argv": null,
+          "comando_explicacion": "Instala fail2ban (monitorea los logs de auth y banea automáticamente IPs con demasiados fallos) y lo deja corriendo de forma permanente. Es la mitigación estructural: evita que haga falta bloquear IPs a mano cada vez que se repita este mismo patrón de ataque.",
+          "responsable": "sysadmin",
+          "plazo": "48h",
+          "impacto": "medio",
+          "action_id": "INC-AUTH-172.18.0.7-3d230e85-bceba4",
+          "status": "pending"
+        }
+      ],
+      "first_seen": "2026-09-26T02:33:05.595Z",
+      "last_seen": "2026-09-26T02:34:42.039Z",
+      "event_count": 20,
+      "attacker_ips": [
+        "172.18.0.7"
+      ],
+      "victim_hosts": [
+        "172.18.0.3"
+      ],
+      "target_users": [
+        "testuser"
+      ],
+      "detection_source": "elastic",
+      "rule_name": "SSH Brute Force – Aggressive per Source IP",
+      "severity_siem": "high",
+      "risk_score": 73,
+      "log_event_count": 20,
+      "alert_event_count": 18,
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "sample_messages": [
+        "Failed password for testuser from 172.18.0.7 port 56482 ssh2",
+        "Failed password for testuser from 172.18.0.7 port 56482 ssh2",
+        "Failed password for testuser from 172.18.0.7 port 56482 ssh2",
+        "Failed password for testuser from 172.18.0.7 port 56482 ssh2",
+        "Failed password for testuser from 172.18.0.7 port 43548 ssh2",
+        "Failed password for testuser from 172.18.0.7 port 43548 ssh2",
+        "Failed password for testuser from 172.18.0.7 port 43548 ssh2",
+        "Failed password for testuser from 172.18.0.7 port 43548 ssh2"
+      ],
+      "evidence": [
+        {
+          "ts": "2026-09-26T02:34:42.039Z",
+          "detail": "Failed password for testuser from 172.18.0.7 port 56482 ssh2"
+        },
+        {
+          "ts": "2026-09-26T02:34:42.029Z",
+          "detail": "Failed password for testuser from 172.18.0.7 port 56482 ssh2"
+        },
+        {
+          "ts": "2026-09-26T02:34:42.018Z",
+          "detail": "Failed password for testuser from 172.18.0.7 port 56482 ssh2"
+        },
+        {
+          "ts": "2026-09-26T02:34:42.009Z",
+          "detail": "Failed password for testuser from 172.18.0.7 port 56482 ssh2"
+        },
+        {
+          "ts": "2026-09-26T02:34:09.933Z",
+          "detail": "Failed password for testuser from 172.18.0.7 port 43548 ssh2"
+        },
+        {
+          "ts": "2026-09-26T02:34:09.922Z",
+          "detail": "Failed password for testuser from 172.18.0.7 port 43548 ssh2"
+        },
+        {
+          "ts": "2026-09-26T02:34:09.912Z",
+          "detail": "Failed password for testuser from 172.18.0.7 port 43548 ssh2"
+        },
+        {
+          "ts": "2026-09-26T02:34:09.900Z",
+          "detail": "Failed password for testuser from 172.18.0.7 port 43548 ssh2"
+        },
+        {
+          "ts": "2026-09-26T02:34:09.889Z",
+          "detail": "Failed password for testuser from 172.18.0.7 port 43548 ssh2"
+        },
+        {
+          "ts": "2026-09-26T02:34:09.879Z",
+          "detail": "Failed password for testuser from 172.18.0.7 port 43548 ssh2"
+        },
+        {
+          "ts": "2026-09-26T02:33:37.781Z",
+          "detail": "Failed password for testuser from 172.18.0.7 port 54954 ssh2"
+        },
+        {
+          "ts": "2026-09-26T02:33:37.770Z",
+          "detail": "Failed password for testuser from 172.18.0.7 port 54954 ssh2"
+        }
+      ],
+      "analysis": {
+        "explicacion": "Se detectaron 20 intentos de autenticación fallida contra SSH desde 172.18.0.7, apuntando a testuser.",
+        "metodologia": "Un ataque de fuerza bruta automatizado (ej. Hydra o Medusa) prueba miles de contraseñas en serie hasta encontrar una válida.",
+        "contexto_riesgo": "Si alguna credencial es débil, el atacante obtiene acceso interactivo al host y puede moverse lateralmente dentro de la red.",
+        "severidad_ajustada": "HIGH",
+        "accion_recomendada": "Bloquear la IP atacante en el firewall perimetral",
+        "falso_positivo_probabilidad": "LOW",
+        "referencias": [
+          "T1110"
+        ],
+        "_source": "fallback",
+        "contexto_historico": "Sin antecedentes previos para 172.18.0.7: es la primera vez que se registra actividad de esta IP.",
+        "contexto_campana": null
+      },
+      "campaign_id": null,
+      "related_incidents": [],
+      "campaign_shared_ips": []
+    },
+    {
+      "incident_id": "INC-PHISH-172.18.0.9-9fd151db",
+      "source_ip": "172.18.0.9",
+      "classification": {
+        "attack_type": "credential_harvesting",
+        "confidence": "media",
+        "severity": "alta",
+        "false_positive_likelihood": "media",
+        "rationale": "1 envío(s) de credenciales hacia una página de login sospechosa (/login); posible captura de credenciales (phishing).",
+        "mitre_technique": "T1566",
+        "factores": [
+          "1 envío(s) de credenciales detectado(s) hacia una URL marcada como sospechosa",
+          "1 usuario(s) distinto(s) afectado(s)",
+          "Sin regla de Kibana desplegada todavía para este tipo de evento (no hay Suricata) → la única confirmación es la del clasificador",
+          "Falso positivo: MEDIA — depende de qué tan confiable sea la fuente que marcó la URL como sospechosa"
+        ]
+      },
+      "recommended_actions": [
+        {
+          "orden": 1,
+          "accion": "Dar de baja / bloquear el servidor de phishing (página falsa)",
+          "comando_sugerido": "sudo ufw deny from 198.51.100.43",
+          "comando_argv": [
+            "sudo",
+            "ufw",
+            "deny",
+            "from",
+            "198.51.100.43"
+          ],
+          "comando_explicacion": "Bloquea en el firewall la IP que aloja la página de phishing, cortando el acceso desde esta red hacia ese servidor — no da de baja la página en sí (está fuera de nuestro control), pero corta la exposición local.",
+          "responsable": "SOC",
+          "plazo": "inmediata",
+          "impacto": "alto",
+          "action_id": "INC-PHISH-172.18.0.9-9fd151db-cf4d88",
+          "status": "pending"
+        },
+        {
+          "orden": 2,
+          "accion": "Forzar reset de credenciales del usuario que envió datos (testuser)",
+          "comando_sugerido": "sudo passwd testuser",
+          "comando_argv": [
+            "sudo",
+            "passwd",
+            "testuser"
+          ],
+          "comando_explicacion": "Cambia la contraseña del usuario que envió sus credenciales a la página falsa. Es la acción más urgente del incidente: esa contraseña ya está en manos del atacante, tratarla como comprometida de inmediato, no como sospecha.",
+          "responsable": "sysadmin",
+          "plazo": "inmediata",
+          "impacto": "alto",
+          "action_id": "INC-PHISH-172.18.0.9-9fd151db-a4b178",
+          "status": "pending"
+        },
+        {
+          "orden": 3,
+          "accion": "Alertar a los usuarios afectados y reforzar concientización",
+          "comando_sugerido": null,
+          "comando_argv": null,
+          "comando_explicacion": null,
+          "responsable": "SOC",
+          "plazo": "inmediata",
+          "impacto": "medio",
+          "action_id": "INC-PHISH-172.18.0.9-9fd151db-ba031a",
+          "status": "pending"
+        },
+        {
+          "orden": 4,
+          "accion": "Agregar el indicador (IP/dominio) a la blocklist / threat intel",
+          "comando_sugerido": null,
+          "comando_argv": null,
+          "comando_explicacion": null,
+          "responsable": "SOC",
+          "plazo": "24h",
+          "impacto": "medio",
+          "action_id": "INC-PHISH-172.18.0.9-9fd151db-5d0f50",
+          "status": "pending"
+        }
+      ],
+      "first_seen": "2026-09-26T02:32:28.000Z",
+      "last_seen": "2026-09-26T02:32:28.000Z",
+      "event_count": 1,
+      "attacker_ips": [
+        "198.51.100.43"
+      ],
+      "victim_hosts": [],
+      "target_users": [
+        "testuser"
+      ],
+      "detection_source": "clasificador",
+      "rule_name": null,
+      "severity_siem": null,
+      "risk_score": null,
+      "log_event_count": 1,
+      "alert_event_count": 0,
+      "mitre": {
+        "tactic": "Initial Access",
+        "technique": "Phishing",
+        "technique_id": "T1566"
+      },
+      "sample_messages": [
+        "POST /login usuario=testuser desde 172.18.0.9"
+      ],
+      "evidence": [
+        {
+          "ts": "2026-09-26T02:32:28.000Z",
+          "detail": "POST /login (user=testuser, creds=sí)"
+        }
+      ],
+      "analysis": {
+        "explicacion": "Se registraron 1 envío(s) de credenciales de testuser hacia una página de login sospechosa desde 198.51.100.43.",
+        "metodologia": "El phishing presenta una página falsa que imita un login legítimo para capturar usuario y contraseña cuando la víctima los ingresa.",
+        "contexto_riesgo": "Las credenciales capturadas dan acceso directo con identidad válida, evadiendo controles que asumen que el usuario es legítimo.",
+        "severidad_ajustada": "HIGH",
+        "accion_recomendada": "Dar de baja / bloquear el servidor de phishing (página falsa)",
+        "falso_positivo_probabilidad": "MEDIUM",
+        "referencias": [
+          "T1566"
+        ],
+        "_source": "fallback",
+        "contexto_historico": "Sin antecedentes previos para 172.18.0.9, 198.51.100.43: es la primera vez que se registra actividad de esta IP.",
+        "contexto_campana": "Este incidente está vinculado a otro(s) 1 incidente(s) activo(s) (INC-SCAN-198.51.100.43-e3eb0144) por compartir la IP 198.51.100.43. Tratarlos como una sola campaña, no como eventos aislados: la severidad real del conjunto puede ser mayor que la de cada incidente por separado."
+      },
+      "phishing_urls": [
+        "/login"
+      ],
+      "campaign_id": "CAMP-c082a1dc",
+      "related_incidents": [
+        "INC-SCAN-198.51.100.43-e3eb0144"
+      ],
+      "campaign_shared_ips": [
+        "198.51.100.43"
+      ]
+    }
+  ],
+  "analyzed_at": "2026-09-26T02:34:53.431129+00:00",
+  "analyst_mode": "fallback"
+}

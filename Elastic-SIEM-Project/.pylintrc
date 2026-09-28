@@ -1,0 +1,62 @@
+# Configuración de pylint para SIEM-IA.
+#
+# El plugin `pylint-secure-coding-standard` aporta las reglas de seguridad: es la
+# capa que hace cumplir, de forma automatizada, la garantía de no-autonomía
+# descrita en docs/10-plan-de-accion.md §6 y certificada por tests/test_no_autonomy.py.
+
+[MAIN]
+load-plugins=pylint_secure_coding_standard
+ignore-paths=^\.devtools/.*$,^\.venv/.*$,^node_modules/.*$
+jobs=0
+
+[SECURE_CODING_STANDARD]
+# ── Ejecución de comandos: el corazón de la no-autonomía ──
+# `os.system` queda prohibido sin excepciones.
+os-system=True
+# `subprocess.run(...)` debe llevar `check=` explícito (nada de fallos silenciosos).
+subprocess-run-check=True
+# Prohibido lanzar procesos con una shell de por medio.
+check-on-os-popen=True
+check-on-os-spawn=True
+check-on-os-exec=True
+# ── Archivos y permisos: protege el registro append-only ──
+os-open-mode=0o600
+os-mkdir-mode=0o700
+os-mkfifo-mode=0o600
+os-makedirs-mode=0o700
+# ── Otros vectores ──
+# `pickle`, `marshal` y `shelve` deserializan código: no se usan en el proyecto.
+check-on-pickle=True
+check-on-marshal=True
+check-on-shelve=True
+
+[MESSAGES CONTROL]
+# El proyecto documenta a nivel de módulo y de función relevante, no de cada helper.
+# Los helpers privados (_playbook, _classification...) se leen con su módulo.
+disable=
+    missing-class-docstring,
+    missing-function-docstring,
+    too-few-public-methods,
+    duplicate-code,
+
+[FORMAT]
+max-line-length=100
+
+[DESIGN]
+# El clasificador tiene funciones largas por naturaleza (tablas de playbooks).
+# La Fase 2 (R-02/R-04) las reduce; hasta entonces estos límites reflejan la realidad.
+max-locals=25
+max-branches=15
+max-statements=60
+max-args=6
+
+[BASIC]
+# El código y la documentación del proyecto están en español.
+good-names=i,j,k,e,f,p,r,s,t,a,b,c,d,ip,ts,fh,an,ev,id,_
+no-docstring-rgx=^_
+
+[VARIABLES]
+dummy-variables-rgx=_+$|(_[a-zA-Z0-9_]*[a-zA-Z0-9]+?$)|unused_
+
+[REPORTS]
+score=yes

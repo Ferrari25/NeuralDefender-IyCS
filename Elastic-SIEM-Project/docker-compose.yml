@@ -1,0 +1,159 @@
+services:
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+    container_name: elasticsearch
+    restart: unless-stopped
+    environment:
+      # Most settings live in the mounted elasticsearch.yml (single source of truth).
+      # Only secrets / substitution vars are passed here to avoid "duplicate settings" errors.
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - CLUSTER_NAME=${CLUSTER_NAME}
+      - "ES_JAVA_OPTS=${ES_JAVA_OPTS}"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+      - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./elasticsearch/certs:/usr/share/elasticsearch/config/certs
+    ports:
+      - "127.0.0.1:9200:9200"
+    networks:
+      - elastic-net
+    healthcheck:
+      # Authenticated check: security is enabled, so an anonymous request returns 401.
+      test: ["CMD-SHELL", "curl -s -u elastic:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # One-shot setup: sets the kibana_system built-in user password so Kibana can authenticate.
+  setup:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+    container_name: siem-setup
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - elastic-net
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+    # Sets the kibana_system password and EXITS (one-shot). Bounded retries so it can
+    # never hang Kibana, which waits for this service to complete successfully.
+    command:
+      - bash
+      - -c
+      - |
+        echo "Setting kibana_system password...";
+        for i in $$(seq 1 30); do
+          code=$$(curl -s -o /dev/null -w "%{http_code}" -u "elastic:$${ELASTIC_PASSWORD}" -X POST "http://elasticsearch:9200/_security/user/kibana_system/_password" -H "Content-Type: application/json" -d "{\"password\":\"$${KIBANA_SYSTEM_PASSWORD}\"}");
+          if [ "$$code" = "200" ]; then echo "kibana_system password set."; exit 0; fi;
+          echo "Attempt $$i: HTTP $$code, retrying..."; sleep 5;
+        done;
+        echo "FAILED to set kibana_system password after 30 attempts"; exit 1
+    restart: "no"
+
+  # Kibana
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.2
+    container_name: kibana
+    restart: unless-stopped
+    environment:
+      # Provided for ${...} substitution inside the mounted kibana.yml.
+      - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+      - KIBANA_ENCRYPTION_KEY=${KIBANA_ENCRYPTION_KEY}
+      - KIBANA_SAVEDOBJECTS_KEY=${KIBANA_SAVEDOBJECTS_KEY}
+    volumes:
+      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+    ports:
+      - "127.0.0.1:5601:5601"
+    networks:
+      - elastic-net
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      setup:
+        condition: service_completed_successfully
+
+  # Logstash
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.12.2
+    container_name: logstash
+    restart: unless-stopped
+    user: root
+    environment:
+      - xpack.monitoring.elasticsearch.hosts=http://elasticsearch:9200
+      - xpack.monitoring.elasticsearch.username=elastic
+      - xpack.monitoring.elasticsearch.password=${ELASTIC_PASSWORD}
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+    volumes:
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+    ports:
+      - "127.0.0.1:5044:5044"
+      - "127.0.0.1:9600:9600"
+    networks:
+      - elastic-net
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  # Filebeat
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.12.2
+    container_name: filebeat
+    restart: unless-stopped
+    user: root  # Needed to access host logs and the Docker socket
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/log:/var/log:ro
+      - ./network_logs:/usr/share/filebeat/network_logs:ro
+    networks:
+      - elastic-net
+    depends_on:
+      logstash:
+        condition: service_started
+    command: filebeat -e -strict.perms=false
+
+  # SSH Target (brute-force simulation) — only starts with: --profile simulation
+  ssh-target:
+    image: linuxserver/openssh-server
+    container_name: ssh-target
+    profiles: ["simulation"]
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - USER_NAME=testuser
+      - PASSWORD_ACCESS=true
+      - USER_PASSWORD=testpassword
+      - LOG_STDOUT=true
+    ports:
+      - "127.0.0.1:2222:2222"
+    networks:
+      - elastic-net
+    labels:
+      co.elastic.logs/module: "system"
+      co.elastic.logs/fileset: "auth"
+
+  # Hydra attacker — only starts with: --profile simulation
+  hydra-attacker:
+    image: ubuntu:22.04
+    container_name: hydra-attacker
+    profiles: ["simulation"]
+    tty: true
+    stdin_open: true
+    command: bash -c "apt-get update && apt-get install -y hydra && sleep infinity"
+    networks:
+      - elastic-net
+
+networks:
+  elastic-net:
+    driver: bridge
+volumes:
+  elasticsearch-data:

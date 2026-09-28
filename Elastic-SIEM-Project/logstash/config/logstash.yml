@@ -1,0 +1,13 @@
+http.host: 0.0.0.0
+log.level: info
+path.config: /usr/share/logstash/pipeline
+path.logs: /usr/share/logstash/logs
+pipeline.batch.delay: 50
+pipeline.batch.size: 125
+pipeline.workers: 2
+queue.max_bytes: 1gb
+queue.type: memory
+xpack.monitoring.elasticsearch.hosts: http://elasticsearch:9200
+xpack.monitoring.elasticsearch.password: NeAz4PHSB7iLiYp6mnphXGwU
+xpack.monitoring.elasticsearch.username: elastic
+xpack.monitoring.enabled: true

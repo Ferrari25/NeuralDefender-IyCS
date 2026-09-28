@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -m py_compile siem_lib.py classifier.py siem_agent.py siem_pipeline.py dashboard.py get-logs.py prepare-for-ia.py)",
+      "Bash(pip show *)"
+    ]
+  }
+}

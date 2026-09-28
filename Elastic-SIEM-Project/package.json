@@ -1,0 +1,16 @@
+{
+  "name": "siem-ia-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "An\u00e1lisis est\u00e1tico del JavaScript del dashboard de supervisi\u00f3n SIEM-IA",
+  "scripts": {
+    "lint:js": "eslint --no-error-on-unmatched-pattern 'static/**/*.js'",
+    "lint:js:report": "eslint --no-error-on-unmatched-pattern -f stylish 'static/**/*.js'"
+  },
+  "devDependencies": {
+    "eslint": "^9.11.0",
+    "eslint-plugin-security": "^3.0.1",
+    "eslint-plugin-no-unsanitized": "^4.1.2"
+  }
+}

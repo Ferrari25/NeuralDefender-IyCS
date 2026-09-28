@@ -1,0 +1,12 @@
+# Configuración de bandit (SAST de seguridad) — formato INI, se autodescubre.
+#
+# ⚠️  `exclude_dirs` de este archivo NO se aplica al recorrido recursivo de `-r`.
+#     Hay que pasar las exclusiones por línea de comandos:
+#
+#     bandit -r . -x './.devtools,./.venv,./node_modules,./tests,./elasticsearch'
+#
+# Línea de base al cierre de la Fase 0 (ver docs/11-reporte-fase-0.md §5.1):
+#   HIGH   2  → B324 sha1 en classifier.py:52 y :476   (se corrige en Fase 2)
+#   LOW    2  → B404/B603 subprocess en siem_pipeline.py (justificado, allowlist)
+[bandit]
+exclude_dirs = ["./.devtools", "./.venv", "./node_modules", "./tests", "./elasticsearch"]

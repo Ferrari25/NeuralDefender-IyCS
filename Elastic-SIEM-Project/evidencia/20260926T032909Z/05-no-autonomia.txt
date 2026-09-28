@@ -1,0 +1,60 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+SIEM-IA · raíz del proyecto: /home/test/Descargas/SIEM-IA-main/Elastic-SIEM-Project · CWD real: /home/test/Descargas/SIEM-IA-main/Elastic-SIEM-Project
+rootdir: /home/test/Descargas/SIEM-IA-main/Elastic-SIEM-Project
+configfile: pytest.ini
+plugins: cov-7.1.0
+collecting ... collected 38 items
+
+tests/test_no_autonomy.py::test_hay_archivos_para_analizar PASSED        [  2%]
+tests/test_no_autonomy.py::test_sin_imports_de_ejecucion[audit_verify.py] PASSED [  5%]
+tests/test_no_autonomy.py::test_sin_imports_de_ejecucion[classifier.py] PASSED [  7%]
+tests/test_no_autonomy.py::test_sin_imports_de_ejecucion[dashboard.py] PASSED [ 10%]
+tests/test_no_autonomy.py::test_sin_imports_de_ejecucion[get-logs.py] PASSED [ 13%]
+tests/test_no_autonomy.py::test_sin_imports_de_ejecucion[manage_users.py] PASSED [ 15%]
+tests/test_no_autonomy.py::test_sin_imports_de_ejecucion[prepare-for-ia.py] PASSED [ 18%]
+tests/test_no_autonomy.py::test_sin_imports_de_ejecucion[siem_agent.py] PASSED [ 21%]
+tests/test_no_autonomy.py::test_sin_imports_de_ejecucion[siem_auth.py] PASSED [ 23%]
+tests/test_no_autonomy.py::test_sin_imports_de_ejecucion[siem_lib.py] PASSED [ 26%]
+tests/test_no_autonomy.py::test_sin_imports_de_ejecucion[siem_pipeline.py] SKIPPED [ 28%]
+tests/test_no_autonomy.py::test_sin_imports_de_ejecucion[siem_validators.py] PASSED [ 31%]
+tests/test_no_autonomy.py::test_sin_llamadas_de_ejecucion[audit_verify.py] PASSED [ 34%]
+tests/test_no_autonomy.py::test_sin_llamadas_de_ejecucion[classifier.py] PASSED [ 36%]
+tests/test_no_autonomy.py::test_sin_llamadas_de_ejecucion[dashboard.py] PASSED [ 39%]
+tests/test_no_autonomy.py::test_sin_llamadas_de_ejecucion[get-logs.py] PASSED [ 42%]
+tests/test_no_autonomy.py::test_sin_llamadas_de_ejecucion[manage_users.py] PASSED [ 44%]
+tests/test_no_autonomy.py::test_sin_llamadas_de_ejecucion[prepare-for-ia.py] PASSED [ 47%]
+tests/test_no_autonomy.py::test_sin_llamadas_de_ejecucion[siem_agent.py] PASSED [ 50%]
+tests/test_no_autonomy.py::test_sin_llamadas_de_ejecucion[siem_auth.py] PASSED [ 52%]
+tests/test_no_autonomy.py::test_sin_llamadas_de_ejecucion[siem_lib.py] PASSED [ 55%]
+tests/test_no_autonomy.py::test_sin_llamadas_de_ejecucion[siem_pipeline.py] SKIPPED [ 57%]
+tests/test_no_autonomy.py::test_sin_llamadas_de_ejecucion[siem_validators.py] PASSED [ 60%]
+tests/test_no_autonomy.py::test_allowlist_es_minima PASSED               [ 63%]
+tests/test_no_autonomy.py::test_allowlist_pipeline_nunca_usa_shell PASSED [ 65%]
+tests/test_no_autonomy.py::test_allowlist_pipeline_solo_ejecuta_sus_propias_etapas PASSED [ 68%]
+tests/test_no_autonomy.py::test_allowlist_pipeline_no_recibe_datos_externos PASSED [ 71%]
+tests/test_no_autonomy.py::test_comando_sugerido_nunca_se_pasa_a_una_llamada PASSED [ 73%]
+tests/test_no_autonomy.py::test_los_comandos_del_playbook_son_plantillas_fijas PASSED [ 76%]
+tests/test_no_autonomy.py::test_el_agente_llm_no_puede_generar_comandos PASSED [ 78%]
+tests/test_no_autonomy.py::test_el_analisis_del_llm_no_sobreescribe_el_playbook PASSED [ 81%]
+tests/test_no_autonomy.py::test_sin_ejecucion_diferida_ni_clientes_de_infraestructura PASSED [ 84%]
+tests/test_no_autonomy.py::test_las_peticiones_de_red_solo_van_a_elasticsearch_y_al_llm PASSED [ 86%]
+tests/test_no_autonomy.py::test_el_dashboard_no_define_rutas_de_ejecucion PASSED [ 89%]
+tests/test_no_autonomy.py::test_el_cliente_no_ejecuta_nada PASSED        [ 92%]
+tests/test_no_autonomy.py::test_la_ui_advierte_que_no_ejecuta PASSED     [ 94%]
+tests/test_no_autonomy.py::test_certificacion_resumen 
+  ── Certificación de no-autonomía ──────────────────────────
+  Archivos .py analizados por AST : 11
+  Con import de subprocess        : ['siem_pipeline.py']
+  Allowlist                       : ['siem_pipeline.py']
+  Rutas HTTP que ejecutan algo    : ninguna
+  Herramientas del LLM            : ninguna
+  ───────────────────────────────────────────────────────────
+PASSED             [ 97%]
+tests/test_no_autonomy.py::test_el_andamiaje_de_pruebas_no_se_despliega PASSED [100%]
+
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_no_autonomy.py:133: siem_pipeline.py está en la allowlist (ver test_allowlist_*)
+SKIPPED [1] tests/test_no_autonomy.py:156: siem_pipeline.py está en la allowlist (ver test_allowlist_*)
+======================== 36 passed, 2 skipped in 1.83s =========================

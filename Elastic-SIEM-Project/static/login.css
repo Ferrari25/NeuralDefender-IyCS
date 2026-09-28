@@ -1,0 +1,70 @@
+/* Pantalla de inicio de sesión — hoja de estilos.
+ *
+ * Vivía en un <style> de 37 líneas dentro de `templates/login.html`: el refactor
+ * R-05 extrajo el CSS del panel y dejó el login atrás. Eso lo excluía de la caché,
+ * del análisis estático y —lo que más costaba— de los tokens compartidos, así que
+ * la pantalla había ido quedando con su propia paleta.
+ *
+ * Los tokens están en `tokens.css`, que la plantilla enlaza primero.
+ */
+
+* { box-sizing: border-box; }
+
+body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
+       font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+       display: flex; align-items: center; justify-content: center;
+       padding: var(--sp-20); }
+
+.card { background: var(--panel); border: 1px solid var(--border);
+        border-radius: var(--r-lg); padding: var(--sp-32);
+        width: 100%; max-width: 400px; }
+
+.marca { display: flex; align-items: center; gap: var(--sp-10);
+         margin-bottom: var(--sp-4); }
+/* El escudo estaba como `style="font-size:22px"` en la plantilla: un valor suelto
+ * que ninguna herramienta veía. */
+.marca .escudo { font-size: var(--fs-2xl); }
+.marca h1 { font-size: var(--fs-xl); margin: 0; font-weight: 600; }
+
+.sub { color: var(--muted); font-size: var(--fs-md);
+       margin: 0 0 var(--sp-24); line-height: 1.5; }
+
+label { display: block; font-size: var(--fs-sm); text-transform: uppercase;
+        letter-spacing: .04em; color: var(--muted);
+        margin: var(--sp-14) 0 var(--sp-6); }
+
+input { width: 100%; background: var(--bg); border: 1px solid var(--border);
+        color: var(--text); border-radius: var(--r-sm);
+        padding: var(--sp-10) var(--sp-12);
+        font-size: var(--fs-body); font-family: inherit; }
+input:focus { outline: none; border-color: var(--accent); }
+
+button { width: 100%; margin-top: var(--sp-22); padding: var(--sp-12);
+         border-radius: var(--r-sm); border: 1px solid var(--ok-claro);
+         background: var(--ok); color: #fff;
+         font-size: var(--fs-body); font-weight: 600; cursor: pointer;
+         font-family: inherit; }
+/* El hover ACLARABA el fondo (--ok-claro), y con texto blanco eso daba 3.37:1:
+ * el botón se volvía menos legible justo cuando estabas por apretarlo. Oscurecer
+ * da la misma señal de interacción y sube a 5.41:1. */
+button:hover:not(:disabled) { background: var(--ok-oscuro); }
+button:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Aviso de error y aviso de espera (bloqueo por intentos fallidos, ControlDeIntentos).
+ * Arrancan ocultos; `login.js` les agrega la clase que corresponde. */
+.aviso { margin-top: var(--sp-16); padding: var(--sp-10) var(--sp-12);
+         border-radius: var(--r-sm); font-size: var(--fs-md);
+         line-height: 1.5; display: none; }
+.aviso.error  { display: block; background: var(--tenue-no);
+                border: 1px solid var(--err); color: var(--tenue-no-texto); }
+.aviso.espera { display: block; background: var(--tenue-aviso);
+                border: 1px solid var(--med); color: var(--tenue-aviso-texto); }
+
+.nota { margin-top: var(--sp-22); padding-top: var(--sp-18);
+        border-top: 1px solid var(--border); color: var(--muted);
+        font-size: var(--fs-sm); line-height: 1.6; }
+.nota b { color: var(--text); }
+
+code { background: var(--panel2); border: 1px solid var(--border);
+       border-radius: var(--r-xs); padding: var(--sp-2) var(--sp-6);
+       font-size: var(--fs-xs); }

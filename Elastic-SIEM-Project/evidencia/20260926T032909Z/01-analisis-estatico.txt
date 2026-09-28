@@ -1,0 +1,80 @@
+ANÁLISIS ESTÁTICO — salidas crudas de cada herramienta
+Generado: 2026-09-26T03:29:09Z
+==============================================================
+
+── ruff (reglas de seguridad S, bugs B, complejidad C) ──
+
+── pylint + pylint-secure-coding-standard ──
+
+── bandit (severidad alta) ──
+
+── eslint + eslint-plugin-security + no-unsanitized ──
+
+══════════ ruff ══════════
+All checks passed!
+
+══════════ pylint + secure-coding-standard ══════════
+************* Module dashboard
+dashboard.py:343:0: R0911: Too many return statements (7/6) (too-many-return-statements)
+dashboard.py:439:4: C0415: Import outside toplevel (siem_auth._ruta_usuarios, siem_auth.cargar_usuarios) (import-outside-toplevel)
+dashboard.py:443:11: W0718: Catching too general exception Exception (broad-exception-caught)
+************* Module get-logs
+get-logs.py:1:0: C0103: Module name "get-logs" doesn't conform to snake_case naming style (invalid-name)
+************* Module prepare-for-ia
+prepare-for-ia.py:1:0: C0103: Module name "prepare-for-ia" doesn't conform to snake_case naming style (invalid-name)
+************* Module siem_agent
+siem_agent.py:99:0: C0325: Unnecessary parens after 'not' keyword (superfluous-parens)
+siem_agent.py:107:0: C0301: Line too long (129/100) (line-too-long)
+siem_agent.py:120:0: C0301: Line too long (104/100) (line-too-long)
+siem_agent.py:182:0: C0301: Line too long (106/100) (line-too-long)
+siem_agent.py:321:0: C0301: Line too long (116/100) (line-too-long)
+siem_agent.py:334:0: C0301: Line too long (107/100) (line-too-long)
+siem_agent.py:148:11: W0718: Catching too general exception Exception (broad-exception-caught)
+siem_agent.py:146:8: E0401: Unable to import 'google' (import-error)
+siem_agent.py:146:8: C0415: Import outside toplevel (google.genai) (import-outside-toplevel)
+siem_agent.py:154:4: E0401: Unable to import 'google.genai' (import-error)
+siem_agent.py:154:4: C0415: Import outside toplevel (google.genai.types) (import-outside-toplevel)
+siem_agent.py:289:15: W0718: Catching too general exception Exception (broad-exception-caught)
+************* Module siem_lib
+siem_lib.py:465:4: W0706: The except handler raises immediately (try-except-raise)
+************* Module siem_pipeline
+siem_pipeline.py:22:0: C0301: Line too long (102/100) (line-too-long)
+siem_pipeline.py:23:0: C0301: Line too long (106/100) (line-too-long)
+
+-----------------------------------
+Your code has been rated at 9.53/10
+
+
+══════════ bandit ══════════
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	running on Python 3.12.3
+Run started:2026-09-26 03:29:19.130206+00:00
+
+Test results:
+	No issues identified.
+
+Code scanned:
+	Total lines of code: 2563
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 2
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 2
+Files skipped (0):
+
+══════════ eslint ══════════
+npm notice
+npm notice New major version of npm available! 10.9.8 -> 12.1.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.1.0
+npm notice To update run: npm install -g npm@12.1.0
+npm notice

@@ -1,0 +1,15 @@
+# SIEM-IA — dependencias de los scripts y el dashboard
+requests>=2.31
+python-dotenv>=1.0
+google-genai>=2.0      # Agente 2 (LLM analista). Opcional: hay fallback determinístico.
+Flask>=3.0            # Dashboard de supervisión humana
+
+# --- Autenticación del panel (hallazgo API-01) ---
+Flask-Login>=0.6      # Sesiones y usuario autenticado
+Flask-WTF>=1.2        # Protección CSRF
+argon2-cffi>=23.1     # Hash de contraseñas con Argon2id (RFC 9106)
+
+# En Debian/Ubuntu el intérprete está marcado como "externally managed" (PEP 668)
+# y `pip install` falla. La instalación local del proyecto es:
+#     python3 -m pip install --target=.devtools -r requirements.txt
+#     export PYTHONPATH="$PWD/.devtools"

@@ -1,0 +1,274 @@
+/* Panel de supervisión SIEM-IA — hoja de estilos.
+ *
+ * Extraída de `templates/index.html` en el refactor R-05. Vivía embebida en un
+ * <style> de 188 líneas dentro de la plantilla, lo que impedía cachearla,
+ * revisarla por separado y —sobre todo— que cualquier herramienta la analizara.
+ *
+ * Tablero de operaciones: color estable por severidad, icono estable por tipo de
+ * ataque (RNF-USA-07).
+ *
+ * LOS TOKENS NO VIVEN ACÁ: están en `tokens.css`, que también carga el login.
+ * La plantilla los enlaza primero. No reintroducir un `:root` en este archivo —
+ * hay una prueba que lo verifica.
+ */
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+       font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+header { padding: var(--sp-16) var(--sp-28); border-bottom: 1px solid var(--border);
+         display: flex; align-items: center; justify-content: space-between; position: sticky; top:0; background:var(--bg); z-index:10;}
+header h1 { font-size: var(--fs-xl); margin: 0; font-weight: 600; }
+header .right { display:flex; align-items:center; gap: var(--sp-12); }
+.meta { color: var(--muted); font-size: var(--fs-md); }
+.mode-badge { font-size: var(--fs-sm); font-weight: 600; padding: var(--sp-4) var(--sp-10); border-radius: var(--r-pill); border: 1px solid var(--border); }
+.mode-gemini { color: var(--ok-texto); border-color: var(--ok-claro); }
+.mode-fallback { color: var(--med); border-color: var(--med); }
+.sesion { font-size: var(--fs-sm); color: var(--muted); }
+.sesion b { color: var(--text); }
+.sesion .rol { border: 1px solid var(--border); border-radius: var(--r-pill);
+               padding: var(--sp-2) var(--sp-8); margin-left: var(--sp-6); font-size: var(--fs-xs);
+               text-transform: uppercase; letter-spacing: .03em; }
+.salir { background: transparent; border: 1px solid var(--border); color: var(--muted);
+         border-radius: var(--r-sm); padding: var(--sp-4) var(--sp-10); font-size: var(--fs-sm); cursor: pointer;
+         font-family: inherit; }
+.salir:hover { color: var(--text); border-color: var(--muted); }
+.wrap { padding: var(--sp-22) var(--sp-28) var(--sp-60); max-width: 1360px; margin: 0 auto; }
+
+/* ── Resumen ────────────────────────────────────────────────────────────────
+ * Eran SIETE recuadros del mismo tamaño y el mismo peso —Incidentes, Acciones,
+ * Pendientes, Críticos, Altos, Medios, Bajos—, así que nada estaba destacado. Y
+ * como las severidades suelen concentrarse, tres de los siete mostraban 0 con la
+ * misma prominencia que el número que importa.
+ *
+ * El número que importa es UNO: cuántas acciones esperan una decisión humana. Es
+ * lo que este panel existe para resolver. La jerarquía se consigue DEGRADANDO el
+ * contexto, no inflando el número: un dígito de 32px sería ajeno a un tablero
+ * denso de 13px. */
+.summary { display: flex; gap: var(--sp-20); margin-bottom: var(--sp-18);
+           flex-wrap: wrap; align-items: center; }
+
+.principal .n { font-size: var(--fs-2xl); font-weight: 700; line-height: 1;
+                color: var(--muted); }
+.principal .l { font-size: var(--fs-sm); color: var(--muted); margin-top: var(--sp-4); }
+/* Con pendientes, el número se enciende: es lo único de la fila que pide algo. */
+.principal.hay-pendientes .n { color: var(--accent); }
+.principal.hay-pendientes .l { color: var(--text); }
+
+.secundarias { display: flex; flex-direction: column; gap: var(--sp-2);
+               font-size: var(--fs-sm); color: var(--muted); }
+
+.severidad { display: flex; flex-direction: column; gap: var(--sp-6); min-width: 210px; }
+/* Barra apilada. `--dato-n` lo pone el JavaScript con el conteo de cada severidad:
+ * es un DATO, no un estilo, y por eso viaja como propiedad personalizada en vez de
+ * como una declaración CSS en línea. El prefijo `--dato-` lo distingue de un token
+ * de diseño, que vive en `tokens.css`; hay una prueba que verifica que cada
+ * `--dato-*` usado acá lo defina de verdad el JavaScript. El reparto lo hace flex. */
+.barra { display: flex; height: var(--sp-6); border-radius: var(--r-pill);
+         overflow: hidden; background: var(--panel3); }
+.barra .seg { flex: var(--dato-n) 1 0; }
+.barra .sev-CRITICAL { background: var(--crit); }
+.barra .sev-HIGH { background: var(--high); }
+.barra .sev-MEDIUM { background: var(--med); }
+.barra .sev-LOW { background: var(--low); }
+
+/* La leyenda es el contenido accesible: la barra va `aria-hidden` porque no dice
+ * nada que no esté acá en texto. Lista las CUATRO severidades, incluidas las que
+ * están en cero — un cero informa ("miramos y no hay críticos"); lo que cambia es
+ * que deja de competir, porque su número no se resalta. */
+.leyenda { display: flex; flex-wrap: wrap; gap: var(--sp-10); list-style: none;
+           margin: 0; padding: 0; font-size: var(--fs-xs); color: var(--muted); }
+.leyenda li { display: flex; align-items: center; gap: var(--sp-4); }
+.leyenda b { color: var(--muted); font-weight: 700; }
+.leyenda li:not(.cero) b { color: var(--text); }
+.leyenda .sev-CRITICAL { color: var(--crit); }
+.leyenda .sev-HIGH { color: var(--high); }
+.leyenda .sev-MEDIUM { color: var(--med); }
+.leyenda .sev-LOW { color: var(--low); }
+
+/* Aclaración al lado de un dato, en el mismo renglón: informa sin competir. */
+.sutil { color: var(--muted); }
+
+.resumen-vacio { font-size: var(--fs-sm); color: var(--muted); }
+.resumen-vacio code { font-family: ui-monospace, monospace; font-size: var(--fs-mono);
+                      background: var(--panel2); border: 1px solid var(--border);
+                      border-radius: var(--r-xs); padding: var(--sp-2) var(--sp-6); }
+
+.toolbar { margin-left:auto; display:flex; gap: var(--sp-8); align-items:center; font-size:var(--fs-sm); color:var(--muted);}
+
+h2.panel-title { font-size: var(--fs-md); text-transform: uppercase; letter-spacing: .05em; color: var(--muted);
+                  margin: 0 0 var(--sp-10); display:flex; align-items:center; gap: var(--sp-8); }
+section.panel { margin-bottom: var(--sp-26); }
+
+.layout { display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: var(--sp-22); align-items: start; }
+@media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
+
+/* Filtros */
+.filters { display:flex; gap: var(--sp-8); flex-wrap:wrap; margin-bottom: var(--sp-12); }
+.filters select, .filters input { background:var(--bg); border:1px solid var(--border); color:var(--text);
+  border-radius:var(--r-sm); padding: var(--sp-6) var(--sp-10); font-size:var(--fs-md); font-family:inherit; }
+.filters input { min-width: 200px; }
+
+/* Tabla de eventos activos */
+table.events { width:100%; border-collapse: collapse; background: var(--panel); border:1px solid var(--border);
+               border-radius:var(--r-lg); overflow:hidden; font-size:var(--fs-body); }
+table.events th { text-align:left; font-size:var(--fs-xs); text-transform:uppercase; letter-spacing:.04em; color:var(--muted);
+                   padding: var(--sp-10) var(--sp-14); border-bottom:1px solid var(--border); background:#11161d; }
+table.events td { padding: var(--sp-10) var(--sp-14); border-bottom:1px solid var(--border); vertical-align: top; }
+table.events tbody tr { cursor:pointer; }
+table.events tbody tr:hover { background:#1b2330; }
+table.events tbody tr.selected { background:#152436; }
+table.events tbody tr:last-child td { border-bottom:none; }
+.ip-mono { font-family: ui-monospace, monospace; font-size:var(--fs-mono); }
+.ai-excerpt { color: var(--muted); max-width: 360px; }
+
+/* Insignias de severidad. El texto va OSCURO sobre los cuatro rellenos, no solo
+ * sobre los claros: con blanco, CRITICAL daba 3.35:1 y HIGH 3.37:1 sobre sus
+ * propios fondos, por debajo del 4.5:1 que WCAG AA pide para texto normal (11px
+ * bold no califica como "texto grande", que empieza en 18.66px bold).
+ *
+ * La urgencia la comunica el RELLENO, que sigue siendo rojo; el color del texto
+ * solo tiene que ser legible. Cada tono oscuro es un teñido del propio color, no
+ * negro puro, para que la insignia no se vea sucia.
+ *
+ * No volver a #fff: tests/unit/test_contraste_de_la_interfaz.py calcula los
+ * ratios sobre este archivo y falla. */
+.badge { font-size: var(--fs-xs); font-weight: 700; padding: var(--sp-4) var(--sp-10); border-radius: var(--r-pill);
+         text-transform: uppercase; letter-spacing: .03em; white-space:nowrap;
+         /* Relleno neutro por si llega una severidad fuera de las cuatro: antes
+          * heredaba `color:#fff` sin fondo y la insignia quedaba invisible. 7.91:1 */
+         background: var(--border); color: var(--text); }
+.b-CRITICAL { background: var(--crit); color:#1a0603; } /* 5.85:1 */
+.b-HIGH { background: var(--high); color:#240d00; }     /* 5.50:1 */
+.b-MEDIUM { background: var(--med); color:#1c1300; }    /* 7.28:1 */
+.b-LOW { background: var(--low); color:#04130a; }       /* 7.50:1 */
+
+/* Detalle expandido */
+.detail-wrap { margin-top: var(--sp-14); }
+.card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.card-head { padding: var(--sp-14) var(--sp-18); border-bottom: 1px solid var(--border);
+             display: flex; align-items: center; gap: var(--sp-12); flex-wrap: wrap; }
+.card-head .title { font-weight: 600; font-size: var(--fs-lg); }
+.card-head .id { color: var(--muted); font-size: var(--fs-sm); font-family: ui-monospace, monospace; }
+.card-head .src { margin-left: auto; font-size: var(--fs-md); color: var(--muted); font-family: ui-monospace, monospace; }
+.card-head .close { cursor:pointer; color:var(--muted); border:1px solid var(--border); border-radius:var(--r-sm); padding: var(--sp-4) var(--sp-10); font-size:var(--fs-sm); }
+.card-body { padding: var(--sp-18) var(--sp-20); }
+.grid { display: grid; grid-template-columns: 120px 1fr; gap: var(--sp-6) var(--sp-14); font-size: var(--fs-body); margin-bottom: var(--sp-14); }
+.grid .k { color: var(--muted); }
+.analysis p { margin: var(--sp-6) 0; line-height: 1.5; font-size: var(--fs-body); }
+.analysis .lbl { color: var(--accent); font-weight: 600; }
+.src-tag { font-size: var(--fs-xs); padding: var(--sp-2) var(--sp-8); border-radius: var(--r-xs); border: 1px solid var(--border); color: var(--muted); }
+.fp-hint { font-size: var(--fs-sm); color: var(--muted); }
+
+.campaign-banner { background: var(--camp-fondo); border: 1px solid var(--camp-borde); border-left: 3px solid var(--camp-texto);
+                    border-radius: var(--r-sm); padding: var(--sp-10) var(--sp-14); margin-bottom: var(--sp-14); font-size: var(--fs-body);
+                    line-height: 1.5; color: var(--text); }
+.campaign-banner b { color: var(--camp-enlace); }
+.campaign-banner a { color: var(--camp-enlace); }
+
+.factors { margin-top: var(--sp-14); border: 1px solid var(--border); border-radius: var(--r-md);
+           background: var(--panel2); padding: var(--sp-10) var(--sp-14) var(--sp-12); }
+.factors ul { margin: var(--sp-6) 0 0; padding-left: var(--sp-20); }
+.factors li { font-size: var(--fs-md); color: var(--text); line-height: 1.6; }
+
+.campaign-icon { margin-left: var(--sp-4); cursor: default; }
+
+.about { font-size: var(--fs-sm); color: var(--muted); cursor: pointer; text-decoration: underline dotted; }
+.about-panel { display: none; background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-lg);
+               padding: var(--sp-16) var(--sp-20); margin-bottom: var(--sp-18); font-size: var(--fs-body); line-height: 1.6; }
+.about-panel.open { display: block; }
+.about-panel h3 { font-size: var(--fs-md); text-transform: uppercase; letter-spacing: .04em; color: var(--accent); margin: var(--sp-14) 0 var(--sp-6); }
+.about-panel h3:first-child { margin-top: 0; }
+.about-panel ul { margin: var(--sp-4) 0; padding-left: var(--sp-20); }
+.about-panel code { background: var(--panel2); border: 1px solid var(--border); border-radius: var(--r-xs); padding: var(--sp-2) var(--sp-6); font-size: var(--fs-sm); }
+
+.evidence { margin-top: var(--sp-14); border:1px solid var(--border); border-radius:var(--r-md); background:var(--panel2); }
+.ev-head { padding: var(--sp-10) var(--sp-14); cursor:pointer; display:flex; align-items:center; gap: var(--sp-8);
+           font-size:var(--fs-md); font-weight:600; color:var(--text); }
+.ev-head:hover { background:#11161d; }
+.ev-body { padding: 0 var(--sp-14) var(--sp-14); }
+.ev-why { font-size:var(--fs-md); color:var(--text); background:#13242f; border-left:3px solid var(--accent);
+          padding: var(--sp-8) var(--sp-10); border-radius:var(--r-xs); margin: var(--sp-6) 0 var(--sp-12); }
+.ev-section-title { font-size:var(--fs-xs); text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin: var(--sp-10) 0 var(--sp-6); }
+.timeline { list-style:none; margin:0; padding:0; }
+.timeline li { display:flex; gap: var(--sp-10); padding: var(--sp-4) 0; font-family:ui-monospace,monospace; font-size:var(--fs-mono); }
+.timeline .t { color:var(--accent); white-space:nowrap; }
+.timeline .d { color:var(--text); word-break:break-all; }
+.ip-hl { color:var(--ok-texto); font-weight:600; }
+/* Un rol sin permiso para decidir no ve botones que el servidor le va a
+   rechazar con 403. El control real está en el servidor; esto es claridad. */
+body.solo-lectura .ctrl,
+body.solo-lectura .suggestion button { display: none; }
+.chips { display:flex; flex-wrap:wrap; gap: var(--sp-6); }
+.chip { font-family:ui-monospace,monospace; font-size:var(--fs-sm); background:var(--bg); border:1px solid var(--border);
+        border-radius:var(--r-xs); padding: var(--sp-2) var(--sp-8); color:var(--ok-texto); }
+
+.actions { margin-top: var(--sp-16); }
+.actions h3 { font-size: var(--fs-md); text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 var(--sp-10); }
+.action { border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-12) var(--sp-14); margin-bottom: var(--sp-10); }
+.action .top { display: flex; align-items: center; gap: var(--sp-10); flex-wrap: wrap; }
+.action .desc { font-size: var(--fs-body); }
+.action .who { font-size: var(--fs-xs); color: var(--muted); border: 1px solid var(--border); padding: var(--sp-2) var(--sp-8); border-radius: var(--r-xs); }
+.action .cmd { margin: var(--sp-10) 0 0; background: var(--panel2); border: 1px solid var(--border);
+               border-radius: var(--r-sm) var(--r-sm) 0 0; padding: var(--sp-8) var(--sp-10); font-family: ui-monospace, monospace;
+               font-size: var(--fs-mono); color: var(--ok-texto); overflow-x: auto; }
+.action .cmd-explain { margin: 0 0 0; background: #101820; border: 1px solid var(--border); border-top: none;
+               border-radius: 0 0 var(--r-sm) var(--r-sm); padding: var(--sp-8) var(--sp-10) var(--sp-10); font-size: var(--fs-mono); color: var(--muted);
+               line-height: 1.45; }
+.action .cmd-explain b { color: var(--accent); font-weight: 600; }
+.action .ctrl { margin-left: auto; display: flex; gap: var(--sp-8); align-items: center; }
+button { font: inherit; font-size: var(--fs-md); border: 1px solid var(--border); background: var(--panel3);
+         color: var(--text); border-radius: var(--r-sm); padding: var(--sp-6) var(--sp-14); cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button.approve.on { background: var(--ok); border-color: var(--ok); color: #fff; }
+button.dismiss.on { background: var(--no); border-color: var(--no); color: #fff; }
+button.small { padding: var(--sp-4) var(--sp-10); font-size: var(--fs-sm); }
+/* Estado vs. acción. El chip de estado y el botón de la acción estaban pintados
+ * igual —relleno verde saturado con texto blanco— y viven en la MISMA fila del
+ * panel de decisión: uno informa qué pasó, el otro ofrece hacer algo.
+ *
+ * Los estados pasan a un tinte con borde, que se lee como etiqueta y no como
+ * control; los botones conservan el relleno sólido. Y el chip lleva además una
+ * marca (✔ / ✘), así la diferencia no depende solo del color. */
+.state { font-size: var(--fs-sm); padding: var(--sp-2) var(--sp-10);
+         border-radius: var(--r-pill); font-weight: 600;
+         border: 1px solid var(--border); white-space: nowrap; }
+.s-pending   { background: var(--panel3); color: var(--muted); }                 /*  4.95:1 */
+.s-approved  { background: var(--tenue-ok); color: var(--tenue-ok-texto);
+               border-color: var(--ok); }                                        /* 10.40:1 */
+.s-dismissed { background: var(--tenue-no); color: var(--tenue-no-texto);
+               border-color: var(--no); }                                        /*  8.99:1 */
+.decided { font-size: var(--fs-xs); color: var(--muted); margin-top: var(--sp-6); }
+.hidden { display:none; }
+.empty { text-align: center; color: var(--muted); padding: var(--sp-40) var(--sp-20); background:var(--panel);
+         border:1px solid var(--border); border-radius:var(--r-lg); }
+a { color: var(--accent); }
+
+/* Sidebar: Ataques recientes + Historial de decisiones */
+.side-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-lg); padding: var(--sp-14) var(--sp-16); margin-bottom: var(--sp-18); }
+.recent-item { display:flex; align-items:flex-start; gap: var(--sp-10); padding: var(--sp-8) 0; border-bottom:1px solid var(--border); font-size:var(--fs-md); }
+.recent-item:last-child { border-bottom:none; }
+.recent-item .icon { font-size:var(--fs-icon); line-height:1.4; }
+.recent-item .body { flex:1; min-width:0; }
+.recent-item .ip { font-family: ui-monospace, monospace; font-size:var(--fs-mono); color:var(--text); }
+.recent-item .type { color:var(--muted); font-size:var(--fs-sm); }
+.recent-item .when { color:var(--muted); font-size:var(--fs-xs); white-space:nowrap; }
+
+.decision-item { padding: var(--sp-8) 0; border-bottom:1px solid var(--border); font-size:var(--fs-mono); }
+.decision-item:last-child { border-bottom:none; }
+.decision-item .dec-approved { color: var(--ok-texto); font-weight:600; }
+.decision-item .dec-dismissed { color: var(--tenue-no-texto); font-weight:600; }
+.decision-item .who { color: var(--muted); }
+
+/* Registro de eventos del sistema (feed) */
+.feed-item { background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-lg);
+             padding: var(--sp-14) var(--sp-18); margin-bottom: var(--sp-12); }
+.feed-item .fi-head { display:flex; align-items:center; gap: var(--sp-10); flex-wrap:wrap; margin-bottom: var(--sp-8); }
+.feed-item .fi-head .title { font-weight:600; font-size:var(--fs-body); }
+.feed-item .fi-head .src { margin-left:auto; font-family: ui-monospace, monospace; font-size:var(--fs-mono); color:var(--muted); }
+.feed-lines { list-style:none; margin: 0 0 var(--sp-10); padding:0; max-height: 160px; overflow-y:auto; }
+.feed-lines li { display:flex; gap: var(--sp-10); padding: var(--sp-4) 0; font-family:ui-monospace,monospace; font-size:var(--fs-sm); color:var(--muted); }
+.feed-lines .t { color:var(--accent); white-space:nowrap; }
+.suggestion { background:#13242f; border-left:3px solid var(--accent); border-radius:var(--r-xs);
+              padding: var(--sp-10) var(--sp-12); display:flex; align-items:center; gap: var(--sp-12); flex-wrap:wrap; }
+.suggestion .txt { flex:1; min-width:220px; font-size:var(--fs-body); }
+.suggestion .txt b { color: var(--accent); }

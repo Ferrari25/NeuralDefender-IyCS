@@ -1,0 +1,22 @@
+# SIEM-IA — dependencias de desarrollo (no hacen falta para correr el sistema).
+#
+# Instalación sin tocar el Python del sistema (Debian/Ubuntu marcan el intérprete
+# como "externally managed", PEP 668):
+#
+#     python3 -m pip install --target=.devtools -r requirements-dev.txt
+#     export PYTHONPATH="$PWD/.devtools"
+#     .devtools/bin/pytest
+
+# --- Pruebas ---
+pytest>=8.0
+pytest-cov>=5.0
+
+# --- Análisis estático (SAST) ---
+pylint>=3.2
+pylint-secure-coding-standard>=1.4    # reglas de seguridad como plugin de pylint
+bandit>=1.7                           # SAST de seguridad (hashes, subprocess, requests)
+ruff>=0.5                             # linter/formateador rápido
+
+# --- Fase 3 (todavía no se usan; se listan para que el entorno sea reproducible) ---
+# pytest-playwright>=0.5
+# pytest-xdist>=3.6

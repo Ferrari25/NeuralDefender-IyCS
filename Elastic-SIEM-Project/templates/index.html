@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SIEM-IA · Panel de supervisión</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='iconos.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body>
+{% include '_iconos.html' %}
+  <header>
+    <h1><svg class="ico"><use href="#i-escudo"></use></svg> SIEM-IA · Panel de supervisión</h1>
+    <div class="right">
+      <span class="about" data-accion="about"><svg class="ico"><use href="#i-info"></use></svg> Cómo funciona este panel</span>
+      <span class="sesion" id="sesion"></span>
+      <button class="salir" id="salir" type="button">Cerrar sesión</button>
+      <span class="mode-badge" id="modeBadge">cargando…</span>
+      <span class="meta" id="meta"></span>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="about-panel" id="aboutPanel">
+      <h3>Arquitectura de detección → análisis → acción</h3>
+      <p><b>Agente 1 (determinístico):</b> <code>classifier.py</code> agrupa eventos crudos por IP/host y
+      aplica reglas fijas de umbral (ej. 20+ fallos de auth = fuerza bruta). Rápido, barato y 100%
+      auditable — nunca usa IA para esta parte, así el resultado siempre es reproducible.</p>
+      <p><b>Agente 2 (IA con fallback):</b> <code>siem_agent.py</code> traduce la clasificación a una
+      explicación en lenguaje claro (Gemini si hay API key configurada; si no, un análisis
+      determinístico de respaldo — nunca deja al analista sin explicación).</p>
+      <h3>Cómo el Agente 2 razona mejor sin decidir más</h3>
+      <p>Tres capacidades que amplían el análisis, no la autonomía del sistema:</p>
+      <ul>
+        <li><b>Correlación entre incidentes</b> — si varios incidentes activos comparten una IP
+        (banner morado <svg class="ico"><use href="#i-enlace"></use></svg>), se marcan como una misma campaña en vez de leerse como eventos sueltos.</li>
+        <li><b>Contexto histórico</b> — antes de analizar, revisa <code>decisions.jsonl</code> buscando
+        decisiones previas sobre esa IP en otros incidentes ("¿ya la bloqueamos antes?").</li>
+        <li><b>Explicabilidad</b> — la severidad y la probabilidad de falso positivo no son una caja
+        negra: cada incidente muestra los factores concretos (umbral superado, confirmación del SIEM,
+        etc.) que llevaron a esa conclusión.</li>
+      </ul>
+      <p>Los tres se calculan siempre en Python (no los redacta el LLM) por el mismo motivo que los
+      comandos: son hechos auditables, no una interpretación que pueda variar entre corridas.</p>
+      <h3>Por qué los comandos no los genera la IA</h3>
+      <p>Los comandos sugeridos salen siempre del <i>playbook</i> fijo del Agente 1, nunca del LLM.
+      El campo <code>message</code> de un log SSH lo puede escribir un atacante (ej. el nombre de
+      usuario que tipea); si un LLM generara comandos a partir de eso, una inyección de prompt en
+      el log podría terminar sugiriéndole un comando malicioso al operador. Con comandos fijos, esa
+      superficie de ataque no existe.</p>
+      <h3>El principio rector</h3>
+      <p><b>La IA sugiere, el humano decide.</b> El sistema nunca ejecuta una acción de contención
+      por su cuenta. Cada click en Aprobar/Descartar queda en <code>decisions.jsonl</code>, un log
+      append-only e inmutable — trazabilidad completa de quién decidió qué y cuándo, la base de
+      cualquier auditoría de este flujo.</p>
+    </div>
+    <div class="summary" id="summary"></div>
+
+    <div class="layout">
+      <div>
+        <section class="panel">
+          <h2 class="panel-title"><svg class="ico"><use href="#i-actividad"></use></svg> Eventos de Seguridad Activos</h2>
+          <div class="filters">
+            <select id="fSeverity" data-filtro="1">
+              <option value="">Todas las severidades</option>
+              <option value="CRITICAL">Crítica</option>
+              <option value="HIGH">Alta</option>
+              <option value="MEDIUM">Media</option>
+              <option value="LOW">Baja</option>
+            </select>
+            <select id="fType" data-filtro="1">
+              <option value="">Todos los tipos de ataque</option>
+            </select>
+            <input id="fSearch" type="text" placeholder="Buscar por IP…" data-filtro="1">
+          </div>
+          <div id="eventsTableWrap"></div>
+          <div id="detailWrap" class="detail-wrap"></div>
+        </section>
+
+        <section class="panel">
+          <h2 class="panel-title"><svg class="ico"><use href="#i-registro"></use></svg> Registro de Eventos del Sistema</h2>
+          <div id="logFeed"></div>
+        </section>
+      </div>
+
+      <aside>
+        <div class="side-card">
+          <h2 class="panel-title"><svg class="ico"><use href="#i-reloj"></use></svg> Ataques Recientes</h2>
+          <div id="recentAttacks"></div>
+        </div>
+        <div class="side-card">
+          <h2 class="panel-title"><svg class="ico"><use href="#i-archivo"></use></svg> Historial de Decisiones</h2>
+          <div id="decisionHistory">cargando…</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

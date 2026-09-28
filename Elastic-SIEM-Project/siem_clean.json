@@ -1,0 +1,415 @@
+{
+  "generated_at": "2026-09-26T02:34:52.772267+00:00",
+  "context": "Elastic SIEM - Análisis de seguridad automatizado",
+  "summary": {
+    "total_alerts": 4,
+    "total_auth_failures": 20,
+    "active_alerts": 4,
+    "high_severity": 4,
+    "window": "24h",
+    "top_source_ips": {
+      "172.18.0.7": 28
+    },
+    "mitre_techniques": [
+      "T1046",
+      "T1110",
+      "T1566"
+    ]
+  },
+  "alerts": [
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-26T02:34:18.576Z",
+      "alert_id": "633074165b09dd2d...",
+      "rule_name": "SSH Brute Force – Aggressive per Source IP",
+      "severity": "high",
+      "risk_score": 73,
+      "status": "active",
+      "reason": "event created high alert SSH Brute Force – Aggressive per Source IP.",
+      "source_ip": "172.18.0.7",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 6,
+      "time_window": {
+        "from": "2026-09-26T02:33:37.728Z",
+        "to": "2026-09-26T02:34:18.576Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Scanners de vulnerabilidades autorizados; equipos de pentesting."
+      ],
+      "rule_query": "tags:authentication_failure"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-26T02:33:18.561Z",
+      "alert_id": "751f726a665af579...",
+      "rule_name": "Credential Submission to Suspicious Login",
+      "severity": "high",
+      "risk_score": 68,
+      "status": "active",
+      "reason": "event on 5e2c900a74d6 created high alert Credential Submission to Suspicious Login.",
+      "source_ip": "172.18.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-09-26T02:33:18.561Z"
+      },
+      "mitre": {
+        "tactic": "Initial Access",
+        "technique": "Phishing",
+        "technique_id": "T1566"
+      },
+      "false_positives": [
+        "Logins legitimos a aplicaciones internas que casualmente matcheen el patron."
+      ],
+      "rule_query": "event_type:http_request and credential_submission:true and url:*login*"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-26T02:33:15.520Z",
+      "alert_id": "8f9cb180af8e687e...",
+      "rule_name": "Port Scan – Many Distinct Ports",
+      "severity": "high",
+      "risk_score": 73,
+      "status": "active",
+      "reason": "event created high alert Port Scan – Many Distinct Ports.",
+      "source_ip": "198.51.100.43",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 26,
+      "time_window": {
+        "from": "2026-09-26T02:32:25.000Z",
+        "to": "2026-09-26T02:33:15.520Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [
+        "Herramientas de monitoreo/inventario autorizadas (ej. Nessus, escaneres internos)."
+      ],
+      "rule_query": "event_type:network_flow"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-26T02:33:15.518Z",
+      "alert_id": "7c5e956231cb0f14...",
+      "rule_name": "SSH Brute Force – Aggressive per Source IP",
+      "severity": "high",
+      "risk_score": 73,
+      "status": "active",
+      "reason": "event created high alert SSH Brute Force – Aggressive per Source IP.",
+      "source_ip": "172.18.0.7",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 12,
+      "time_window": {
+        "from": "2026-09-26T02:32:33.431Z",
+        "to": "2026-09-26T02:33:15.518Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Scanners de vulnerabilidades autorizados; equipos de pentesting."
+      ],
+      "rule_query": "tags:authentication_failure"
+    }
+  ],
+  "auth_failure_logs": [
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:34:42.039Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 56482 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:34:42.029Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 56482 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:34:42.018Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 56482 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:34:42.009Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 56482 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:34:09.933Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 43548 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:34:09.922Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 43548 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:34:09.912Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 43548 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:34:09.900Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 43548 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:34:09.889Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 43548 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:34:09.879Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 43548 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:33:37.781Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 54954 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:33:37.770Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 54954 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:33:37.759Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 54954 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:33:37.749Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 54954 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:33:37.738Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 54954 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:33:37.728Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 54954 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:33:05.627Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 44200 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:33:05.616Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 44200 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:33:05.606Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 44200 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    },
+    {
+      "type": "auth_failure_log",
+      "timestamp": "2026-09-26T02:33:05.595Z",
+      "message": "Failed password for testuser from 172.18.0.7 port 44200 ssh2",
+      "host_ip": "172.18.0.3",
+      "host_name": "5e2c900a74d6",
+      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "tags": [
+        "beats_input_codec_plain_applied",
+        "authentication_failure",
+        "private_ip"
+      ],
+      "source_type": null
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+# Ruff: estilo y errores rápidos, para que pylint se dedique a la lógica.
+line-length = 100
+target-version = "py310"
+exclude = [".devtools", ".venv", "node_modules", "__pycache__"]
+
+[lint]
+select = ["E", "F", "W", "I", "UP", "B", "S", "C4", "SIM"]
+# S603/S607: subprocess en siem_pipeline.py — justificado y cubierto por
+# tests/test_no_autonomy.py. Se silencia por archivo, no globalmente (ver per-file-ignores).
+ignore = ["E501"]
+
+[lint.per-file-ignores]
+# El orquestador: subprocess auditado y en la allowlist de no-autonomía.
+"siem_pipeline.py" = ["S603", "S607"]
+# Los tests usan assert (S101) y acceden a helpers privados a propósito.
+# S603/S404: `test_auditoria_append_only.py` lanza el pipeline real para verificar
+# que no pisa la auditoría. Es andamiaje de prueba, no capacidad del producto, y
+# `tests/test_no_autonomy.py::test_el_andamiaje_de_pruebas_no_se_despliega`
+# vigila esa frontera.
+# S314: `test_iconos.py` parsea el sprite SVG del propio repositorio para verificar
+# que está bien formado. No es entrada no confiable —es un archivo versionado— así
+# que no justifica sumar `defusedxml` como dependencia.
+"tests/**" = ["S101", "S105", "S106", "S314", "S404", "S603", "S607", "SIM117"]

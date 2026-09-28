@@ -1,0 +1,103 @@
+/* Tokens de diseño de SIEM-IA — la fuente única de la paleta y las escalas.
+ *
+ * Lo cargan las DOS pantallas: `app.css` (panel de supervisión) y `login.css`.
+ *
+ * Antes cada una traía su propio `:root`, y eso ya había producido una colisión
+ * real: `--ok` valía #238636 en el panel y #3fb950 en el login. Un nombre con dos
+ * colores no es un token — es dos valores sueltos disfrazados. El login además
+ * definía `--ok` sin usarlo nunca.
+ *
+ * Los cambios de paleta se hacen ACÁ. Hay pruebas que verifican que ninguna hoja
+ * reintroduzca un `:root` propio ni un valor de espaciado fuera de la escala:
+ *   tests/unit/test_tokens_de_diseno.py
+ *   tests/unit/test_contraste_de_la_interfaz.py
+ */
+
+:root {
+  /* ── Superficies y texto ─────────────────────────────────────────────────── */
+  --bg:     #0d1117;   /* fondo de la página */
+  --panel:  #161b22;   /* tarjetas y paneles */
+  --panel2: #0b0f14;   /* hundido: bloques de código, campos */
+  --panel3: #21262d;   /* elevado: botones en reposo, chip pendiente */
+  --border: #30363d;
+  --text:   #c9d1d9;
+  --muted:  #8b949e;
+  --accent: #58a6ff;
+
+  /* ── Severidad ───────────────────────────────────────────────────────────── */
+  /* Color estable por severidad (RNF-USA-07): el mismo tono siempre significa lo
+   * mismo, en la tabla, en las insignias y en las métricas. */
+  --crit: #f85149; --high: #db6d28; --med: #d29922; --low: #3fb950;
+
+  /* ── Decisión del analista ───────────────────────────────────────────────── */
+  --ok:        #238636;  /* aprobar: relleno (blanco encima da 4.63:1, AA justo) */
+  --ok-claro:  #2ea043;  /* aprobar: BORDE. No usar de fondo con texto blanco: 3.37:1 */
+  --ok-oscuro: #1f7a30;  /* hover: más oscuro, no más claro — 5.41:1 */
+  --ok-texto:  #7ee787;  /* verde legible sobre fondo oscuro */
+  --no:       #6e2222;  /* descartar */
+
+  /* ── Alias semánticos ────────────────────────────────────────────────────── */
+  /* Mismo color, otro significado. Se escriben como alias y no repitiendo el hex
+   * para que se vea que son lo mismo a propósito. */
+  --err: var(--crit);   /* error de formulario, no severidad de incidente */
+
+  /* ── Pares tenues: el color informa un ESTADO, no ofrece una acción ───────
+   * Un relleno saturado dice "apretame"; un tinte dice "esto ya pasó". La
+   * diferencia importaba de verdad: el chip «aprobada» estaba pintado igual que
+   * el botón «Aprobar» —verde sólido, texto blanco— y viven en la MISMA fila.
+   *
+   * Se llamaban `--err-fondo` / `--aviso-fondo`, por los avisos del login. El
+   * nombre era demasiado estrecho: el mismo lenguaje visual sirve ahora también
+   * a los chips de estado del panel de decisión. */
+  --tenue-ok:    #10261a;  --tenue-ok-texto:    var(--ok-texto);  /* 10.40:1 */
+  --tenue-no:    #2d1113;  --tenue-no-texto:    #ffa198;          /*  8.99:1 */
+  --tenue-aviso: #2b2213;  --tenue-aviso-texto: #e3b341;          /*  8.05:1 */
+
+  /* ── Campaña (correlación entre incidentes) ──────────────────────────────── */
+  --camp-fondo: #241a33; --camp-borde: #6e40c9;
+  --camp-texto: #a371f7; --camp-enlace: #d2a8ff;
+
+  /* ── Escala tipográfica ───────────────────────────────────────────────────
+   * Había 10 tamaños para 53 usos, incluidos 12.5px y 13.5px. El problema no
+   * era la cantidad: era que la intención no estaba escrita, así que cada
+   * regla nueva inventaba un tamaño más.
+   *
+   * --fs-mono es medio píxel MENOS que --fs-md a propósito: una tipografía
+   * monoespaciada se ve más grande que una proporcional al mismo tamaño, y
+   * 12.5px monoespaciado se lee como 13px sans al lado. No redondearlo. */
+  --fs-xs:   11px;    /* insignias de severidad, etiquetas diminutas */
+  --fs-sm:   12px;    /* texto secundario, metadatos, controles */
+  --fs-mono: 12.5px;  /* IP, comandos, marcas de tiempo (monoespaciado) */
+  --fs-md:   13px;    /* interfaz: títulos de panel, celdas, botones */
+  --fs-body: 14px;    /* lectura: tarjetas, banners, sugerencias */
+  --fs-lg:   15px;    /* título de tarjeta */
+  --fs-icon: 16px;    /* glifo de icono por tipo de ataque */
+  --fs-xl:   18px;    /* título de la página */
+  --fs-2xl:  20px;    /* el número grande de cada métrica */
+
+  /* ── Radios ───────────────────────────────────────────────────────────────
+   * Cinco pasos con una jerarquía: cuanto más grande el contenedor, más
+   * redondeado. Mezclarlos es lo que hace que un panel se vea desprolijo. */
+  --r-xs:   4px;      /* controles y bloques de una línea */
+  --r-sm:   6px;      /* banners, cajas internas */
+  --r-md:   8px;      /* tarjetas intermedias: métrica, acción, evidencia */
+  --r-lg:  10px;      /* contenedores externos: tabla, tarjeta lateral */
+  --r-pill: 20px;     /* insignias y chips */
+
+  /* ── Espaciado ────────────────────────────────────────────────────────────
+   * Grilla de 2px. El archivo ya la seguía casi entera —10px y 14px son los
+   * dos valores más usados, 25 y 20 veces— pero tenía 1, 3, 5, 7 y 9px
+   * sueltos en 14 lugares. Esos se ajustaron al paso más cercano.
+   *
+   * No es una grilla de 4px: llevar 6, 10, 14, 18, 22 y 26 a múltiplos de 4
+   * movería 72 usos, y 10 y 14 son claramente el ritmo buscado.
+   *
+   * Los tokens se llaman por su valor, no por una talla: así la hoja se sigue
+   * leyendo y el conjunto queda cerrado. Hay una prueba que falla si aparece
+   * un valor de espaciado fuera de esta lista. */
+  --sp-2:   2px;  --sp-4:   4px;  --sp-6:   6px;  --sp-8:   8px;
+  --sp-10: 10px;  --sp-12: 12px;  --sp-14: 14px;  --sp-16: 16px;
+  --sp-18: 18px;  --sp-20: 20px;  --sp-22: 22px;  --sp-24: 24px;  --sp-26: 26px;
+  --sp-28: 28px;  --sp-32: 32px;  --sp-40: 40px;
+  --sp-60: 60px;
+}

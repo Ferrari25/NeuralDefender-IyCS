@@ -1,0 +1,22 @@
+/* Iconos monocromos — el estilo común del sprite (`templates/_iconos.html`).
+ *
+ * Archivo aparte porque lo necesitan las DOS pantallas y `tokens.css` solo puede
+ * declarar variables: si empezara a traer reglas, el panel y el login se
+ * acoplarían por la puerta de atrás y hay una prueba que lo impide.
+ */
+
+/* Se dimensiona en `em`, no en px: el icono crece y se achica con el texto que lo
+ * acompaña, así que no hace falta un tamaño por cada lugar donde aparece. `-.14em`
+ * lo baja a la línea base óptica del texto. */
+.ico { width: 1.05em; height: 1.05em; vertical-align: -.14em; flex: none;
+       fill: none; stroke: currentColor; stroke-width: 1.8;
+       stroke-linecap: round; stroke-linejoin: round; }
+
+/* Punto de estado del modo de análisis. Era 🟢 / 🟡: dos emoji cuyo color venía del
+ * sistema operativo y no del significado. Ahora toma `currentColor`, así que lo
+ * pinta la clase del modo (--ok-texto o --med) y siempre coincide con el texto. */
+.punto { display: inline-block; width: .55em; height: .55em; border-radius: 50%;
+         background: currentColor; vertical-align: .05em; }
+
+/* Ocultar por clase y no con `style="display:none"` generado desde JavaScript. */
+.oculto { display: none; }
