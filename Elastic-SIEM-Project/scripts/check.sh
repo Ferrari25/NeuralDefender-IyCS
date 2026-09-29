@@ -22,7 +22,29 @@ EXCLUIR='./.devtools,./.venv,./node_modules,./tests,./elasticsearch'
 MODO="${1:-todo}"
 FALLOS=0
 
-titulo() { printf '\n\033[1m══ %s ══\033[0m\n' "$1"; }
+# Categorías separadas a propósito (pedido de demo): "análisis estático" no es
+# una sola cosa — un LINTER busca estilo/prolijidad (ruff, eslint) y el SAST de
+# seguridad busca vulnerabilidades conocidas (bandit, pylint+secure-coding-
+# standard). Las pruebas, además, distinguen UNITARIA (una función aislada) de
+# SERVICIO (el contrato real: API, scripts, un Kibana simulado) de ESTÁTICO
+# (una certificación por AST, no una ejecución). Ver docs/12-registro-de-pruebas.md §2.
+declare -A CAT_FALLOS CAT_COLOR
+ORDEN_CATEGORIAS=()
+CATEGORIA_ACTUAL=""
+
+titulo() { # color(36/35/33/34/96/1)  etiqueta  nombre
+  local color="$1" etiqueta="$2" nombre="$3"
+  printf '\n\033[1;%sm▶ %-9s\033[0m \033[1m%s\033[0m\n' "$color" "$etiqueta" "$nombre"
+  CATEGORIA_ACTUAL="$etiqueta $nombre"
+  ORDEN_CATEGORIAS+=("$CATEGORIA_ACTUAL")
+  CAT_FALLOS["$CATEGORIA_ACTUAL"]=0
+  CAT_COLOR["$CATEGORIA_ACTUAL"]="$color"
+}
+
+registrar_fallo() {
+  FALLOS=$((FALLOS + 1))
+  [[ -n "$CATEGORIA_ACTUAL" ]] && CAT_FALLOS["$CATEGORIA_ACTUAL"]=$((CAT_FALLOS["$CATEGORIA_ACTUAL"] + 1))
+}
 
 # Línea de base de la Fase 0: hallazgos preexistentes, ya documentados en
 # docs/11-reporte-fase-0.md y agendados para las Fases 1 y 2. La puerta falla
@@ -37,12 +59,12 @@ BASE_BANDIT_ALTOS=0
 
 linea_base() { # nombre  esperado  cantidad_actual  pista
   local nombre="$1" esperado="$2" actual="$3" pista="$4"
-  printf '  %-34s' "$nombre"
+  printf '    %-32s' "$nombre"
   if (( actual > esperado )); then
     printf '\033[31mFALLA\033[0m  %d hallazgos (línea de base: %d) — hay %d nuevo(s)\n' \
       "$actual" "$esperado" "$((actual - esperado))"
-    echo "      $pista"
-    FALLOS=$((FALLOS + 1))
+    echo "        $pista"
+    registrar_fallo
   elif (( actual < esperado )); then
     printf '\033[32mMEJORA\033[0m %d hallazgos (línea de base era %d) — bajá BASE_* en este script\n' \
       "$actual" "$esperado"
@@ -52,24 +74,39 @@ linea_base() { # nombre  esperado  cantidad_actual  pista
 }
 paso()   { # nombre  comando...
   local nombre="$1"; shift
-  printf '  %-34s' "$nombre"
+  printf '    %-32s' "$nombre"
   if salida=$("$@" 2>&1); then
-    printf '\033[32mOK\033[0m\n'
+    # Si es una corrida de pytest, mostrar el conteo real ("N passed en X.XXs")
+    # en vez de un OK a secas — más convincente en vivo que una etiqueta fija,
+    # y no queda obsoleto cuando se agregan pruebas.
+    ultima=$(echo "$salida" | grep -oE '[0-9]+ passed[a-záéíóúñ, 0-9.]*' | tail -1)
+    if [[ -n "$ultima" ]]; then
+      printf '\033[32m✔ OK\033[0m  \033[2m(%s)\033[0m\n' "$ultima"
+    else
+      printf '\033[32m✔ OK\033[0m\n'
+    fi
   else
-    printf '\033[31mFALLA\033[0m\n'
-    echo "$salida" | sed 's/^/      /' | tail -25
-    FALLOS=$((FALLOS + 1))
+    printf '\033[31m✘ FALLA\033[0m\n'
+    echo "$salida" | sed 's/^/        /' | tail -25
+    registrar_fallo
   fi
 }
 
 if [[ "$MODO" == "todo" || "$MODO" == "--sast" ]]; then
-  titulo "Análisis estático (SAST)"
+  titulo 36 "LINTERS" "— estilo y prolijidad, no buscan vulnerabilidades"
   # El código nuevo (tests/) tiene que estar impecable: sin línea de base.
   paso "ruff · tests/"                  $BIN/ruff check tests/
   # El código del proyecto arrastra hallazgos conocidos: se mide contra la base.
   n_ruff=$($BIN/ruff check . --output-format=concise 2>/dev/null | grep -cE '^[^ ]+\.py:[0-9]+' )
   linea_base "ruff · proyecto" "$BASE_RUFF" "${n_ruff:-99}" "Ver: .devtools/bin/ruff check ."
+  if [[ -d node_modules ]]; then
+    paso "eslint (static/app.js)"       node_modules/.bin/eslint \
+         --no-error-on-unmatched-pattern 'static/**/*.js'
+  else
+    printf '    %-32s\033[33mOMITIDO\033[0m (falta npm install)\n' "eslint (static/app.js)"
+  fi
 
+  titulo 35 "SAST" "— seguridad: vulnerabilidades conocidas, no ejecuta nada"
   paso "pylint + secure-coding-standard" $BIN/pylint --fail-under=9.0 \
        classifier.py siem_lib.py dashboard.py siem_agent.py siem_pipeline.py \
        siem_validators.py siem_auth.py manage_users.py audit_verify.py \
@@ -79,26 +116,38 @@ if [[ "$MODO" == "todo" || "$MODO" == "--sast" ]]; then
     | python3 -c 'import json,sys; print(sum(1 for r in json.load(sys.stdin)["results"] if r["issue_severity"]=="HIGH"))' 2>/dev/null)
   linea_base "bandit · severidad alta" "$BASE_BANDIT_ALTOS" "${n_bandit:-99}" \
     "Ver: .devtools/bin/bandit -r . -x '$EXCLUIR' -lll"
-  if [[ -d node_modules ]]; then
-    paso "eslint + security"            node_modules/.bin/eslint \
-         --no-error-on-unmatched-pattern 'static/**/*.js'
-  else
-    printf '  %-34s\033[33mOMITIDO\033[0m (falta npm install)\n' "eslint + security"
-  fi
+  printf '    %-32s\033[36mnota\033[0m: eslint-plugin-security / no-unsanitized ya corrieron arriba, dentro de eslint\n' " "
 fi
 
 if [[ "$MODO" == "todo" || "$MODO" == "--tests" ]]; then
-  titulo "Pruebas"
+  titulo 33 "ESTÁTICO" "— certificación por AST (no ejecuta el sistema)"
   paso "no-autonomía (AST)"             $BIN/pytest -q tests/test_no_autonomy.py
-  paso "unitarias"                      $BIN/pytest -q tests/unit
-  paso "integración"                    $BIN/pytest -q tests/integration
-  paso "cobertura >= 80% (alcance §4.1)" $BIN/pytest -q \
+
+  titulo 34 "UNITARIAS" "— una función o módulo aislado (tests/unit/)"
+  paso "pytest tests/unit"              $BIN/pytest -q tests/unit
+
+  titulo 96 "SERVICIO" "— contrato real: API, deploy-rules.sh, reset.sh (tests/integration/)"
+  paso "pytest tests/integration"       $BIN/pytest -q tests/integration
+
+  titulo 1 "COBERTURA" "— ≥ 80% sobre el alcance declarado (§4.1)"
+  paso "6 módulos del alcance §4.1"     $BIN/pytest -q \
        --cov=classifier --cov=siem_lib --cov=dashboard \
        --cov=siem_validators --cov=siem_auth --cov=manage_users \
        --cov-fail-under=80 --cov-report=
 fi
 
-titulo "Resultado"
+printf '\n\033[1m════════════════════════════════════════════════════════════\033[0m\n'
+printf '\033[1m  RESUMEN\033[0m\n'
+printf '\033[1m════════════════════════════════════════════════════════════\033[0m\n'
+for cat in "${ORDEN_CATEGORIAS[@]}"; do
+  color="${CAT_COLOR[$cat]}"
+  if (( CAT_FALLOS["$cat"] == 0 )); then
+    printf '  \033[1;%sm%-55s\033[0m \033[32m✔\033[0m\n' "$color" "$cat"
+  else
+    printf '  \033[1;%sm%-55s\033[0m \033[31m✘ (%d)\033[0m\n' "$color" "$cat" "${CAT_FALLOS[$cat]}"
+  fi
+done
+echo
 if (( FALLOS == 0 )); then
   echo "  ✅ Todo en verde."
 else
