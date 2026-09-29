@@ -34,7 +34,7 @@ docker exec ssh-target rm -f /var/log/auth.log
 echo "[*] Preparando diccionario de contraseñas en hydra-attacker..."
 # 24 contraseñas incorrectas + la real al final. El tamaño no es decorativo: el
 # clasificador marca fuerza bruta a partir de BRUTE_FORCE_THRESHOLD = 20 fallos
-# (classifier.py). Con un diccionario de 4, el ataque solo se clasificaba como
+# (src/classifier.py). Con un diccionario de 4, el ataque solo se clasificaba como
 # tal si Kibana llegaba a disparar una alerta primero — y si el pipeline corría
 # antes que la regla, el mismo ataque aparecía como "autenticación sospechosa".
 # Con 24 fallos la detección se sostiene sola, sin depender del reloj del SIEM.
@@ -58,4 +58,4 @@ sleep 10
 echo "[*] Contenido de auth.log en ssh-target:"
 docker exec ssh-target cat /var/log/auth.log || echo "[!] No se encontró auth.log todavía."
 
-echo "[OK] Listo. Corré:  python3 siem_pipeline.py   y luego abrí el dashboard."
+echo "[OK] Listo. Corré:  python3 src/siem_pipeline.py   y luego abrí el dashboard."

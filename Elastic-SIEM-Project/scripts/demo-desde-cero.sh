@@ -94,12 +94,12 @@ n_docs()    { es "$ES/filebeat-*/_count" 2>/dev/null \
 n_incidentes() { python3 - <<'PY' 2>/dev/null || echo 0
 import json
 import pathlib
-p = pathlib.Path("siem_incidents.json")
+p = pathlib.Path("data/siem_incidents.json")
 print(json.loads(p.read_text(encoding="utf-8"))["incident_count"] if p.exists() else 0)
 PY
 }
 
-# `prepare-for-ia.py` es una etapa TOLERABLE del pipeline: si Elasticsearch no
+# `src/prepare-for-ia.py` es una etapa TOLERABLE del pipeline: si Elasticsearch no
 # responde, el orquestador sigue con los datos que haya y termina con código 0. Eso
 # está bien para el modo offline, pero en una demostración desde cero es una trampa:
 # se mostrarían datos de una captura anterior justo cuando se afirma que no hay
@@ -110,7 +110,7 @@ import json
 import pathlib
 from datetime import datetime, timedelta, timezone
 
-p = pathlib.Path("siem_clean.json")
+p = pathlib.Path("data/siem_clean.json")
 if not p.exists():
     print("FALTA")
     raise SystemExit
@@ -339,7 +339,7 @@ pausa 4
 paso "7/7 · Clasificación, análisis y panel"
 
 detalle "Agente 1 (determinístico) → Agente 2 (explicación) → panel de supervisión"
-if ! python3 siem_pipeline.py >/tmp/desde-cero-pipeline.log 2>&1; then
+if ! python3 src/siem_pipeline.py >/tmp/desde-cero-pipeline.log 2>&1; then
   mal "el pipeline falló (ver /tmp/desde-cero-pipeline.log)"
   exit 1
 fi
@@ -369,7 +369,7 @@ python3 - <<'PY' 2>/dev/null
 import json
 import pathlib
 
-p = pathlib.Path("siem_incidents.json")
+p = pathlib.Path("data/siem_incidents.json")
 if not p.exists():
     raise SystemExit
 

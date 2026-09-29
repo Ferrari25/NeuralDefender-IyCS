@@ -41,7 +41,7 @@ while (( $# )); do
   esac
 done
 
-REGISTRO="decisions.jsonl"
+REGISTRO="data/decisions.jsonl"
 
 narrar()  { $SOLO_JSON || printf '\n\033[1;36m▸ %s\033[0m\n' "$1"; }
 detalle() { $SOLO_JSON || printf '  %s\n' "$1"; }
@@ -94,7 +94,7 @@ import os
 import pathlib
 import sys
 
-sys.path.insert(0, os.getcwd())
+sys.path.insert(0, os.path.join(os.getcwd(), "src"))
 from siem_lib import append_jsonl  # noqa: E402
 
 copia = pathlib.Path(os.environ["TALLER"]) / "decisions.jsonl"
@@ -123,12 +123,12 @@ pausa 3
 # ─── 1 · La cadena está intacta ──────────────────────────────────────────────
 
 narrar "1 · Se verifica la copia tal como está"
-detalle "python3 audit_verify.py $COPIA"
+detalle "python3 src/audit_verify.py $COPIA"
 pausa 2
 
-SALIDA_TEXTO=$(python3 audit_verify.py "$COPIA" 2>&1)
+SALIDA_TEXTO=$(python3 src/audit_verify.py "$COPIA" 2>&1)
 $SOLO_JSON || printf '%s\n' "$SALIDA_TEXTO" | sed 's/^/     /'
-$SOLO_JSON && ANTES_JSON=$(python3 audit_verify.py --json "$COPIA" 2>/dev/null)
+$SOLO_JSON && ANTES_JSON=$(python3 src/audit_verify.py --json "$COPIA" 2>/dev/null)
 pausa 3
 
 # ─── 2 · Se altera una decisión ya registrada ────────────────────────────────
@@ -168,10 +168,10 @@ pausa 3
 narrar "3 · Se vuelve a verificar, sin decirle nada al verificador"
 pausa 2
 
-SALIDA_TEXTO=$(python3 audit_verify.py "$COPIA" 2>&1)
+SALIDA_TEXTO=$(python3 src/audit_verify.py "$COPIA" 2>&1)
 SALIDA=$?
 $SOLO_JSON || printf '%s\n' "$SALIDA_TEXTO" | sed 's/^/     /'
-$SOLO_JSON && DESPUES_JSON=$(python3 audit_verify.py --json "$COPIA" 2>/dev/null)
+$SOLO_JSON && DESPUES_JSON=$(python3 src/audit_verify.py --json "$COPIA" 2>/dev/null)
 
 echo
 if (( SALIDA == 1 )); then
@@ -188,7 +188,7 @@ pausa 4
 
 narrar "4 · Se restaura la copia y se verifica otra vez"
 cp "$PRISTINA" "$COPIA"
-$SOLO_JSON || python3 audit_verify.py "$COPIA" | sed -n '3,5p' | sed 's/^/     /'
+$SOLO_JSON || python3 src/audit_verify.py "$COPIA" | sed -n '3,5p' | sed 's/^/     /'
 pausa 2
 
 # ─── 5 · El archivo real no cambió ───────────────────────────────────────────

@@ -86,7 +86,7 @@ def _alerta(regla: str, campo: str | None, valor: str | None,
 def _parse(hits):
     import importlib.util
     import pathlib
-    ruta = pathlib.Path(__file__).resolve().parent.parent.parent / "prepare-for-ia.py"
+    ruta = pathlib.Path(__file__).resolve().parent.parent.parent / "src" / "prepare-for-ia.py"
     spec = importlib.util.spec_from_file_location("prepare_for_ia", ruta)
     modulo = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(modulo)
@@ -272,7 +272,7 @@ def test_prepare_for_ia_no_vuelve_a_tirar_el_campo_agrupado():
     import pathlib
 
     fuente = (pathlib.Path(__file__).resolve().parent.parent.parent
-              / "prepare-for-ia.py").read_text(encoding="utf-8")
+              / "src" / "prepare-for-ia.py").read_text(encoding="utf-8")
 
     assert "rol_del_campo_agrupado" in fuente
     assert '"victim_host"' in fuente

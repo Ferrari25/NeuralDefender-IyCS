@@ -29,7 +29,7 @@ def test_ids_de_incidente_estables(incidents):
 
     El sufijo cambió en la Fase 2 al pasar de SHA-1 a SHA-256 (hallazgo B324 de
     bandit). Fue un corte consciente y por única vez, documentado en
-    `docs/12-registro-de-pruebas.md` §6.
+    `docs/04-auditoria-pruebas-y-demostracion.md` §6.
     """
     assert [i["incident_id"] for i in incidents] == [
         "INC-SCAN-172.18.0.7-8e58721f",

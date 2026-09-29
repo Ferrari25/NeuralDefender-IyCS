@@ -44,12 +44,12 @@ docker compose --profile simulation down -v --remove-orphans
 
 # Artefactos REGENERABLES: se borran sin más, el pipeline los vuelve a crear.
 echo "🧹 Limpiando artefactos locales del pipeline..."
-rm -f siem_clean.json siem_incidents.json ai_report.json
+rm -f data/siem_clean.json data/siem_incidents.json data/ai_report.json
 rm -f network_logs/*.json
 
 # Registro de AUDITORÍA: se archiva, nunca se borra (A-01).
 ALGO_QUE_ARCHIVAR=false
-for f in decisions.jsonl analysis_history.jsonl; do
+for f in data/decisions.jsonl data/analysis_history.jsonl; do
   [[ -s "$f" ]] && ALGO_QUE_ARCHIVAR=true
 done
 
@@ -59,7 +59,7 @@ if $ALGO_QUE_ARCHIVAR; then
   # compartirían nombre y el segundo pisaría el archivo del primero — es decir,
   # perdería evidencia de auditoría, justo lo que este cambio busca evitar.
   ARCHIVO_AUDITORIA=$(mktemp -d "audit/archive/$(date -u +%Y%m%dT%H%M%SZ)-XXXX")
-  for f in decisions.jsonl analysis_history.jsonl; do
+  for f in data/decisions.jsonl data/analysis_history.jsonl; do
     [[ -s "$f" ]] && mv "$f" "$ARCHIVO_AUDITORIA/"
   done
   chmod -R a-w "$ARCHIVO_AUDITORIA"

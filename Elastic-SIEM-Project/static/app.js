@@ -298,8 +298,10 @@ function render() {
   renderDecisionHistory(lastData._decisions || []);
 }
 
+// En inglés, igual que los badges de severidad (`${sev}` en las tarjetas/tabla):
+// esta leyenda vivía en español y quedaba "3 críticos" al lado de un badge "CRITICAL".
 const SEV_ETIQUETA = new Map([
-  ["CRITICAL", "críticos"], ["HIGH", "altos"], ["MEDIUM", "medios"], ["LOW", "bajos"],
+  ["CRITICAL", "critical"], ["HIGH", "high"], ["MEDIUM", "medium"], ["LOW", "low"],
 ]);
 const plural = (n, singular, plural_) => `${n} ${n === 1 ? singular : plural_}`;
 
@@ -562,6 +564,10 @@ function renderAction(inc, a) {
     : "";
   const decided = a.decided_at
     ? html`<div class="decided">por ${a.decided_by} · ${a.decided_at}${a.note ? ` · nota: ${a.note}` : ""}</div>` : "";
+  // La simulación solo se muestra una vez aprobada: antes de eso todavía es
+  // una sugerencia, no algo que el analista "decidió" y quiera ver en acción
+  // (ver `renderResultadoSimulado`).
+  const simulado = a.status === "approved" ? renderResultadoSimulado(a) : "";
   return html`
     <div class="action">
       <div class="top">
@@ -577,7 +583,24 @@ function renderAction(inc, a) {
             data-incidente="${inc.incident_id}" data-action-id="${a.action_id}">Descartar</button>
         </span>
       </div>
-      ${cmd}${pidiendoMotivo === a.action_id ? renderMotivoForm(inc, a) : ""}${decided}
+      ${cmd}${pidiendoMotivo === a.action_id ? renderMotivoForm(inc, a) : ""}${decided}${simulado}
+    </div>`;
+}
+
+// Qué PASARÍA si este comando corriera — nunca qué pasó. El texto sale del
+// playbook de classifier.py (`resultado_simulado`), escrito a mano igual que
+// `comando_explicacion`; nunca se ejecuta nada acá ni en el servidor (ver
+// tests/test_no_autonomy.py). El rótulo "SIMULADO" y el estilo de advertencia
+// están para que nadie lo confunda con un registro de auditoría real: eso
+// vive únicamente en decisions.jsonl, y esto no escribe ahí.
+function renderResultadoSimulado(a) {
+  if (!a.resultado_simulado) return "";
+  return html`
+    <div class="simulado">
+      <div class="simulado-aviso">${ico("i-advertencia")}
+        <b>SIMULADO — nada de esto se ejecutó.</b> Es una vista previa de qué
+        pasaría si alguien corriera el comando a mano; el sistema no lo hizo.</div>
+      <pre class="simulado-salida">${a.resultado_simulado}</pre>
     </div>`;
 }
 

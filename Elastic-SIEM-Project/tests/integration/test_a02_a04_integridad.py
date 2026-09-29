@@ -49,7 +49,7 @@ def test_append_usa_bloqueo_y_fsync():
     energía no se puede provocar en una prueba, pero sí se puede exigir que el
     código la pida.
     """
-    fuente = (PROJECT_ROOT / "siem_lib.py").read_text(encoding="utf-8")
+    fuente = (PROJECT_ROOT / "src" / "siem_lib.py").read_text(encoding="utf-8")
     cuerpo = fuente.split("def append_jsonl")[1].split("\ndef ")[0]
     assert "flock" in cuerpo and "LOCK_EX" in cuerpo
     assert "fsync" in cuerpo
@@ -193,13 +193,13 @@ def test_registro_vacio_o_inexistente_es_valido(sandbox):
 def _correr_verificador(directorio: Path, *args: str) -> subprocess.CompletedProcess:
     entorno = {**os.environ, "PYTHONPATH": str(PROJECT_ROOT)}
     return subprocess.run(
-        [sys.executable, str(PROJECT_ROOT / "audit_verify.py"), *args],
+        [sys.executable, str(PROJECT_ROOT / "src" / "audit_verify.py"), *args],
         cwd=directorio, capture_output=True, text=True, timeout=60,
         env=entorno, check=False)
 
 
 def test_audit_verify_sale_con_cero_si_la_cadena_esta_intacta(sandbox):
-    ruta = sandbox / "decisions.jsonl"
+    ruta = sandbox / "data" / "decisions.jsonl"
     for n in range(3):
         siem_lib.append_jsonl(ruta, {"n": n, "decision": "approved", "analyst": "ana"})
 
@@ -210,7 +210,7 @@ def test_audit_verify_sale_con_cero_si_la_cadena_esta_intacta(sandbox):
 
 def test_audit_verify_sale_con_uno_si_esta_rota(sandbox):
     """Código de salida 1: sirve como puerta en CI."""
-    ruta = sandbox / "decisions.jsonl"
+    ruta = sandbox / "data" / "decisions.jsonl"
     for n in range(3):
         siem_lib.append_jsonl(ruta, {"n": n})
     lineas = ruta.read_text(encoding="utf-8").strip().split("\n")
@@ -224,7 +224,7 @@ def test_audit_verify_sale_con_uno_si_esta_rota(sandbox):
 
 
 def test_audit_verify_tiene_salida_json(sandbox):
-    ruta = sandbox / "decisions.jsonl"
+    ruta = sandbox / "data" / "decisions.jsonl"
     siem_lib.append_jsonl(ruta, {"decision": "approved", "analyst": "ana"})
 
     resultado = _correr_verificador(sandbox, "--json")
@@ -235,7 +235,7 @@ def test_audit_verify_tiene_salida_json(sandbox):
 
 def test_audit_verify_no_modifica_nada(sandbox):
     """Un verificador que pudiera reparar el archivo que audita no serviría."""
-    ruta = sandbox / "decisions.jsonl"
+    ruta = sandbox / "data" / "decisions.jsonl"
     for n in range(3):
         siem_lib.append_jsonl(ruta, {"n": n})
     antes = ruta.read_bytes()
@@ -320,7 +320,7 @@ def test_las_decisiones_del_dashboard_quedan_encadenadas(client, sandbox_con_inc
             "incident_id": inc["incident_id"], "action_id": accion["action_id"],
             "decision": "approved"})
 
-    resultado = siem_lib.verificar_cadena(sandbox_con_incidentes / "decisions.jsonl")
+    resultado = siem_lib.verificar_cadena(sandbox_con_incidentes / "data" / "decisions.jsonl")
     assert resultado["chain_ok"] is True
     assert resultado["records"] == len(inc["recommended_actions"])
 
@@ -328,7 +328,7 @@ def test_las_decisiones_del_dashboard_quedan_encadenadas(client, sandbox_con_inc
 def test_manipular_una_decision_se_detecta_desde_el_flujo_real(client,
                                                                sandbox_con_incidentes):
     """Alguien edita a mano una decisión aprobada para que parezca descartada."""
-    ruta = sandbox_con_incidentes / "decisions.jsonl"
+    ruta = sandbox_con_incidentes / "data" / "decisions.jsonl"
     inc = client.get("/api/incidents").get_json()["incidents"][0]
     for accion in inc["recommended_actions"][:3]:
         client.post("/api/decision", json={
@@ -477,7 +477,7 @@ def test_el_api_tambien_distingue_los_tres_estados(client_como, sandbox_con_inci
     distintiva, separada de la de decidir (ver test_api01_autenticacion.py).
     """
     auditor = client_como("cata")
-    ruta = sandbox_con_incidentes / "decisions.jsonl"
+    ruta = sandbox_con_incidentes / "data" / "decisions.jsonl"
 
     assert auditor.get("/api/v1/audit/verify").get_json()["estado"] == "ok"
 

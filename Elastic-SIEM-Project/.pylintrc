@@ -2,7 +2,7 @@
 #
 # El plugin `pylint-secure-coding-standard` aporta las reglas de seguridad: es la
 # capa que hace cumplir, de forma automatizada, la garantía de no-autonomía
-# descrita en docs/10-plan-de-accion.md §6 y certificada por tests/test_no_autonomy.py.
+# descrita en docs/10-auditoria-y-hallazgos.md y certificada por tests/test_no_autonomy.py.
 
 [MAIN]
 load-plugins=pylint_secure_coding_standard

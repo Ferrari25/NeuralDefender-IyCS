@@ -20,7 +20,7 @@ sin ningún dato de log en el medio.
 
 Si este archivo falla, **no lo silencies**: o el cambio introduce autonomía (y
 hay que revertirlo), o es una decisión consciente que exige actualizar
-`docs/11-reporte-fase-0.md`, `docs/10-plan-de-accion.md` §6 y `CONTRIBUTING.md`.
+`docs/04-auditoria-pruebas-y-demostracion.md`.
 """
 
 from __future__ import annotations
@@ -188,7 +188,7 @@ def test_allowlist_es_minima():
 
 def test_allowlist_pipeline_nunca_usa_shell():
     """`shell=True` convertiría la lista de argumentos en una línea de comando."""
-    ruta = PROJECT_ROOT / "siem_pipeline.py"
+    ruta = PROJECT_ROOT / "src" / "siem_pipeline.py"
     for nodo in ast.walk(_arbol(ruta)):
         if isinstance(nodo, ast.Call):
             for kw in nodo.keywords:
@@ -202,7 +202,7 @@ def test_allowlist_pipeline_solo_ejecuta_sus_propias_etapas():
     Cada entrada de STEPS es `[sys.executable, "<script>.py"]` — el intérprete
     actual y un script del repo. No hay interpolación, ni f-strings, ni datos.
     """
-    ruta = PROJECT_ROOT / "siem_pipeline.py"
+    ruta = PROJECT_ROOT / "src" / "siem_pipeline.py"
     arbol = _arbol(ruta)
 
     steps = next((n for n in ast.walk(arbol)
@@ -227,7 +227,7 @@ def test_allowlist_pipeline_solo_ejecuta_sus_propias_etapas():
         assert script.value.endswith(".py")
         scripts.append(script.value)
 
-    assert scripts == ["prepare-for-ia.py", "classifier.py", "siem_agent.py"]
+    assert scripts == ["src/prepare-for-ia.py", "src/classifier.py", "src/siem_agent.py"]
     for nombre in scripts:
         assert (PROJECT_ROOT / nombre).is_file(), f"{nombre} no existe en el repo"
 
@@ -239,7 +239,7 @@ def test_allowlist_pipeline_no_recibe_datos_externos():
     en un `print` final, y eso no es acceso a datos. Lo que importa es que no
     abra archivos, no importe `siem_lib` y no lea el entorno.
     """
-    arbol = _arbol(PROJECT_ROOT / "siem_pipeline.py")
+    arbol = _arbol(PROJECT_ROOT / "src" / "siem_pipeline.py")
 
     importados = set()
     for nodo in ast.walk(arbol):
@@ -256,7 +256,7 @@ def test_allowlist_pipeline_no_recibe_datos_externos():
         if isinstance(nodo, ast.Call):
             nombre = (_nombre_llamado(nodo) or "").split(".")[-1]
             assert nombre not in prohibidas, \
-                f"{_ubicacion(PROJECT_ROOT / 'siem_pipeline.py', nodo)}: {nombre}(...)"
+                f"{_ubicacion(PROJECT_ROOT / 'src' / 'siem_pipeline.py', nodo)}: {nombre}(...)"
 
 
 # ─── 5. Los comandos sugeridos son datos, nunca se ejecutan ──────────────────
@@ -307,7 +307,7 @@ def test_el_agente_llm_no_puede_generar_comandos():
     """
     import siem_agent
 
-    fuente = (PROJECT_ROOT / "siem_agent.py").read_text(encoding="utf-8")
+    fuente = (PROJECT_ROOT / "src" / "siem_agent.py").read_text(encoding="utf-8")
     assert "No generes comandos" in siem_agent.SYSTEM_INSTRUCTION
     for capacidad in ("tools=", "function_declarations", "FunctionDeclaration",
                       "automatic_function_calling", "code_execution"):
@@ -393,7 +393,7 @@ def test_sin_ejecucion_diferida_ni_clientes_de_infraestructura():
 def test_las_peticiones_de_red_solo_van_a_elasticsearch_y_al_llm():
     """El único `requests` del proyecto apunta a `ES_HOST`; no hay webhooks."""
 
-    fuente = (PROJECT_ROOT / "siem_lib.py").read_text(encoding="utf-8")
+    fuente = (PROJECT_ROOT / "src" / "siem_lib.py").read_text(encoding="utf-8")
     llamadas = [n for n in ast.walk(ast.parse(fuente))
                 if isinstance(n, ast.Call) and (_nombre_llamado(n) or "").startswith("requests.")]
     assert llamadas, "cambió la forma de hablar con Elasticsearch: revisar este test"
@@ -414,7 +414,7 @@ def test_el_dashboard_no_define_rutas_de_ejecucion():
     `@app.route(...)` y las llamadas a `app.add_url_rule(...)` que dan
     compatibilidad con los caminos sin versionar.
     """
-    ruta = PROJECT_ROOT / "dashboard.py"
+    ruta = PROJECT_ROOT / "src" / "dashboard.py"
     rutas = []
     for nodo in ast.walk(_arbol(ruta)):
         if isinstance(nodo, ast.FunctionDef):

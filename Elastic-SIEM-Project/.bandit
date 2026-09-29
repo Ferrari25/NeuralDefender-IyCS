@@ -5,7 +5,7 @@
 #
 #     bandit -r . -x './.devtools,./.venv,./node_modules,./tests,./elasticsearch'
 #
-# Línea de base al cierre de la Fase 0 (ver docs/11-reporte-fase-0.md §5.1):
+# Línea de base al cierre de la Fase 0 (ver docs/10-auditoria-y-hallazgos.md):
 #   HIGH   2  → B324 sha1 en classifier.py:52 y :476   (se corrige en Fase 2)
 #   LOW    2  → B404/B603 subprocess en siem_pipeline.py (justificado, allowlist)
 [bandit]

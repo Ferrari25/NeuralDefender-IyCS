@@ -11,7 +11,7 @@ ignore = ["E501"]
 
 [lint.per-file-ignores]
 # El orquestador: subprocess auditado y en la allowlist de no-autonomía.
-"siem_pipeline.py" = ["S603", "S607"]
+"src/siem_pipeline.py" = ["S603", "S607"]
 # Los tests usan assert (S101) y acceden a helpers privados a propósito.
 # S603/S404: `test_auditoria_append_only.py` lanza el pipeline real para verificar
 # que no pisa la auditoría. Es andamiaje de prueba, no capacidad del producto, y

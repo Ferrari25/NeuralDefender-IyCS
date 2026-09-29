@@ -342,11 +342,14 @@ def laboratorio_auditoria(tmp_path: Path) -> Path:
     import siem_lib
 
     (tmp_path / "scripts").mkdir()
+    (tmp_path / "data").mkdir()
+    (tmp_path / "src").mkdir()
     shutil.copy(DEMO_AUDITORIA, tmp_path / "scripts" / DEMO_AUDITORIA.name)
-    for modulo in ("audit_verify.py", "siem_lib.py", "siem_validators.py", ".devtools"):
-        (tmp_path / modulo).symlink_to(RAIZ / modulo)
+    for modulo in ("audit_verify.py", "siem_lib.py", "siem_validators.py"):
+        (tmp_path / "src" / modulo).symlink_to(RAIZ / "src" / modulo)
+    (tmp_path / ".devtools").symlink_to(RAIZ / ".devtools")
 
-    registro = tmp_path / "decisions.jsonl"
+    registro = tmp_path / "data" / "decisions.jsonl"
     for n in range(1, 4):
         siem_lib.append_jsonl(registro, {
             "ts": f"2026-09-0{n}T10:00:00+00:00", "incident_id": f"INC-T-{n}",
@@ -376,7 +379,7 @@ def test_la_ruptura_de_la_cadena_se_detecta(laboratorio_auditoria: Path):
 
 def test_la_demostracion_no_modifica_el_registro(laboratorio_auditoria: Path):
     """La propiedad que hace que este script se pueda correr sin miedo."""
-    registro = laboratorio_auditoria / "decisions.jsonl"
+    registro = laboratorio_auditoria / "data" / "decisions.jsonl"
     antes = registro.read_bytes()
 
     _demostrar_ruptura(laboratorio_auditoria)

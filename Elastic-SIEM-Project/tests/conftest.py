@@ -18,8 +18,9 @@ import pytest
 
 # El código vive en la raíz del proyecto, un nivel arriba de tests/.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+SRC = PROJECT_ROOT / "src"
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
-sys.path.insert(0, str(PROJECT_ROOT))
+sys.path.insert(0, str(SRC))
 
 
 # ─── Datos ───────────────────────────────────────────────────────────────────
@@ -85,22 +86,23 @@ def eventos_de_red(directorio) -> list[dict]:
 def sandbox(tmp_path, monkeypatch) -> Path:
     """CWD temporal con la estructura mínima del proyecto.
 
-    Los scripts abren `decisions.jsonl` y `siem_incidents.json` por ruta
-    relativa; sin esto, un test de escritura corrompería los datos reales.
+    Los scripts abren `data/decisions.jsonl` y `data/siem_incidents.json` por
+    ruta relativa; sin esto, un test de escritura corrompería los datos reales.
     """
     (tmp_path / "network_logs").mkdir()
+    (tmp_path / "data").mkdir()
     monkeypatch.chdir(tmp_path)
     return tmp_path
 
 
 @pytest.fixture
 def sandbox_con_incidentes(sandbox, siem_clean, network_logs_dir) -> Path:
-    """Sandbox con un `siem_incidents.json` ya generado por el clasificador."""
+    """Sandbox con un `data/siem_incidents.json` ya generado por el clasificador."""
     import classifier
     import siem_lib
 
     incs = classifier.classify(siem_clean, eventos_de_red(network_logs_dir))
-    siem_lib.write_json(sandbox / "siem_incidents.json", {
+    siem_lib.write_json(sandbox / "data" / "siem_incidents.json", {
         "generated_at": "2026-09-16T00:00:00+00:00",
         "source": "tests",
         "incident_count": len(incs),

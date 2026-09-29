@@ -223,7 +223,7 @@ def test_el_javascript_no_genera_declaraciones_css_en_linea():
 
 def _tipos_de_ataque_del_clasificador() -> set[str]:
     """Los tipos que `_classification` sabe nombrar, leídos de su propia tabla."""
-    fuente = (RAIZ / "classifier.py").read_text(encoding="utf-8")
+    fuente = (RAIZ / "src" / "classifier.py").read_text(encoding="utf-8")
     bloque = fuente[fuente.index("    table = {"):]
     bloque = bloque[:bloque.index("\n    }")]
     return set(re.findall(r'^\s{8}"(\w+)":', bloque, re.M))

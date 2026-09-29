@@ -63,7 +63,7 @@ incidentes_actuales() {
   python3 - <<'PY' 2>/dev/null || echo 0
 import json
 import pathlib
-p = pathlib.Path("siem_incidents.json")
+p = pathlib.Path("data/siem_incidents.json")
 print(json.loads(p.read_text(encoding="utf-8"))["incident_count"] if p.exists() else 0)
 PY
 }
@@ -190,10 +190,11 @@ imprimir_guion() {
      No editar decisions.jsonl a mano para esto.
 
   ── 9 · Las pruebas encuentran cosas ────────────────────────────────────
-         ./scripts/check.sh          (SAST + 724 pruebas)
+         ./scripts/pruebas_de_codigo_estatico.sh   (linters + SAST)
+         ./scripts/pruebas_de_servicio.sh          (unitarias + servicio + cobertura)
 
      Y para mostrar que el análisis estático detecta de verdad, no que está
-     de adorno, ver docs/auditoria/03-evidencia-para-la-catedra.md §1.
+     de adorno, ver docs/04-auditoria-pruebas-y-demostracion.md.
 
 GUION
 }
@@ -223,7 +224,7 @@ usuarios = json.loads(p.read_text())['usuarios'] if p.exists() else []
 sys.exit(0 if any(u['username'] == '$1' for u in usuarios) else 1)" 2>/dev/null; then
     amarillo "'$1' ya existe"
   else
-    SIEM_NEW_PASSWORD="$3" python3 manage_users.py crear "$1" --rol "$2" >/dev/null 2>&1 \
+    SIEM_NEW_PASSWORD="$3" python3 src/manage_users.py crear "$1" --rol "$2" >/dev/null 2>&1 \
       && verde "'$1' creado (rol $2)" || rojo "no se pudo crear '$1'"
   fi
 }
@@ -293,13 +294,13 @@ if [[ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:5601/api/status
   verde "alertas del SIEM disponibles: ${N_AL:-0}"
 fi
 
-if python3 siem_pipeline.py >/tmp/demo-pipeline.log 2>&1; then
+if python3 src/siem_pipeline.py >/tmp/demo-pipeline.log 2>&1; then
   N=$(incidentes_actuales)
   verde "$N incidente(s) clasificado(s) y analizado(s)"
   python3 - <<'PY'
 import json
 import pathlib
-d = json.loads(pathlib.Path("siem_incidents.json").read_text(encoding="utf-8"))
+d = json.loads(pathlib.Path("data/siem_incidents.json").read_text(encoding="utf-8"))
 for i in d["incidents"]:
     c = i["classification"]
     campana = "  \U0001f517 campaña" if i.get("campaign_id") else ""
@@ -322,7 +323,7 @@ fi
 
 if ! curl -s -o /dev/null --max-time 2 http://127.0.0.1:5000/api/v1/healthz 2>/dev/null; then
   paso "Falta levantar el panel"
-  echo "     python3 dashboard.py     → http://127.0.0.1:5000/login"
+  echo "     python3 src/dashboard.py     → http://127.0.0.1:5000/login"
 fi
 
 imprimir_guion

@@ -37,7 +37,7 @@ import pytest
 import classifier
 
 RAIZ = Path(__file__).resolve().parent.parent.parent
-FUENTE = (RAIZ / "classifier.py").read_text(encoding="utf-8")
+FUENTE = (RAIZ / "src" / "classifier.py").read_text(encoding="utf-8")
 APP_JS = (RAIZ / "static" / "app.js").read_text(encoding="utf-8")
 
 # Traducción de la severidad determinística, igual que `SEV_DETERMINISTICA` en el panel.

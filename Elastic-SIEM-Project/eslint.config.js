@@ -9,7 +9,7 @@
 // ⚠️  Alcance actual: hoy el JS vive embebido en `templates/index.html`, que
 // ESLint no analiza. Esta configuración apunta a `static/**/*.js` y entra en
 // vigor con el refactor R-05 (Fase 3), que extrae el script a su propio archivo.
-// Ver docs/11-reporte-fase-0.md §5.2.
+// Ver docs/10-auditoria-y-hallazgos.md.
 
 import js from "@eslint/js";
 import security from "eslint-plugin-security";

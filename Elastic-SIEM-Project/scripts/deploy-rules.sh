@@ -12,7 +12,7 @@
 # decide, y el sistema no ejecuta acciones de contención. Detectar no es actuar.
 #
 # ─────────────────────────────────────────────────────────────────────────────
-# Cierra el hallazgo F-02 de docs/auditoria/01-auditoria-integral.md y el
+# Cierra el hallazgo F-02 de docs/04-auditoria-pruebas-y-demostracion.md y el
 # requisito RF-DIF-03 de la ERS (detección como código).
 #
 # Antes, las reglas se creaban a mano en la consola de Kibana: quien clonaba el

@@ -187,7 +187,7 @@ narrar "El pipeline clasifica y analiza"
 detalle "Agente 1 (determinístico) → Agente 2 (explicación) → panel"
 pausa 2
 
-if ! python3 siem_pipeline.py >/tmp/demo-ataque.log 2>&1; then
+if ! python3 src/siem_pipeline.py >/tmp/demo-ataque.log 2>&1; then
   echo "  ✗ el pipeline falló (ver /tmp/demo-ataque.log)"
   exit 1
 fi

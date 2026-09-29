@@ -167,7 +167,7 @@ def test_prepare_for_ia_usa_la_consulta_agrupada():
     import pathlib
 
     fuente = (pathlib.Path(__file__).resolve().parent.parent.parent
-              / "prepare-for-ia.py").read_text(encoding="utf-8")
+              / "src" / "prepare-for-ia.py").read_text(encoding="utf-8")
 
     assert "alerts_query_por_regla" in fuente
     assert "es_search_por_grupo" in fuente

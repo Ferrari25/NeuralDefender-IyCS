@@ -5,8 +5,9 @@
 # POR QUÉ EXISTE
 #
 # Los dos primeros objetivos de la materia son «pruebas de código estático» y
-# «pruebas de servicios». El proyecto las corre —`./scripts/check.sh` hace las dos
-# cosas— pero la salida se va por pantalla y no queda nada que adjuntar a un
+# «pruebas de servicios». El proyecto las corre con
+# `./scripts/pruebas_de_codigo_estatico.sh` y `./scripts/pruebas_de_servicio.sh`,
+# pero la salida se va por pantalla y no queda nada que adjuntar a un
 # informe ni que mostrar si la demostración en vivo falla.
 #
 # Este script deja una carpeta con las salidas CRUDAS de cada herramienta, más un
@@ -73,7 +74,7 @@ paso "1/5 · Análisis estático (SAST)"
   echo; echo "══════════ bandit ══════════"
   .devtools/bin/bandit -r . -x ./.devtools,./tests,./node_modules -ll 2>&1 | tail -25 || true
   echo; echo "══════════ eslint ══════════"
-  npx --no-install eslint static/ 2>&1 | tail -20 || echo "(eslint: ver check.sh)"
+  npx --no-install eslint static/ 2>&1 | tail -20 || echo "(eslint: ver pruebas_de_codigo_estatico.sh)"
 } >> "$DIR/01-analisis-estatico.txt" 2>&1
 ok "01-analisis-estatico.txt"
 
@@ -82,9 +83,9 @@ ok "01-analisis-estatico.txt"
 paso "2/5 · Inyección de una vulnerabilidad real"
 
 RESPALDO=$(mktemp)
-cp siem_lib.py "$RESPALDO"
+cp src/siem_lib.py "$RESPALDO"
 # shellcheck disable=SC2064
-trap "cp '$RESPALDO' siem_lib.py; rm -f '$RESPALDO'" EXIT INT TERM
+trap "cp '$RESPALDO' src/siem_lib.py; rm -f '$RESPALDO'" EXIT INT TERM
 
 {
   echo "¿EL ANÁLISIS ESTÁTICO SIRVE DE ALGO?"
@@ -93,7 +94,7 @@ trap "cp '$RESPALDO' siem_lib.py; rm -f '$RESPALDO'" EXIT INT TERM
   echo
   echo "Un informe que dice «el análisis estático pasa» no prueba nada: podría"
   echo "estar mal configurado y pasar siempre. Acá se inyecta una vulnerabilidad"
-  echo "REAL en siem_lib.py y se muestra que la puerta la encuentra."
+  echo "REAL en src/siem_lib.py y se muestra que la puerta la encuentra."
   echo
   echo "── Código inyectado ──"
   echo '    def _evidencia(x):'
@@ -105,24 +106,24 @@ trap "cp '$RESPALDO' siem_lib.py; rm -f '$RESPALDO'" EXIT INT TERM
 
 .devtools/bin/ruff check . >> "$DIR/02-la-puerta-atrapa.txt" 2>&1
 
-printf '\n\ndef _evidencia(x):\n    import hashlib\n    return hashlib.md5(x).hexdigest()\n' >> siem_lib.py
+printf '\n\ndef _evidencia(x):\n    import hashlib\n    return hashlib.md5(x).hexdigest()\n' >> src/siem_lib.py
 
 {
   echo; echo "── ruff DESPUÉS de inyectar ──"
   .devtools/bin/ruff check . 2>&1 || true
   echo; echo "── bandit DESPUÉS de inyectar ──"
-  .devtools/bin/bandit siem_lib.py -ll 2>&1 | grep -A6 'Issue:' || true
+  .devtools/bin/bandit src/siem_lib.py -ll 2>&1 | grep -A6 'Issue:' || true
 } >> "$DIR/02-la-puerta-atrapa.txt" 2>&1
 
 HALLAZGOS=$(.devtools/bin/ruff check . 2>&1 | grep -cE '^[A-Z]+[0-9]+' || true)
-cp "$RESPALDO" siem_lib.py
+cp "$RESPALDO" src/siem_lib.py
 
 {
   echo; echo "── Tras revertir ──"
   .devtools/bin/ruff check . 2>&1 || true
   echo
   echo "El archivo quedó idéntico al original (verificado por SHA-256):"
-  sha256sum siem_lib.py
+  sha256sum src/siem_lib.py
 } >> "$DIR/02-la-puerta-atrapa.txt" 2>&1
 
 if (( HALLAZGOS > 0 )); then
@@ -141,7 +142,7 @@ if $SIN_SERVICIOS; then
 elif [[ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 http://127.0.0.1:5000/api/v1/healthz 2>/dev/null)" != "200" ]]; then
   {
     echo "El panel no responde en http://127.0.0.1:5000"
-    echo "Levantalo con:  python3 dashboard.py"
+    echo "Levantalo con:  python3 src/dashboard.py"
   } > "$DIR/03-pruebas-de-servicio.txt"
   mal "03 — el panel no responde; se omitieron las pruebas de servicio"
 else
@@ -244,7 +245,7 @@ herramienta: no están editadas ni resumidas.
 | Archivo | Qué prueba |
 |---------|------------|
 | \`01-analisis-estatico.txt\` | Las cuatro herramientas corriendo sobre el código: **ruff** (reglas de seguridad, bugs, complejidad), **pylint + pylint-secure-coding-standard**, **bandit** y **ESLint + eslint-plugin-security + no-unsanitized**. |
-| \`02-la-puerta-atrapa.txt\` | **Lo que hace que esto sea una prueba y no una captura de pantalla.** Se inyecta una vulnerabilidad real (\`hashlib.md5\`) en \`siem_lib.py\`, se corre el análisis, se muestra que aparece el hallazgo, y se revierte verificando con SHA-256 que el archivo quedó idéntico. |
+| \`02-la-puerta-atrapa.txt\` | **Lo que hace que esto sea una prueba y no una captura de pantalla.** Se inyecta una vulnerabilidad real (\`hashlib.md5\`) en \`src/siem_lib.py\`, se corre el análisis, se muestra que aparece el hallazgo, y se revierte verificando con SHA-256 que el archivo quedó idéntico. |
 
 Las líneas de base están en **cero**: la puerta falla ante cualquier hallazgo nuevo.
 
@@ -275,12 +276,13 @@ audita; el auditor audita y no decide.
 ## Cómo reproducirlo
 
 \`\`\`bash
-./scripts/check.sh        # la puerta de calidad completa, en pantalla
-./scripts/evidencia.sh    # la misma corrida, guardada en una carpeta
+./scripts/pruebas_de_codigo_estatico.sh   # linters + SAST, en pantalla
+./scripts/pruebas_de_servicio.sh          # unitarias + servicio + cobertura, en pantalla
+./scripts/evidencia.sh                    # la misma corrida, guardada en una carpeta
 \`\`\`
 
 El detalle de qué se verifica y por qué está en
-[\`../../docs/12-registro-de-pruebas.md\`](../../docs/12-registro-de-pruebas.md).
+[\`../../docs/04-auditoria-pruebas-y-demostracion.md\`](../../docs/04-auditoria-pruebas-y-demostracion.md).
 RESUMEN
 
 trap - EXIT INT TERM

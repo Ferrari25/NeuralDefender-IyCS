@@ -1,0 +1,1099 @@
+{
+  "generated_at": "2026-09-29T14:17:48.788116+00:00",
+  "source": "data/siem_clean.json",
+  "incident_count": 7,
+  "incidents": [
+    {
+      "incident_id": "INC-AUTH-172.19.0.6-0de63e73",
+      "source_ip": "172.19.0.6",
+      "classification": {
+        "attack_type": "ssh_brute_force",
+        "confidence": "alta",
+        "severity": "alta",
+        "false_positive_likelihood": "baja",
+        "rationale": "56 fallos de autenticación desde una misma IP superan el umbral de 20; patrón de fuerza bruta automatizada (T1110).",
+        "mitre_technique": "T1110",
+        "factores": [
+          "56 fallo(s) de autenticación registrados (umbral de fuerza bruta: 20)",
+          "Host(s) atacado(s): 172.19.0.5",
+          "Volumen muy por encima del umbral: descarta un error humano puntual",
+          "Falso positivo: BAJA — este volumen es infrecuente en tráfico legítimo"
+        ]
+      },
+      "recommended_actions": [
+        {
+          "orden": 1,
+          "accion": "Bloquear la IP atacante en el firewall perimetral",
+          "comando_sugerido": "sudo ufw deny from 172.19.0.6",
+          "comando_argv": [
+            "sudo",
+            "ufw",
+            "deny",
+            "from",
+            "172.19.0.6"
+          ],
+          "comando_explicacion": "Agrega una regla al firewall (UFW, sobre iptables) que descarta todo el tráfico entrante desde esa IP puntual. No afecta a ningún otro origen ni servicio; es reversible con 'ufw delete deny from <ip>'.",
+          "resultado_simulado": "Regla añadida a UFW:\n  [ 3] Anywhere                   DENY IN    172.19.0.6\nDesde ahora, todo paquete entrante con origen 172.19.0.6 se descarta silenciosamente — el atacante ve la conexión como caída, no rechazada.",
+          "responsable": "SOC",
+          "plazo": "inmediata",
+          "impacto": "alto",
+          "action_id": "INC-AUTH-172.19.0.6-0de63e73-adf999",
+          "status": "pending"
+        },
+        {
+          "orden": 2,
+          "accion": "Verificar si hubo algún login EXITOSO desde la IP atacante",
+          "comando_sugerido": "grep 'Accepted password' /var/log/auth.log | grep 172.19.0.6",
+          "comando_argv": null,
+          "comando_explicacion": "Búsqueda de solo lectura sobre el log de autenticación del host: filtra las líneas de login aceptado y las cruza con la IP atacante. Si aparece algo, la fuerza bruta encontró la contraseña y hay que tratarlo como una cuenta comprometida, no solo como un intento fallido.",
+          "resultado_simulado": "Depende del log real del host — dos resultados posibles:\n  · Sin coincidencias → ningún login exitoso desde 172.19.0.6, la fuerza bruta\n    no llegó a acertar una contraseña.\n  · Con coincidencias (ej. 'Accepted password for testuser from 172.19.0.6')\n    → tratar la cuenta como comprometida de inmediato, no como sospecha.",
+          "responsable": "sysadmin",
+          "plazo": "inmediata",
+          "impacto": "alto",
+          "action_id": "INC-AUTH-172.19.0.6-0de63e73-01f7df",
+          "status": "pending"
+        },
+        {
+          "orden": 3,
+          "accion": "Forzar rotación de credenciales del usuario objetivo (testuser)",
+          "comando_sugerido": "sudo passwd testuser",
+          "comando_argv": [
+            "sudo",
+            "passwd",
+            "testuser"
+          ],
+          "comando_explicacion": "Inicia el cambio de contraseña del usuario atacado de forma interactiva. Invalida la contraseña anterior — importante sobre todo si el paso anterior mostró un login exitoso, porque esa contraseña ya quedó expuesta.",
+          "resultado_simulado": "Changing password for user testuser.\nNew password: \nRetype new password: \npasswd: password updated successfully\nLa contraseña anterior de testuser queda inválida de inmediato — cualquier sesión que dependiera de ella hay que volver a abrirla.",
+          "responsable": "sysadmin",
+          "plazo": "24h",
+          "impacto": "medio",
+          "action_id": "INC-AUTH-172.19.0.6-0de63e73-07f1d3",
+          "status": "pending"
+        },
+        {
+          "orden": 4,
+          "accion": "Habilitar rate-limiting / fail2ban en el servicio SSH",
+          "comando_sugerido": "sudo apt-get install -y fail2ban && sudo systemctl enable --now fail2ban",
+          "comando_argv": null,
+          "comando_explicacion": "Instala fail2ban (monitorea los logs de auth y banea automáticamente IPs con demasiados fallos) y lo deja corriendo de forma permanente. Es la mitigación estructural: evita que haga falta bloquear IPs a mano cada vez que se repita este mismo patrón de ataque.",
+          "resultado_simulado": "Setting up fail2ban (0.11.2-6) ...\nCreated symlink /etc/systemd/system/multi-user.target.wants/fail2ban.service\n  → /lib/systemd/system/fail2ban.service.\n● fail2ban.service - Fail2Ban Service\n     Active: active (running)\nA partir de ahora, cualquier IP con demasiados fallos de SSH se banea sola, sin depender de que un analista lo haga a mano cada vez.",
+          "responsable": "sysadmin",
+          "plazo": "48h",
+          "impacto": "medio",
+          "action_id": "INC-AUTH-172.19.0.6-0de63e73-bceba4",
+          "status": "pending"
+        }
+      ],
+      "first_seen": "2026-09-28T19:11:45.438Z",
+      "last_seen": "2026-09-28T19:17:49.890Z",
+      "event_count": 56,
+      "attacker_ips": [
+        "172.19.0.6"
+      ],
+      "victim_hosts": [
+        "172.19.0.5"
+      ],
+      "target_users": [
+        "testuser"
+      ],
+      "detection_source": "elastic",
+      "rule_name": "SSH Successful Login After Brute Force",
+      "severity_siem": "critical",
+      "risk_score": 95,
+      "log_event_count": 20,
+      "alert_event_count": 56,
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "sample_messages": [
+        "Failed password for testuser from 172.19.0.6 port 36594 ssh2",
+        "Failed password for testuser from 172.19.0.6 port 36594 ssh2",
+        "Failed password for testuser from 172.19.0.6 port 36594 ssh2",
+        "Failed password for testuser from 172.19.0.6 port 36594 ssh2",
+        "Failed password for testuser from 172.19.0.6 port 50454 ssh2",
+        "Failed password for testuser from 172.19.0.6 port 50454 ssh2",
+        "Failed password for testuser from 172.19.0.6 port 50454 ssh2",
+        "Failed password for testuser from 172.19.0.6 port 50454 ssh2"
+      ],
+      "evidence": [
+        {
+          "ts": "2026-09-28T19:13:21.792Z",
+          "detail": "Failed password for testuser from 172.19.0.6 port 36594 ssh2"
+        },
+        {
+          "ts": "2026-09-28T19:13:21.782Z",
+          "detail": "Failed password for testuser from 172.19.0.6 port 36594 ssh2"
+        },
+        {
+          "ts": "2026-09-28T19:13:21.772Z",
+          "detail": "Failed password for testuser from 172.19.0.6 port 36594 ssh2"
+        },
+        {
+          "ts": "2026-09-28T19:13:21.764Z",
+          "detail": "Failed password for testuser from 172.19.0.6 port 36594 ssh2"
+        },
+        {
+          "ts": "2026-09-28T19:12:49.680Z",
+          "detail": "Failed password for testuser from 172.19.0.6 port 50454 ssh2"
+        },
+        {
+          "ts": "2026-09-28T19:12:49.669Z",
+          "detail": "Failed password for testuser from 172.19.0.6 port 50454 ssh2"
+        },
+        {
+          "ts": "2026-09-28T19:12:49.659Z",
+          "detail": "Failed password for testuser from 172.19.0.6 port 50454 ssh2"
+        },
+        {
+          "ts": "2026-09-28T19:12:49.649Z",
+          "detail": "Failed password for testuser from 172.19.0.6 port 50454 ssh2"
+        },
+        {
+          "ts": "2026-09-28T19:12:49.639Z",
+          "detail": "Failed password for testuser from 172.19.0.6 port 50454 ssh2"
+        },
+        {
+          "ts": "2026-09-28T19:12:49.631Z",
+          "detail": "Failed password for testuser from 172.19.0.6 port 50454 ssh2"
+        },
+        {
+          "ts": "2026-09-28T19:12:17.571Z",
+          "detail": "Failed password for testuser from 172.19.0.6 port 38304 ssh2"
+        },
+        {
+          "ts": "2026-09-28T19:12:17.561Z",
+          "detail": "Failed password for testuser from 172.19.0.6 port 38304 ssh2"
+        }
+      ],
+      "analysis": {
+        "explicacion": "Se detectó un ataque de fuerza bruta SSH dirigido al host 172.19.0.5 desde la IP de origen 172.19.0.6. El ataque generó 56 fallos de autenticación consecutivos contra el usuario 'testuser' en una ventana de tiempo de aproximadamente 6 minutos, comprendida entre las 19:11:45 y las 19:17:49 UTC del 28 de septiembre de 2026. Este volumen supera ampliamente el umbral establecido de 20 intentos, descartando un error humano y confirmando actividad automatizada. Además, existe un antecedente reciente donde un analista aprobó una acción sobre esta misma IP (INC-AUTH-172.19.0.6-cbb69f21).",
+        "metodologia": "Esta técnica consiste en el envío automatizado y masivo de múltiples combinaciones de credenciales para adivinar la contraseña de una cuenta específica en el servicio SSH. Los atacantes suelen utilizar herramientas estandarizadas como Hydra o Medusa para automatizar la iteración rápida de diccionarios de claves.",
+        "contexto_riesgo": "Si el atacante logra adivinar la contraseña del usuario 'testuser' en el host 172.19.0.5, obtendría acceso remoto inicial con privilegios de shell. Dado que la IP 172.19.0.6 ya cuenta con un historial de aprobación previa en el sistema, representa una amenaza activa y persistente para la infraestructura.",
+        "severidad_ajustada": "CRITICAL",
+        "accion_recomendada": "Bloquear de manera inmediata la IP de origen 172.19.0.6 en el firewall y verificar el estado de la cuenta 'testuser' en el host 172.19.0.5.",
+        "falso_positivo_probabilidad": "LOW",
+        "referencias": [
+          "Brute Force: T1110 - https://attack.mitre.org/techniques/T1110/"
+        ],
+        "puntos_de_investigacion": [
+          "¿El usuario 'testuser' logró autenticarse exitosamente en algún momento posterior o previo a la ventana del incidente?",
+          "¿Qué tipo de acciones se aprobaron previamente para la IP 172.19.0.6 en el incidente INC-AUTH-172.19.0.6-cbb69f21?",
+          "¿Existen otros intentos de conexión SSH desde la IP 172.19.0.6 dirigidos a diferentes usuarios u otros hosts dentro de la red?"
+        ],
+        "_source": "gemini",
+        "contexto_historico": "Hay 1 decisión(es) previa(s) registrada(s) sobre esta IP (1 aprobada(s), 0 descartada(s)). La más reciente: analista approved una acción del incidente INC-AUTH-172.19.0.6-cbb69f21 el 2026-09-28T19:34:46.927822+00:00.",
+        "contexto_campana": null
+      },
+      "campaign_id": null,
+      "related_incidents": [],
+      "campaign_shared_ips": []
+    },
+    {
+      "incident_id": "INC-SCAN-172.19.0.9-d9fcb918",
+      "source_ip": "172.19.0.9",
+      "classification": {
+        "attack_type": "port_scan",
+        "confidence": "alta",
+        "severity": "alta",
+        "false_positive_likelihood": "baja",
+        "rationale": "26 puertos distintos sondeados desde 172.19.0.9 (umbral 10); patrón de reconocimiento de red.",
+        "mitre_technique": "T1046",
+        "factores": [
+          "26 puerto(s) distinto(s) sondeado(s) (umbral: 10)",
+          "1 host(s) de destino distintos sondeados",
+          "Confirmado por una regla activa del SIEM: 'Port Scan – Many Distinct Ports'",
+          "Patrón de barrido secuencial de puertos, poco común en tráfico legítimo",
+          "Falso positivo: BAJA — salvo que la IP sea un scanner de vulnerabilidades autorizado"
+        ]
+      },
+      "recommended_actions": [
+        {
+          "orden": 1,
+          "accion": "Bloquear la IP que realiza el escaneo en el firewall",
+          "comando_sugerido": "sudo ufw deny from 172.19.0.9",
+          "comando_argv": [
+            "sudo",
+            "ufw",
+            "deny",
+            "from",
+            "172.19.0.9"
+          ],
+          "comando_explicacion": "Igual que en fuerza bruta: agrega una regla de firewall que descarta todo el tráfico de esa IP puntual, cortando el reconocimiento en curso.",
+          "resultado_simulado": "Regla añadida a UFW:\n  [ 3] Anywhere                   DENY IN    172.19.0.9\nEl escaneo en curso deja de recibir respuesta de ningún puerto — desde la perspectiva del atacante, el host entero pasa a verse caído.",
+          "responsable": "SOC",
+          "plazo": "inmediata",
+          "impacto": "alto",
+          "action_id": "INC-SCAN-172.19.0.9-d9fcb918-2aea17",
+          "status": "pending"
+        },
+        {
+          "orden": 2,
+          "accion": "Revisar qué servicios/puertos quedaron expuestos en el host objetivo",
+          "comando_sugerido": "sudo ss -tulnp",
+          "comando_argv": [
+            "sudo",
+            "ss",
+            "-tulnp"
+          ],
+          "comando_explicacion": "Lista los puertos TCP/UDP (-t/-u) en escucha (-l) en este host, con el proceso dueño de cada uno (-p) y sin resolver nombres (-n, más rápido). Es de solo lectura: sirve para ver exactamente qué encontró el atacante al escanear, antes de decidir qué cerrar.",
+          "resultado_simulado": "Netid  State   Local Address:Port   Process\ntcp    LISTEN  0.0.0.0:22           \"sshd\"\ntcp    LISTEN  0.0.0.0:5601         \"node\" (kibana)\ntcp    LISTEN  0.0.0.0:9200         \"java\" (elasticsearch)\n(salida real: depende de qué haya expuesto el host que se está revisando)",
+          "responsable": "sysadmin",
+          "plazo": "24h",
+          "impacto": "medio",
+          "action_id": "INC-SCAN-172.19.0.9-d9fcb918-c0fb68",
+          "status": "pending"
+        },
+        {
+          "orden": 3,
+          "accion": "Cerrar puertos innecesarios y segmentar el host afectado",
+          "comando_sugerido": null,
+          "comando_argv": null,
+          "comando_explicacion": null,
+          "resultado_simulado": null,
+          "responsable": "sysadmin",
+          "plazo": "24h",
+          "impacto": "medio",
+          "action_id": "INC-SCAN-172.19.0.9-d9fcb918-456bc0",
+          "status": "pending"
+        },
+        {
+          "orden": 4,
+          "accion": "Desplegar IDS de red (Suricata) para visibilidad de futuros escaneos",
+          "comando_sugerido": null,
+          "comando_argv": null,
+          "comando_explicacion": null,
+          "resultado_simulado": null,
+          "responsable": "SOC",
+          "plazo": "48h",
+          "impacto": "bajo",
+          "action_id": "INC-SCAN-172.19.0.9-d9fcb918-eb2160",
+          "status": "pending"
+        }
+      ],
+      "first_seen": "2026-09-28T19:13:44.000Z",
+      "last_seen": "2026-09-28T19:14:09.000Z",
+      "event_count": 26,
+      "attacker_ips": [
+        "172.19.0.9"
+      ],
+      "victim_hosts": [
+        "172.18.0.5"
+      ],
+      "target_users": [],
+      "detection_source": "elastic",
+      "rule_name": "Port Scan – Many Distinct Ports",
+      "severity_siem": "high",
+      "risk_score": 73,
+      "log_event_count": 26,
+      "alert_event_count": 0,
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "sample_messages": [
+        "scan 172.19.0.9 -> 172.18.0.5 puertos [21, 22, 23, 25, 53, 80, 110, 135, 139, 143, 443, 445]"
+      ],
+      "evidence": [
+        {
+          "ts": "2026-09-28T19:13:44.000Z",
+          "detail": "probe → 172.18.0.5:21/tcp"
+        },
+        {
+          "ts": "2026-09-28T19:13:45.000Z",
+          "detail": "probe → 172.18.0.5:22/tcp"
+        },
+        {
+          "ts": "2026-09-28T19:13:46.000Z",
+          "detail": "probe → 172.18.0.5:23/tcp"
+        },
+        {
+          "ts": "2026-09-28T19:13:47.000Z",
+          "detail": "probe → 172.18.0.5:25/tcp"
+        },
+        {
+          "ts": "2026-09-28T19:13:48.000Z",
+          "detail": "probe → 172.18.0.5:53/tcp"
+        },
+        {
+          "ts": "2026-09-28T19:13:49.000Z",
+          "detail": "probe → 172.18.0.5:80/tcp"
+        },
+        {
+          "ts": "2026-09-28T19:13:50.000Z",
+          "detail": "probe → 172.18.0.5:110/tcp"
+        },
+        {
+          "ts": "2026-09-28T19:13:51.000Z",
+          "detail": "probe → 172.18.0.5:135/tcp"
+        },
+        {
+          "ts": "2026-09-28T19:13:52.000Z",
+          "detail": "probe → 172.18.0.5:139/tcp"
+        },
+        {
+          "ts": "2026-09-28T19:13:53.000Z",
+          "detail": "probe → 172.18.0.5:143/tcp"
+        },
+        {
+          "ts": "2026-09-28T19:13:54.000Z",
+          "detail": "probe → 172.18.0.5:443/tcp"
+        },
+        {
+          "ts": "2026-09-28T19:13:55.000Z",
+          "detail": "probe → 172.18.0.5:445/tcp"
+        }
+      ],
+      "analysis": {
+        "explicacion": "La IP de origen 172.19.0.9 realizó un sondeo rápido contra 172.18.0.5, impactando en 26 puertos distintos en un lapso de apenas 25 segundos (entre las 19:13:44 y las 19:14:09 UTC). Este comportamiento generó 26 eventos y disparó la regla de SIEM 'Port Scan – Many Distinct Ports' mediante un patrón secuencial. Además, esta IP no posee registros históricos previos y está vinculada activamente a otra alerta simultánea bajo el identificador INC-AUTH-172.19.0.9-524072bc.",
+        "metodologia": "El escaneo de puertos es una fase de reconocimiento empleada para descubrir servicios activos y vulnerabilidades en la red. Herramientas comunes como Nmap o scripts personalizados envían paquetes TCP o UDP de forma masiva para mapear la superficie de ataque del objetivo.",
+        "contexto_riesgo": "Dado que la IP 172.19.0.9 está ejecutando múltiples acciones en paralelo (evidenciado por la campaña asociada), el riesgo radica en una fase previa a la explotación de los servicios descubiertos en el host 172.18.0.5. Si el atacante identifica un servicio desactualizado en los 26 puertos sondeados, podría comprometer el servidor afectado.",
+        "severidad_ajustada": "HIGH",
+        "accion_recomendada": "Verificar si la IP 172.19.0.9 corresponde a un escáner de vulnerabilidades autorizado y, de no ser así, bloquearla temporalmente en el perímetro junto con la revisión del incidente relacionado INC-AUTH-172.19.0.9-524072bc.",
+        "falso_positivo_probabilidad": "LOW",
+        "referencias": [
+          "MITRE ATT&CK T1046: Network Service Discovery - https://attack.mitre.org/techniques/T1046/"
+        ],
+        "puntos_de_investigacion": [
+          "¿Qué actividad adicional registra la IP 172.19.0.9 en el incidente vinculado INC-AUTH-172.19.0.9-524072bc?",
+          "¿Pertenece la IP 172.19.0.9 a algún sistema de escaneo interno autorizado como Nessus o Qualys?",
+          "¿Qué servicios específicos respondieron al sondeo en el host de destino 172.18.0.5 durante la ventana de tiempo analizada?"
+        ],
+        "_source": "gemini",
+        "contexto_historico": "Sin antecedentes previos para 172.19.0.9: es la primera vez que se registra actividad de esta IP.",
+        "contexto_campana": "Este incidente está vinculado a otro(s) 1 incidente(s) activo(s) (INC-AUTH-172.19.0.9-524072bc) por compartir la IP 172.19.0.9. Tratarlos como una sola campaña, no como eventos aislados: la severidad real del conjunto puede ser mayor que la de cada incidente por separado."
+      },
+      "scanned_ports": [
+        21,
+        22,
+        23,
+        25,
+        53,
+        80,
+        110,
+        135,
+        139,
+        143,
+        443,
+        445,
+        993,
+        995,
+        1433,
+        1521,
+        2222,
+        3306,
+        3389,
+        5432,
+        5601,
+        6379,
+        8080,
+        8443,
+        9200,
+        9300
+      ],
+      "target_hosts": [
+        "172.18.0.5"
+      ],
+      "campaign_id": "CAMP-eb9e37eb",
+      "related_incidents": [
+        "INC-AUTH-172.19.0.9-524072bc"
+      ],
+      "campaign_shared_ips": [
+        "172.19.0.9"
+      ]
+    },
+    {
+      "incident_id": "INC-SCAN-172.18.0.7-cd3bee55",
+      "source_ip": "172.18.0.7",
+      "classification": {
+        "attack_type": "port_scan",
+        "confidence": "alta",
+        "severity": "alta",
+        "false_positive_likelihood": "baja",
+        "rationale": "26 puertos distintos sondeados desde 172.18.0.7 (umbral 10); patrón de reconocimiento de red.",
+        "mitre_technique": "T1046",
+        "factores": [
+          "26 puerto(s) distinto(s) sondeado(s) (umbral: 10)",
+          "1 host(s) de destino distintos sondeados",
+          "Confirmado por una regla activa del SIEM: 'Port Scan – Many Distinct Ports'",
+          "Patrón de barrido secuencial de puertos, poco común en tráfico legítimo",
+          "Falso positivo: BAJA — salvo que la IP sea un scanner de vulnerabilidades autorizado"
+        ]
+      },
+      "recommended_actions": [
+        {
+          "orden": 1,
+          "accion": "Bloquear la IP que realiza el escaneo en el firewall",
+          "comando_sugerido": "sudo ufw deny from 172.18.0.7",
+          "comando_argv": [
+            "sudo",
+            "ufw",
+            "deny",
+            "from",
+            "172.18.0.7"
+          ],
+          "comando_explicacion": "Igual que en fuerza bruta: agrega una regla de firewall que descarta todo el tráfico de esa IP puntual, cortando el reconocimiento en curso.",
+          "resultado_simulado": "Regla añadida a UFW:\n  [ 3] Anywhere                   DENY IN    172.18.0.7\nEl escaneo en curso deja de recibir respuesta de ningún puerto — desde la perspectiva del atacante, el host entero pasa a verse caído.",
+          "responsable": "SOC",
+          "plazo": "inmediata",
+          "impacto": "alto",
+          "action_id": "INC-SCAN-172.18.0.7-cd3bee55-3af475",
+          "status": "pending"
+        },
+        {
+          "orden": 2,
+          "accion": "Revisar qué servicios/puertos quedaron expuestos en el host objetivo",
+          "comando_sugerido": "sudo ss -tulnp",
+          "comando_argv": [
+            "sudo",
+            "ss",
+            "-tulnp"
+          ],
+          "comando_explicacion": "Lista los puertos TCP/UDP (-t/-u) en escucha (-l) en este host, con el proceso dueño de cada uno (-p) y sin resolver nombres (-n, más rápido). Es de solo lectura: sirve para ver exactamente qué encontró el atacante al escanear, antes de decidir qué cerrar.",
+          "resultado_simulado": "Netid  State   Local Address:Port   Process\ntcp    LISTEN  0.0.0.0:22           \"sshd\"\ntcp    LISTEN  0.0.0.0:5601         \"node\" (kibana)\ntcp    LISTEN  0.0.0.0:9200         \"java\" (elasticsearch)\n(salida real: depende de qué haya expuesto el host que se está revisando)",
+          "responsable": "sysadmin",
+          "plazo": "24h",
+          "impacto": "medio",
+          "action_id": "INC-SCAN-172.18.0.7-cd3bee55-c0fb68",
+          "status": "pending"
+        },
+        {
+          "orden": 3,
+          "accion": "Cerrar puertos innecesarios y segmentar el host afectado",
+          "comando_sugerido": null,
+          "comando_argv": null,
+          "comando_explicacion": null,
+          "resultado_simulado": null,
+          "responsable": "sysadmin",
+          "plazo": "24h",
+          "impacto": "medio",
+          "action_id": "INC-SCAN-172.18.0.7-cd3bee55-456bc0",
+          "status": "pending"
+        },
+        {
+          "orden": 4,
+          "accion": "Desplegar IDS de red (Suricata) para visibilidad de futuros escaneos",
+          "comando_sugerido": null,
+          "comando_argv": null,
+          "comando_explicacion": null,
+          "resultado_simulado": null,
+          "responsable": "SOC",
+          "plazo": "48h",
+          "impacto": "bajo",
+          "action_id": "INC-SCAN-172.18.0.7-cd3bee55-eb2160",
+          "status": "pending"
+        }
+      ],
+      "first_seen": "2026-09-29T13:52:55.000Z",
+      "last_seen": "2026-09-29T13:53:20.000Z",
+      "event_count": 26,
+      "attacker_ips": [
+        "172.18.0.7"
+      ],
+      "victim_hosts": [
+        "172.18.0.5"
+      ],
+      "target_users": [],
+      "detection_source": "elastic",
+      "rule_name": "Port Scan – Many Distinct Ports",
+      "severity_siem": "high",
+      "risk_score": 73,
+      "log_event_count": 26,
+      "alert_event_count": 0,
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "sample_messages": [
+        "scan 172.18.0.7 -> 172.18.0.5 puertos [21, 22, 23, 25, 53, 80, 110, 135, 139, 143, 443, 445]"
+      ],
+      "evidence": [
+        {
+          "ts": "2026-09-29T13:52:55.000Z",
+          "detail": "probe → 172.18.0.5:21/tcp"
+        },
+        {
+          "ts": "2026-09-29T13:52:56.000Z",
+          "detail": "probe → 172.18.0.5:22/tcp"
+        },
+        {
+          "ts": "2026-09-29T13:52:57.000Z",
+          "detail": "probe → 172.18.0.5:23/tcp"
+        },
+        {
+          "ts": "2026-09-29T13:52:58.000Z",
+          "detail": "probe → 172.18.0.5:25/tcp"
+        },
+        {
+          "ts": "2026-09-29T13:52:59.000Z",
+          "detail": "probe → 172.18.0.5:53/tcp"
+        },
+        {
+          "ts": "2026-09-29T13:53:00.000Z",
+          "detail": "probe → 172.18.0.5:80/tcp"
+        },
+        {
+          "ts": "2026-09-29T13:53:01.000Z",
+          "detail": "probe → 172.18.0.5:110/tcp"
+        },
+        {
+          "ts": "2026-09-29T13:53:02.000Z",
+          "detail": "probe → 172.18.0.5:135/tcp"
+        },
+        {
+          "ts": "2026-09-29T13:53:03.000Z",
+          "detail": "probe → 172.18.0.5:139/tcp"
+        },
+        {
+          "ts": "2026-09-29T13:53:04.000Z",
+          "detail": "probe → 172.18.0.5:143/tcp"
+        },
+        {
+          "ts": "2026-09-29T13:53:05.000Z",
+          "detail": "probe → 172.18.0.5:443/tcp"
+        },
+        {
+          "ts": "2026-09-29T13:53:06.000Z",
+          "detail": "probe → 172.18.0.5:445/tcp"
+        }
+      ],
+      "analysis": {
+        "explicacion": "La IP de origen 172.18.0.7 realizó un escaneo rápido de 26 puertos distintos (incluyendo servicios comunes como FTP, SSH, Telnet, HTTP y SMB) contra un único host de destino entre las 13:52:55 y las 13:53:20 UTC del 29 de septiembre de 2026. Esta actividad generó 26 eventos y disparó la regla de SIEM 'Port Scan – Many Distinct Ports'. La IP no cuenta con antecedentes previos registrados en el sistema.",
+        "metodologia": "Esta técnica, clasificada como Network Service Discovery (T1046), permite a un atacante identificar servicios activos y posibles vulnerabilidades en la red mediante herramientas automatizadas como Nmap. El patrón observado muestra un barrido secuencial en un breve lapso de 25 segundos para mapear la superficie de ataque del objetivo.",
+        "contexto_riesgo": "Si el escaneo prospera, el atacante obtendrá un mapa preciso de los servicios abiertos en el host de destino, facilitando ataques de fuerza bruta o la explotación específica de versiones desactualizadas de los servicios detectados (como FTP o SMB). Dado que la IP 172.18.0.7 es nueva en los registros, este reconocimiento inicial podría preceder a un movimiento lateral o intrusión directa.",
+        "severidad_ajustada": "HIGH",
+        "accion_recomendada": "Verificar si la IP 172.18.0.7 corresponde a un escáner de vulnerabilidades autorizado y, en caso contrario, bloquear temporalmente el tráfico proveniente de dicha dirección.",
+        "falso_positivo_probabilidad": "LOW",
+        "referencias": [
+          "MITRE ATT&CK T1046 - Network Service Discovery: https://attack.mitre.org/techniques/T1046/"
+        ],
+        "puntos_de_investigacion": [
+          "¿La dirección IP 172.18.0.7 pertenece a una herramienta de escaneo interna autorizada (ej. Nessus, OpenVAS)?",
+          "¿Qué host específico recibió los 26 paquetes de sondeo y qué servicios estaban activos en ese momento?",
+          "¿Se registraron intentos de conexión o autenticación desde la IP 172.18.0.7 inmediatamente después de la ventana de escaneo?"
+        ],
+        "_source": "gemini",
+        "contexto_historico": "Sin antecedentes previos para 172.18.0.7: es la primera vez que se registra actividad de esta IP.",
+        "contexto_campana": null
+      },
+      "scanned_ports": [
+        21,
+        22,
+        23,
+        25,
+        53,
+        80,
+        110,
+        135,
+        139,
+        143,
+        443,
+        445,
+        993,
+        995,
+        1433,
+        1521,
+        2222,
+        3306,
+        3389,
+        5432,
+        5601,
+        6379,
+        8080,
+        8443,
+        9200,
+        9300
+      ],
+      "target_hosts": [
+        "172.18.0.5"
+      ],
+      "campaign_id": null,
+      "related_incidents": [],
+      "campaign_shared_ips": []
+    },
+    {
+      "incident_id": "INC-AUTH-172.19.0.10-4c57a217",
+      "source_ip": "172.19.0.10",
+      "classification": {
+        "attack_type": "ssh_brute_force",
+        "confidence": "alta",
+        "severity": "alta",
+        "false_positive_likelihood": "baja",
+        "rationale": "25 fallos de autenticación desde una misma IP superan el umbral de 20; patrón de fuerza bruta automatizada (T1110).",
+        "mitre_technique": "T1110",
+        "factores": [
+          "25 fallo(s) de autenticación registrados (umbral de fuerza bruta: 20)",
+          "Volumen muy por encima del umbral: descarta un error humano puntual",
+          "Falso positivo: BAJA — este volumen es infrecuente en tráfico legítimo"
+        ]
+      },
+      "recommended_actions": [
+        {
+          "orden": 1,
+          "accion": "Bloquear la IP atacante en el firewall perimetral",
+          "comando_sugerido": "sudo ufw deny from 172.19.0.10",
+          "comando_argv": [
+            "sudo",
+            "ufw",
+            "deny",
+            "from",
+            "172.19.0.10"
+          ],
+          "comando_explicacion": "Agrega una regla al firewall (UFW, sobre iptables) que descarta todo el tráfico entrante desde esa IP puntual. No afecta a ningún otro origen ni servicio; es reversible con 'ufw delete deny from <ip>'.",
+          "resultado_simulado": "Regla añadida a UFW:\n  [ 3] Anywhere                   DENY IN    172.19.0.10\nDesde ahora, todo paquete entrante con origen 172.19.0.10 se descarta silenciosamente — el atacante ve la conexión como caída, no rechazada.",
+          "responsable": "SOC",
+          "plazo": "inmediata",
+          "impacto": "alto",
+          "action_id": "INC-AUTH-172.19.0.10-4c57a217-da7ac8",
+          "status": "pending"
+        },
+        {
+          "orden": 2,
+          "accion": "Verificar si hubo algún login EXITOSO desde la IP atacante",
+          "comando_sugerido": "grep 'Accepted password' /var/log/auth.log | grep 172.19.0.10",
+          "comando_argv": null,
+          "comando_explicacion": "Búsqueda de solo lectura sobre el log de autenticación del host: filtra las líneas de login aceptado y las cruza con la IP atacante. Si aparece algo, la fuerza bruta encontró la contraseña y hay que tratarlo como una cuenta comprometida, no solo como un intento fallido.",
+          "resultado_simulado": "Depende del log real del host — dos resultados posibles:\n  · Sin coincidencias → ningún login exitoso desde 172.19.0.10, la fuerza bruta\n    no llegó a acertar una contraseña.\n  · Con coincidencias (ej. 'Accepted password for testuser from 172.19.0.10')\n    → tratar la cuenta como comprometida de inmediato, no como sospecha.",
+          "responsable": "sysadmin",
+          "plazo": "inmediata",
+          "impacto": "alto",
+          "action_id": "INC-AUTH-172.19.0.10-4c57a217-d6621b",
+          "status": "pending"
+        },
+        {
+          "orden": 3,
+          "accion": "Habilitar rate-limiting / fail2ban en el servicio SSH",
+          "comando_sugerido": "sudo apt-get install -y fail2ban && sudo systemctl enable --now fail2ban",
+          "comando_argv": null,
+          "comando_explicacion": "Instala fail2ban (monitorea los logs de auth y banea automáticamente IPs con demasiados fallos) y lo deja corriendo de forma permanente. Es la mitigación estructural: evita que haga falta bloquear IPs a mano cada vez que se repita este mismo patrón de ataque.",
+          "resultado_simulado": "Setting up fail2ban (0.11.2-6) ...\nCreated symlink /etc/systemd/system/multi-user.target.wants/fail2ban.service\n  → /lib/systemd/system/fail2ban.service.\n● fail2ban.service - Fail2Ban Service\n     Active: active (running)\nA partir de ahora, cualquier IP con demasiados fallos de SSH se banea sola, sin depender de que un analista lo haga a mano cada vez.",
+          "responsable": "sysadmin",
+          "plazo": "48h",
+          "impacto": "medio",
+          "action_id": "INC-AUTH-172.19.0.10-4c57a217-bceba4",
+          "status": "pending"
+        }
+      ],
+      "first_seen": "2026-09-28T19:10:08.311Z",
+      "last_seen": "2026-09-28T19:15:10.897Z",
+      "event_count": 25,
+      "attacker_ips": [
+        "172.19.0.10"
+      ],
+      "victim_hosts": [],
+      "target_users": [],
+      "detection_source": "elastic",
+      "rule_name": "SSH Brute Force – Aggressive per Source IP",
+      "severity_siem": "high",
+      "risk_score": 73,
+      "log_event_count": 0,
+      "alert_event_count": 25,
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "sample_messages": [],
+      "evidence": [],
+      "analysis": {
+        "explicacion": "Se detectó un ataque de fuerza bruta SSH proveniente de la IP 172.19.0.10, registrando 25 fallos de autenticación entre las 19:10:08 y las 19:15:10 UTC del 28 de septiembre de 2026. Este volumen supera ampliamente el umbral establecido de 20 intentos, descartando un error humano puntual. Además, la IP no posee antecedentes previos en el sistema pero está vinculada a otro incidente activo (INC-PHISH-172.18.0.9-507bb502), lo que indica una posible campaña coordinada.",
+        "metodologia": "Los atacantes utilizan scripts automatizados para probar múltiples combinaciones de credenciales contra el servicio SSH de manera sistemática. Herramientas comunes para esta técnica incluyen Hydra, Medusa o scripts personalizados en Python que iteran rápidamente sobre listas de usuarios y contraseñas.",
+        "contexto_riesgo": "Si esta fuerza bruta logra comprometer el acceso SSH, el atacante obtendrá un punto de apoyo inicial en la red con capacidad de moverse lateralmente. Dado que la IP de origen comparte contexto con otro incidente activo, el riesgo de una brecha multifase es elevado.",
+        "severidad_ajustada": "HIGH",
+        "accion_recomendada": "Bloquear inmediatamente la IP 172.19.0.10 en el firewall perimetral e investigar el incidente vinculado INC-PHISH-172.18.0.9-507bb502.",
+        "falso_positivo_probabilidad": "LOW",
+        "referencias": [
+          "https://attack.mitre.org/techniques/T1110/"
+        ],
+        "puntos_de_investigacion": [
+          "¿Qué cuentas de usuario específicas fueron blanco de los 25 intentos fallidos desde la IP 172.19.0.10?",
+          "¿Existen conexiones exitosas (sesiones abiertas) desde la IP 172.19.0.10 inmediatamente después de la ventana de ataque?",
+          "¿Qué relación exacta guarda la IP 172.19.0.10 con el incidente asociado INC-PHISH-172.18.0.9-507bb502?"
+        ],
+        "_source": "gemini",
+        "contexto_historico": "Sin antecedentes previos para 172.19.0.10: es la primera vez que se registra actividad de esta IP.",
+        "contexto_campana": "Este incidente está vinculado a otro(s) 1 incidente(s) activo(s) (INC-PHISH-172.18.0.9-507bb502) por compartir la IP 172.19.0.10. Tratarlos como una sola campaña, no como eventos aislados: la severidad real del conjunto puede ser mayor que la de cada incidente por separado."
+      },
+      "campaign_id": "CAMP-36e23351",
+      "related_incidents": [
+        "INC-PHISH-172.18.0.9-507bb502"
+      ],
+      "campaign_shared_ips": [
+        "172.19.0.10"
+      ]
+    },
+    {
+      "incident_id": "INC-AUTH-172.19.0.9-524072bc",
+      "source_ip": "172.19.0.9",
+      "classification": {
+        "attack_type": "ssh_brute_force",
+        "confidence": "alta",
+        "severity": "alta",
+        "false_positive_likelihood": "baja",
+        "rationale": "El SIEM disparó la regla 'SSH Invalid User Enumeration': 8 fallos de autenticación desde 172.19.0.9 contra un usuario; patrón consistente con fuerza bruta SSH (MITRE T1110), confirmado por el SIEM.",
+        "mitre_technique": "T1110",
+        "factores": [
+          "8 fallo(s) de autenticación registrados (umbral de fuerza bruta: 20)",
+          "Confirmado por una regla activa del SIEM: 'SSH Invalid User Enumeration'",
+          "El clasificador no degrada la severidad solo porque el conteo sea bajo, ya que el SIEM ya corroboró el patrón de forma independiente",
+          "Falso positivo: BAJA — confirmado por dos capas de detección (SIEM + clasificador)"
+        ]
+      },
+      "recommended_actions": [
+        {
+          "orden": 1,
+          "accion": "Bloquear la IP atacante en el firewall perimetral",
+          "comando_sugerido": "sudo ufw deny from 172.19.0.9",
+          "comando_argv": [
+            "sudo",
+            "ufw",
+            "deny",
+            "from",
+            "172.19.0.9"
+          ],
+          "comando_explicacion": "Agrega una regla al firewall (UFW, sobre iptables) que descarta todo el tráfico entrante desde esa IP puntual. No afecta a ningún otro origen ni servicio; es reversible con 'ufw delete deny from <ip>'.",
+          "resultado_simulado": "Regla añadida a UFW:\n  [ 3] Anywhere                   DENY IN    172.19.0.9\nDesde ahora, todo paquete entrante con origen 172.19.0.9 se descarta silenciosamente — el atacante ve la conexión como caída, no rechazada.",
+          "responsable": "SOC",
+          "plazo": "inmediata",
+          "impacto": "alto",
+          "action_id": "INC-AUTH-172.19.0.9-524072bc-7aa1ab",
+          "status": "pending"
+        },
+        {
+          "orden": 2,
+          "accion": "Verificar si hubo algún login EXITOSO desde la IP atacante",
+          "comando_sugerido": "grep 'Accepted password' /var/log/auth.log | grep 172.19.0.9",
+          "comando_argv": null,
+          "comando_explicacion": "Búsqueda de solo lectura sobre el log de autenticación del host: filtra las líneas de login aceptado y las cruza con la IP atacante. Si aparece algo, la fuerza bruta encontró la contraseña y hay que tratarlo como una cuenta comprometida, no solo como un intento fallido.",
+          "resultado_simulado": "Depende del log real del host — dos resultados posibles:\n  · Sin coincidencias → ningún login exitoso desde 172.19.0.9, la fuerza bruta\n    no llegó a acertar una contraseña.\n  · Con coincidencias (ej. 'Accepted password for testuser from 172.19.0.9')\n    → tratar la cuenta como comprometida de inmediato, no como sospecha.",
+          "responsable": "sysadmin",
+          "plazo": "inmediata",
+          "impacto": "alto",
+          "action_id": "INC-AUTH-172.19.0.9-524072bc-e85594",
+          "status": "pending"
+        },
+        {
+          "orden": 3,
+          "accion": "Habilitar rate-limiting / fail2ban en el servicio SSH",
+          "comando_sugerido": "sudo apt-get install -y fail2ban && sudo systemctl enable --now fail2ban",
+          "comando_argv": null,
+          "comando_explicacion": "Instala fail2ban (monitorea los logs de auth y banea automáticamente IPs con demasiados fallos) y lo deja corriendo de forma permanente. Es la mitigación estructural: evita que haga falta bloquear IPs a mano cada vez que se repita este mismo patrón de ataque.",
+          "resultado_simulado": "Setting up fail2ban (0.11.2-6) ...\nCreated symlink /etc/systemd/system/multi-user.target.wants/fail2ban.service\n  → /lib/systemd/system/fail2ban.service.\n● fail2ban.service - Fail2Ban Service\n     Active: active (running)\nA partir de ahora, cualquier IP con demasiados fallos de SSH se banea sola, sin depender de que un analista lo haga a mano cada vez.",
+          "responsable": "sysadmin",
+          "plazo": "48h",
+          "impacto": "medio",
+          "action_id": "INC-AUTH-172.19.0.9-524072bc-bceba4",
+          "status": "pending"
+        }
+      ],
+      "first_seen": "2026-09-28T19:10:05.440Z",
+      "last_seen": "2026-09-28T19:10:08.312Z",
+      "event_count": 8,
+      "attacker_ips": [
+        "172.19.0.9"
+      ],
+      "victim_hosts": [],
+      "target_users": [],
+      "detection_source": "elastic",
+      "rule_name": "SSH Invalid User Enumeration",
+      "severity_siem": "medium",
+      "risk_score": 50,
+      "log_event_count": 0,
+      "alert_event_count": 8,
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "sample_messages": [],
+      "evidence": [],
+      "analysis": {
+        "explicacion": "Se detectó un ataque de fuerza bruta SSH proveniente de la IP 172.19.0.9, la cual generó 8 fallos de autenticación en un lapso muy corto de menos de tres segundos, entre las 19:10:05 y las 19:10:08 del 28 de septiembre de 2026. Este comportamiento fue corroborado por la regla activa del SIEM 'SSH Invalid User Enumeration'. Además, esta misma dirección IP ya cuenta con un historial previo de actividad maliciosa documentada bajo el incidente INC-SCAN-172.19.0.9-d9fcb918.",
+        "metodologia": "Los atacantes utilizan scripts automatizados para probar múltiples combinaciones de credenciales contra servicios expuestos a la red. Es común el uso de herramientas como Hydra o Medusa para realizar autenticaciones masivas y adivinar contraseñas débiles o enumerar nombres de usuario válidos.",
+        "contexto_riesgo": "Si el ataque prospera, el atacante obtendrá acceso remoto al servidor SSH, lo que podría comprometer la confidencialidad e integridad del sistema operativo. Dado que la IP 172.19.0.9 está vinculada a una campaña activa previa, existe un riesgo elevado de persistencia o movimientos laterales si el acceso no se bloquea inmediatamente.",
+        "severidad_ajustada": "MEDIUM",
+        "accion_recomendada": "Bloquear inmediatamente la IP 172.19.0.9 en el perímetro y revisar los registros de autenticación para descartar accesos exitosos previos.",
+        "falso_positivo_probabilidad": "LOW",
+        "referencias": [
+          "https://attack.mitre.org/techniques/T1110/",
+          "https://attack.mitre.org/techniques/T1110/001/"
+        ],
+        "puntos_de_investigacion": [
+          "¿Existió algún intento de inicio de sesión exitoso desde la IP 172.19.0.9 antes o después de la ventana de este incidente?",
+          "¿Qué relación exacta guarda el incidente previo INC-SCAN-172.19.0.9-d9fcb918 con los objetivos atacados en esta ocasión?",
+          "¿Cuáles fueron los nombres de usuario específicos probados por la IP 172.19.0.9 durante estos 8 eventos?"
+        ],
+        "_source": "gemini",
+        "contexto_historico": "Hay 2 decisión(es) previa(s) registrada(s) sobre esta IP (2 aprobada(s), 0 descartada(s)). La más reciente: analista approved una acción del incidente INC-SCAN-172.19.0.9-d9fcb918 el 2026-09-29T14:16:25.008186+00:00.",
+        "contexto_campana": "Este incidente está vinculado a otro(s) 1 incidente(s) activo(s) (INC-SCAN-172.19.0.9-d9fcb918) por compartir la IP 172.19.0.9. Tratarlos como una sola campaña, no como eventos aislados: la severidad real del conjunto puede ser mayor que la de cada incidente por separado.",
+        "severidad_ajustada_sin_normalizar": "HIGH"
+      },
+      "campaign_id": "CAMP-eb9e37eb",
+      "related_incidents": [
+        "INC-SCAN-172.19.0.9-d9fcb918"
+      ],
+      "campaign_shared_ips": [
+        "172.19.0.9"
+      ]
+    },
+    {
+      "incident_id": "INC-AUTH-172.19.0.8-74152d42",
+      "source_ip": "172.19.0.8",
+      "classification": {
+        "attack_type": "ssh_brute_force",
+        "confidence": "alta",
+        "severity": "alta",
+        "false_positive_likelihood": "baja",
+        "rationale": "El SIEM disparó la regla 'SSH Isolated Authentication Failure': 2 fallos de autenticación desde 172.19.0.8 contra un usuario; patrón consistente con fuerza bruta SSH (MITRE T1110), confirmado por el SIEM.",
+        "mitre_technique": "T1110",
+        "factores": [
+          "2 fallo(s) de autenticación registrados (umbral de fuerza bruta: 20)",
+          "Confirmado por una regla activa del SIEM: 'SSH Isolated Authentication Failure'",
+          "El clasificador no degrada la severidad solo porque el conteo sea bajo, ya que el SIEM ya corroboró el patrón de forma independiente",
+          "Falso positivo: BAJA — confirmado por dos capas de detección (SIEM + clasificador)"
+        ]
+      },
+      "recommended_actions": [
+        {
+          "orden": 1,
+          "accion": "Bloquear la IP atacante en el firewall perimetral",
+          "comando_sugerido": "sudo ufw deny from 172.19.0.8",
+          "comando_argv": [
+            "sudo",
+            "ufw",
+            "deny",
+            "from",
+            "172.19.0.8"
+          ],
+          "comando_explicacion": "Agrega una regla al firewall (UFW, sobre iptables) que descarta todo el tráfico entrante desde esa IP puntual. No afecta a ningún otro origen ni servicio; es reversible con 'ufw delete deny from <ip>'.",
+          "resultado_simulado": "Regla añadida a UFW:\n  [ 3] Anywhere                   DENY IN    172.19.0.8\nDesde ahora, todo paquete entrante con origen 172.19.0.8 se descarta silenciosamente — el atacante ve la conexión como caída, no rechazada.",
+          "responsable": "SOC",
+          "plazo": "inmediata",
+          "impacto": "alto",
+          "action_id": "INC-AUTH-172.19.0.8-74152d42-5582ec",
+          "status": "pending"
+        },
+        {
+          "orden": 2,
+          "accion": "Verificar si hubo algún login EXITOSO desde la IP atacante",
+          "comando_sugerido": "grep 'Accepted password' /var/log/auth.log | grep 172.19.0.8",
+          "comando_argv": null,
+          "comando_explicacion": "Búsqueda de solo lectura sobre el log de autenticación del host: filtra las líneas de login aceptado y las cruza con la IP atacante. Si aparece algo, la fuerza bruta encontró la contraseña y hay que tratarlo como una cuenta comprometida, no solo como un intento fallido.",
+          "resultado_simulado": "Depende del log real del host — dos resultados posibles:\n  · Sin coincidencias → ningún login exitoso desde 172.19.0.8, la fuerza bruta\n    no llegó a acertar una contraseña.\n  · Con coincidencias (ej. 'Accepted password for testuser from 172.19.0.8')\n    → tratar la cuenta como comprometida de inmediato, no como sospecha.",
+          "responsable": "sysadmin",
+          "plazo": "inmediata",
+          "impacto": "alto",
+          "action_id": "INC-AUTH-172.19.0.8-74152d42-c4eb2b",
+          "status": "pending"
+        },
+        {
+          "orden": 3,
+          "accion": "Habilitar rate-limiting / fail2ban en el servicio SSH",
+          "comando_sugerido": "sudo apt-get install -y fail2ban && sudo systemctl enable --now fail2ban",
+          "comando_argv": null,
+          "comando_explicacion": "Instala fail2ban (monitorea los logs de auth y banea automáticamente IPs con demasiados fallos) y lo deja corriendo de forma permanente. Es la mitigación estructural: evita que haga falta bloquear IPs a mano cada vez que se repita este mismo patrón de ataque.",
+          "resultado_simulado": "Setting up fail2ban (0.11.2-6) ...\nCreated symlink /etc/systemd/system/multi-user.target.wants/fail2ban.service\n  → /lib/systemd/system/fail2ban.service.\n● fail2ban.service - Fail2Ban Service\n     Active: active (running)\nA partir de ahora, cualquier IP con demasiados fallos de SSH se banea sola, sin depender de que un analista lo haga a mano cada vez.",
+          "responsable": "sysadmin",
+          "plazo": "48h",
+          "impacto": "medio",
+          "action_id": "INC-AUTH-172.19.0.8-74152d42-bceba4",
+          "status": "pending"
+        }
+      ],
+      "first_seen": "2026-09-28T19:10:08.312Z",
+      "last_seen": "2026-09-28T19:10:08.312Z",
+      "event_count": 2,
+      "attacker_ips": [
+        "172.19.0.8"
+      ],
+      "victim_hosts": [],
+      "target_users": [],
+      "detection_source": "elastic",
+      "rule_name": "SSH Isolated Authentication Failure",
+      "severity_siem": "low",
+      "risk_score": 21,
+      "log_event_count": 0,
+      "alert_event_count": 2,
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "sample_messages": [],
+      "evidence": [],
+      "analysis": {
+        "explicacion": "Se registraron exactamente 2 intentos fallidos de autenticación por SSH desde la dirección IP 172.19.0.8 en un único instante de tiempo (2026-09-28T19:10:08.312Z). El evento fue detectado y confirmado por la regla activa del SIEM 'SSH Isolated Authentication Failure'. La IP de origen no posee antecedentes previos registrados en la red, siendo esta su primera aparición. A pesar de que el volumen de fallos está por debajo del umbral estándar de fuerza bruta, el SIEM validó el patrón de forma independiente.",
+        "metodologia": "La técnica de fuerza bruta (MITRE T1110) consiste en intentar adivinar credenciales mediante múltiples solicitudes automatizadas de inicio de sesión utilizando combinaciones de usuarios y contraseñas. Los atacantes suelen emplear herramientas como Hydra, Medusa o scripts personalizados para automatizar este proceso contra servicios expuestos como SSH.",
+        "contexto_riesgo": "Si este intento de acceso prospera, el atacante obtendría una sesión interactiva mediante SSH desde la IP 172.19.0.8, comprometiendo inicialmente el servicio y arriesgando la confidencialidad e integridad del entorno. Dado que la IP es totalmente nueva en los registros, el impacto potencial inicial dependerá de si las cuentas objetivo contaban con contraseñas débiles o predeterminadas.",
+        "severidad_ajustada": "LOW",
+        "accion_recomendada": "Verificar en los logs del servicio SSH si la IP 172.19.0.8 realizó conexiones exitosas posteriores y evaluar el bloqueo preventivo de la IP si la actividad persiste.",
+        "falso_positivo_probabilidad": "LOW",
+        "referencias": [
+          "MITRE ATT&CK T1110: Brute Force - https://attack.mitre.org/techniques/T1110/"
+        ],
+        "puntos_de_investigacion": [
+          "¿Existió alguna autenticación exitosa por SSH desde la IP 172.19.0.8 inmediatamente después de estos 2 fallos?",
+          "¿Qué cuenta o cuentas de usuario específicas fueron el blanco de estos intentos fallidos desde la IP 172.19.0.8?",
+          "¿A qué servicio o activo interno específico apuntaba la conexión SSH originada en la IP 172.19.0.8?"
+        ],
+        "_source": "gemini",
+        "contexto_historico": "Sin antecedentes previos para 172.19.0.8: es la primera vez que se registra actividad de esta IP.",
+        "contexto_campana": null
+      },
+      "campaign_id": null,
+      "related_incidents": [],
+      "campaign_shared_ips": []
+    },
+    {
+      "incident_id": "INC-PHISH-172.18.0.9-507bb502",
+      "source_ip": "172.18.0.9",
+      "classification": {
+        "attack_type": "credential_harvesting",
+        "confidence": "media",
+        "severity": "alta",
+        "false_positive_likelihood": "media",
+        "rationale": "2 envío(s) de credenciales hacia una página de login sospechosa (/login); posible captura de credenciales (phishing).",
+        "mitre_technique": "T1566",
+        "factores": [
+          "2 envío(s) de credenciales detectado(s) hacia una URL marcada como sospechosa",
+          "1 usuario(s) distinto(s) afectado(s)",
+          "Confirmado por una regla activa del SIEM: 'Credential Submission to Suspicious Login'",
+          "Falso positivo: MEDIA — depende de qué tan confiable sea la fuente que marcó la URL como sospechosa"
+        ]
+      },
+      "recommended_actions": [
+        {
+          "orden": 1,
+          "accion": "Dar de baja / bloquear el servidor de phishing (página falsa)",
+          "comando_sugerido": "sudo ufw deny from 172.18.0.8",
+          "comando_argv": [
+            "sudo",
+            "ufw",
+            "deny",
+            "from",
+            "172.18.0.8"
+          ],
+          "comando_explicacion": "Bloquea en el firewall la IP que aloja la página de phishing, cortando el acceso desde esta red hacia ese servidor — no da de baja la página en sí (está fuera de nuestro control), pero corta la exposición local.",
+          "resultado_simulado": "Regla añadida a UFW:\n  [ 3] Anywhere                   DENY OUT   172.18.0.8\nNingún equipo de esta red vuelve a poder llegar a esa IP — pero la página falsa sigue en línea para el resto de internet, fuera de nuestro control.",
+          "responsable": "SOC",
+          "plazo": "inmediata",
+          "impacto": "alto",
+          "action_id": "INC-PHISH-172.18.0.9-507bb502-3d4edc",
+          "status": "pending"
+        },
+        {
+          "orden": 2,
+          "accion": "Forzar reset de credenciales del usuario que envió datos (testuser)",
+          "comando_sugerido": "sudo passwd testuser",
+          "comando_argv": [
+            "sudo",
+            "passwd",
+            "testuser"
+          ],
+          "comando_explicacion": "Cambia la contraseña del usuario que envió sus credenciales a la página falsa. Es la acción más urgente del incidente: esa contraseña ya está en manos del atacante, tratarla como comprometida de inmediato, no como sospecha.",
+          "resultado_simulado": "Changing password for user testuser.\nNew password: \nRetype new password: \npasswd: password updated successfully\nLa contraseña que testuser envió a la página falsa deja de servirle al atacante para entrar con ella.",
+          "responsable": "sysadmin",
+          "plazo": "inmediata",
+          "impacto": "alto",
+          "action_id": "INC-PHISH-172.18.0.9-507bb502-a4b178",
+          "status": "pending"
+        },
+        {
+          "orden": 3,
+          "accion": "Alertar a los usuarios afectados y reforzar concientización",
+          "comando_sugerido": null,
+          "comando_argv": null,
+          "comando_explicacion": null,
+          "resultado_simulado": null,
+          "responsable": "SOC",
+          "plazo": "inmediata",
+          "impacto": "medio",
+          "action_id": "INC-PHISH-172.18.0.9-507bb502-ba031a",
+          "status": "pending"
+        },
+        {
+          "orden": 4,
+          "accion": "Agregar el indicador (IP/dominio) a la blocklist / threat intel",
+          "comando_sugerido": null,
+          "comando_argv": null,
+          "comando_explicacion": null,
+          "resultado_simulado": null,
+          "responsable": "SOC",
+          "plazo": "24h",
+          "impacto": "medio",
+          "action_id": "INC-PHISH-172.18.0.9-507bb502-5d0f50",
+          "status": "pending"
+        }
+      ],
+      "first_seen": "2026-09-28T19:13:47.000Z",
+      "last_seen": "2026-09-29T13:52:58.000Z",
+      "event_count": 2,
+      "attacker_ips": [
+        "172.18.0.8",
+        "172.19.0.10"
+      ],
+      "victim_hosts": [],
+      "target_users": [
+        "testuser"
+      ],
+      "detection_source": "elastic",
+      "rule_name": "Credential Submission to Suspicious Login",
+      "severity_siem": "high",
+      "risk_score": 68,
+      "log_event_count": 2,
+      "alert_event_count": 0,
+      "mitre": {
+        "tactic": "Initial Access",
+        "technique": "Phishing",
+        "technique_id": "T1566"
+      },
+      "sample_messages": [
+        "POST /login usuario=testuser desde 172.18.0.9"
+      ],
+      "evidence": [
+        {
+          "ts": "2026-09-28T19:13:47.000Z",
+          "detail": "POST /login (user=testuser, creds=sí)"
+        },
+        {
+          "ts": "2026-09-29T13:52:58.000Z",
+          "detail": "POST /login (user=testuser, creds=sí)"
+        }
+      ],
+      "analysis": {
+        "explicacion": "Se detectó que el usuario testuser envió credenciales en dos oportunidades hacia una URL considerada sospechosa. La actividad ocurrió en una ventana temporal de casi 19 horas, abarcando desde el 28 de septiembre hasta el 29 de septiembre de 2026. Este caso está vinculado a otra alerta activa (INC-AUTH-172.19.0.10-4c57a217) debido a que comparten la IP 172.19.0.10, formando parte de una campaña coordinada. Las IPs involucradas (172.18.0.8, 172.18.0.9 y 172.19.0.10) no poseen antecedentes previos registrados en el sistema.",
+        "metodologia": "Esta técnica involucra la sustracción de credenciales mediante páginas de phishing o desvíos a sitios externos maliciosos donde el usuario ingresa sus datos. Los atacantes suelen utilizar formularios falsos o infraestructura externa para recolectar nombres de usuario y contraseñas que luego reutilizan para acceso inicial.",
+        "contexto_riesgo": "Si el ataque prospera, el atacante obtendrá acceso legítimo a la cuenta de testuser, permitiéndole moverse dentro de la red corporativa. Dado que este incidente forma parte de una campaña activa compartida con la IP 172.19.0.10, el impacto podría escalar a múltiples vectores o comprometer otros recursos si no se contiene de inmediato.",
+        "severidad_ajustada": "HIGH",
+        "accion_recomendada": "Verificar de inmediato si el usuario testuser realizó autenticaciones exitosas desde las IPs 172.18.0.8, 172.18.0.9 o 172.19.0.10 y proceder a revocar su sesión y forzar cambio de contraseña.",
+        "falso_positivo_probabilidad": "MEDIUM",
+        "referencias": [
+          "MITRE ATT&CK T1566: Phishing - https://attack.mitre.org/techniques/T1566/"
+        ],
+        "puntos_de_investigacion": [
+          "¿A qué URL o destino externo específico se enviaron las credenciales desde la IP 172.18.0.9?",
+          "¿Existen registros de inicio de sesión exitoso para la cuenta testuser provenientes de las IPs 172.18.0.8, 172.18.0.9 o 172.19.0.10 durante la ventana del incidente?",
+          "¿Qué actividad adicional registra el incidente vinculado INC-AUTH-172.19.0.10-4c57a217 que comparte la IP 172.19.0.10?"
+        ],
+        "_source": "gemini",
+        "contexto_historico": "Sin antecedentes previos para 172.18.0.8, 172.18.0.9, 172.19.0.10: es la primera vez que se registra actividad de esta IP.",
+        "contexto_campana": "Este incidente está vinculado a otro(s) 1 incidente(s) activo(s) (INC-AUTH-172.19.0.10-4c57a217) por compartir la IP 172.19.0.10. Tratarlos como una sola campaña, no como eventos aislados: la severidad real del conjunto puede ser mayor que la de cada incidente por separado."
+      },
+      "phishing_urls": [
+        "/login"
+      ],
+      "campaign_id": "CAMP-36e23351",
+      "related_incidents": [
+        "INC-AUTH-172.19.0.10-4c57a217"
+      ],
+      "campaign_shared_ips": [
+        "172.19.0.10"
+      ]
+    }
+  ],
+  "analyzed_at": "2026-09-29T14:19:55.444179+00:00",
+  "analyst_mode": "gemini"
+}

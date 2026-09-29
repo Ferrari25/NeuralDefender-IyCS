@@ -29,7 +29,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 def test_el_archivo_solo_crece_nunca_se_reescribe(client, sandbox_con_incidentes):
     """Invariante central: los bytes previos jamás cambian."""
-    ruta = sandbox_con_incidentes / "decisions.jsonl"
+    ruta = sandbox_con_incidentes / "data" / "decisions.jsonl"
     inc = client.get("/api/incidents").get_json()["incidents"][0]
 
     instantaneas = []
@@ -46,7 +46,7 @@ def test_el_archivo_solo_crece_nunca_se_reescribe(client, sandbox_con_incidentes
 
 def test_revisar_una_decision_agrega_no_edita(client, sandbox_con_incidentes):
     """Cambiar de opinión deja las dos decisiones en el historial."""
-    ruta = sandbox_con_incidentes / "decisions.jsonl"
+    ruta = sandbox_con_incidentes / "data" / "decisions.jsonl"
     inc = client.get("/api/incidents").get_json()["incidents"][0]
     act_id = inc["recommended_actions"][0]["action_id"]
 
@@ -131,7 +131,7 @@ def test_cada_linea_es_json_valido_e_independiente(client, sandbox_con_incidente
             "incident_id": inc["incident_id"], "action_id": act["action_id"],
             "decision": "dismissed", "note": "con acentos: clasificación"})
 
-    crudo = (sandbox_con_incidentes / "decisions.jsonl").read_text(encoding="utf-8")
+    crudo = (sandbox_con_incidentes / "data" / "decisions.jsonl").read_text(encoding="utf-8")
     assert crudo.endswith("\n")
     for linea in crudo.strip().split("\n"):
         assert json.loads(linea)["decision"] == "dismissed"
@@ -142,13 +142,13 @@ def test_cada_linea_es_json_valido_e_independiente(client, sandbox_con_incidente
 
 def test_el_pipeline_nunca_reescribe_analysis_history(sandbox_con_incidentes):
     """`siem_agent` agrega una línea por corrida; no reemplaza el historial."""
-    ruta = sandbox_con_incidentes / "analysis_history.jsonl"
+    ruta = sandbox_con_incidentes / "data" / "analysis_history.jsonl"
     siem_lib.append_jsonl(ruta, {"ts": "2026-09-16T10:00:00+00:00", "incident_count": 1})
     primera = ruta.read_bytes()
 
     entorno = {**os.environ, "PYTHONPATH": str(PROJECT_ROOT), "GEMINI_API_KEY": ""}
     resultado = subprocess.run(
-        [sys.executable, str(PROJECT_ROOT / "siem_agent.py")],
+        [sys.executable, str(PROJECT_ROOT / "src" / "siem_agent.py")],
         cwd=sandbox_con_incidentes, capture_output=True, text=True, timeout=120,
         env=entorno, check=False,
     )

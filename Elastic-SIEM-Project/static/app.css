@@ -246,6 +246,17 @@ body.solo-lectura .ctrl { display: none; }
                border-radius: 0 0 var(--r-sm) var(--r-sm); padding: var(--sp-8) var(--sp-10) var(--sp-10); font-size: var(--fs-mono); color: var(--muted);
                line-height: 1.45; }
 .action .cmd-explain b { color: var(--accent); font-weight: 600; }
+/* Vista previa simulada de una acción ya aprobada — ver renderResultadoSimulado
+   en app.js. Borde punteado en vez de sólido a propósito: distingue de un
+   vistazo "esto es hipotético" de la caja de comando real de arriba, que sí
+   corresponde a algo que existe. */
+.action .simulado { margin: var(--sp-10) 0 0; border: 1px dashed var(--med); border-radius: var(--r-sm); overflow: hidden; }
+.action .simulado-aviso { display: flex; align-items: flex-start; gap: var(--sp-8); padding: var(--sp-8) var(--sp-10);
+               background: rgba(210, 153, 34, 0.12); color: var(--med); font-size: var(--fs-sm); line-height: 1.4; }
+.action .simulado-aviso b { color: var(--med); }
+.action .simulado-salida { margin: 0; padding: var(--sp-10); background: #0a0f14; color: var(--muted);
+               font-family: ui-monospace, monospace; font-size: var(--fs-mono); line-height: 1.5;
+               white-space: pre-wrap; overflow-x: auto; }
 .action .ctrl { margin-left: auto; display: flex; gap: var(--sp-8); align-items: center; }
 button { font: inherit; font-size: var(--fs-md); border: 1px solid var(--border); background: var(--panel3);
          color: var(--text); border-radius: var(--r-sm); padding: var(--sp-6) var(--sp-14); cursor: pointer; }

@@ -40,7 +40,7 @@ def test_healthz_responde_sin_datos_sensibles(client):
 
 def test_healthz_funciona_sin_corrida_previa(client, sandbox_con_incidentes):
     """Sirve para esperar al server aunque el pipeline no haya corrido."""
-    (sandbox_con_incidentes / "siem_incidents.json").unlink()
+    (sandbox_con_incidentes / "data" / "siem_incidents.json").unlink()
     r = client.get("/api/v1/healthz")
     assert r.status_code == 200
     assert r.get_json()["incidents_file"] is False
@@ -160,7 +160,7 @@ def test_un_action_id_inexistente_da_404(client, sandbox_con_incidentes):
         "decision": "approved"})
 
     assert r.status_code == 404
-    assert not (sandbox_con_incidentes / "decisions.jsonl").exists(), \
+    assert not (sandbox_con_incidentes / "data" / "decisions.jsonl").exists(), \
         "no se escribió nada en el registro inmutable"
 
 
@@ -169,7 +169,7 @@ def test_un_incidente_inexistente_da_404(client, sandbox_con_incidentes):
         "incident_id": "INC-INVENTADO-000", "action_id": "INC-INVENTADO-000-a1",
         "decision": "approved"})
     assert r.status_code == 404
-    assert not (sandbox_con_incidentes / "decisions.jsonl").exists()
+    assert not (sandbox_con_incidentes / "data" / "decisions.jsonl").exists()
 
 
 def test_no_se_puede_cruzar_una_accion_a_otro_incidente(client, sandbox_con_incidentes):
@@ -185,7 +185,7 @@ def test_no_se_puede_cruzar_una_accion_a_otro_incidente(client, sandbox_con_inci
         "incident_id": incidentes[0]["incident_id"], "action_id": ajeno,
         "decision": "approved"})
     assert r.status_code == 404
-    assert not (sandbox_con_incidentes / "decisions.jsonl").exists()
+    assert not (sandbox_con_incidentes / "data" / "decisions.jsonl").exists()
 
 
 # ─── El camino feliz, con la cadena de auditoría ─────────────────────────────
@@ -223,7 +223,7 @@ def test_audit_verify_denuncia_una_manipulacion(client, client_como,
                                                 sandbox_con_incidentes):
     """El panel puede mostrar que su propia auditoría fue alterada."""
     auditor = client_como("cata")
-    ruta = sandbox_con_incidentes / "decisions.jsonl"
+    ruta = sandbox_con_incidentes / "data" / "decisions.jsonl"
     inc_id, act_id = _una_accion(client)
     for _ in range(3):
         client.post("/api/v1/decision", json={
@@ -248,7 +248,7 @@ def test_una_linea_corrupta_no_tumba_el_panel(client, client_como,
 
     La lectura es tolerante; la integridad se reporta aparte, en `/audit/verify`.
     """
-    ruta = sandbox_con_incidentes / "decisions.jsonl"
+    ruta = sandbox_con_incidentes / "data" / "decisions.jsonl"
     inc_id, act_id = _una_accion(client)
     client.post("/api/v1/decision", json={
         "incident_id": inc_id, "action_id": act_id, "decision": "approved"})

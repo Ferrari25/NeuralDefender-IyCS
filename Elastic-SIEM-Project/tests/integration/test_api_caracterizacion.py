@@ -30,7 +30,7 @@ def test_incidents_devuelve_la_captura(client):
 
 def test_incidents_sin_archivo_avisa_que_falta(client, sandbox_con_incidentes):
     """Sin corrida previa del pipeline, la API lo señala con `missing`."""
-    (sandbox_con_incidentes / "siem_incidents.json").unlink()
+    (sandbox_con_incidentes / "data" / "siem_incidents.json").unlink()
     datos = client.get("/api/incidents").get_json()
     assert datos == {"incidents": [], "analyst_mode": None, "missing": True}
 
@@ -139,15 +139,15 @@ def test_la_api_no_expone_ninguna_ruta_de_ejecucion(client):
 
 def test_aprobar_una_accion_solo_escribe_una_linea(client, sandbox_con_incidentes):
     """Aprobar registra una intención; no dispara nada ni toca otro archivo."""
-    antes = {p.name for p in sandbox_con_incidentes.iterdir()}
+    antes = {p.name for p in (sandbox_con_incidentes / "data").iterdir()}
     inc_id, act_id = _una_accion(client)
     client.post("/api/decision", json={
         "incident_id": inc_id, "action_id": act_id, "decision": "approved"})
 
-    despues = {p.name for p in sandbox_con_incidentes.iterdir()}
+    despues = {p.name for p in (sandbox_con_incidentes / "data").iterdir()}
     assert despues - antes == {"decisions.jsonl"}
 
-    lineas = (sandbox_con_incidentes / "decisions.jsonl").read_text(
+    lineas = (sandbox_con_incidentes / "data" / "decisions.jsonl").read_text(
         encoding="utf-8").strip().split("\n")
     assert len(lineas) == 1
     assert json.loads(lineas[0])["decision"] == "approved"

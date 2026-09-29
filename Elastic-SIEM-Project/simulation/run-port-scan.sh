@@ -63,4 +63,4 @@ if ! $OFFLINE; then
   fi
 fi
 
-echo "[OK] Listo. Corré:  python3 siem_pipeline.py   y luego abrí el dashboard."
+echo "[OK] Listo. Corré:  python3 src/siem_pipeline.py   y luego abrí el dashboard."

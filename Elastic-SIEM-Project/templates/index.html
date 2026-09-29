@@ -23,10 +23,10 @@
   <div class="wrap">
     <div class="about-panel" id="aboutPanel">
       <h3>Arquitectura de detección → análisis → acción</h3>
-      <p><b>Agente 1 (determinístico):</b> <code>classifier.py</code> agrupa eventos crudos por IP/host y
+      <p><b>Agente 1 (determinístico):</b> <code>src/classifier.py</code> agrupa eventos crudos por IP/host y
       aplica reglas fijas de umbral (ej. 20+ fallos de auth = fuerza bruta). Rápido, barato y 100%
       auditable — nunca usa IA para esta parte, así el resultado siempre es reproducible.</p>
-      <p><b>Agente 2 (IA con fallback):</b> <code>siem_agent.py</code> traduce la clasificación a una
+      <p><b>Agente 2 (IA con fallback):</b> <code>src/siem_agent.py</code> traduce la clasificación a una
       explicación en lenguaje claro (Gemini si hay API key configurada; si no, un análisis
       determinístico de respaldo — nunca deja al analista sin explicación).</p>
       <h3>Cómo el Agente 2 razona mejor sin decidir más</h3>
@@ -63,10 +63,10 @@
           <div class="filters">
             <select id="fSeverity" data-filtro="1">
               <option value="">Todas las severidades</option>
-              <option value="CRITICAL">Crítica</option>
-              <option value="HIGH">Alta</option>
-              <option value="MEDIUM">Media</option>
-              <option value="LOW">Baja</option>
+              <option value="CRITICAL">Critical</option>
+              <option value="HIGH">High</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="LOW">Low</option>
             </select>
             <select id="fType" data-filtro="1">
               <option value="">Todos los tipos de ataque</option>

@@ -181,7 +181,7 @@ def test_el_viewer_no_puede_decidir(client_como, sandbox_con_incidentes):
 
     assert respuesta.status_code == 403
     assert respuesta.get_json()["permiso_requerido"] == "decidir"
-    assert not (sandbox_con_incidentes / "decisions.jsonl").exists()
+    assert not (sandbox_con_incidentes / "data" / "decisions.jsonl").exists()
 
 
 def test_el_auditor_tampoco_puede_decidir(client_como, sandbox_con_incidentes):
@@ -195,7 +195,7 @@ def test_el_auditor_tampoco_puede_decidir(client_como, sandbox_con_incidentes):
         "decision": "approved"})
 
     assert respuesta.status_code == 403
-    assert not (sandbox_con_incidentes / "decisions.jsonl").exists()
+    assert not (sandbox_con_incidentes / "data" / "decisions.jsonl").exists()
 
 
 def test_solo_el_auditor_verifica_la_cadena(client_como):
@@ -255,7 +255,7 @@ def test_el_registro_firma_con_el_usuario_de_la_sesion(client, sandbox_con_incid
     assert "user_agent" in registro
 
     en_disco = json.loads(
-        (sandbox_con_incidentes / "decisions.jsonl").read_text(encoding="utf-8").strip())
+        (sandbox_con_incidentes / "data" / "decisions.jsonl").read_text(encoding="utf-8").strip())
     assert en_disco["analyst"] == "ana"
 
 
@@ -290,7 +290,7 @@ def test_dos_analistas_firman_sus_propias_decisiones(client_como,
             "decision": "approved"})
 
     registros = [json.loads(linea) for linea in
-                 (sandbox_con_incidentes / "decisions.jsonl")
+                 (sandbox_con_incidentes / "data" / "decisions.jsonl")
                  .read_text(encoding="utf-8").strip().split("\n")]
     assert all(r["analyst"] == "ana" for r in registros)
     # Sesiones distintas ⇒ session_id distintos: se puede distinguir desde dónde
@@ -387,7 +387,7 @@ def test_sin_token_csrf_el_post_se_rechaza(app_dashboard, login,
 
         assert respuesta.status_code == 403
         assert "CSRF" in respuesta.get_json()["error"]
-        assert not (sandbox_con_incidentes / "decisions.jsonl").exists()
+        assert not (sandbox_con_incidentes / "data" / "decisions.jsonl").exists()
     finally:
         app_dashboard.app.config["WTF_CSRF_ENABLED"] = False
 

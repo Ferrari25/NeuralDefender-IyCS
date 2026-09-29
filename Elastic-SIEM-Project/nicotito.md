@@ -210,11 +210,11 @@ infraestructura, usando datos sintéticos generados localmente:
 ```bash
 bash simulation/run-port-scan.sh --offline
 bash simulation/run-phishing.sh  --offline
-python3 siem_pipeline.py
-python3 dashboard.py
+python3 src/siem_pipeline.py
+python3 src/dashboard.py
 ```
 
-`prepare-for-ia.py` detecta que no hay Elasticsearch, no falla el pipeline, y
+`src/prepare-for-ia.py` detecta que no hay Elasticsearch, no falla el pipeline, y
 sigue con lo que ya haya en `network_logs/`.
 
 ---
@@ -226,11 +226,12 @@ lectura:
 
 ```bash
 export PYTHONPATH="$PWD/.devtools"
-python3 manage_users.py crear ana --rol analyst
+python3 src/manage_users.py crear ana --rol analyst
 ```
 
-Te pide la contraseña de forma interactiva (no se muestra en pantalla, no se
-pasa por línea de comandos). Roles disponibles:
+Te pide la contraseña **dos veces** (para confirmar) de forma interactiva —
+no se muestra en pantalla ni se pasa por línea de comandos. Mínimo 12
+caracteres. Roles disponibles:
 
 | Rol | Puede |
 |---|---|
@@ -250,40 +251,52 @@ Ningún rol ejecuta acciones de contención — el sistema **sugiere**, un human
 docker compose --profile simulation up -d ssh-target hydra-attacker
 bash simulation/run-brute-force.sh
 
-# Port scan y phishing (funcionan con o sin Docker):
-bash simulation/run-port-scan.sh
-bash simulation/run-phishing.sh
+# Port scan y phishing — con --offline, que solo genera los logs: es el
+# camino confiable (el modo "live" de run-phishing.sh depende de un
+# contenedor, simulated-user, que este docker-compose.yml no define):
+bash simulation/run-port-scan.sh --offline
+bash simulation/run-phishing.sh  --offline
 
 # Clasificar + analizar (Agente 1 determinístico + Agente 2, con o sin Gemini
 # según SIEM_USE_LLM en .env):
-python3 siem_pipeline.py
+python3 src/siem_pipeline.py
+```
+
+**Qué esperar ver.** El pipeline imprime algo como:
+
+```
+  Incidentes detectados: 3
+   • INC-AUTH-<ip>-...: ssh_brute_force [ALTA] — N eventos
+   • INC-SCAN-<ip>-...: port_scan [ALTA] — 26 eventos
+   • INC-PHISH-<ip>-...: credential_harvesting [ALTA] — 1 eventos
 ```
 
 Con las reglas ya desplegadas (paso 5), Kibana tarda hasta su intervalo de
-ejecución (`interval`, normalmente algunos minutos) en generar la alerta real
-— si `siem_pipeline.py` corre antes de que la alerta exista, el Agente 1 igual
-detecta el patrón por su cuenta desde los logs crudos (el sistema no depende
-del SIEM para funcionar), pero conviene esperar un par de minutos y volver a
-correr el pipeline para ver la alerta real de Kibana reflejada en el panel
-(columna "Regla disparada").
+ejecución (`interval`, normalmente algunos minutos) en generar la alerta
+real — si `src/siem_pipeline.py` corre antes de que la alerta exista, el
+Agente 1 igual detecta el patrón por su cuenta desde los logs crudos (el
+sistema no depende del SIEM para funcionar; en la columna "Regla disparada"
+del panel vas a ver "Sin regla SIEM (detección propia)"). Esperá un par de
+minutos y volvé a correr `python3 src/siem_pipeline.py` para ver la alerta
+real de Kibana reflejada ahí en su lugar.
 
 ---
 
 ## 8. Abrir el dashboard
 
 ```bash
-python3 dashboard.py
+python3 src/dashboard.py
 ```
 
 Abrí **http://127.0.0.1:5000/login**, entrá con el usuario que creaste en el
-paso 6. Cada aprobación/descarte queda en `decisions.jsonl` (append-only,
+paso 6. Cada aprobación/descarte queda en `data/decisions.jsonl` (append-only,
 encadenado por hash, firmado con el usuario de la sesión — nunca con una
 variable de entorno).
 
 Verificar en cualquier momento que el registro de auditoría no fue alterado:
 
 ```bash
-python3 audit_verify.py
+python3 src/audit_verify.py
 ```
 
 ---
@@ -292,38 +305,38 @@ python3 audit_verify.py
 
 Herramienta de este mismo proyecto para demostrar que todo lo que disparó una
 alerta real en Elasticsearch tiene su incidente correspondiente en el panel,
-con la regla más grave que corresponde (ver `verify-cobertura.py` para el
+con la regla más grave que corresponde (ver `src/verify-cobertura.py` para el
 detalle de qué compara exactamente):
 
 ```bash
 export PYTHONPATH="$PWD/.devtools"
-python3 verify-cobertura.py
+python3 src/verify-cobertura.py
 ```
 
 Sale `✅` si todo está cubierto, o lista exactamente qué (IP, técnica) disparó
-en Kibana y no aparece todavía en `siem_incidents.json` (normalmente porque
-falta volver a correr `python3 siem_pipeline.py` después de la última alerta).
+en Kibana y no aparece todavía en `data/siem_incidents.json` (normalmente porque
+falta volver a correr `python3 src/siem_pipeline.py` después de la última alerta).
 
 ---
 
-## 10. Demostrar la calidad del código (SAST) y las pruebas de servicio
+## 10. Demostrar los linters, el SAST y las pruebas de servicio
 
 Todo esto requiere haber instalado `requirements-dev.txt` (paso 4):
 
 ```bash
 export PYTHONPATH="$PWD/.devtools"
 
-./scripts/check.sh            # TODO: análisis estático + todas las pruebas (~150s)
-./scripts/check.sh --sast     # Solo análisis estático (ruff, pylint, bandit, eslint)
-./scripts/check.sh --tests    # Solo pruebas (unitarias, servicio, cobertura)
+./scripts/pruebas_de_codigo_estatico.sh   # linters + SAST (ruff, eslint, pylint, bandit)
+./scripts/pruebas_de_servicio.sh          # estático (AST) + unitarias + servicio + cobertura
+./scripts/pruebas_completas.sh            # los dos anteriores, uno atrás del otro
 ```
 
-`check.sh` imprime cada etapa con `OK`/`FALLA`/`BASE` y termina en
-`✅ Todo en verde.` o `❌ N etapa(s) con fallos.` — es la misma puerta que
-correría un CI.
+Cada script imprime cada etapa con `✔ OK`/`✘ FALLA`/`BASE` agrupada por
+categoría con su propio color, y termina en `✅ Todo en verde.` o
+`❌ N etapa(s) con fallos.` — es la misma puerta que correría un CI.
 
 Qué es cada cosa, en el vocabulario del propio proyecto
-(`docs/12-registro-de-pruebas.md`):
+(`docs/04-auditoria-pruebas-y-demostracion.md`):
 
 - **Pruebas de código estático (SAST):** no ejecutan nada, leen el código.
   `ruff` (estilo/imports), `pylint` + `pylint-secure-coding-standard`
@@ -345,8 +358,8 @@ Qué es cada cosa, en el vocabulario del propio proyecto
   ```
 
 Para mostrar el resultado de una corrida real (no la promesa de que pasaría):
-correr `./scripts/check.sh` y compartir esa salida, o pegar el resumen que
-imprime al final cada bloque de `pytest`.
+correr `./scripts/pruebas_completas.sh` y compartir esa salida, o pegar el
+resumen que imprime al final cada bloque de `pytest`.
 
 ---
 
@@ -361,7 +374,7 @@ docker compose --profile simulation down
 ./scripts/start.sh
 ```
 
-`reset.sh` **nunca** borra `decisions.jsonl`/`analysis_history.jsonl`: los
+`reset.sh` **nunca** borra `data/decisions.jsonl`/`data/analysis_history.jsonl`: los
 archiva en `audit/archive/<timestamp>/` con permisos de solo lectura.
 
 ---
@@ -387,12 +400,12 @@ archiva en `audit/archive/<timestamp>/` con permisos de solo lectura.
 | Configurar secretos | `cp .env.example .env` y completar (ver §3) |
 | Instalar dependencias Python | `python3 -m pip install --target=.devtools -r requirements.txt -r requirements-dev.txt` |
 | Levantar todo (stack + reglas) | `./scripts/start.sh` |
-| Crear el primer usuario del panel | `python3 manage_users.py crear <nombre> --rol analyst` |
+| Crear el primer usuario del panel | `python3 src/manage_users.py crear <nombre> --rol analyst` |
 | Lanzar un ataque SSH | `docker compose --profile simulation up -d ssh-target hydra-attacker && bash simulation/run-brute-force.sh` |
-| Correr la capa de IA | `python3 siem_pipeline.py` |
-| Abrir el dashboard | `python3 dashboard.py` → http://127.0.0.1:5000/login |
-| Verificar la auditoría | `python3 audit_verify.py` |
-| Verificar cobertura SIEM ↔ panel | `python3 verify-cobertura.py` |
-| Demostrar SAST + pruebas | `./scripts/check.sh` |
+| Correr la capa de IA | `python3 src/siem_pipeline.py` |
+| Abrir el dashboard | `python3 src/dashboard.py` → http://127.0.0.1:5000/login |
+| Verificar la auditoría | `python3 src/audit_verify.py` |
+| Verificar cobertura SIEM ↔ panel | `python3 src/verify-cobertura.py` |
+| Demostrar linters + SAST + pruebas | `./scripts/pruebas_completas.sh` |
 | Reset completo | `./scripts/reset.sh --yes && ./scripts/start.sh` |
 | Apagar todo | `docker compose --profile simulation down` |
