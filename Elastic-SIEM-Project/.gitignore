@@ -128,7 +128,8 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+# .env — a pedido explícito del dueño del repo, bajo su propia responsabilidad
+# (ver commit que sube secretos): ya NO se ignora.
 .venv
 env/
 venv/
@@ -177,24 +178,9 @@ cython_debug/
 .DS_Store
 .vscode/
 
-# Certificate files
-*.key
-*.csr
-*.srl
-
-# Specific directories
-elasticsearch/certs/
-
-# SIEM-IA runtime artifacts (generados por el pipeline / dashboard)
-decisions.jsonl
-analysis_history.jsonl
-ai_report.json
-# Auditoría archivada por scripts/reset.sh (A-01): local, nunca se versiona.
-audit/
-# Almacén de usuarios del panel: contiene hashes de contraseña (API-01).
-users.json
-# Logs de red/web generados por las simulaciones (se mantiene el directorio).
-network_logs/*.json
+# Certificate files, users.json, audit/, decisions.jsonl, analysis_history.jsonl,
+# ai_report.json y network_logs/*.json — a pedido explícito del dueño del repo,
+# bajo su propia responsabilidad: ya NO se ignoran.
 
 # Herramientas de desarrollo instaladas localmente (PEP 668: no se puede tocar
 # el Python del sistema). Ver requirements-dev.txt.
