@@ -217,7 +217,8 @@ def _accion(orden: int, accion: str, responsable: str, plazo: str, impacto: str,
     }
 
 
-def _playbook(attack_type: str, ip: str | None, user: str | None) -> list[dict]:
+def _playbook(attack_type: str, ip: str | None, user: str | None, *,
+              magnitud_critica: bool = False) -> list[dict]:
     """Devuelve las acciones sugeridas, OMITIENDO las que no se pueden resolver.
 
     `ip` y `user` se revalidan acá aunque el llamador ya lo haya hecho: es el
@@ -227,6 +228,16 @@ def _playbook(attack_type: str, ip: str | None, user: str | None) -> list[dict]:
     Omitir una acción es la respuesta correcta cuando falta el dato: antes se
     emitía `sudo ufw deny from <IP_ATACANTE>`, un comando que el analista no
     puede ejecutar y que además enseña a ignorar lo que dice el panel (L-03).
+
+    `magnitud_critica` es el único hecho de ESTE incidente que hoy influye en
+    la prioridad de las acciones (lo pasa `detect_auth_incidents` cuando el
+    volumen ya cruzó `CRITICAL_FAILURE_COUNT`, el mismo umbral que decide
+    `severity="critica"` en `_classification`): con un volumen así, la
+    mitigación estructural (fail2ban) deja de ser algo para las próximas 48h
+    y pasa a ser tan urgente como bloquear la IP. No se usa para reordenar
+    ACCIONES DE OTROS TIPOS de ataque ni para inventar una acción nueva — solo
+    ajusta plazo/impacto de una que ya existía, con un hecho que el
+    clasificador ya tenía calculado.
     """
     ip = valid_ip(ip)
     usr = valid_username(user)
@@ -280,14 +291,25 @@ def _playbook(attack_type: str, ip: str | None, user: str | None) -> list[dict]:
                     "passwd: password updated successfully\n"
                     f"La contraseña anterior de {usr} queda inválida de inmediato — cualquier "
                     "sesión que dependiera de ella hay que volver a abrirla.")))
+        # Con volumen crítico, esperar 48h a la mitigación estructural deja la
+        # misma ventana abierta que ya se cruzó con miles de intentos —
+        # `magnitud_critica` la sube a la misma urgencia que bloquear la IP.
+        fail2ban_plazo   = "inmediata" if magnitud_critica else "48h"
+        fail2ban_impacto = "alto" if magnitud_critica else "medio"
+        fail2ban_titulo  = (
+            "Habilitar rate-limiting / fail2ban en el servicio SSH"
+            + (" (prioridad elevada: volumen crítico)" if magnitud_critica else ""))
         acciones.append(_accion(
-            4, "Habilitar rate-limiting / fail2ban en el servicio SSH", "sysadmin", "48h", "medio",
+            4, fail2ban_titulo, "sysadmin", fail2ban_plazo, fail2ban_impacto,
             comando="sudo apt-get install -y fail2ban && sudo systemctl enable --now fail2ban",
             explicacion=(
                 "Instala fail2ban (monitorea los logs de auth y banea automáticamente IPs con "
                 "demasiados fallos) y lo deja corriendo de forma permanente. Es la mitigación "
                 "estructural: evita que haga falta bloquear IPs a mano cada vez que se repita "
-                "este mismo patrón de ataque."),
+                "este mismo patrón de ataque."
+                + (" Con este volumen de intentos, no conviene dejarla para las próximas 48h: "
+                   "el mismo patrón puede repetirse desde otra IP antes de que se instale."
+                   if magnitud_critica else "")),
             resultado_simulado=(
                 "Setting up fail2ban (0.11.2-6) ...\n"
                 "Created symlink /etc/systemd/system/multi-user.target.wants/fail2ban.service\n"
@@ -608,7 +630,9 @@ def detect_auth_incidents(siem_data: dict) -> list[dict]:
         attacker_ip = resolver_ip_atacante(sorted(inc["attacker_ips"]), ip)
         user = next(iter(sorted(inc["target_users"])), None)
         incident_id = _incident_id("AUTH", ip, inc["first_seen"])
-        actions = _finalize(incident_id, _playbook(attack_type, attacker_ip, user))
+        actions = _finalize(incident_id, _playbook(
+            attack_type, attacker_ip, user,
+            magnitud_critica=total >= CRITICAL_FAILURE_COUNT))
 
         if not inc["mitre"] and classification["mitre_technique"]:
             inc["mitre"] = {"tactic": "Credential Access", "technique": "Brute Force",

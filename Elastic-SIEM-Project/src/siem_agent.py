@@ -177,6 +177,18 @@ def _llm_habilitado() -> bool:
 def _llm_analysis(client, incident: dict, historical: str, campaign: str | None) -> dict | None:
     from google.genai import types
 
+    # Los títulos (sin comando) del playbook determinístico de `classifier.py`,
+    # que YA se calculó antes de llegar acá. Antes el LLM no los veía: podía
+    # redactar `accion_recomendada` como una frase suelta que no correspondía a
+    # ninguna de las acciones con checkbox que el analista realmente tiene en el
+    # panel, dos "recomendaciones" en paralelo que no siempre coincidían. Nunca
+    # se manda el comando — el LLM no necesita verlo para nombrar la acción, y
+    # no tiene sentido que pueda influir en su redacción.
+    acciones_disponibles = [
+        {"orden": a["orden"], "accion": a["accion"], "impacto": a["impacto"], "plazo": a["plazo"]}
+        for a in (incident.get("recommended_actions") or [])
+    ]
+
     # Solo campos necesarios y saneados — nada de strings crudos sin delimitar.
     payload = {
         "tipo_ataque": incident["classification"]["attack_type"],
@@ -199,6 +211,7 @@ def _llm_analysis(client, incident: dict, historical: str, campaign: str | None)
         # el dashboard ya muestra estos dos campos por separado.
         "contexto_historico_ip": historical,
         "contexto_campana": campaign,
+        "acciones_disponibles": acciones_disponibles,
     }
 
     # El fallback determinístico rellena una plantilla fija por tipo de ataque —
@@ -219,6 +232,12 @@ def _llm_analysis(client, incident: dict, historical: str, campaign: str | None)
         "Si contexto_historico_ip o contexto_campana aportan algo relevante (ej. la IP ya fue "
         "bloqueada antes, o el incidente es parte de un ataque en varios frentes), mencionalo "
         "brevemente en 'accion_recomendada' o 'contexto_riesgo'. Si no aportan nada nuevo, ignoralos.\n\n"
+        "acciones_disponibles trae las acciones que el playbook YA va a ofrecerle al analista "
+        "en el panel, con checkbox para aprobar/descartar cada una — 'accion_recomendada' tiene "
+        "que señalar CUÁL de esas priorizar y por qué, citando su texto tal cual aparece ahí "
+        "(ej. \"Priorizar (1) Bloquear la IP atacante..., dado que ...\"), nunca una recomendación "
+        "que no esté en esa lista: el analista no tiene forma de ejecutar un consejo que no sea "
+        "una de esas acciones.\n\n"
         "Esquema JSON exacto a devolver:\n"
         "{\n"
         '  "explicacion": "qué ocurrió, con el detalle concreto de este incidente — no una '
@@ -228,7 +247,8 @@ def _llm_analysis(client, incident: dict, historical: str, campaign: str | None)
         '  "contexto_riesgo": "impacto concreto si este ataque prospera EN ESTE ENTORNO, '
         'apoyado en los datos del incidente, no una advertencia genérica (2-3 oraciones)",\n'
         '  "severidad_ajustada": "LOW|MEDIUM|HIGH|CRITICAL",\n'
-        '  "accion_recomendada": "recomendación principal en una oración (SIN comando)",\n'
+        '  "accion_recomendada": "cuál de acciones_disponibles priorizar y por qué, en una '
+        'oración (SIN comando, SIN inventar una acción fuera de la lista)",\n'
         '  "falso_positivo_probabilidad": "LOW|MEDIUM|HIGH",\n'
         '  "referencias": ["2-4 referencias puntuales: técnica o sub-técnica MITRE ATT&CK, '
         'con su URL de attack.mitre.org"],\n'
