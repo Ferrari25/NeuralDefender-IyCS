@@ -76,11 +76,6 @@
           <div id="eventsTableWrap"></div>
           <div id="detailWrap" class="detail-wrap"></div>
         </section>
-
-        <section class="panel">
-          <h2 class="panel-title"><svg class="ico"><use href="#i-registro"></use></svg> Registro de Eventos del Sistema</h2>
-          <div id="logFeed"></div>
-        </section>
       </div>
 
       <aside>
@@ -95,6 +90,8 @@
       </aside>
     </div>
   </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>

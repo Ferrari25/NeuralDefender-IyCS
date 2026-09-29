@@ -24,7 +24,7 @@ Cuatro números arrancan en cero y hay que mostrarlos:
 
 | | Al empezar | Al terminar |
 |---|---|---|
-| Reglas de detección en Kibana | **0** | 13 |
+| Reglas de detección en Kibana | **0** | 14 |
 | Alertas en Elasticsearch | **0** | 4 |
 | Documentos de Filebeat | **0** | 140 |
 | Incidentes en el panel | **0** | 3 |
@@ -124,8 +124,8 @@ antes de que lo pregunten.
 ./scripts/deploy-rules.sh        # lo corre el guion solo
 ```
 
-Las 13 reglas viven versionadas en `rules/ndjson/`. **Recargá la pestaña de Rules:
-pasa de 0 a 13.**
+Las 14 reglas viven versionadas en `rules/ndjson/`. **Recargá la pestaña de Rules:
+pasa de 0 a 14.**
 
 > **Lo que hay que decir:** «Las reglas son código: viajan en el repositorio y se
 > despliegan con un comando. Antes se creaban a mano en la consola, y eso significaba
@@ -199,28 +199,36 @@ decir y donde una explicación floja se nota.
 
 | Camino | Qué detecta | Qué aporta |
 |--------|-------------|------------|
-| **Elastic SIEM** | Fuerza bruta SSH | La alerta trae el **nombre de la regla**, la severidad del SIEM, el puntaje de riesgo y la técnica MITRE. El incidente queda explicable: «la regla X disparó por esto». |
-| **Agente 1** | Escaneo de puertos, phishing | El clasificador determinístico cuenta puertos distintos y envíos de credenciales en `network_logs/`. No consulta Elasticsearch. |
+| **Elastic SIEM** | Fuerza bruta SSH, escaneo de puertos, phishing | La alerta trae el **nombre de la regla**, la severidad del SIEM, el puntaje de riesgo y la técnica MITRE. El incidente queda explicable: «la regla X disparó por esto». |
+| **Agente 1** | Los tres tipos, sin depender de que la regla ya haya disparado | El clasificador determinístico cuenta fallos de auth, puertos distintos y envíos de credenciales leyendo `network_logs/`/logs de auth directamente. No espera a Elasticsearch para detectar, pero si la alerta correspondiente YA existe, la usa. |
 
-> **Lo que hay que decir:** «Hay dos caminos y es deliberado. La fuerza bruta la
-> confirmó una regla del SIEM, y el panel lo dice con el nombre de la regla. El escaneo
-> y el phishing los detectó el clasificador por su cuenta, leyendo los logs de red: si
-> Elasticsearch estuviera caído, esos dos igual aparecerían. La detección no depende de
-> un solo motor.»
+> **Lo que hay que decir:** «Hay dos caminos y es deliberado, y desde la corrección de
+> D-11 los tres tipos de ataque los pueden usar los dos. Si la regla de Kibana
+> (SSH, Port Scan o Phishing) ya disparó para esa IP, el panel muestra su nombre real.
+> Si Elasticsearch estuviera caído o la regla todavía no llegó a su intervalo de
+> ejecución, el clasificador igual detecta el patrón leyendo los logs directamente — la
+> detección no depende de un solo motor, pero cuando los dos coinciden, el panel lo
+> dice.»
 
-### Si preguntan por qué el escaneo no tiene regla
+### Si preguntan por qué un escaneo o un phishing aparecen "sin regla SIEM"
 
-Porque en este laboratorio **no hay Suricata ni un sensor de red que alimente
-Elasticsearch con flujos**. `network_logs/` es a la vez la entrada de Filebeat y la
-fuente del clasificador. Las reglas `Port Scan – …` del catálogo sí existen y sí
-disparan sobre esos mismos eventos una vez indexados; lo que pasa es que el Agente 1
-no espera a esa confirmación para detectar.
+Puede pasar, pero ya no es la regla general. `network_logs/` es a la vez la entrada de
+Filebeat y la fuente que lee el clasificador directamente — así que el escaneo o el
+phishing se detectan de inmediato, sin esperar a que Kibana evalúe su regla (que corre
+cada varios minutos, según el `interval` de cada una). Si en el momento de correr
+`siem_pipeline.py` la alerta de Kibana (`Port Scan – …`, `Credential Submission…`, etc.)
+**todavía no disparó**, el incidente queda como "Sin regla SIEM (detección propia)" —
+temporalmente. Volver a correr el pipeline un rato después, ya con la alerta indexada,
+lo actualiza a la regla real. `verify-cobertura.py` es justamente la herramienta para
+demostrar esto: compara las alertas reales de Elasticsearch contra lo que muestra el
+panel y avisa si algo quedó sin actualizar.
 
-> **Esto se corrigió el 26-09-2026 (hallazgo D-11).** Antes, el clasificador ponía a
-> mano `rule_name="Network port scan detection"` y `severity_siem="high"` en esos
-> incidentes. Ninguno de esos nombres existe en Kibana, así que el panel mostraba una
-> procedencia del SIEM que no había ocurrido. Ahora cada incidente declara de dónde
-> salió.
+> **Esto se corrigió el 26-09-2026 (hallazgo D-11)** y se completó el 28-09-2026: antes,
+> el clasificador ponía a mano `rule_name="Network port scan detection"` en esos
+> incidentes (un nombre que no existe en Kibana) y **nunca** consultaba las alertas
+> reales de escaneo/phishing aunque existieran. Ahora nunca inventa un nombre, y cuando
+> la alerta real ya está, la usa — con el mismo criterio de "la más grave gana" que ya
+> tenía la fuerza bruta SSH.
 
 ---
 
@@ -280,8 +288,8 @@ justamente porque la demostración afirma que nada estaba guardado.
 | *¿Cómo sé que no son datos preparados?* | Lo acabamos de construir desde cuatro ceros, recargando el navegador en cada paso. |
 | *¿El sistema puede bloquear una IP?* | No. No existe ninguna ruta que ejecute nada — se demuestra con `tests/test_no_autonomy.py`, que recorre el AST de todo el código. |
 | *¿Y si la IA alucina un comando?* | Los comandos salen de un catálogo fijo en `classifier.py`; el LLM no tiene *function calling*. Hay una prueba con un LLM hostil simulado. |
-| *¿Por qué el escaneo no tiene regla del SIEM?* | Porque lo detecta el clasificador determinístico sin pasar por Elasticsearch. El panel lo dice explícitamente. Ver §4. |
-| *¿Puedo reproducir esto desde cero?* | Es literalmente lo que acabamos de hacer. `./scripts/start.sh` levanta el stack y despliega las 13 reglas. |
+| *¿Por qué a veces el escaneo aparece sin regla del SIEM?* | Porque el clasificador lo detecta sin esperar a Kibana; si la alerta real (`Port Scan – …`) ya disparó para esa IP, el panel la muestra. El panel siempre dice cuál de las dos pasó. Ver §4. |
+| *¿Puedo reproducir esto desde cero?* | Es literalmente lo que acabamos de hacer. `./scripts/start.sh` levanta el stack y despliega las 14 reglas. |
 | *¿Cuánto está probado?* | 1043 pruebas, 95 % de cobertura sobre el alcance declarado, y la puerta de calidad corre SAST además de los tests. |
 
 ---

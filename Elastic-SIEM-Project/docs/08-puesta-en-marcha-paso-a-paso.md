@@ -23,7 +23,9 @@ openssl rand -base64 32                       # → KIBANA_ENCRYPTION_KEY
 openssl rand -base64 32                       # → KIBANA_SAVEDOBJECTS_KEY
 pip install -r requirements.txt
 ```
-`GEMINI_API_KEY` es opcional (sin ella, el Agente 2 usa el fallback).
+`GEMINI_API_KEY` es opcional (sin ella, el Agente 2 usa el fallback). Y aunque esté
+puesta, hace falta además `SIEM_USE_LLM=true` para que se use de verdad — es un
+interruptor aparte, apagado por defecto, para no gastar tokens sin querer.
 
 ### Paso 3 — Certificados TLS
 ```bash

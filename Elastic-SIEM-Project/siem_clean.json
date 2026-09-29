@@ -1,14 +1,17 @@
 {
-  "generated_at": "2026-09-26T02:34:52.772267+00:00",
+  "generated_at": "2026-09-28T19:49:53.785071+00:00",
   "context": "Elastic SIEM - Análisis de seguridad automatizado",
   "summary": {
-    "total_alerts": 4,
+    "total_alerts": 27,
     "total_auth_failures": 20,
-    "active_alerts": 4,
-    "high_severity": 4,
+    "active_alerts": 27,
+    "high_severity": 5,
     "window": "24h",
     "top_source_ips": {
-      "172.18.0.7": 28
+      "172.19.0.6": 28,
+      "172.19.0.10": 14,
+      "172.19.0.9": 4,
+      "172.19.0.8": 2
     },
     "mitre_techniques": [
       "T1046",
@@ -19,41 +22,13 @@
   "alerts": [
     {
       "type": "security_alert",
-      "timestamp": "2026-09-26T02:34:18.576Z",
-      "alert_id": "633074165b09dd2d...",
-      "rule_name": "SSH Brute Force – Aggressive per Source IP",
-      "severity": "high",
-      "risk_score": 73,
+      "timestamp": "2026-09-28T19:18:04.861Z",
+      "alert_id": "75316d042e7d9feb...",
+      "rule_name": "Phishing Page Visit + Submission",
+      "severity": "medium",
+      "risk_score": 60,
       "status": "active",
-      "reason": "event created high alert SSH Brute Force – Aggressive per Source IP.",
-      "source_ip": "172.18.0.7",
-      "victim_host": null,
-      "target_user": null,
-      "grouped_by": "source_ip.keyword",
-      "event_count": 6,
-      "time_window": {
-        "from": "2026-09-26T02:33:37.728Z",
-        "to": "2026-09-26T02:34:18.576Z"
-      },
-      "mitre": {
-        "tactic": "Credential Access",
-        "technique": "Brute Force",
-        "technique_id": "T1110"
-      },
-      "false_positives": [
-        "Scanners de vulnerabilidades autorizados; equipos de pentesting."
-      ],
-      "rule_query": "tags:authentication_failure"
-    },
-    {
-      "type": "security_alert",
-      "timestamp": "2026-09-26T02:33:18.561Z",
-      "alert_id": "751f726a665af579...",
-      "rule_name": "Credential Submission to Suspicious Login",
-      "severity": "high",
-      "risk_score": 68,
-      "status": "active",
-      "reason": "event on 5e2c900a74d6 created high alert Credential Submission to Suspicious Login.",
+      "reason": "event on 0a723031148e created medium alert Phishing Page Visit + Submission.",
       "source_ip": "172.18.0.9",
       "victim_host": null,
       "target_user": null,
@@ -61,35 +36,495 @@
       "event_count": null,
       "time_window": {
         "from": null,
-        "to": "2026-09-26T02:33:18.561Z"
+        "to": "2026-09-28T19:18:04.861Z"
       },
       "mitre": {
         "tactic": "Initial Access",
         "technique": "Phishing",
         "technique_id": "T1566"
       },
-      "false_positives": [
-        "Logins legitimos a aplicaciones internas que casualmente matcheen el patron."
-      ],
-      "rule_query": "event_type:http_request and credential_submission:true and url:*login*"
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=5m\n  [any where event_type.keyword == \"http_request\" and http_method.keyword == \"GET\"]\n  [any where event_type.keyword == \"http_request\" and credential_submission == true]"
     },
     {
       "type": "security_alert",
-      "timestamp": "2026-09-26T02:33:15.520Z",
-      "alert_id": "8f9cb180af8e687e...",
+      "timestamp": "2026-09-28T19:18:04.860Z",
+      "alert_id": "ebadf29cb4f8e7fd...",
+      "rule_name": "Phishing Page Visit + Submission",
+      "severity": "medium",
+      "risk_score": 60,
+      "status": "active",
+      "reason": "event on 0a723031148e created medium alert Phishing Page Visit + Submission.",
+      "source_ip": "172.18.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-09-28T19:18:04.860Z"
+      },
+      "mitre": {
+        "tactic": "Initial Access",
+        "technique": "Phishing",
+        "technique_id": "T1566"
+      },
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=5m\n  [any where event_type.keyword == \"http_request\" and http_method.keyword == \"GET\"]\n  [any where event_type.keyword == \"http_request\" and credential_submission == true]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:18:04.859Z",
+      "alert_id": "f9d5129616326595...",
+      "rule_name": "Phishing Page Visit + Submission",
+      "severity": "medium",
+      "risk_score": 60,
+      "status": "active",
+      "reason": "event on 0a723031148e created medium alert Phishing Page Visit + Submission.",
+      "source_ip": "172.18.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-09-28T19:18:04.859Z"
+      },
+      "mitre": {
+        "tactic": "Initial Access",
+        "technique": "Phishing",
+        "technique_id": "T1566"
+      },
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=5m\n  [any where event_type.keyword == \"http_request\" and http_method.keyword == \"GET\"]\n  [any where event_type.keyword == \"http_request\" and credential_submission == true]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:17:59.158Z",
+      "alert_id": "0e0bc3c29f4ce7f0...",
+      "rule_name": "Port Scan – Rapid Sequential Probe",
+      "severity": "medium",
+      "risk_score": 50,
+      "status": "active",
+      "reason": "event on 0a723031148e created medium alert Port Scan – Rapid Sequential Probe.",
+      "source_ip": "172.19.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-09-28T19:17:59.158Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=30s\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:17:59.158Z",
+      "alert_id": "da9a6d99a706dac7...",
+      "rule_name": "Port Scan – Rapid Sequential Probe",
+      "severity": "medium",
+      "risk_score": 50,
+      "status": "active",
+      "reason": "event on 0a723031148e created medium alert Port Scan – Rapid Sequential Probe.",
+      "source_ip": "172.19.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-09-28T19:17:59.158Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=30s\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:17:59.157Z",
+      "alert_id": "394328590cbc92d0...",
+      "rule_name": "Port Scan – Rapid Sequential Probe",
+      "severity": "medium",
+      "risk_score": 50,
+      "status": "active",
+      "reason": "event on 0a723031148e created medium alert Port Scan – Rapid Sequential Probe.",
+      "source_ip": "172.19.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-09-28T19:17:59.157Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=30s\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:17:59.157Z",
+      "alert_id": "b7c7f2b9f72204b6...",
+      "rule_name": "Port Scan – Rapid Sequential Probe",
+      "severity": "medium",
+      "risk_score": 50,
+      "status": "active",
+      "reason": "event on 0a723031148e created medium alert Port Scan – Rapid Sequential Probe.",
+      "source_ip": "172.19.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-09-28T19:17:59.157Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=30s\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:17:59.156Z",
+      "alert_id": "cf7a99134827e974...",
+      "rule_name": "Port Scan – Rapid Sequential Probe",
+      "severity": "medium",
+      "risk_score": 50,
+      "status": "active",
+      "reason": "event on 0a723031148e created medium alert Port Scan – Rapid Sequential Probe.",
+      "source_ip": "172.19.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-09-28T19:17:59.156Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=30s\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:17:55.944Z",
+      "alert_id": "b723ab6e464c8163...",
+      "rule_name": "Sensitive Port Probe",
+      "severity": "medium",
+      "risk_score": 55,
+      "status": "active",
+      "reason": "event on 0a723031148e created medium alert Sensitive Port Probe.",
+      "source_ip": "172.19.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-09-28T19:17:55.944Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [
+        "Health-checks internos hacia esos puertos."
+      ],
+      "rule_query": "event_type:network_flow and dest_port:(22 or 23 or 445 or 3306 or 3389 or 5432 or 9200)"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:17:55.943Z",
+      "alert_id": "aa33f25da71a32ad...",
+      "rule_name": "Sensitive Port Probe",
+      "severity": "medium",
+      "risk_score": 55,
+      "status": "active",
+      "reason": "event on 0a723031148e created medium alert Sensitive Port Probe.",
+      "source_ip": "172.19.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-09-28T19:17:55.943Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [
+        "Health-checks internos hacia esos puertos."
+      ],
+      "rule_query": "event_type:network_flow and dest_port:(22 or 23 or 445 or 3306 or 3389 or 5432 or 9200)"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:17:55.942Z",
+      "alert_id": "8dfbe6e3867eddd3...",
+      "rule_name": "Sensitive Port Probe",
+      "severity": "medium",
+      "risk_score": 55,
+      "status": "active",
+      "reason": "event on 0a723031148e created medium alert Sensitive Port Probe.",
+      "source_ip": "172.19.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-09-28T19:17:55.942Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [
+        "Health-checks internos hacia esos puertos."
+      ],
+      "rule_query": "event_type:network_flow and dest_port:(22 or 23 or 445 or 3306 or 3389 or 5432 or 9200)"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:17:55.941Z",
+      "alert_id": "3b14106a6205d5c5...",
+      "rule_name": "Sensitive Port Probe",
+      "severity": "medium",
+      "risk_score": 55,
+      "status": "active",
+      "reason": "event on 0a723031148e created medium alert Sensitive Port Probe.",
+      "source_ip": "172.19.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-09-28T19:17:55.941Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [
+        "Health-checks internos hacia esos puertos."
+      ],
+      "rule_query": "event_type:network_flow and dest_port:(22 or 23 or 445 or 3306 or 3389 or 5432 or 9200)"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:17:55.941Z",
+      "alert_id": "2d4771b86cf194dd...",
+      "rule_name": "Sensitive Port Probe",
+      "severity": "medium",
+      "risk_score": 55,
+      "status": "active",
+      "reason": "event on 0a723031148e created medium alert Sensitive Port Probe.",
+      "source_ip": "172.19.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-09-28T19:17:55.941Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [
+        "Health-checks internos hacia esos puertos."
+      ],
+      "rule_query": "event_type:network_flow and dest_port:(22 or 23 or 445 or 3306 or 3389 or 5432 or 9200)"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:17:49.890Z",
+      "alert_id": "7993dd8b5b614b67...",
+      "rule_name": "SSH Successful Login After Brute Force",
+      "severity": "critical",
+      "risk_score": 95,
+      "status": "active",
+      "reason": "event on 0a723031148e created critical alert SSH Successful Login After Brute Force.",
+      "source_ip": "172.19.0.6",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-09-28T19:17:49.890Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuario legitimo que fallo varias veces y luego acerto su contrasena."
+      ],
+      "rule_query": "sequence by source_ip.keyword with maxspan=10m\n  [any where tags.keyword == \"authentication_failure\"]\n  [any where tags.keyword == \"authentication_success\"]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:17:49.889Z",
+      "alert_id": "9b86127e9d679939...",
+      "rule_name": "SSH Successful Login After Brute Force",
+      "severity": "critical",
+      "risk_score": 95,
+      "status": "active",
+      "reason": "event on 0a723031148e created critical alert SSH Successful Login After Brute Force.",
+      "source_ip": "172.19.0.6",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-09-28T19:17:49.889Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuario legitimo que fallo varias veces y luego acerto su contrasena."
+      ],
+      "rule_query": "sequence by source_ip.keyword with maxspan=10m\n  [any where tags.keyword == \"authentication_failure\"]\n  [any where tags.keyword == \"authentication_success\"]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:17:49.888Z",
+      "alert_id": "aeaf9edda31b195c...",
+      "rule_name": "SSH Successful Login After Brute Force",
+      "severity": "critical",
+      "risk_score": 95,
+      "status": "active",
+      "reason": "event on 0a723031148e created critical alert SSH Successful Login After Brute Force.",
+      "source_ip": "172.19.0.6",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-09-28T19:17:49.888Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuario legitimo que fallo varias veces y luego acerto su contrasena."
+      ],
+      "rule_query": "sequence by source_ip.keyword with maxspan=10m\n  [any where tags.keyword == \"authentication_failure\"]\n  [any where tags.keyword == \"authentication_success\"]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:15:10.898Z",
+      "alert_id": "a956d3728e091fbd...",
+      "rule_name": "SSH Isolated Authentication Failure",
+      "severity": "low",
+      "risk_score": 21,
+      "status": "active",
+      "reason": "event created low alert SSH Isolated Authentication Failure.",
+      "source_ip": "172.19.0.6",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 28,
+      "time_window": {
+        "from": "2026-09-28T19:11:13.301Z",
+        "to": "2026-09-28T19:15:10.898Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuario legitimo que escribio mal su contrasena una sola vez."
+      ],
+      "rule_query": "tags:authentication_failure"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:15:10.897Z",
+      "alert_id": "1e0f083bd1f099ea...",
+      "rule_name": "SSH Isolated Authentication Failure",
+      "severity": "low",
+      "risk_score": 21,
+      "status": "active",
+      "reason": "event created low alert SSH Isolated Authentication Failure.",
+      "source_ip": "172.19.0.10",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 10,
+      "time_window": {
+        "from": "2026-09-28T19:10:13.120Z",
+        "to": "2026-09-28T19:15:10.897Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuario legitimo que escribio mal su contrasena una sola vez."
+      ],
+      "rule_query": "tags:authentication_failure"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:14:17.113Z",
+      "alert_id": "bb396f5054f360a5...",
       "rule_name": "Port Scan – Many Distinct Ports",
       "severity": "high",
       "risk_score": 73,
       "status": "active",
       "reason": "event created high alert Port Scan – Many Distinct Ports.",
-      "source_ip": "198.51.100.43",
+      "source_ip": "172.19.0.9",
       "victim_host": null,
       "target_user": null,
       "grouped_by": "source_ip.keyword",
       "event_count": 26,
       "time_window": {
-        "from": "2026-09-26T02:32:25.000Z",
-        "to": "2026-09-26T02:33:15.520Z"
+        "from": "2026-09-28T19:13:44.000Z",
+        "to": "2026-09-28T19:14:17.113Z"
       },
       "mitre": {
         "tactic": "Discovery",
@@ -103,21 +538,49 @@
     },
     {
       "type": "security_alert",
-      "timestamp": "2026-09-26T02:33:15.518Z",
-      "alert_id": "7c5e956231cb0f14...",
+      "timestamp": "2026-09-28T19:14:14.827Z",
+      "alert_id": "1d3faac130336774...",
+      "rule_name": "Credential Submission to Suspicious Login",
+      "severity": "high",
+      "risk_score": 68,
+      "status": "active",
+      "reason": "event on 0a723031148e created high alert Credential Submission to Suspicious Login.",
+      "source_ip": "172.18.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-09-28T19:14:14.827Z"
+      },
+      "mitre": {
+        "tactic": "Initial Access",
+        "technique": "Phishing",
+        "technique_id": "T1566"
+      },
+      "false_positives": [
+        "Logins legitimos a aplicaciones internas que casualmente matcheen el patron."
+      ],
+      "rule_query": "event_type:http_request and credential_submission:true and url:*login*"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:14:01.873Z",
+      "alert_id": "f0f8b010f17d0526...",
       "rule_name": "SSH Brute Force – Aggressive per Source IP",
       "severity": "high",
       "risk_score": 73,
       "status": "active",
       "reason": "event created high alert SSH Brute Force – Aggressive per Source IP.",
-      "source_ip": "172.18.0.7",
+      "source_ip": "172.19.0.6",
       "victim_host": null,
       "target_user": null,
       "grouped_by": "source_ip.keyword",
-      "event_count": 12,
+      "event_count": 16,
       "time_window": {
-        "from": "2026-09-26T02:32:33.431Z",
-        "to": "2026-09-26T02:33:15.518Z"
+        "from": "2026-09-28T19:12:17.523Z",
+        "to": "2026-09-28T19:14:01.873Z"
       },
       "mitre": {
         "tactic": "Credential Access",
@@ -128,16 +591,184 @@
         "Scanners de vulnerabilidades autorizados; equipos de pentesting."
       ],
       "rule_query": "tags:authentication_failure"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:11:55.855Z",
+      "alert_id": "b0826fe4fd8a6278...",
+      "rule_name": "SSH Brute Force – Aggressive per Source IP",
+      "severity": "high",
+      "risk_score": 73,
+      "status": "active",
+      "reason": "event created high alert SSH Brute Force – Aggressive per Source IP.",
+      "source_ip": "172.19.0.6",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 12,
+      "time_window": {
+        "from": "2026-09-28T19:11:13.301Z",
+        "to": "2026-09-28T19:11:55.855Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Scanners de vulnerabilidades autorizados; equipos de pentesting."
+      ],
+      "rule_query": "tags:authentication_failure"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:10:52.892Z",
+      "alert_id": "5e99f37ca6bdb73d...",
+      "rule_name": "SSH Brute Force – Aggressive per Source IP",
+      "severity": "high",
+      "risk_score": 73,
+      "status": "active",
+      "reason": "event created high alert SSH Brute Force – Aggressive per Source IP.",
+      "source_ip": "172.19.0.10",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 11,
+      "time_window": {
+        "from": "2026-09-28T19:09:36.897Z",
+        "to": "2026-09-28T19:10:52.892Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Scanners de vulnerabilidades autorizados; equipos de pentesting."
+      ],
+      "rule_query": "tags:authentication_failure"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:10:08.312Z",
+      "alert_id": "a9a6fa24f5009c49...",
+      "rule_name": "SSH Isolated Authentication Failure",
+      "severity": "low",
+      "risk_score": 21,
+      "status": "active",
+      "reason": "event created low alert SSH Isolated Authentication Failure.",
+      "source_ip": "172.19.0.8",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 2,
+      "time_window": {
+        "from": "2026-09-28T19:09:08.320Z",
+        "to": "2026-09-28T19:10:08.312Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuario legitimo que escribio mal su contrasena una sola vez."
+      ],
+      "rule_query": "tags:authentication_failure"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:10:08.312Z",
+      "alert_id": "f9945cd514efbf69...",
+      "rule_name": "SSH Isolated Authentication Failure",
+      "severity": "low",
+      "risk_score": 21,
+      "status": "active",
+      "reason": "event created low alert SSH Isolated Authentication Failure.",
+      "source_ip": "172.19.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 4,
+      "time_window": {
+        "from": "2026-09-28T19:09:12.540Z",
+        "to": "2026-09-28T19:10:08.312Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuario legitimo que escribio mal su contrasena una sola vez."
+      ],
+      "rule_query": "tags:authentication_failure"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:10:08.311Z",
+      "alert_id": "9f97eaabc510d201...",
+      "rule_name": "SSH Isolated Authentication Failure",
+      "severity": "low",
+      "risk_score": 21,
+      "status": "active",
+      "reason": "event created low alert SSH Isolated Authentication Failure.",
+      "source_ip": "172.19.0.10",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 4,
+      "time_window": {
+        "from": "2026-09-28T19:09:36.897Z",
+        "to": "2026-09-28T19:10:08.311Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuario legitimo que escribio mal su contrasena una sola vez."
+      ],
+      "rule_query": "tags:authentication_failure"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-09-28T19:10:05.440Z",
+      "alert_id": "8a99603be62a9176...",
+      "rule_name": "SSH Invalid User Enumeration",
+      "severity": "medium",
+      "risk_score": 50,
+      "status": "active",
+      "reason": "event created medium alert SSH Invalid User Enumeration.",
+      "source_ip": "172.19.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 4,
+      "time_window": {
+        "from": "2026-09-28T19:09:12.540Z",
+        "to": "2026-09-28T19:10:05.440Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Errores de tipeo del nombre de usuario por usuarios legítimos."
+      ],
+      "rule_query": "tags:invalid_user or message:*Invalid user*"
     }
   ],
   "auth_failure_logs": [
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:34:42.039Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 56482 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:13:21.792Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 36594 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -147,11 +778,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:34:42.029Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 56482 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:13:21.782Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 36594 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -161,11 +792,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:34:42.018Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 56482 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:13:21.772Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 36594 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -175,11 +806,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:34:42.009Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 56482 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:13:21.764Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 36594 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -189,11 +820,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:34:09.933Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 43548 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:12:49.680Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 50454 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -203,11 +834,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:34:09.922Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 43548 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:12:49.669Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 50454 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -217,11 +848,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:34:09.912Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 43548 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:12:49.659Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 50454 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -231,11 +862,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:34:09.900Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 43548 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:12:49.649Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 50454 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -245,11 +876,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:34:09.889Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 43548 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:12:49.639Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 50454 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -259,11 +890,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:34:09.879Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 43548 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:12:49.631Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 50454 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -273,11 +904,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:33:37.781Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 54954 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:12:17.571Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 38304 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -287,11 +918,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:33:37.770Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 54954 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:12:17.561Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 38304 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -301,11 +932,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:33:37.759Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 54954 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:12:17.551Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 38304 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -315,11 +946,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:33:37.749Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 54954 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:12:17.541Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 38304 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -329,11 +960,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:33:37.738Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 54954 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:12:17.531Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 38304 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -343,11 +974,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:33:37.728Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 54954 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:12:17.523Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 38304 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -357,11 +988,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:33:05.627Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 44200 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:11:45.468Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 47550 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -371,11 +1002,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:33:05.616Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 44200 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:11:45.458Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 47550 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -385,11 +1016,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:33:05.606Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 44200 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:11:45.448Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 47550 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",
@@ -399,11 +1030,11 @@
     },
     {
       "type": "auth_failure_log",
-      "timestamp": "2026-09-26T02:33:05.595Z",
-      "message": "Failed password for testuser from 172.18.0.7 port 44200 ssh2",
-      "host_ip": "172.18.0.3",
-      "host_name": "5e2c900a74d6",
-      "log_file": "/var/lib/docker/containers/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b/4eca80e890bdc65280fb8c3a4da5d1de2dde974236bde61d90de3e441668650b-json.log",
+      "timestamp": "2026-09-28T19:11:45.438Z",
+      "message": "Failed password for testuser from 172.19.0.6 port 47550 ssh2",
+      "host_ip": "172.19.0.5",
+      "host_name": "0a723031148e",
+      "log_file": "/var/lib/docker/containers/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901/4a51ec9d19002635e39540fdac3148725fd77ba85cf97a1300070a7fa1ac1901-json.log",
       "tags": [
         "beats_input_codec_plain_applied",
         "authentication_failure",

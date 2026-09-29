@@ -1,17 +1,17 @@
 # Catálogo de reglas de detección (Elastic Security)
 
-13 configuraciones de reglas para los 3 tipos de ataque del proyecto. Cada una
+14 configuraciones de reglas para los 3 tipos de ataque del proyecto. Cada una
 trae las 4 secciones del asistente de Kibana (**Define / About / Schedule / Rule
 actions**), con variaciones de severidad, riesgo, nombre y descripción para ver
 **cómo salta cada alerta**.
 
 > ## ⚡ No hace falta crearlas a mano
 >
-> Las 13 están **versionadas** en [`ndjson/`](ndjson/), una por archivo, y se
+> Las 14 están **versionadas** en [`ndjson/`](ndjson/), una por archivo, y se
 > despliegan con un comando:
 >
 > ```bash
-> ./scripts/deploy-rules.sh      # importa las 13 y las habilita
+> ./scripts/deploy-rules.sh      # importa las 14 y las habilita
 > ./scripts/export-rules.sh      # el camino inverso: Kibana → repositorio
 > ```
 >
@@ -67,6 +67,7 @@ Los campos que **no** necesitan sufijo son `dest_port` (`long`) y
 | A4 | SSH Successful Login After Brute Force | EQL | Critical | 95 | fallo→éxito mismo host en 10 min |
 | A5 | SSH High-Volume Credential Attack | Threshold | Critical | 88 | ≥50 fallos por source_ip en 5 min |
 | A6 | SSH Brute Force – Multiple Users Targeted | Threshold | High | 70 | 1 IP ataca ≥5 usuarios distintos |
+| A7 | SSH Isolated Authentication Failure | Threshold | Low | 21 | ≥1 fallo por source_ip en 5 min |
 | B1 | Port Scan – Many Distinct Ports | Threshold (cardinality) | High | 73 | 1 IP toca ≥10 puertos distintos |
 | B2 | Port Scan – Horizontal (Multiple Hosts) | Threshold (cardinality) | High | 75 | 1 IP toca ≥5 hosts distintos |
 | B3 | Sensitive Port Probe | Custom query | Medium | 55 | sondeo a 22/3389/445/3306… |
@@ -247,6 +248,35 @@ Cada código corresponde a un archivo: `A1` → `ndjson/A1-ssh-brute-force-basic
 
 **Schedule rule**
 - Runs every: `10m` · Look-back: `2m`
+
+**Rule actions**
+- Action frequency: `Per rule run`
+
+---
+
+## A7 · SSH Isolated Authentication Failure
+
+**Define rule**
+- Rule type: **Threshold**
+- Index patterns: `filebeat-*`
+- Custom query: `tags:authentication_failure`
+- Group by: `source_ip`
+- Threshold: `1`
+
+**About rule**
+- Name: `SSH Isolated Authentication Failure`
+- Description: `Un único fallo de autenticación SSH desde una IP en una ventana corta: no llega al patrón de fuerza bruta, pero queda como línea base / contexto para incidentes futuros de esa IP.`
+- Default severity: **Low**
+- Default risk score: **21**
+- MITRE: Credential Access → Brute Force (T1110) — señal temprana, no confirma el patrón
+- Tags: `authentication`, `ssh`, `baseline`, `low-priority`
+- References: `https://attack.mitre.org/techniques/T1110/`
+- False positives: `Usuario legítimo que escribió mal su contraseña una sola vez.`
+- Investigation guide (advanced): `Prioridad baja: no accionar solo. Si la misma IP vuelve a aparecer (más fallos, otro tipo de incidente), correlacionar con el Agente 2 (contexto histórico) antes de escalar.`
+- Author: `SIEM-IA`  ·  License: `DRL`
+
+**Schedule rule**
+- Runs every: `5m` · Look-back: `1m`
 
 **Rule actions**
 - Action frequency: `Per rule run`

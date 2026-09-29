@@ -120,6 +120,7 @@ table.events tbody tr.selected { background:#152436; }
 table.events tbody tr:last-child td { border-bottom:none; }
 .ip-mono { font-family: ui-monospace, monospace; font-size:var(--fs-mono); }
 .ai-excerpt { color: var(--muted); max-width: 360px; }
+.regla-td { max-width: 220px; overflow-wrap: break-word; }
 
 /* Insignias de severidad. El texto va OSCURO sobre los cuatro rellenos, no solo
  * sobre los claros: con blanco, CRITICAL daba 3.35:1 y HIGH 3.37:1 sobre sus
@@ -142,22 +143,53 @@ table.events tbody tr:last-child td { border-bottom:none; }
 .b-MEDIUM { background: var(--med); color:#1c1300; }    /* 7.28:1 */
 .b-LOW { background: var(--low); color:#04130a; }       /* 7.50:1 */
 
-/* Detalle expandido */
+/* Detalle expandido. Al abrirse entra con una transición corta — antes aparecía
+   de golpe, un salto de layout fácil de perder si el clic ya scrolleó la fila
+   fuera de foco. El borde izquierdo repite el color de severidad de la fila que
+   lo abrió (mismos tokens que `.barra`/`.leyenda`), para que quede claro que el
+   panel de abajo es el detalle DE esa fila y no de otra. */
 .detail-wrap { margin-top: var(--sp-14); }
-.card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+@keyframes detalle-entra { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+.card { background: var(--panel); border: 1px solid var(--border); border-left-width: 3px;
+        border-radius: var(--r-lg); overflow: hidden; animation: detalle-entra .18s ease-out; }
+.card.sev-CRITICAL { border-left-color: var(--crit); }
+.card.sev-HIGH     { border-left-color: var(--high); }
+.card.sev-MEDIUM   { border-left-color: var(--med); }
+.card.sev-LOW      { border-left-color: var(--low); }
 .card-head { padding: var(--sp-14) var(--sp-18); border-bottom: 1px solid var(--border);
              display: flex; align-items: center; gap: var(--sp-12); flex-wrap: wrap; }
 .card-head .title { font-weight: 600; font-size: var(--fs-lg); }
 .card-head .id { color: var(--muted); font-size: var(--fs-sm); font-family: ui-monospace, monospace; }
 .card-head .src { margin-left: auto; font-size: var(--fs-md); color: var(--muted); font-family: ui-monospace, monospace; }
 .card-head .close { cursor:pointer; color:var(--muted); border:1px solid var(--border); border-radius:var(--r-sm); padding: var(--sp-4) var(--sp-10); font-size:var(--fs-sm); }
+.card-head .close:hover { color:var(--text); border-color:var(--accent); }
 .card-body { padding: var(--sp-18) var(--sp-20); }
 .grid { display: grid; grid-template-columns: 120px 1fr; gap: var(--sp-6) var(--sp-14); font-size: var(--fs-body); margin-bottom: var(--sp-14); }
 .grid .k { color: var(--muted); }
 .analysis p { margin: var(--sp-6) 0; line-height: 1.5; font-size: var(--fs-body); }
 .analysis .lbl { color: var(--accent); font-weight: 600; }
-.src-tag { font-size: var(--fs-xs); padding: var(--sp-2) var(--sp-8); border-radius: var(--r-xs); border: 1px solid var(--border); color: var(--muted); }
 .fp-hint { font-size: var(--fs-sm); color: var(--muted); }
+
+/* De dónde salió el análisis: arriba de todo, no una etiqueta al costado que se
+ * confunde con cualquier otro dato secundario. `--accent` (el mismo celeste de
+ * los links y el foco) marca "generado por IA"; el fallback usa el mismo tono
+ * apagado que el resto de los metadatos — la ausencia del color ES la señal,
+ * no un color nuevo compitiendo con lo que la severidad ya significa. */
+.analisis-fuente { display:flex; align-items:center; gap: var(--sp-8); margin-bottom: var(--sp-10);
+                    padding: var(--sp-6) var(--sp-10); border-radius: var(--r-sm);
+                    font-size: var(--fs-sm); font-weight: 600; width: fit-content; }
+.analisis-fuente .ico { font-size: var(--fs-md); }
+.analisis-fuente.es-ia { background: var(--panel2); border: 1px solid var(--accent); color: var(--accent); }
+.analisis-fuente.es-fallback { background: var(--panel2); border: 1px solid var(--border); color: var(--muted); }
+
+/* Puntos a investigar: exclusivo del análisis por IA (ver renderPuntosDeInvestigacion
+ * en app.js). Mismo tratamiento que `.factors` pero con el borde izquierdo en
+ * `--accent`, para que se lea como parte de "lo que trae la IA de más", no como
+ * una sección genérica más de la tarjeta. */
+.investigacion { margin-top: var(--sp-14); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+                  border-radius: var(--r-md); background: var(--panel2); padding: var(--sp-10) var(--sp-14) var(--sp-12); }
+.investigacion ul { margin: var(--sp-6) 0 0; padding-left: var(--sp-20); }
+.investigacion li { font-size: var(--fs-md); color: var(--text); line-height: 1.6; }
 
 .campaign-banner { background: var(--camp-fondo); border: 1px solid var(--camp-borde); border-left: 3px solid var(--camp-texto);
                     border-radius: var(--r-sm); padding: var(--sp-10) var(--sp-14); margin-bottom: var(--sp-14); font-size: var(--fs-body);
@@ -196,8 +228,7 @@ table.events tbody tr:last-child td { border-bottom:none; }
 .ip-hl { color:var(--ok-texto); font-weight:600; }
 /* Un rol sin permiso para decidir no ve botones que el servidor le va a
    rechazar con 403. El control real está en el servidor; esto es claridad. */
-body.solo-lectura .ctrl,
-body.solo-lectura .suggestion button { display: none; }
+body.solo-lectura .ctrl { display: none; }
 .chips { display:flex; flex-wrap:wrap; gap: var(--sp-6); }
 .chip { font-family:ui-monospace,monospace; font-size:var(--fs-sm); background:var(--bg); border:1px solid var(--border);
         border-radius:var(--r-xs); padding: var(--sp-2) var(--sp-8); color:var(--ok-texto); }
@@ -222,6 +253,25 @@ button:hover { border-color: var(--accent); }
 button.approve.on { background: var(--ok); border-color: var(--ok); color: #fff; }
 button.dismiss.on { background: var(--no); border-color: var(--no); color: #fff; }
 button.small { padding: var(--sp-4) var(--sp-10); font-size: var(--fs-sm); }
+/* "Cancelar" en el formulario de motivo: la única acción de la interfaz que no
+   decide nada, así que no compite visualmente con Aprobar/Descartar/Confirmar. */
+button.ghost { background: transparent; }
+button.ghost:hover { border-color: var(--muted); color: var(--text); }
+
+/* Formulario de motivo al descartar (aparece bajo el comando, reemplaza al
+   `prompt()` del navegador). El motivo no es un detalle: `historical_context()`
+   en siem_agent.py se lo muestra al analista la próxima vez que esta IP
+   aparezca, así que el hint lo dice en voz alta en vez de asumir que se
+   entiende solo. */
+.motivo { margin-top: var(--sp-10); padding: var(--sp-12) var(--sp-14);
+          background: var(--panel2); border: 1px solid var(--border); border-radius: var(--r-sm); }
+.motivo label { display: block; font-size: var(--fs-sm); font-weight: 600; color: var(--text); margin-bottom: var(--sp-6); }
+.motivo textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+                    border-radius: var(--r-sm); padding: var(--sp-8) var(--sp-10); font: inherit; font-size: var(--fs-body);
+                    resize: vertical; }
+.motivo textarea:focus { outline: none; border-color: var(--accent); }
+.motivo-hint { margin: var(--sp-6) 0 0; font-size: var(--fs-xs); color: var(--muted); }
+.motivo-ctrl { margin-top: var(--sp-10); display: flex; gap: var(--sp-8); }
 /* Estado vs. acción. El chip de estado y el botón de la acción estaban pintados
  * igual —relleno verde saturado con texto blanco— y viven en la MISMA fila del
  * panel de decisión: uno informa qué pasó, el otro ofrece hacer algo.
@@ -237,38 +287,68 @@ button.small { padding: var(--sp-4) var(--sp-10); font-size: var(--fs-sm); }
                border-color: var(--ok); }                                        /* 10.40:1 */
 .s-dismissed { background: var(--tenue-no); color: var(--tenue-no-texto);
                border-color: var(--no); }                                        /*  8.99:1 */
+/* "Resuelto" en la tabla de eventos activos: mismo `.state.s-approved` que ya
+   usa el chip de una acción aprobada — reutiliza el tinte en vez de inventar un
+   color nuevo para el mismo significado. Va debajo de la insignia de
+   severidad, no al lado: la columna es angosta y competir por el ancho las
+   cortaría a las dos. */
+.resuelto-tag { display: block; width: fit-content; margin-top: var(--sp-4); font-size: var(--fs-xs); }
 .decided { font-size: var(--fs-xs); color: var(--muted); margin-top: var(--sp-6); }
 .hidden { display:none; }
 .empty { text-align: center; color: var(--muted); padding: var(--sp-40) var(--sp-20); background:var(--panel);
          border:1px solid var(--border); border-radius:var(--r-lg); }
 a { color: var(--accent); }
 
-/* Sidebar: Ataques recientes + Historial de decisiones */
-.side-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-lg); padding: var(--sp-14) var(--sp-16); margin-bottom: var(--sp-18); }
-.recent-item { display:flex; align-items:flex-start; gap: var(--sp-10); padding: var(--sp-8) 0; border-bottom:1px solid var(--border); font-size:var(--fs-md); }
-.recent-item:last-child { border-bottom:none; }
-.recent-item .icon { font-size:var(--fs-icon); line-height:1.4; }
-.recent-item .body { flex:1; min-width:0; }
-.recent-item .ip { font-family: ui-monospace, monospace; font-size:var(--fs-mono); color:var(--text); }
-.recent-item .type { color:var(--muted); font-size:var(--fs-sm); }
+/* Sidebar: Ataques recientes + Historial de decisiones.
+ *
+ * `.ip` y `.type` son dos <div> seguidos sin margen propio: quedaban pegados,
+ * separados solo por la altura de línea. Y el badge de severidad, contra la IP,
+ * dependía de un espacio de texto suelto en la plantilla — mucho más angosto
+ * que cualquier separación real. `.body` pasa a columna con `gap` propio, y
+ * `.ip` a fila con el suyo: la separación queda declarada, no es un efecto
+ * secundario del contenido. */
+.side-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-lg); padding: var(--sp-16) var(--sp-18); margin-bottom: var(--sp-18); }
+.recent-item { display:flex; align-items:flex-start; gap: var(--sp-12); padding: var(--sp-12) 0; border-bottom:1px solid var(--border); font-size:var(--fs-md); }
+.recent-item:last-child { padding-bottom: 0; border-bottom:none; }
+.recent-item .icon { font-size:var(--fs-icon); line-height:1.4; margin-top: var(--sp-2); }
+.recent-item .body { flex:1; min-width:0; display:flex; flex-direction:column; gap: var(--sp-6); }
+.recent-item .ip { display:flex; align-items:center; flex-wrap:wrap; gap: var(--sp-8);
+                    font-family: ui-monospace, monospace; font-size:var(--fs-mono); color:var(--text); }
+.recent-item .type { color:var(--muted); font-size:var(--fs-sm); line-height:1.4; }
 .recent-item .when { color:var(--muted); font-size:var(--fs-xs); white-space:nowrap; }
 
+/* Historial de decisiones: una línea por INCIDENTE (no por acción decidida),
+ * plegada por defecto. Antes cada acción decidida era su propia línea, así que
+ * un incidente con 3 decisiones se leía como 3 entradas repitiendo el mismo
+ * incident_id — mucho texto para pocos incidentes. Acá se resume
+ * (aprobadas/descartadas) y se puede abrir para ver cada acción, con su nota,
+ * sin perder nada de lo que ya mostraba. */
 .decision-item { padding: var(--sp-8) 0; border-bottom:1px solid var(--border); font-size:var(--fs-mono); }
 .decision-item:last-child { border-bottom:none; }
 .decision-item .dec-approved { color: var(--ok-texto); font-weight:600; }
 .decision-item .dec-dismissed { color: var(--tenue-no-texto); font-weight:600; }
 .decision-item .who { color: var(--muted); }
+.decision-head { display:flex; align-items:center; gap: var(--sp-8); width:100%;
+                 background:transparent; border:none; border-radius:0; padding: var(--sp-2) 0;
+                 font:inherit; font-size:var(--fs-mono); color:var(--text); text-align:left; cursor:pointer; }
+.decision-head:hover .who-title { color: var(--accent); }
+.chev { color: var(--muted); flex:none; }
+.decision-head .who-title { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.decision-head .decision-resumen { display:flex; gap: var(--sp-8); flex:none; font-size:var(--fs-sm); }
+.decision-ultima { margin-left: var(--sp-20); }
+.decision-detalle { margin: var(--sp-8) 0 0 var(--sp-20); padding-left: var(--sp-10);
+                     border-left: 2px solid var(--border); display:flex; flex-direction:column; gap: var(--sp-8); }
 
-/* Registro de eventos del sistema (feed) */
-.feed-item { background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-lg);
-             padding: var(--sp-14) var(--sp-18); margin-bottom: var(--sp-12); }
-.feed-item .fi-head { display:flex; align-items:center; gap: var(--sp-10); flex-wrap:wrap; margin-bottom: var(--sp-8); }
-.feed-item .fi-head .title { font-weight:600; font-size:var(--fs-body); }
-.feed-item .fi-head .src { margin-left:auto; font-family: ui-monospace, monospace; font-size:var(--fs-mono); color:var(--muted); }
-.feed-lines { list-style:none; margin: 0 0 var(--sp-10); padding:0; max-height: 160px; overflow-y:auto; }
-.feed-lines li { display:flex; gap: var(--sp-10); padding: var(--sp-4) 0; font-family:ui-monospace,monospace; font-size:var(--fs-sm); color:var(--muted); }
-.feed-lines .t { color:var(--accent); white-space:nowrap; }
-.suggestion { background:#13242f; border-left:3px solid var(--accent); border-radius:var(--r-xs);
-              padding: var(--sp-10) var(--sp-12); display:flex; align-items:center; gap: var(--sp-12); flex-wrap:wrap; }
-.suggestion .txt { flex:1; min-width:220px; font-size:var(--fs-body); }
-.suggestion .txt b { color: var(--accent); }
+/* Confirmación flotante tras aprobar / descartar. Con la vista vacía (`.visible`
+   ausente) queda fuera del flujo del lector de pantalla vía opacidad + sin
+   puntero; `aria-live` en la plantilla anuncia el texto solo cuando cambia. */
+.toast { position: fixed; right: var(--sp-24); bottom: var(--sp-24); z-index: 30;
+         max-width: 320px; background: var(--panel3); color: var(--text);
+         border: 1px solid var(--border); border-radius: var(--r-md);
+         padding: var(--sp-12) var(--sp-16); font-size: var(--fs-body); font-weight: 600;
+         box-shadow: 0 6px 20px rgba(0,0,0,.45);
+         opacity: 0; transform: translateY(8px); pointer-events: none;
+         transition: opacity .2s ease, transform .2s ease; }
+.toast.visible { opacity: 1; transform: translateY(0); }
+.toast.ok    { background: var(--tenue-ok); color: var(--tenue-ok-texto); border-color: var(--ok); }
+.toast.error { background: var(--tenue-no); color: var(--tenue-no-texto); border-color: var(--no); }

@@ -1,6 +1,6 @@
 # 07 · Configurar las reglas de detección en Elastic
 
-> **Desde el 17-09-2026 las reglas no se crean a mano.** Las 13 están versionadas
+> **Desde el 17-09-2026 las reglas no se crean a mano.** Las 14 están versionadas
 > en [`../rules/ndjson/`](../rules/ndjson/) y se despliegan con
 > `./scripts/deploy-rules.sh` (lo hace `start.sh` automáticamente). Este
 > documento explica **cómo funciona** una regla y cómo se crearía desde la
@@ -16,7 +16,7 @@ bruta SSH, y cómo se manejan los otros dos ataques.
 > `prepare-for-ia.py`).
 
 > Esta guía cubre **una** regla en detalle, a modo de tutorial. Para el catálogo completo de
-> **13 reglas listas para crear** (con severidad, riesgo y variantes por tipo de ataque) y para
+> **14 reglas listas para crear** (con severidad, riesgo y variantes por tipo de ataque) y para
 > saber **cuáles vale la pena activar** sin generar ruido, ver
 > [`rules/rules.md`](../rules/rules.md) y [`docs/alertas/`](alertas/README.md).
 

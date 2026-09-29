@@ -20,3 +20,12 @@
 
 /* Ocultar por clase y no con `style="display:none"` generado desde JavaScript. */
 .oculto { display: none; }
+
+/* El atributo `hidden` de `_iconos.html` no alcanza: el elemento raíz del sprite
+ * es un `<svg>` (namespace SVG, no HTML), y en ese namespace el `display:none`
+ * que el navegador aplica por `[hidden]` no siempre llega a un `<svg>` de nivel
+ * superior. Sin esta regla el sprite se dibuja a su tamaño por defecto
+ * (300×150), empujando 150px de más al `<header>` en el panel y corriendo la
+ * tarjeta de `login.html` fuera del centro (su `<body>` es un flex container:
+ * el sprite pasa a ser un ítem más de la fila). */
+svg[hidden] { display: none; }

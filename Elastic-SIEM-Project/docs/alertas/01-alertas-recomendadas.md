@@ -1,6 +1,6 @@
 # 01 · Alertas recomendadas
 
-`rules/rules.md` trae 13 configuraciones de regla listas para crear. Activar las 13
+`rules/rules.md` trae 14 configuraciones de regla listas para crear. Activar las 14
 de una — con equipos chicos, que es el escenario real que este proyecto apunta a
 resolver (ver [contexto y problema](../00-contexto-y-problema.md)) — es la forma más
 rápida de terminar con un dashboard saturado y volver a sufrir alert fatigue, que es
@@ -23,7 +23,7 @@ clasificar y explicar. Sin ellas, la capa de IA no tiene de qué agarrarse.
 | Regla | Por qué vale la pena |
 |-------|----------------------|
 | **A2 · SSH Brute Force – Aggressive per Source IP** (`rules/rules.md`) | Es el caso de uso principal del proyecto: 10+ fallos de auth desde una misma IP en 1 minuto. Umbral alto → prácticamente nunca es un falso positivo. |
-| **A4 · SSH Successful Login After Brute Force** | La más importante de las 13: un login **exitoso** justo después de una ráfaga de fallos. Esto ya no es "posible ataque", es **compromiso probable** — casi cero falsos positivos, severidad Critical justificada. |
+| **A4 · SSH Successful Login After Brute Force** | La más importante de las 14: un login **exitoso** justo después de una ráfaga de fallos. Esto ya no es "posible ataque", es **compromiso probable** — casi cero falsos positivos, severidad Critical justificada. |
 | **B1 · Port Scan – Many Distinct Ports** | Cubre el segundo tipo de ataque del proyecto (reconocimiento de red). Un umbral de 10+ puertos distintos filtra los sondeos ocasionales de una sola conexión. |
 | **C1 · Credential Submission to Suspicious Login** | Cubre el tercer tipo (phishing). Dispara con la certeza más alta posible: hubo un POST con credenciales a una página marcada como sospechosa. |
 
@@ -49,16 +49,21 @@ de red más grande para que el patrón se note.
 | **B2 · Port Scan – Horizontal (Multiple Hosts)** | Necesita 5+ hosts distintos sondeados por la misma IP — en una red chica (como el `network_logs/` sintético de este proyecto) rara vez se junta esa cantidad de hosts, así que aporta poco hasta que la topología crezca. |
 
 No incluidas en esta guía por ahora: **A1** y **A5** (quedan cubiertas por A2, que ya
-es más agresiva y específica) y **C3** (EQL de secuencia GET→POST; útil pero
-redundante con C1+C2 combinadas). Siguen disponibles en `rules/rules.md` si hace
-falta esa granularidad extra.
+es más agresiva y específica), **C3** (EQL de secuencia GET→POST; útil pero
+redundante con C1+C2 combinadas) y **A7** (umbral 1 a propósito — ver "Qué NO
+hacer" más abajo). Siguen disponibles en `rules/rules.md` si hace falta esa
+granularidad extra.
 
 ## Qué NO hacer (alertas que no valen la pena)
 
 - **No bajar el `Threshold` de fuerza bruta a 2-3.** Cualquier persona que se
   equivoca de contraseña dos veces dispara la regla. El umbral recomendado (5 para
   la regla básica, 10 para la agresiva) ya filtra ese ruido — ver la nota en
-  [`docs/07`](../07-reglas-de-deteccion.md).
+  [`docs/07`](../07-reglas-de-deteccion.md). **A7 · SSH Isolated Authentication
+  Failure** es la excepción deliberada: umbral 1, severidad Low, pensada para
+  demostrar el escalón más bajo de la escalera de severidad (junto a A1 Medium, A2
+  High, A4 Critical), no para dejarse encendida en un entorno real — ahí sí generaría
+  una alerta por cada error de tipeo.
 - **No marcar todo como `Critical`.** Si todas las severidades son iguales, la
   severidad deja de ser información. Reservar `Critical` para lo que de verdad exige
   reacción inmediata (como A4).

@@ -9,7 +9,7 @@
 #   4. las reglas de detección estén desplegadas
 # Recién ahí libera la consola, con un resumen del estado.
 #
-# Además despliega las 13 reglas de detección versionadas en rules/ndjson/.
+# Además despliega las 14 reglas de detección versionadas en rules/ndjson/.
 #
 # Uso:  ./scripts/start.sh                 (solo el stack core)
 #       ./scripts/start.sh --simulation    (además levanta ssh-target + hydra)

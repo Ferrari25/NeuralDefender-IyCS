@@ -73,7 +73,7 @@ if [[ "$MODO" == "todo" || "$MODO" == "--sast" ]]; then
   paso "pylint + secure-coding-standard" $BIN/pylint --fail-under=9.0 \
        classifier.py siem_lib.py dashboard.py siem_agent.py siem_pipeline.py \
        siem_validators.py siem_auth.py manage_users.py audit_verify.py \
-       get-logs.py prepare-for-ia.py
+       get-logs.py prepare-for-ia.py verify-cobertura.py
 
   n_bandit=$($BIN/bandit -r . -x "$EXCLUIR" -f json -q 2>/dev/null \
     | python3 -c 'import json,sys; print(sum(1 for r in json.load(sys.stdin)["results"] if r["issue_severity"]=="HIGH"))' 2>/dev/null)

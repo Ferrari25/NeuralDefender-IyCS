@@ -56,6 +56,14 @@ PORT_SCAN_DISTINCT_PORTS = 10     # puertos distintos sondeados → port scan
 # Técnicas MITRE que detect_auth_incidents() acepta como "esto es una alerta de autenticación".
 # Sin esta lista, cualquier alerta de Kibana (port scan, phishing) se procesaría acá también.
 _AUTH_MITRE_TECHNIQUES = {"T1110"}
+# Mismo criterio para port scan (reglas B1-B4) y phishing (reglas C1-C3): cada
+# detector solo mira las alertas de SU técnica, no las 14 mezcladas.
+_PORT_SCAN_MITRE_TECHNIQUES = {"T1046"}
+_PHISHING_MITRE_TECHNIQUES  = {"T1566"}
+
+# Orden de severidad del SIEM, para quedarnos con la alerta MÁS GRAVE cuando varias
+# reglas de Kibana disparan sobre la misma IP (ver `detect_auth_incidents`).
+_RANGO_SEVERIDAD_SIEM = {"low": 0, "medium": 1, "high": 2, "critical": 3}
 
 _FROM_IP_RE = re.compile(r"from (\d{1,3}(?:\.\d{1,3}){3})")
 _USER_RE    = re.compile(r"for (?:invalid user )?(\w+)")
@@ -435,9 +443,20 @@ def detect_auth_incidents(siem_data: dict) -> list[dict]:
         # de las alertas en vez de la de los logs.
         ip = valid_ip(a.get("source_ip")) or IP_DESCONOCIDA
         inc = ensure(ip, a.get("timestamp", now_iso()))
-        inc["rule_name"]     = a.get("rule_name") or inc["rule_name"]
-        inc["severity_siem"] = a.get("severity") or inc["severity_siem"]
-        inc["risk_score"]    = a.get("risk_score") or inc["risk_score"]
+        # Si varias reglas de Kibana disparan sobre la misma IP (ej. una atacante
+        # activa una regla Low de línea base Y una Critical de compromiso), la
+        # identidad del incidente (`rule_name`/`severity_siem`/`risk_score`) tiene
+        # que ser la de la alerta MÁS GRAVE — no la última que devolvió
+        # Elasticsearch. Con "última gana", un incidente que de verdad es crítico
+        # podía terminar mostrando "Low" solo porque esa alerta llegó después en
+        # la respuesta: el panel lo pinta con la severidad de la insignia, así que
+        # perder la más grave acá degradaba el incidente en silencio.
+        rango_actual = _RANGO_SEVERIDAD_SIEM.get((inc["severity_siem"] or "").lower(), -1)
+        rango_nueva  = _RANGO_SEVERIDAD_SIEM.get((a.get("severity") or "").lower(), -1)
+        if rango_nueva >= rango_actual:
+            inc["rule_name"]     = a.get("rule_name") or inc["rule_name"]
+            inc["severity_siem"] = a.get("severity") or inc["severity_siem"]
+            inc["risk_score"]    = a.get("risk_score") or inc["risk_score"]
         inc["alert_event_count"] += a.get("event_count") or 0
         if ip != IP_DESCONOCIDA:
             inc["attacker_ips"].add(ip)
@@ -553,9 +572,51 @@ def detect_auth_incidents(siem_data: dict) -> list[dict]:
     return out
 
 
+def _alertas_por_ip(alerts: list[dict], tecnicas: set[str]) -> dict[str, list[dict]]:
+    """Alertas de Kibana de una técnica dada, agrupadas por `source_ip`.
+
+    `port_scan` y `phishing` se detectan leyendo `network_logs/` directamente
+    (ver docstring del módulo) — nunca consultaban las alertas B1-B4/C1-C3 que sí
+    existen en Kibana para esa misma técnica, así que un evento detectado por acá
+    aparecía siempre como "sin regla SIEM" aunque la regla hubiera disparado de
+    verdad. `source_ip` en la alerta ya sale del mismo campo crudo del evento que
+    usa el detector para agrupar (ver `parse_alerts`), así que agrupar por ahí
+    alcanza para emparejar sin reinterpretar roles.
+    """
+    agrupadas: dict[str, list[dict]] = {}
+    for a in alerts:
+        technique_id = (a.get("mitre") or {}).get("technique_id")
+        if technique_id not in tecnicas:
+            continue
+        ip = valid_ip(a.get("source_ip"))
+        if not ip:
+            continue
+        agrupadas.setdefault(ip, []).append(a)
+    return agrupadas
+
+
+def _regla_mas_severa(alertas_por_ip: dict[str, list[dict]], ip: str) -> tuple[str | None, str | None, int | None]:
+    """De las alertas que coinciden con esta IP, la identidad de la MÁS GRAVE.
+
+    Mismo criterio que la fusión por IP de `detect_auth_incidents`: con varias
+    reglas activas sobre la misma IP, la más grave manda, no la primera o la
+    última que devolvió Elasticsearch.
+    """
+    mejor: dict | None = None
+    mejor_rango = -1
+    for a in alertas_por_ip.get(ip, []):
+        rango = _RANGO_SEVERIDAD_SIEM.get((a.get("severity") or "").lower(), -1)
+        if rango >= mejor_rango:
+            mejor_rango = rango
+            mejor = a
+    if mejor is None:
+        return None, None, None
+    return mejor.get("rule_name"), mejor.get("severity"), mejor.get("risk_score")
+
+
 # ─── Detección: port scan (eventos de red) ───────────────────────────────────
 
-def detect_port_scans(events: list[dict]) -> list[dict]:
+def detect_port_scans(events: list[dict], alerts: list[dict] | None = None) -> list[dict]:
     flows = [e for e in events if e.get("event_type") in ("network_flow", "port_scan")
              and e.get("source_ip") and e.get("dest_port") is not None]
     by_ip: dict[str, dict] = {}
@@ -575,17 +636,27 @@ def detect_port_scans(events: list[dict]) -> list[dict]:
                     "detail": f"probe → {e.get('dest_ip','?')}:{e.get('dest_port')}/{e.get('protocol','tcp')}"})
         b["count"] += 1
 
+    alertas_por_ip = _alertas_por_ip(alerts or [], _PORT_SCAN_MITRE_TECHNIQUES)
+
     out: list[dict] = []
     for ip, b in by_ip.items():
         if len(b["ports"]) < PORT_SCAN_DISTINCT_PORTS:
             continue
         ts_sorted = sorted(b["ts"], key=ts_ordenable) or [now_iso()]
         ip_atacante = valid_ip(ip)
+        # D-11 sigue vigente: `rule_name` solo se completa si de verdad hay una
+        # alerta de Kibana (B1-B4) para esta IP — nunca un nombre inventado. Si
+        # ninguna regla disparó todavía (ej. Filebeat no llegó a indexar, o las
+        # reglas están deshabilitadas), sigue cayendo a "clasificador", como antes.
+        rule_name, severity_siem, risk_score = _regla_mas_severa(alertas_por_ip, ip)
         detail = (f"{len(b['ports'])} puertos distintos sondeados desde {ip} "
                   f"(umbral {PORT_SCAN_DISTINCT_PORTS}); patrón de reconocimiento de red.")
         factors = [
             f"{len(b['ports'])} puerto(s) distinto(s) sondeado(s) (umbral: {PORT_SCAN_DISTINCT_PORTS})",
             f"{len(b['dests'])} host(s) de destino distintos sondeados",
+            (f"Confirmado por una regla activa del SIEM: '{rule_name}'" if rule_name
+             else "Ninguna regla de Kibana disparó todavía para esta IP "
+                  "→ la única confirmación es la del clasificador"),
             "Patrón de barrido secuencial de puertos, poco común en tráfico legítimo",
             "Falso positivo: BAJA — salvo que la IP sea un scanner de vulnerabilidades autorizado",
         ]
@@ -597,10 +668,8 @@ def detect_port_scans(events: list[dict]) -> list[dict]:
             attacker_ips=[ip_atacante] if ip_atacante else [],
             victim_hosts=sorted(b["dests"]),
             first_seen=ts_sorted[0], last_seen=ts_sorted[-1],
-            # D-11: sin `rule_name` ni `severity_siem`. Este detector no consulta
-            # Elasticsearch: cuenta puertos distintos en `network_logs/`. La
-            # severidad la pone `_classification`, que es de dónde sale de verdad.
-
+            detection_source="elastic" if rule_name else "clasificador",
+            rule_name=rule_name, severity_siem=severity_siem, risk_score=risk_score,
             event_count=b["count"], log_event_count=b["count"],
             mitre={"tactic": "Discovery", "technique": "Network Service Discovery",
                    "technique_id": "T1046"},
@@ -619,7 +688,7 @@ def detect_port_scans(events: list[dict]) -> list[dict]:
 
 # ─── Detección: phishing / credential harvesting (eventos web) ───────────────
 
-def detect_phishing(events: list[dict]) -> list[dict]:
+def detect_phishing(events: list[dict], alerts: list[dict] | None = None) -> list[dict]:
     subs = [e for e in events if e.get("event_type") == "http_request"
             and (e.get("credential_submission") or e.get("password_submitted"))]
     by_ip: dict[str, dict] = {}
@@ -649,18 +718,24 @@ def detect_phishing(events: list[dict]) -> list[dict]:
                               f"(user={e.get('username','?')}, creds={'sí' if e.get('credential_submission') or e.get('password_submitted') else 'no'})"})
         b["count"] += 1
 
+    alertas_por_ip = _alertas_por_ip(alerts or [], _PHISHING_MITRE_TECHNIQUES)
+
     out: list[dict] = []
     for ip, b in by_ip.items():
         ts_sorted = sorted(b["ts"], key=ts_ordenable) or [now_iso()]
         users = ", ".join(sorted(b["users"])) or "usuario(s) desconocido(s)"
+        # D-11 sigue vigente: nunca se inventa un nombre de regla. Si ninguna de
+        # C1-C3 disparó todavía para esta IP, el factor lo dice tal cual.
+        rule_name, severity_siem, risk_score = _regla_mas_severa(alertas_por_ip, ip)
         detail = (f"{b['count']} envío(s) de credenciales hacia una página de login "
                   f"sospechosa ({', '.join(sorted(b['urls'])) or '/login'}); posible "
                   f"captura de credenciales (phishing).")
         factors = [
             f"{b['count']} envío(s) de credenciales detectado(s) hacia una URL marcada como sospechosa",
             f"{len(b['users'])} usuario(s) distinto(s) afectado(s)",
-            "Sin regla de Kibana desplegada todavía para este tipo de evento (no hay Suricata) "
-            "→ la única confirmación es la del clasificador",
+            (f"Confirmado por una regla activa del SIEM: '{rule_name}'" if rule_name
+             else "Ninguna regla de Kibana disparó todavía para esta IP "
+                  "→ la única confirmación es la del clasificador"),
             "Falso positivo: MEDIA — depende de qué tan confiable sea la fuente que marcó la URL como sospechosa",
         ]
         classification = _classification("credential_harvesting", b["count"], detail, factors)
@@ -673,8 +748,8 @@ def detect_phishing(events: list[dict]) -> list[dict]:
             attacker_ips=sorted(b["dests"]) or ([ip] if valid_ip(ip) else []),
             target_users=sorted(b["users"]),
             first_seen=ts_sorted[0], last_seen=ts_sorted[-1],
-            # D-11: ídem el escaneo — sale de `network_logs/`, no de una alerta.
-
+            detection_source="elastic" if rule_name else "clasificador",
+            rule_name=rule_name, severity_siem=severity_siem, risk_score=risk_score,
             event_count=b["count"], log_event_count=b["count"],
             mitre={"tactic": "Initial Access", "technique": "Phishing",
                    "technique_id": "T1566"},
@@ -753,10 +828,11 @@ def _link_campaigns(incidents: list[dict]) -> None:
 
 def classify(siem_data: dict, network_events: list[dict] | None = None) -> list[dict]:
     network_events = network_events or []
+    alerts = siem_data.get("alerts", [])
     incidents = (
         detect_auth_incidents(siem_data)
-        + detect_port_scans(network_events)
-        + detect_phishing(network_events)
+        + detect_port_scans(network_events, alerts)
+        + detect_phishing(network_events, alerts)
     )
     incidents.sort(key=lambda x: x["event_count"], reverse=True)
     _link_campaigns(incidents)

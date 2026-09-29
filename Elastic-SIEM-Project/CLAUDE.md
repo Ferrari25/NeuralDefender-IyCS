@@ -43,10 +43,10 @@ de credenciales (T1566).
 ## Cómo correrlo (resumen — detalle en `docs/08`)
 
 ```bash
-./scripts/start.sh                                  # stack + despliegue de las 13 reglas
+./scripts/start.sh                                  # stack + despliegue de las 14 reglas
 # o por partes:
 docker compose up -d                              # stack Elastic (setup automatiza kibana_system)
-./scripts/deploy-rules.sh                         # 13 reglas de detección versionadas
+./scripts/deploy-rules.sh                         # 14 reglas de detección versionadas
 docker compose --profile simulation up -d         # contenedores de ataque (no arrancan por defecto)
 bash simulation/run-brute-force.sh                 # generar ataque
 python3 siem_pipeline.py                            # detección → análisis
@@ -58,14 +58,16 @@ bash simulation/run-port-scan.sh --offline && python3 siem_pipeline.py && python
 
 ## Notas que ahorran tiempo
 
-- **El LLM (Gemini) está en cuota 0** → el **fallback determinístico** es el camino
-  real hoy. El sistema funciona completo offline.
+- **El Agente 2 (Gemini) tiene un interruptor aparte de la key**: `SIEM_USE_LLM=true`
+  en `.env` (default `false`). Con la key puesta pero el interruptor apagado, sigue
+  yendo al **fallback determinístico** — es a propósito, para no gastar tokens sin
+  querer. El sistema funciona completo offline con el fallback.
 - **Los comandos de respuesta salen del playbook de `classifier.py`, no del LLM**
   (mitigación de inyección de prompt vía logs), y los datos que se interpolan en
   ellos pasan por `siem_validators.py`: si no validan, la acción no se ofrece.
 - **Antes de tocar código, correr `./scripts/check.sh`** (SAST + 1053 pruebas, ~150 s).
   La puerta falla ante cualquier hallazgo nuevo; las líneas de base están en cero.
-- **Las reglas de detección son código** (`rules/ndjson/`, 13 archivos). Se
+- **Las reglas de detección son código** (`rules/ndjson/`, 14 archivos). Se
   despliegan con `./scripts/deploy-rules.sh` (idempotente) y se bajan con
   `./scripts/export-rules.sh`. Los campos de agrupación usan `.keyword`: en
   `filebeat-*` son `text` y agregar sobre ellos falla. Ver `rules/rules.md`.

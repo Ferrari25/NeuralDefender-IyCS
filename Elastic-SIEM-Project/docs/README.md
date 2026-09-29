@@ -36,7 +36,7 @@ tarea por tarea, y el guion de demostración para la defensa.
 
 La carpeta [`alertas/`](alertas/README.md) responde una pregunta distinta a la `07`: no *cómo* se
 crea una regla, sino **cuáles vale la pena tener activas** para no caer en alert fatigue, y por qué.
-El catálogo técnico completo (13 reglas listas para pegar en Kibana) vive en
+El catálogo técnico completo (14 reglas listas para pegar en Kibana) vive en
 [`../rules/rules.md`](../rules/rules.md).
 
 ## Resumen en una frase

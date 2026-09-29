@@ -71,7 +71,11 @@ El sistema tiene **dos capas** que se conectan por un archivo de intercambio:
 
 1. **Contexto histórico (`historical_context`)** — antes de analizar, busca en `decisions.jsonl` si el analista ya tomó alguna decisión sobre alguna de las IPs de este incidente, en **otro** incidente. Si encontró algo, arma un resumen ("ya se aprobó una acción sobre esta IP el...", "todas las decisiones previas fueron descartes").
 2. **Contexto de campaña (`campaign_context`)** — si `classifier.py` vinculó este incidente a otros, arma la explicación de esa campaña.
-3. **Análisis** — LLM (Gemini) si hay `GEMINI_API_KEY`, con el contexto histórico y de campaña como insumo del prompt; si no hay key o falla, cae al análisis determinístico de respaldo.
+3. **Análisis** — LLM (Gemini) si hay `GEMINI_API_KEY` **y** `SIEM_USE_LLM=true` (el
+   interruptor está apagado por defecto para no gastar tokens sin querer, aunque la
+   key esté configurada), con el contexto histórico y de campaña como insumo del
+   prompt; si falta cualquiera de los dos o falla, cae al análisis determinístico de
+   respaldo.
 4. Los campos `contexto_historico` y `contexto_campana` del resultado final **siempre** se sobreescriben con el valor calculado en Python (paso 1-2), nunca se dejan a que el LLM los haya parafraseado — mismo principio que los comandos del playbook.
 
 ## Decisiones de diseño clave
@@ -86,8 +90,9 @@ El sistema tiene **dos capas** que se conectan por un archivo de intercambio:
   siempre de forma determinística. El LLM puede *usarlos* para redactar mejor su
   explicación, pero el campo final que ve el analista nunca depende de que el
   modelo los haya reproducido bien.
-- **Fallback sin nube:** si no hay `GEMINI_API_KEY` o falla la red, el análisis se
-  genera de forma determinística. El sistema **siempre** produce salida.
+- **Fallback sin nube:** si no hay `GEMINI_API_KEY`, si `SIEM_USE_LLM` no está en
+  `true`, o si falla la red, el análisis se genera de forma determinística. El
+  sistema **siempre** produce salida.
 - **Supervisión humana con registro inmutable:** las decisiones van a un log
   append-only (`decisions.jsonl`, con la IP del incidente incluida desde
   `dashboard.py`); el estado se reconstruye por *replay*. El panel de "Historial

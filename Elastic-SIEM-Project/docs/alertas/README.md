@@ -9,7 +9,7 @@ resolver.
 
 - **[01 · Alertas recomendadas](01-alertas-recomendadas.md)** — cuáles activar primero,
   cuáles son opcionales, y qué tipo de regla evitar por ruidosa o redundante.
-- **[Catálogo técnico completo](../../rules/rules.md)** — las 13 configuraciones de
+- **[Catálogo técnico completo](../../rules/rules.md)** — las 14 configuraciones de
   regla listas para pegar en Kibana (Define/About/Schedule/Actions), con severidad,
   riesgo y mapeo MITRE ATT&CK de cada una. Esta guía elige un subconjunto curado de
   ese catálogo; no lo duplica.

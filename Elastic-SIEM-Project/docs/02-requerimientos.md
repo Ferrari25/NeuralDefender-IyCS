@@ -52,6 +52,7 @@ cp .env.example .env
 | `KIBANA_ENCRYPTION_KEY`, `KIBANA_SAVEDOBJECTS_KEY` | Claves de cifrado de Kibana (32 bytes base64). |
 | `ES_HOST` | Endpoint de ES para los scripts (por defecto `http://localhost:9200`). |
 | `GEMINI_API_KEY` | Key del LLM. **Opcional**: sin ella, el Agente 2 usa el fallback. |
+| `SIEM_USE_LLM` | `true` para que el Agente 2 use la key de verdad. Cualquier otro valor (default) usa el fallback aunque la key esté puesta — apagado por defecto para no gastar tokens sin querer. |
 | `ANALYST_NAME` | Nombre que firma las decisiones en el dashboard. |
 
 > **Seguridad:** nunca commitear `.env`. Generar claves nuevas con

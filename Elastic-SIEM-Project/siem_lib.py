@@ -187,14 +187,33 @@ def auth_failure_query(size: int, window: str = "24h") -> dict:
                     "log.file.path", "tags", "fields", "source_ip", "user"],
         "query": {
             "bool": {
-                "filter": [_time_range(window)],
+                "filter": [
+                    _time_range(window),
+                    # Restringido a las fuentes REALES de auth SSH: el contenedor de
+                    # simulación, o (despliegue no containerizado) el módulo system/auth
+                    # de Filebeat. El input `container` de Filebeat indexa el stdout de
+                    # TODOS los contenedores sin discriminar — Kibana incluido — y una
+                    # frase como "authentication failure" hacía falso positivo contra el
+                    # propio NOMBRE de la regla A7 ("SSH Isolated Authentication Failure")
+                    # cada vez que Kibana logueaba haberla ejecutado: un incidente fantasma,
+                    # sin atacante ni regla real detrás.
+                    {
+                        "bool": {
+                            "should": [
+                                {"term": {"container.name.keyword": "ssh-target"}},
+                                {"term": {"fields.source_type.keyword": "system_logs"}},
+                            ],
+                            "minimum_should_match": 1,
+                        }
+                    },
+                ],
                 "must": [{
                     "bool": {
                         "should": [
                             {"match_phrase": {"message": "Failed password"}},
                             {"match_phrase": {"message": "authentication failure"}},
                             {"match_phrase": {"message": "Invalid user"}},
-                            {"term": {"tags": "authentication_failure"}},
+                            {"term": {"tags.keyword": "authentication_failure"}},
                         ],
                         "minimum_should_match": 1,
                     }

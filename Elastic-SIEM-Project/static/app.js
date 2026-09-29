@@ -56,6 +56,10 @@ const estadoTexto = s => ESTADO_TEXTO.get(s) || s;
 const SEV_DETERMINISTICA = new Map([
   ["critica", "CRITICAL"], ["alta", "HIGH"], ["media", "MEDIUM"], ["baja", "LOW"],
 ]);
+// De más a menos grave. Un solo lugar: lo consumen tanto el resumen (conteo por
+// severidad) como el orden de "Ataques Recientes" — reordenar acá alcanza para
+// las dos vistas.
+const SEV_ORDEN = ["CRITICAL", "HIGH", "MEDIUM", "LOW"];
 const severidadDe = inc => (
   inc?.analysis?.severidad_ajustada
   || inc?.severity_siem
@@ -72,6 +76,13 @@ const procedenciaDe = inc => inc.detection_source === "elastic" && inc.rule_name
       inc.severity_siem ? html` · severidad ${inc.severity_siem}` : ""}${
       inc.risk_score ? html` · riesgo ${inc.risk_score}` : ""}`
   : html`Agente 1 · detección determinística <span class="sutil">(sin alerta de Kibana asociada)</span>`;
+
+// Versión de una línea de `procedenciaDe`, para la tabla y "Ataques recientes":
+// ahí no entra la frase completa, pero el analista igual necesita ver de un
+// vistazo qué regla disparó el evento (o que no hubo ninguna) sin abrir el detalle.
+const reglaCorta = inc => inc.detection_source === "elastic" && inc.rule_name
+  ? inc.rule_name
+  : "Sin regla SIEM (detección propia)";
 
 const attackLabel = t => ATTACK_LABELS.get(t) || "Otro";
 const attackIcon  = t => ico(ATTACK_ICONS.get(t) || "i-advertencia");
@@ -221,6 +232,8 @@ document.getElementById("salir").addEventListener("click", async () => {
 let lastData = { incidents: [] };
 let selectedId = null;
 const collapsed = new Map(); // estado de colapso de evidencia por incidente
+let pidiendoMotivo = null; // action_id que está mostrando el formulario de "por qué se descarta"
+const decisionesAbiertas = new Set(); // incident_id con el detalle de decisiones expandido
 
 async function load() {
   const [incR, decR] = await Promise.all([
@@ -282,7 +295,6 @@ function render() {
   renderEventsTable(filteredIncidents());
   renderDetail(incs);
   renderRecentAttacks(incs);
-  renderLogFeed(incs);
   renderDecisionHistory(lastData._decisions || []);
 }
 
@@ -364,7 +376,7 @@ function renderEventsTable(incs) {
   pintar(wrap, html`
     <table class="events">
       <thead><tr>
-        <th>ID</th><th>Estado</th><th>IP origen</th><th>Tipo de ataque</th><th>Análisis de IA</th>
+        <th>ID</th><th>Estado</th><th>IP origen</th><th>Tipo de ataque</th><th>Regla disparada</th><th>Análisis de IA</th>
       </tr></thead>
       <tbody>
         ${incs.map(rowHtml)}
@@ -372,12 +384,20 @@ function renderEventsTable(incs) {
     </table>`);
 }
 
+// "Resuelto" no es un campo que mande el servidor: se deriva de si ALGUNA
+// acción sugerida de este incidente ya fue aprobada. No hace falta trackear
+// "visto" aparte — aprobar una acción solo es posible con el detalle abierto,
+// así que ya implica que un analista lo revisó.
+const tieneAccionAprobada = inc => (inc.recommended_actions || []).some(a => a.status === "approved");
+
 function rowHtml(inc) {
   const sev = severidadDe(inc);
   const excerpt = (inc.analysis?.explicacion || "").split(". ")[0];
   const sel = inc.incident_id === selectedId ? "selected" : "";
   const campaign = (inc.related_incidents || []).length
     ? html`<span class="campaign-icon" title="Parte de una campaña de ${inc.related_incidents.length + 1} incidentes">${ico("i-enlace")}</span>` : "";
+  const resuelto = tieneAccionAprobada(inc)
+    ? html`<span class="state s-approved resuelto-tag" title="Ya se aprobó al menos una acción sugerida">✔ resuelto</span>` : "";
   // RNF-USA-08: la fila es interactiva, así que se anuncia como tal y se puede
   // alcanzar con el tabulador. Antes era un <tr> con un manejador y nada más:
   // invisible para quien navega con teclado o con lector de pantalla.
@@ -386,9 +406,10 @@ function rowHtml(inc) {
         role="button" tabindex="0"
         aria-label="Abrir el detalle del incidente ${inc.incident_id}">
       <td class="ip-mono">${inc.incident_id}${campaign}</td>
-      <td><span class="badge ${sevClass(sev)}">${sev}</span></td>
+      <td><span class="badge ${sevClass(sev)}">${sev}</span>${resuelto}</td>
       <td class="ip-mono">${inc.source_ip}</td>
-      <td>${attackIcon(inc.classification?.attack_type)} ${attackLabel(inc.classification?.attack_type)}</td>
+      <td>${attackLabel(inc.classification?.attack_type)}</td>
+      <td class="regla-td ${inc.detection_source === "elastic" && inc.rule_name ? "" : "sutil"}">${reglaCorta(inc)}</td>
       <td class="ai-excerpt">${excerpt || "—"}</td>
     </tr>`;
 }
@@ -406,6 +427,34 @@ function renderDetail(incs) {
   pintar(wrap, html`${renderCard(inc)}`);
 }
 
+// De dónde salió el análisis, arriba de todo y a la vista — antes era una
+// etiqueta minúscula al lado de "Qué pasó", del mismo gris que cualquier otro
+// dato secundario, fácil de no notar. La IA y el fallback comparten estructura
+// (mismos campos), así que sin esto no había forma rápida de distinguirlos.
+function renderFuenteAnalisis(an) {
+  const esIA = an._source === "gemini";
+  return html`
+    <div class="analisis-fuente ${esIA ? "es-ia" : "es-fallback"}">
+      ${ico(esIA ? "i-ia" : "i-archivo")}
+      ${esIA ? "Análisis generado por IA (Gemini)" : "Análisis determinístico — reglas fijas, sin IA"}
+    </div>`;
+}
+
+// Exclusivo de la IA: preguntas específicas a ESTE incidente, no una plantilla
+// — es justamente lo que un fallback de reglas fijas no puede producir (no
+// razona sobre el caso puntual). Por eso no tiene contraparte en
+// `_fallback_analysis()`: si no vino nada, la sección no se dibuja, y esa
+// ausencia ES la diferencia con el modo determinístico.
+function renderPuntosDeInvestigacion(an) {
+  const puntos = (an.puntos_de_investigacion || []).filter(Boolean);
+  if (!puntos.length) return "";
+  return html`
+    <div class="investigacion">
+      <div class="ev-section-title">${ico("i-lupa")} Puntos a investigar (Agente 2)</div>
+      <ul>${puntos.map(p => html`<li>${p}</li>`)}</ul>
+    </div>`;
+}
+
 function renderCard(inc) {
   const an = inc.analysis || {};
   const sev = severidadDe(inc);
@@ -413,7 +462,7 @@ function renderCard(inc) {
   const refs = (an.referencias || []).join(", ");
   const factores = inc.classification?.factores || [];
   return html`
-    <div class="card">
+    <div class="card sev-${sev}">
       <div class="card-head">
         <span class="badge ${sevClass(sev)}">${sev}</span>
         <span class="title">${attackIcon(inc.classification?.attack_type)} ${attackLabel(inc.classification?.attack_type)}</span>
@@ -432,12 +481,13 @@ function renderCard(inc) {
           <span class="k">Ventana</span><span>${inc.first_seen} → ${inc.last_seen}</span>
         </div>
         <div class="analysis">
-          <p><span class="lbl">Qué pasó:</span> ${an.explicacion}
-             <span class="src-tag">${an._source || "—"}</span></p>
+          ${renderFuenteAnalisis(an)}
+          <p><span class="lbl">Qué pasó:</span> ${an.explicacion}</p>
           <p><span class="lbl">Metodología:</span> ${an.metodologia}</p>
           <p><span class="lbl">Riesgo en este entorno:</span> ${an.contexto_riesgo}</p>
           ${refs ? html`<p><span class="lbl">Referencias:</span> ${refs}</p>` : ""}
           ${an.contexto_historico ? html`<p><span class="lbl">${ico("i-reloj")} Antecedentes de esta IP:</span> ${an.contexto_historico}</p>` : ""}
+          ${renderPuntosDeInvestigacion(an)}
         </div>
         ${factores.length ? html`
         <div class="factors">
@@ -523,20 +573,54 @@ function renderAction(inc, a) {
             data-accion="decidir" data-decision="approved"
             data-incidente="${inc.incident_id}" data-action-id="${a.action_id}">Aprobar</button>
           <button class="dismiss ${a.status==='dismissed'?'on':''}" type="button"
-            data-accion="decidir" data-decision="dismissed"
+            data-accion="pedir-motivo"
             data-incidente="${inc.incident_id}" data-action-id="${a.action_id}">Descartar</button>
         </span>
       </div>
-      ${cmd}${decided}
+      ${cmd}${pidiendoMotivo === a.action_id ? renderMotivoForm(inc, a) : ""}${decided}
+    </div>`;
+}
+
+// Al descartar, el "por qué" no es un detalle: es lo que `historical_context()`
+// en siem_agent.py va a mostrarle al analista la PRÓXIMA vez que esta IP
+// aparezca ("¿ya la descartamos antes, y por qué?"). Un `prompt()` del
+// navegador lo trataba como un detalle opcional, ni el propio panel volvía a
+// mostrarlo. Ahora es un paso explícito con su propio campo, dentro del panel.
+function renderMotivoForm(inc, a) {
+  return html`
+    <div class="motivo">
+      <label for="motivo-${a.action_id}">¿Por qué se descarta esta sugerencia?</label>
+      <textarea id="motivo-${a.action_id}" rows="2"
+        placeholder="Ej.: falso positivo, ya estaba mitigado, no aplica en este entorno…"></textarea>
+      <p class="motivo-hint">Queda en el registro de auditoría y el Agente 2 lo va a usar como
+        contexto si esta misma IP vuelve a aparecer.</p>
+      <div class="motivo-ctrl">
+        <button type="button" class="dismiss" data-accion="confirmar-descarte"
+          data-incidente="${inc.incident_id}" data-action-id="${a.action_id}">Confirmar descarte</button>
+        <button type="button" class="ghost" data-accion="cancelar-motivo">Cancelar</button>
+      </div>
     </div>`;
 }
 
 function renderRecentAttacks(incs) {
   const box = document.getElementById("recentAttacks");
-  const recent = [...incs].sort((a, b) => (b.last_seen || "").localeCompare(a.last_seen || "")).slice(0, 8);
+  // Severidad calculada una sola vez por incidente (no en cada comparación del
+  // sort) y reusada también al pintar el badge — mismo valor, un solo lugar que
+  // lo decide (`severidadDe`).
+  //
+  // Lo más GRAVE primero, no lo más reciente: un Critical de hace 20 minutos
+  // tiene que verse antes que un Medium de hace 1 minuto. Dentro de la misma
+  // severidad, el desempate sigue siendo la hora (más nuevo primero).
+  const recent = incs
+    .map(inc => ({ inc, sev: severidadDe(inc) }))
+    .sort((a, b) => {
+      const porSeveridad = SEV_ORDEN.indexOf(a.sev) - SEV_ORDEN.indexOf(b.sev);
+      return porSeveridad !== 0 ? porSeveridad
+        : (b.inc.last_seen || "").localeCompare(a.inc.last_seen || "");
+    })
+    .slice(0, 8);
   if (!recent.length) { pintar(box, html`<div class="meta">Sin actividad todavía.</div>`); return; }
-  pintar(box, html`${recent.map(inc => {
-    const sev = severidadDe(inc);
+  pintar(box, html`${recent.map(({ inc, sev }) => {
     return html`
       <div class="recent-item">
         <span class="icon">${attackIcon(inc.classification?.attack_type)}</span>
@@ -547,6 +631,22 @@ function renderRecentAttacks(incs) {
         <div class="when">${timeAgo(inc.last_seen)}</div>
       </div>`;
   })}`);
+}
+
+// El texto de una acción no viaja en decisions.jsonl (solo su action_id, un
+// hash corto). Se busca en los incidentes ya cargados para que el detalle
+// diga QUÉ se decidió, no un id ilegible; si el incidente ya salió de la
+// ventana de 24h, se muestra el id como respaldo.
+function _accionTexto(incident_id, action_id) {
+  const inc = lastData.incidents.find(i => i.incident_id === incident_id);
+  const accion = inc?.recommended_actions?.find(a => a.action_id === action_id);
+  return accion?.accion || action_id;
+}
+
+function toggleDecisiones(incident_id) {
+  if (decisionesAbiertas.has(incident_id)) decisionesAbiertas.delete(incident_id);
+  else decisionesAbiertas.add(incident_id);
+  render();
 }
 
 function renderDecisionHistory(decisions) {
@@ -568,61 +668,59 @@ function renderDecisionHistory(decisions) {
     if (!prev || (d.ts || "") > (prev.ts || "")) latestByAction.set(d.action_id, d);
   }
 
-  const sorted = [...latestByAction.values()]
-    .sort((a, b) => (b.ts || "").localeCompare(a.ts || "")).slice(0, 12);
-  pintar(box, html`${sorted.map(d => {
-    const revCount = revisions.get(d.action_id) || 1;
-    const revNote = revCount > 1 ? html` <span class="fp-hint">(revisado ${revCount}×)</span>` : "";
+  // Agrupado por INCIDENTE, no por acción: 4 incidentes con 2-3 decisiones cada
+  // uno se leían como 10-12 líneas sueltas, todas con el mismo incident_id
+  // repetido — mucho texto para "4 eventos". Acá es una línea por incidente,
+  // con el desglose aprobadas/descartadas, que se puede abrir para ver cada
+  // acción decidida por separado. No se pierde nada: se colapsa la vista, no
+  // el dato — mismo criterio que el resto del panel con decisions.jsonl.
+  const porIncidente = new Map();
+  for (const d of latestByAction.values()) {
+    const grupo = porIncidente.get(d.incident_id) || { aprobadas: 0, descartadas: 0, items: [] };
+    grupo[d.decision === "approved" ? "aprobadas" : "descartadas"]++;
+    grupo.items.push(d);
+    porIncidente.set(d.incident_id, grupo);
+  }
+  for (const grupo of porIncidente.values()) {
+    grupo.items.sort((a, b) => (b.ts || "").localeCompare(a.ts || ""));
+  }
+
+  const grupos = [...porIncidente.entries()]
+    .sort(([, a], [, b]) => (b.items[0].ts || "").localeCompare(a.items[0].ts || ""))
+    .slice(0, 10);
+
+  pintar(box, html`${grupos.map(([incident_id, g]) => {
+    const ultima = g.items[0];
+    const abierto = decisionesAbiertas.has(incident_id);
+    const resumen = [
+      g.aprobadas ? html`<b class="dec-approved">${g.aprobadas} ✔</b>` : "",
+      g.descartadas ? html`<b class="dec-dismissed">${g.descartadas} ✘</b>` : "",
+    ];
+    const detalle = abierto ? html`
+      <div class="decision-detalle" id="dec-${incident_id}">
+        ${g.items.map(d => {
+          const revCount = revisions.get(d.action_id) || 1;
+          const revNote = revCount > 1 ? html` <span class="fp-hint">(revisado ${revCount}×)</span>` : "";
+          return html`
+          <div class="decision-sub">
+            <span class="dec-${d.decision}">${d.decision === "approved" ? "✔ Aprobada" : "✘ Descartada"}</span>
+            — ${_accionTexto(d.incident_id, d.action_id)}${revNote}
+            <div class="who">${d.analyst} · ${hhmmss(d.ts)}${d.note ? ` · ${d.note}` : ""}</div>
+          </div>`;
+        })}
+      </div>` : "";
     return html`
     <div class="decision-item">
-      <span class="dec-${d.decision}">${d.decision === "approved" ? "✔ Aprobada" : "✘ Descartada"}</span>
-      — ${d.incident_id}${revNote}
-      <div class="who">${d.analyst} · ${hhmmss(d.ts)}${d.note ? ` · ${d.note}` : ""}</div>
+      <button type="button" class="decision-head" data-accion="toggle-decisiones" data-incidente="${incident_id}"
+              aria-expanded="${abierto ? "true" : "false"}" aria-controls="dec-${incident_id}">
+        <span class="chev">${abierto ? "▾" : "▸"}</span>
+        <span class="who-title">${incident_id}</span>
+        <span class="decision-resumen">${resumen}</span>
+      </button>
+      <div class="who decision-ultima">última: ${ultima.analyst} · ${hhmmss(ultima.ts)}</div>
+      ${detalle}
     </div>`;
   })}`);
-}
-
-function renderLogFeed(incs) {
-  const box = document.getElementById("logFeed");
-  if (!incs.length) {
-    pintar(box, html`<div class="empty">No hay eventos registrados. Corré
-      <code>python3 siem_pipeline.py</code> para generarlos.</div>`);
-    return;
-  }
-  const sorted = [...incs].sort((a, b) => (b.last_seen || "").localeCompare(a.last_seen || ""));
-  pintar(box, html`${sorted.map(renderFeedItem)}`);
-}
-
-function renderFeedItem(inc) {
-  const an = inc.analysis || {};
-  const sev = severidadDe(inc);
-  const ev = (inc.evidence && inc.evidence.length) ? inc.evidence
-    : (inc.sample_messages || []).map(s => ({ ts: inc.first_seen, detail: s }));
-  const lines = ev.slice(0, 10).map(e =>
-    html`<li><span class="t">${hhmmss(e.ts)}</span><span>${highlightLog(e.detail)}</span></li>`);
-  const primary = (inc.recommended_actions || [])[0];
-  const suggestion = primary ? html`
-    <div class="suggestion">
-      <div class="txt"><b>Sugerencia de IA:</b> ${an.accion_recomendada || primary.accion}
-        <span class="state s-${primary.status}">${estadoTexto(primary.status)}</span></div>
-      <button class="small approve ${primary.status==='approved'?'on':''}" type="button"
-        data-accion="decidir" data-decision="approved"
-        data-incidente="${inc.incident_id}" data-action-id="${primary.action_id}">Aprobar</button>
-      <button class="small dismiss ${primary.status==='dismissed'?'on':''}" type="button"
-        data-accion="decidir" data-decision="dismissed"
-        data-incidente="${inc.incident_id}" data-action-id="${primary.action_id}">Descartar</button>
-    </div>` : "";
-  return html`
-    <div class="feed-item">
-      <div class="fi-head">
-        <span class="badge ${sevClass(sev)}">${sev}</span>
-        <span class="title">${attackIcon(inc.classification?.attack_type)} ${attackLabel(inc.classification?.attack_type)}</span>
-        <span class="meta">${inc.incident_id}</span>
-        <span class="src">${inc.source_ip}</span>
-      </div>
-      <ul class="feed-lines">${lines.length ? lines : html`<li>Sin detalle de eventos individuales.</li>`}</ul>
-      ${suggestion}
-    </div>`;
 }
 
 function toggleAbout() {
@@ -634,9 +732,21 @@ function toggleEv(evId) {
   render();
 }
 
-async function decide(incident_id, action_id, decision) {
-  let note = "";
-  if (decision === "dismissed") note = prompt("Motivo (opcional) para descartar:") || "";
+// Confirmación visible al aprobar/descartar. Antes la única señal de "pasó
+// algo" era esperar el refresco de 15s y notar que el botón cambió de color —
+// fácil de no ver, sobre todo si el clic scrollea o el analista ya pasó a
+// otra fila.
+let avisoTimer = null;
+function mostrarAviso(mensaje, tipo) {
+  const el = document.getElementById("toast");
+  if (!el) return;
+  el.textContent = mensaje;
+  el.className = `toast visible ${tipo}`;
+  clearTimeout(avisoTimer);
+  avisoTimer = setTimeout(() => { el.className = "toast"; }, 3200);
+}
+
+async function decide(incident_id, action_id, decision, note = "") {
   const r = await fetch("/api/v1/decision", {
     method: "POST",
     headers: {
@@ -650,9 +760,31 @@ async function decide(incident_id, action_id, decision) {
   if (r.status === 401) { window.location.href = "/login"; return; }
   if (!r.ok) {
     const datos = await r.json().catch(() => ({}));
-    alert(datos.error || "No se pudo registrar la decisión.");
+    mostrarAviso(datos.error || "No se pudo registrar la decisión.", "error");
+    return;
   }
+  mostrarAviso(decision === "approved" ? "✔ Acción aprobada" : "✘ Acción descartada", "ok");
   load();
+}
+
+// Descartar ya no dispara la decisión al toque: primero abre el formulario del
+// motivo (`renderMotivoForm`). `prompt()` lo trataba como un detalle opcional
+// que se perdía en un cuadro nativo; acá queda a la vista, dentro del panel.
+function pedirMotivo(action_id) {
+  pidiendoMotivo = action_id;
+  render();
+  document.getElementById(`motivo-${action_id}`)?.focus();
+}
+
+function cancelarMotivo() {
+  pidiendoMotivo = null;
+  render();
+}
+
+function confirmarDescarte(incident_id, action_id) {
+  const nota = document.getElementById(`motivo-${action_id}`)?.value.trim() || "";
+  pidiendoMotivo = null;
+  decide(incident_id, action_id, "dismissed", nota);
 }
 
 // S-02: delegación de eventos. Los datos viajan en atributos `data-*` y se leen
@@ -670,6 +802,17 @@ function delegar(evt) {
   } else if (accion === "decidir") {
     evt.stopPropagation();
     decide(incidente, actionId, decision);
+  } else if (accion === "pedir-motivo") {
+    evt.stopPropagation();
+    pedirMotivo(actionId);
+  } else if (accion === "confirmar-descarte") {
+    evt.stopPropagation();
+    confirmarDescarte(incidente, actionId);
+  } else if (accion === "cancelar-motivo") {
+    evt.stopPropagation();
+    cancelarMotivo();
+  } else if (accion === "toggle-decisiones") {
+    toggleDecisiones(incidente);
   } else if (accion === "evidencia") {
     toggleEv(evidencia);
   } else if (accion === "about") {

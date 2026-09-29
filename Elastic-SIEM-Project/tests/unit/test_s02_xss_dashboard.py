@@ -100,8 +100,13 @@ def test_la_delegacion_lee_dataset_no_evalua(app_js):
 
 
 def test_decide_ya_no_recibe_el_objeto_event_interpolado(app_js):
-    """La firma vieja `decide(event, '…')` obligaba a interpolar en un onclick."""
-    assert "async function decide(incident_id, action_id, decision)" in app_js
+    """La firma vieja `decide(event, '…')` obligaba a interpolar en un onclick.
+
+    `note` se sumó como cuarto parámetro cuando el motivo de descarte pasó de un
+    `prompt()` del navegador a un campo del propio panel — sigue viajando como
+    dato explícito, nunca como el `event` interpolado que esta prueba prohíbe.
+    """
+    assert "async function decide(incident_id, action_id, decision, note = \"\")" in app_js
     assert "decide(event," not in app_js
 
 

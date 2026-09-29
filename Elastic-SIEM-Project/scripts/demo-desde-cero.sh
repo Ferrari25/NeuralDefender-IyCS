@@ -249,7 +249,7 @@ pausa 6
 
 paso "3/7 · Desplegar las reglas de detección"
 
-detalle "Las 13 reglas viven versionadas en rules/ndjson/, como código."
+detalle "Las 14 reglas viven versionadas en rules/ndjson/, como código."
 detalle "Esto le enseña a Elastic QUÉ reconocer. No ejecuta nada sobre nadie."
 pausa 3
 

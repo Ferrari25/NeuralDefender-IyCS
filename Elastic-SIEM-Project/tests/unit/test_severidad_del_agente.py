@@ -28,7 +28,7 @@ CLASES_CSS = set(re.findall(r"\.b-([A-Z]+)\s*\{",
                             (RAIZ / "static" / "app.css").read_text(encoding="utf-8")))
 
 
-def _incidente(severidad_determinista: str = "alta") -> dict:
+def _incidente(severidad_determinista: str = "alta", severity_siem: str | None = None) -> dict:
     """Lo mínimo que `_fallback_analysis` necesita para armar su plantilla."""
     return {"incident_id": "INC-T-1",
             "classification": {"severity": severidad_determinista,
@@ -37,6 +37,7 @@ def _incidente(severidad_determinista: str = "alta") -> dict:
                                "mitre_technique": "T1046"},
             "source_ip": "198.51.100.5",
             "event_count": 26,
+            "severity_siem": severity_siem,
             "recommended_actions": []}
 
 
@@ -160,3 +161,56 @@ def test_el_respaldo_deterministico_ya_venia_normalizado():
 
     assert analisis["severidad_ajustada"] in siem_agent._SEV_VALIDAS
     assert "severidad_ajustada_sin_normalizar" not in analisis
+
+
+# ─── La severidad de una alerta real (`severity_siem`) es un hecho ───────────
+#
+# `classifier._classification()` solo distingue tres niveles reales para estos
+# tipos de ataque (port_scan y credential_harvesting son siempre "alta"; SSH es
+# "alta" salvo un volumen extremo). Sin esto, un incidente que nació de una
+# regla de Kibana "Medium" o "Low" se repintaba "alta" en el panel — la
+# severidad que el analista de verdad configuró se perdía en el camino.
+
+def test_la_severidad_de_una_alerta_real_gana_sobre_el_respaldo():
+    """El respaldo, sin `severity_siem`, diría HIGH (clasificador == "alta")."""
+    inc = _incidente("alta", severity_siem="medium")
+    analisis = siem_agent.analyze_incident(None, inc, "sin antecedentes", None)
+
+    assert analisis["severidad_ajustada"] == "MEDIUM"
+    assert analisis["severidad_ajustada_sin_normalizar"] == "HIGH", (
+        "lo que el respaldo calculó por su cuenta queda registrado, no se pierde")
+
+
+def test_la_severidad_de_una_alerta_real_gana_sobre_lo_que_devuelve_el_llm(monkeypatch):
+    cliente = _con_llm_que_devuelve(monkeypatch, "HIGH")
+    inc = _incidente("critica", severity_siem="low")
+    analisis = siem_agent.analyze_incident(cliente, inc, "sin antecedentes", None)
+
+    assert analisis["severidad_ajustada"] == "LOW"
+
+
+def test_sin_severity_siem_sigue_mandando_el_agente_2():
+    """Regresión: un incidente detectado por el clasificador (sin alerta de
+    Kibana) no tiene `severity_siem` — nada de esto lo debe tocar."""
+    inc = _incidente("critica", severity_siem=None)
+    analisis = siem_agent.analyze_incident(None, inc, "sin antecedentes", None)
+
+    assert analisis["severidad_ajustada"] == "CRITICAL"
+    assert "severidad_ajustada_sin_normalizar" not in analisis
+
+
+def test_un_severity_siem_irreconocible_se_ignora():
+    """Un valor que no es LOW/MEDIUM/HIGH/CRITICAL no debe colarse a la insignia."""
+    inc = _incidente("alta", severity_siem="urgentísimo")
+    analisis = siem_agent.analyze_incident(None, inc, "sin antecedentes", None)
+
+    assert analisis["severidad_ajustada"] == "HIGH"
+    assert "severidad_ajustada_sin_normalizar" not in analisis
+
+
+@pytest.mark.parametrize("valor", ["low", "High", " critical ", "mEdIuM"])
+def test_severity_siem_tolera_caja_y_espacios(valor: str):
+    inc = _incidente("baja", severity_siem=valor)
+    analisis = siem_agent.analyze_incident(None, inc, "sin antecedentes", None)
+
+    assert analisis["severidad_ajustada"] == valor.strip().upper()

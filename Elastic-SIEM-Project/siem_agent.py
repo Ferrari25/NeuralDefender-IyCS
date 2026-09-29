@@ -29,7 +29,17 @@ from siem_lib import append_jsonl, load_json, now_iso, read_jsonl, write_json
 INCIDENTS_FILE = "siem_incidents.json"
 HISTORY_FILE   = "analysis_history.jsonl"   # registro append-only de corridas
 DECISIONS_FILE = "decisions.jsonl"          # registro append-only de decisiones del analista
-MODEL          = "gemini-2.0-flash"
+
+# `gemini-2.0-flash` (el valor fijo que tenía esto) dejó de existir: Google va
+# retirando versiones con el tiempo, y una key nueva contra un modelo
+# discontinuado devuelve 404 en vez de una respuesta. `-latest` es un alias que
+# Google reapunta al flash recomendado del momento, así que no vuelve a quedar
+# obsoleto solo. Se eligió la variante "lite" — más barata por token, en línea
+# con que el consumo de tokens ya tiene su propio interruptor (SIEM_USE_LLM).
+# Si Gemini está temporalmente saturado (503), el resultado es el mismo
+# fallback determinístico que si no hubiera key — no hace falta que el modelo
+# esté siempre disponible para que el pipeline funcione.
+MODEL          = "gemini-flash-lite-latest"
 
 SYSTEM_INSTRUCTION = (
     "Sos un analista senior de ciberseguridad (SOC). Recibís datos de una alerta "
@@ -137,7 +147,17 @@ def campaign_context(incident: dict) -> str | None:
 # ─── LLM ─────────────────────────────────────────────────────────────────────
 
 def _build_client():
-    """Devuelve un cliente Gemini o None si no se puede (sin key / sin SDK)."""
+    """Devuelve un cliente Gemini o None si no se puede (apagado / sin key / sin SDK).
+
+    El interruptor (`SIEM_USE_LLM`) es una variable aparte de la API key a
+    propósito: la key puede quedar puesta en `.env` sin que eso gaste un solo
+    token, y prender/apagar el consumo real es una sola variable, sin tocar
+    nada más. Por default queda APAGADO — hay que activarlo a mano, así nadie
+    quema tokens sin darse cuenta solo por tener la key configurada.
+    """
+    if not _llm_habilitado():
+        print("[INFO] SIEM_USE_LLM no está en 'true': usando análisis determinístico (fallback).")
+        return None
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         print("[INFO] Sin GEMINI_API_KEY: usando análisis determinístico (fallback).")
@@ -150,6 +170,10 @@ def _build_client():
         return None
 
 
+def _llm_habilitado() -> bool:
+    return os.getenv("SIEM_USE_LLM", "").strip().lower() in ("1", "true", "yes")
+
+
 def _llm_analysis(client, incident: dict, historical: str, campaign: str | None) -> dict | None:
     from google.genai import types
 
@@ -157,6 +181,11 @@ def _llm_analysis(client, incident: dict, historical: str, campaign: str | None)
     payload = {
         "tipo_ataque": incident["classification"]["attack_type"],
         "severidad_clasificador": incident["classification"]["severity"],
+        # Si hubo una alerta real de Elastic, esta es la severidad que ya decidió
+        # la regla de Kibana. `analyze_incident` la vuelve autoritativa sobre lo que
+        # devuelva este análisis, pero conviene que el LLM la vea: puede explicar
+        # POR QUÉ ese nivel tiene sentido en vez de contradecirlo en el texto.
+        "severidad_siem": incident.get("severity_siem"),
         "factores_clasificacion": incident["classification"].get("factores", []),
         "ip_origen": incident.get("source_ip"),
         "ips_atacante": incident.get("attacker_ips"),
@@ -172,8 +201,18 @@ def _llm_analysis(client, incident: dict, historical: str, campaign: str | None)
         "contexto_campana": campaign,
     }
 
+    # El fallback determinístico rellena una plantilla fija por tipo de ataque —
+    # es lo único que PUEDE hacer sin razonar sobre el incidente puntual. El
+    # pedido acá es explícito en pedir lo que un template no puede dar: detalle
+    # que use los datos DE ESTE incidente, no una definición genérica del tipo
+    # de ataque que serviría para cualquier otro. Si el texto que vuelve
+    # podría pegarse sin cambios en cualquier otro incidente del mismo tipo, no
+    # cumplió el pedido.
     prompt = (
-        "Analizá el siguiente incidente y devolvé el JSON pedido.\n\n"
+        "Analizá el siguiente incidente y devolvé el JSON pedido. Es para un analista de "
+        "seguridad que decide en segundos: priorizá lo concreto de ESTE incidente (volumen, "
+        "ventana de tiempo, usuario/IP objetivo, antecedentes) por sobre una descripción "
+        "general del tipo de ataque que serviría para cualquier otro caso igual.\n\n"
         "<DATOS_INCIDENTE>\n"
         f"{json.dumps(payload, indent=2, ensure_ascii=False)}\n"
         "</DATOS_INCIDENTE>\n\n"
@@ -182,13 +221,20 @@ def _llm_analysis(client, incident: dict, historical: str, campaign: str | None)
         "brevemente en 'accion_recomendada' o 'contexto_riesgo'. Si no aportan nada nuevo, ignoralos.\n\n"
         "Esquema JSON exacto a devolver:\n"
         "{\n"
-        '  "explicacion": "qué ocurrió, en términos simples (2-3 oraciones)",\n'
-        '  "metodologia": "cómo funciona este tipo de ataque",\n'
-        '  "contexto_riesgo": "por qué es peligroso en este entorno",\n'
+        '  "explicacion": "qué ocurrió, con el detalle concreto de este incidente — no una '
+        'definición del tipo de ataque (3-5 oraciones)",\n'
+        '  "metodologia": "cómo funciona esta técnica y qué herramientas o variantes son '
+        'típicas (2-3 oraciones)",\n'
+        '  "contexto_riesgo": "impacto concreto si este ataque prospera EN ESTE ENTORNO, '
+        'apoyado en los datos del incidente, no una advertencia genérica (2-3 oraciones)",\n'
         '  "severidad_ajustada": "LOW|MEDIUM|HIGH|CRITICAL",\n'
         '  "accion_recomendada": "recomendación principal en una oración (SIN comando)",\n'
         '  "falso_positivo_probabilidad": "LOW|MEDIUM|HIGH",\n'
-        '  "referencias": ["técnicas MITRE ATT&CK o CVEs relevantes"]\n'
+        '  "referencias": ["2-4 referencias puntuales: técnica o sub-técnica MITRE ATT&CK, '
+        'con su URL de attack.mitre.org"],\n'
+        '  "puntos_de_investigacion": ["2-4 preguntas concretas para que el analista chequee '
+        'a continuación, específicas a los datos de ESTE incidente — nunca una pregunta '
+        'genérica que serviría para cualquier caso del mismo tipo"]\n'
         "}"
     )
 
@@ -303,6 +349,19 @@ def analyze_incident(client, incident: dict, historical: str, campaign: str | No
     # pierde el dato original.
     original = analysis.get("severidad_ajustada")
     normalizada = _normalizar_severidad(original, incident)
+
+    # Si el incidente vino de una alerta REAL de Elastic, `severity_siem` es un
+    # hecho — la severidad que la regla de Kibana ya decidió — no algo que el
+    # Agente 2 deba reinterpretar desde cero. El respaldo determinístico no
+    # razona con contexto: recalcularla con la tabla fija de `classifier.py`
+    # (que para SSH solo distingue "alta"/"crítica", y para port scan/phishing
+    # siempre da "alta") solo podía perder información real ya conocida. Mismo
+    # criterio que `contexto_historico` / `contexto_campana` arriba: el hecho
+    # auditable gana sobre lo reconstruido.
+    desde_alerta = str(incident.get("severity_siem") or "").strip().upper()
+    if desde_alerta in _SEV_VALIDAS:
+        normalizada = desde_alerta
+
     if normalizada != original:
         analysis["severidad_ajustada_sin_normalizar"] = original
     analysis["severidad_ajustada"] = normalizada

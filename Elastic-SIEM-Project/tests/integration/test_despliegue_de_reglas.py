@@ -179,12 +179,12 @@ def _correr(script: str, proyecto: Path, kibana_url: str, *args: str):
 
 # ─── Despliegue ──────────────────────────────────────────────────────────────
 
-def test_el_despliegue_sube_las_trece_reglas(proyecto, kibana):
+def test_el_despliegue_sube_las_catorce_reglas(proyecto, kibana):
     resultado = _correr("deploy-rules.sh", proyecto, kibana.url)
 
     assert resultado.returncode == 0, resultado.stderr
-    assert len(kibana.reglas) == 13
-    assert "13 regla(s) importada(s)" in resultado.stdout
+    assert len(kibana.reglas) == 14
+    assert "14 regla(s) importada(s)" in resultado.stdout
 
 
 def test_el_despliegue_habilita_las_reglas(proyecto, kibana):
@@ -201,7 +201,7 @@ def test_con_disabled_quedan_apagadas(proyecto, kibana):
     """
     _correr("deploy-rules.sh", proyecto, kibana.url, "--disabled")
 
-    assert len(kibana.reglas) == 13
+    assert len(kibana.reglas) == 14
     assert not any(r["enabled"] for r in kibana.reglas.values())
 
 
@@ -212,7 +212,7 @@ def test_se_puede_habilitar_despues_de_desplegar_apagadas(proyecto, kibana):
 
     _correr("deploy-rules.sh", proyecto, kibana.url)
     assert all(r["enabled"] for r in kibana.reglas.values())
-    assert len(kibana.reglas) == 13
+    assert len(kibana.reglas) == 14
 
 
 # ─── Idempotencia: el requisito central ──────────────────────────────────────
@@ -222,19 +222,19 @@ def test_desplegar_dos_veces_no_duplica(proyecto, kibana):
 
     La identidad de cada regla es su `rule_id`, fijo en el archivo versionado.
     Si un archivo lo perdiera, o el script dejara de usar `overwrite=true`, la
-    segunda corrida agregaría 13 reglas más.
+    segunda corrida agregaría 14 reglas más.
     """
     _correr("deploy-rules.sh", proyecto, kibana.url)
-    assert len(kibana.reglas) == 13
+    assert len(kibana.reglas) == 14
 
     _correr("deploy-rules.sh", proyecto, kibana.url)
-    assert len(kibana.reglas) == 13, "la segunda corrida duplicó reglas"
+    assert len(kibana.reglas) == 14, "la segunda corrida duplicó reglas"
 
 
-def test_cinco_corridas_seguidas_siguen_dando_trece(proyecto, kibana):
+def test_cinco_corridas_seguidas_siguen_dando_catorce(proyecto, kibana):
     for _ in range(5):
         assert _correr("deploy-rules.sh", proyecto, kibana.url).returncode == 0
-    assert len(kibana.reglas) == 13
+    assert len(kibana.reglas) == 14
 
 
 def test_desplegar_actualiza_una_regla_modificada(proyecto, kibana):
@@ -248,7 +248,7 @@ def test_desplegar_actualiza_una_regla_modificada(proyecto, kibana):
     archivo.write_text(json.dumps(regla, ensure_ascii=False) + "\n", encoding="utf-8")
 
     _correr("deploy-rules.sh", proyecto, kibana.url)
-    assert len(kibana.reglas) == 13
+    assert len(kibana.reglas) == 14
     assert kibana.reglas["sensitive-port-probe"]["risk_score"] == 80
 
 
@@ -335,7 +335,7 @@ def test_exportar_trae_las_reglas_de_kibana(proyecto, kibana):
 
     resultado = _correr("export-rules.sh", proyecto, kibana.url)
     assert resultado.returncode == 0
-    assert "13 regla(s) en Kibana" in resultado.stdout
+    assert "14 regla(s) en Kibana" in resultado.stdout
 
 
 def test_check_pasa_cuando_coinciden(proyecto, kibana):
@@ -419,13 +419,13 @@ def test_el_ida_y_vuelta_es_estable(proyecto, kibana):
     assert primera == segunda
 
 
-def test_desde_cero_quedan_trece_reglas_activas(proyecto, kibana):
+def test_desde_cero_quedan_catorce_reglas_activas(proyecto, kibana):
     """El criterio de aceptación de la tarea, verificado de punta a punta."""
     assert len(kibana.reglas) == 0
 
     resultado = _correr("deploy-rules.sh", proyecto, kibana.url)
 
     assert resultado.returncode == 0
-    assert len(kibana.reglas) == 13
-    assert sum(1 for r in kibana.reglas.values() if r["enabled"]) == 13
-    assert "13 regla(s) en Kibana · 13 habilitada(s)" in resultado.stdout
+    assert len(kibana.reglas) == 14
+    assert sum(1 for r in kibana.reglas.values() if r["enabled"]) == 14
+    assert "14 regla(s) en Kibana · 14 habilitada(s)" in resultado.stdout

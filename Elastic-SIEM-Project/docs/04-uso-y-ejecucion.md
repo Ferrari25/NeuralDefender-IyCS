@@ -94,11 +94,16 @@ python3 dashboard.py
 
 ## El LLM (Agente 2)
 
-- Modelo por defecto: `gemini-2.0-flash`. Salida estructurada (JSON) directa, sin
-  parsear bloques markdown.
-- Si **no hay** `GEMINI_API_KEY`, o la API falla (cuota/red), cada incidente cae al
-  **análisis determinístico**. El campo `analyst_mode` y la etiqueta en cada card
-  indican qué se usó.
+- Modelo por defecto: `gemini-flash-lite-latest` (alias — Google lo reapunta al
+  flash-lite vigente, así no vuelve a quedar fijo a una versión que Google
+  discontinúe). Salida estructurada (JSON) directa, sin parsear bloques markdown.
+- **Interruptor de costo:** además de `GEMINI_API_KEY`, hace falta
+  `SIEM_USE_LLM=true` en `.env` — apagado por defecto, para poder dejar la key
+  guardada sin que eso implique gastar tokens. Para prender/apagar el consumo real
+  alcanza con esa variable, sin tocar código.
+- Si **no hay** `GEMINI_API_KEY`, si `SIEM_USE_LLM` no es `true`, o si la API falla
+  (cuota/red), cada incidente cae al **análisis determinístico**. El campo
+  `analyst_mode` y la etiqueta en cada card indican qué se usó.
 - Mitigación de inyección de prompt: los datos del log se marcan como **no
   confiables** por system instruction y se entregan delimitados; el LLM nunca
   genera comandos (esos vienen del playbook del Agente 1).

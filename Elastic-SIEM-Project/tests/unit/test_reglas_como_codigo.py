@@ -58,9 +58,9 @@ def reglas() -> dict[str, dict]:
 
 # ─── El catálogo está completo ───────────────────────────────────────────────
 
-def test_hay_trece_reglas():
-    """Las 13 del catálogo, ni una menos."""
-    assert len(_archivos()) == 13
+def test_hay_catorce_reglas():
+    """Las 14 del catálogo, ni una menos."""
+    assert len(_archivos()) == 14
 
 
 def test_cada_regla_del_catalogo_tiene_su_archivo():
@@ -70,7 +70,7 @@ def test_cada_regla_del_catalogo_tiene_su_archivo():
     revés), esto lo detecta: era exactamente la brecha F-02.
     """
     codigos_md = _codigos_del_catalogo()
-    assert len(codigos_md) == 13, f"rules.md declara {len(codigos_md)} reglas"
+    assert len(codigos_md) == 14, f"rules.md declara {len(codigos_md)} reglas"
 
     codigos_archivos = {p.name.split("-", 1)[0] for p in _archivos()}
     faltan = set(codigos_md) - codigos_archivos

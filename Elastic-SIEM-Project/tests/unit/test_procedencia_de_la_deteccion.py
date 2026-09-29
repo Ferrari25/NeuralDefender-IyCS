@@ -74,6 +74,77 @@ def test_el_phishing_no_inventa_una_regla_del_siem(network_logs_dir):
     assert inc["risk_score"] is None
 
 
+# ─── Varias reglas sobre la misma IP: gana la alerta más grave ───────────────
+#
+# Con varias reglas de Kibana activas a la vez (la escalera Low/Medium/High/
+# Critical del catálogo), una misma IP atacante puede disparar más de una. Antes
+# se quedaba con la ÚLTIMA alerta que devolvía Elasticsearch, sin importar su
+# severidad: un incidente realmente crítico podía terminar mostrando "Low" en
+# el panel solo por el orden de la respuesta.
+
+def _alerta_auth(rule_name: str, severity: str, source_ip: str = "172.18.0.6",
+                 timestamp: str = "2026-09-28T15:00:00.000Z", event_count: int = 5,
+                 risk_score: int = 50) -> dict:
+    """Un alerta ya parseada (forma que produce `prepare-for-ia.parse_alerts`)."""
+    return {"type": "security_alert", "timestamp": timestamp, "rule_name": rule_name,
+            "severity": severity, "risk_score": risk_score, "source_ip": source_ip,
+            "event_count": event_count,
+            "mitre": {"technique_id": "T1110", "technique": "Brute Force",
+                      "tactic": "Credential Access"}}
+
+
+def test_una_alerta_critica_no_se_pierde_detras_de_una_low():
+    siem_data = {"alerts": [
+        _alerta_auth("SSH Isolated Authentication Failure", "low", event_count=1),
+        _alerta_auth("SSH Successful Login After Brute Force", "critical", event_count=25),
+    ], "auth_failure_logs": []}
+
+    incs = classifier.detect_auth_incidents(siem_data)
+    assert len(incs) == 1, "misma IP: un solo incidente"
+
+    inc = incs[0]
+    assert inc["severity_siem"] == "critical"
+    assert inc["rule_name"] == "SSH Successful Login After Brute Force"
+
+
+def test_el_orden_de_llegada_no_importa():
+    """La crítica primero o última: el resultado tiene que ser el mismo."""
+    orden_a = classifier.detect_auth_incidents({"alerts": [
+        _alerta_auth("SSH Successful Login After Brute Force", "critical"),
+        _alerta_auth("SSH Isolated Authentication Failure", "low"),
+    ], "auth_failure_logs": []})[0]
+
+    orden_b = classifier.detect_auth_incidents({"alerts": [
+        _alerta_auth("SSH Isolated Authentication Failure", "low"),
+        _alerta_auth("SSH Successful Login After Brute Force", "critical"),
+    ], "auth_failure_logs": []})[0]
+
+    assert orden_a["severity_siem"] == orden_b["severity_siem"] == "critical"
+    assert orden_a["rule_name"] == orden_b["rule_name"]
+
+
+def test_entre_dos_alertas_de_la_misma_severidad_se_queda_con_la_mas_reciente():
+    """Sin un desempate por gravedad, se preserva el criterio anterior: la que
+    llega después en la respuesta de Elasticsearch (normalmente, la más nueva)."""
+    inc = classifier.detect_auth_incidents({"alerts": [
+        _alerta_auth("SSH Brute Force – Basic Threshold", "medium"),
+        _alerta_auth("SSH Invalid User Enumeration", "medium"),
+    ], "auth_failure_logs": []})[0]
+
+    assert inc["rule_name"] == "SSH Invalid User Enumeration"
+
+
+def test_el_risk_score_acompana_a_la_alerta_mas_grave():
+    """`risk_score` y `rule_name` tienen que venir de la MISMA alerta: mezclar el
+    nombre de una regla con el puntaje de otra sería inconsistente."""
+    inc = classifier.detect_auth_incidents({"alerts": [
+        _alerta_auth("SSH Isolated Authentication Failure", "low", risk_score=21),
+        _alerta_auth("SSH Successful Login After Brute Force", "critical", risk_score=95),
+    ], "auth_failure_logs": []})[0]
+
+    assert inc["risk_score"] == 95
+
+
 # ─── Autenticación: la procedencia depende de si hubo alerta ─────────────────
 
 def test_con_alerta_de_kibana_la_procedencia_es_elastic(siem_clean):
@@ -182,9 +253,15 @@ def test_sin_severidad_del_siem_queda_la_determinista(tipo: str, esperada: str):
 
 def test_el_panel_decide_la_severidad_en_un_solo_lugar():
     """La misma cadena de respaldos estaba repetida en seis sitios: al cambiarla,
-    cualquiera de los seis podía quedar atrás."""
+    cualquiera de los seis podía quedar atrás.
+
+    Bajó a cinco cuando se quitó el panel "Registro de eventos del sistema"
+    (`renderFeedItem` era uno de los seis) — el número importa menos que la
+    garantía: cada sitio que pinta una severidad pasa por `severidadDe()`, nunca
+    reimplementa la cadena de respaldos.
+    """
     assert "const severidadDe = inc =>" in APP_JS
-    assert APP_JS.count("severidadDe(") == 6, "quedaron llamadas fuera del ayudante"
+    assert APP_JS.count("severidadDe(") == 5, "quedaron llamadas fuera del ayudante"
     assert "severidad_ajustada || " not in APP_JS, "sobrevivió una copia de la cadena"
 
 
