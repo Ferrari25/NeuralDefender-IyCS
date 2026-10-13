@@ -1,0 +1,48 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "SIEM: análisis estático completo (linters + SAST)",
+      "type": "shell",
+      "command": "./scripts/pruebas_de_codigo_estatico.sh",
+      "options": { "cwd": "${workspaceFolder}/Elastic-SIEM-Project" },
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "SIEM: ruff (todo el proyecto)",
+      "type": "shell",
+      "command": ".devtools/bin/ruff check . --output-format=concise",
+      "options": { "cwd": "${workspaceFolder}/Elastic-SIEM-Project" },
+      "problemMatcher": {
+        "owner": "ruff",
+        "fileLocation": ["relative", "${workspaceFolder}/Elastic-SIEM-Project"],
+        "pattern": {
+          "regexp": "^(.+?):(\\d+):(\\d+): (\\S+) (.*)$",
+          "file": 1, "line": 2, "column": 3, "code": 4, "message": 5
+        }
+      }
+    },
+    {
+      "label": "SIEM: bandit (todo el proyecto)",
+      "type": "shell",
+      "command": "PYTHONPATH=$PWD/.devtools .devtools/bin/bandit -r . -x './.devtools,./.venv,./node_modules,./tests,./elasticsearch' -q -f custom --msg-template '{abspath}:{line}: {severity} {test_id} {msg}'",
+      "options": { "cwd": "${workspaceFolder}/Elastic-SIEM-Project" },
+      "problemMatcher": {
+        "owner": "bandit",
+        "fileLocation": "absolute",
+        "pattern": {
+          "regexp": "^(.+?):(\\d+): (HIGH|MEDIUM|LOW) (\\S+) (.*)$",
+          "file": 1, "line": 2, "severity": 3, "code": 4, "message": 5
+        }
+      }
+    },
+    {
+      "label": "SIEM: eslint (dashboard JS)",
+      "type": "shell",
+      "command": "node_modules/.bin/eslint -f stylish 'services/gateway/static/**/*.js'",
+      "options": { "cwd": "${workspaceFolder}/Elastic-SIEM-Project" },
+      "problemMatcher": "$eslint-stylish"
+    }
+  ]
+}

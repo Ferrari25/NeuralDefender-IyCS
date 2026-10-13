@@ -1,0 +1,31 @@
+{
+  // ── Python: mismas herramientas y configs que scripts/pruebas_de_codigo_estatico.sh ──
+  "python.defaultInterpreterPath": "/usr/bin/python3",
+  "python.analysis.extraPaths": [
+    "Elastic-SIEM-Project/.devtools",
+    "Elastic-SIEM-Project/libs"
+  ],
+
+  // ruff: estilo + reglas "S" (el port de bandit). Lee Elastic-SIEM-Project/ruff.toml.
+  "ruff.path": ["${workspaceFolder}/Elastic-SIEM-Project/.devtools/bin/ruff"],
+  "ruff.lint.enable": true,
+
+  // pylint + pylint-secure-coding-standard (E80xx), vía el wrapper con .pylintrc.
+  "pylint.path": ["${workspaceFolder}/.vscode/pylint.sh"],
+  "pylint.lintOnChange": true,
+  "pylint.severity": {
+    "convention": "Information",
+    "refactor": "Information",
+    "warning": "Warning",
+    "error": "Error",
+    "fatal": "Error"
+  },
+
+  // ── JavaScript del dashboard: eslint + security + no-unsanitized ──
+  "eslint.workingDirectories": ["./Elastic-SIEM-Project"],
+  "eslint.validate": ["javascript"],
+
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  }
+}
