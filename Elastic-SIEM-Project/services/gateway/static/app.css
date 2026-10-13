@@ -399,3 +399,35 @@ a { color: var(--accent); }
 .aprendizaje ul { margin: var(--sp-6) 0 0; padding-left: var(--sp-20); }
 .aprendizaje li { font-size: var(--fs-md); color: var(--text); line-height: 1.6; }
 .aprendizaje p { margin: var(--sp-6) 0 0; font-size: var(--fs-md); }
+
+/* Confirmación antes de decidir (ver `confirmarDecision` en app.js). Un
+ * <dialog> nativo: atrapa el foco, Escape cancela y el fondo queda inerte sin
+ * código propio. Ancho acotado para que se lea de un vistazo, con scroll
+ * interno si la acción trae un comando largo. */
+.confirmacion { width: min(640px, calc(100vw - var(--sp-32))); max-height: calc(100vh - var(--sp-60));
+                padding: 0; background: var(--panel); color: var(--text);
+                border: 1px solid var(--border); border-radius: var(--r-lg); }
+.confirmacion::backdrop { background: rgba(1, 4, 9, 0.72); }
+.confirmacion form { display: flex; flex-direction: column; gap: var(--sp-12);
+                     padding: var(--sp-18) var(--sp-20); }
+.confirmacion h2 { margin: 0; font-size: var(--fs-lg); color: var(--text); }
+.confirmacion .grid { margin-bottom: 0; font-size: var(--fs-md); }
+.confirmacion-seccion { border: 1px solid var(--border); border-radius: var(--r-md);
+                        background: var(--panel2); padding: var(--sp-6) var(--sp-14) var(--sp-12); }
+.confirmacion-seccion p { margin: var(--sp-6) 0 0; font-size: var(--fs-md); line-height: 1.5; }
+.confirmacion-seccion .cmd { margin-top: var(--sp-8); background: var(--bg); border: 1px solid var(--border);
+                             border-radius: var(--r-sm); padding: var(--sp-8) var(--sp-10);
+                             font-family: ui-monospace, monospace; font-size: var(--fs-mono);
+                             color: var(--ok-texto); overflow-x: auto; }
+.confirmacion-seccion .who { color: var(--muted); font-size: var(--fs-sm); }
+.confirmacion-accion { font-size: var(--fs-body); font-weight: 600; }
+.confirmacion-efecto ul { margin: var(--sp-6) 0 0; padding-left: var(--sp-20); font-size: var(--fs-md); line-height: 1.6; }
+.confirmacion-avisos { list-style: none; margin: 0; padding: var(--sp-8) var(--sp-12);
+                       background: var(--tenue-aviso); color: var(--tenue-aviso-texto);
+                       border: 1px solid var(--med); border-radius: var(--r-md);
+                       font-size: var(--fs-md); line-height: 1.5; display: flex; flex-direction: column; gap: var(--sp-4); }
+.confirmacion-ctrl { display: flex; justify-content: flex-end; gap: var(--sp-8); }
+
+.reportes { margin-top: var(--sp-12); }
+.reportes summary { cursor: pointer; font-size: var(--fs-sm); font-weight: 600; color: var(--accent); }
+.reportes-ctrl { display: flex; gap: var(--sp-8); }

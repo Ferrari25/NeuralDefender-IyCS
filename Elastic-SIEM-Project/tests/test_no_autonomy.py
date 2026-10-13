@@ -297,8 +297,10 @@ def test_las_apis_internas_son_exactamente_estas():
     assert encontradas == {
         "auth": [("GET", "/v1/users-summary"), ("GET", "/v1/users/<username>"),
                  ("POST", "/v1/authenticate")],
-        "audit": [("GET", "/v1/analysis-history/verify"), ("GET", "/v1/decisions"),
-                  ("GET", "/v1/decisions/verify"), ("POST", "/v1/analysis-history"),
+        "audit": [("GET", "/v1/activity"), ("GET", "/v1/activity/verify"),
+                  ("GET", "/v1/analysis-history/verify"), ("GET", "/v1/decisions"),
+                  ("GET", "/v1/decisions/verify"), ("GET", "/v1/reports"),
+                  ("POST", "/v1/activity"), ("POST", "/v1/analysis-history"),
                   ("POST", "/v1/decisions")],
         "collector": [("GET", "/v1/snapshots/latest"), ("POST", "/v1/snapshots")],
         "classifier": [("POST", "/v1/classify")],
@@ -324,7 +326,8 @@ def test_la_auditoria_no_expone_modificacion_ni_borrado():
     assert {m for m, _ in rutas} <= {"GET", "POST"}
     for metodo, r in rutas:
         if metodo == "POST":
-            assert r in ("/v1/decisions", "/v1/analysis-history"), r
+            # Los tres POST AGREGAN una línea a un registro encadenado; ninguno edita.
+            assert r in ("/v1/decisions", "/v1/analysis-history", "/v1/activity"), r
 
 
 # ─── 5. Los comandos sugeridos son datos, nunca se ejecutan ──────────────────
@@ -514,7 +517,7 @@ def test_el_dashboard_no_define_rutas_de_ejecucion():
         "/api/v1/healthz", "/api/v1/incidents", "/api/v1/incidents/<incident_id>",
         "/api/v1/login", "/api/v1/logout", "/api/v1/me",
         "/api/v1/memoria", "/api/v1/memoria/documentos", "/api/v1/memoria/lecciones",
-        "/api/v1/memoria/lecciones/<leccion_id>/revision", "/login",
+        "/api/v1/memoria/lecciones/<leccion_id>/revision", "/api/v1/reportes", "/login",
     ]
     for r in rutas:
         assert not any(v in r for v in ("execute", "run", "exec", "shell",

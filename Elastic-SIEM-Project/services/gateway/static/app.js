@@ -845,6 +845,7 @@ async function enviarMemoria(ruta, cuerpo) {
 }
 
 async function revisarLeccion(leccionId, decision) {
+  if (!await confirmarLeccion(leccionId, decision)) return;
   const ok = await enviarMemoria(`/api/v1/memoria/lecciones/${encodeURIComponent(leccionId)}/revision`, { decision });
   if (!ok) return;
   mostrarAviso(decision === "aprobar" ? "✔ Lección aprobada: el agente la va a usar desde el próximo análisis"
@@ -881,6 +882,21 @@ document.getElementById("formDocumento").addEventListener("submit", async evt =>
   evt.target.reset();
   mostrarAviso("Documento cargado: el agente lo consulta desde el próximo análisis", "ok");
   load();
+});
+
+// Reportes: el servidor arma el archivo (servicio audit). El CSV se descarga
+// sin salir del panel (llega como adjunto); el JSON se abre en otra pestaña.
+document.getElementById("formReporte").addEventListener("submit", evt => {
+  evt.preventDefault();
+  const formato = evt.submitter?.dataset.formato || "csv";
+  const params = new URLSearchParams({ formato });
+  const desde = document.getElementById("repDesde").value;
+  const hasta = document.getElementById("repHasta").value;
+  if (desde) params.set("desde", desde);
+  if (hasta) params.set("hasta", hasta);
+  const url = `/api/v1/reportes?${params}`;
+  if (formato === "csv") window.location.assign(url);
+  else window.open(url, "_blank", "noopener");
 });
 
 function toggleAbout() {
@@ -946,10 +962,142 @@ function cancelarMotivo() {
   render();
 }
 
-function confirmarDescarte(incident_id, action_id) {
+async function confirmarDescarte(incident_id, action_id) {
   const nota = document.getElementById(`motivo-${action_id}`)?.value.trim() || "";
+  if (!await confirmarDecision(incident_id, action_id, "dismissed", nota)) return;
   pidiendoMotivo = null;
   decide(incident_id, action_id, "dismissed", nota);
+}
+
+async function aprobarAccion(incident_id, action_id) {
+  if (!await confirmarDecision(incident_id, action_id, "approved", "")) return;
+  decide(incident_id, action_id, "approved");
+}
+
+// ─── Confirmación antes de decidir ──────────────────────────────────────────
+//
+// Un clic en «Aprobar» quedaba registrado para siempre en un log append-only,
+// sin un último vistazo a QUÉ se estaba aprobando: el comando, su impacto, la
+// probabilidad de falso positivo, si ya lo había decidido otro. El cuadro
+// junta lo importante en un solo lugar, justo antes de firmar.
+//
+// Las advertencias se calculan de los datos (falso positivo alto, impacto alto,
+// decisión previa de otra persona, descarte sin motivo): no son texto fijo que
+// se aprende a ignorar.
+
+function preguntar(titulo, cuerpo, textoBoton, tipo) {
+  const dialogo = document.getElementById("confirmacion");
+  document.getElementById("confirmacionTitulo").textContent = titulo;
+  pintar(document.getElementById("confirmacionCuerpo"), cuerpo);
+  const si = document.getElementById("confirmacionSi");
+  si.textContent = textoBoton;
+  si.className = tipo;
+  return new Promise(resolver => {
+    dialogo.addEventListener("close", () => resolver(dialogo.returnValue === "si"), { once: true });
+    dialogo.returnValue = "no";
+    dialogo.showModal();
+    si.focus();
+  });
+}
+
+const advertencias = lista => {
+  const activas = lista.filter(Boolean);
+  return activas.length
+    ? html`<ul class="confirmacion-avisos">${activas.map(a => html`<li>${ico("i-advertencia")} ${a}</li>`)}</ul>`
+    : "";
+};
+
+function confirmarDecision(incident_id, action_id, decision, nota) {
+  const inc = (lastData.incidents || []).find(i => i.incident_id === incident_id);
+  const a = inc?.recommended_actions?.find(x => x.action_id === action_id);
+  if (!inc || !a) return Promise.resolve(true);   // sin datos locales: decide el servidor (404)
+  const an = inc.analysis || {};
+  const sev = severidadDe(inc);
+  const aprobar = decision === "approved";
+  const fp = (an.falso_positivo_probabilidad || "").toUpperCase();
+  const lecciones = an.aprendizaje?.lecciones || [];
+
+  const avisos = advertencias([
+    a.status !== "pending" && a.status !== decision
+      && `Esta acción ya estaba ${estadoTexto(a.status)} por ${a.decided_by}. Tu decisión la reemplaza; la anterior queda en el registro.`,
+    aprobar && fp === "HIGH" && "La probabilidad de falso positivo es ALTA: confirmá la evidencia antes de aprobar.",
+    aprobar && (a.impacto || "").toLowerCase() === "alto" && "La acción tiene impacto ALTO sobre el servicio.",
+    !aprobar && !nota && "Descartás sin motivo: la próxima vez que aparezca esta IP, ni vos ni el agente van a saber por qué.",
+  ]);
+
+  const cuerpo = html`
+    <div class="confirmacion-seccion">
+      <div class="ev-section-title">El incidente</div>
+      <div class="grid">
+        <span class="k">Tipo</span><span>${attackIcon(inc.classification?.attack_type)} ${attackLabel(inc.classification?.attack_type)} · <span class="badge ${sevClass(sev)}">${sev}</span></span>
+        <span class="k">Atacante</span><span class="ip-hl">${(inc.attacker_ips || []).join(", ") || inc.source_ip}</span>
+        <span class="k">Eventos</span><span>${(inc.event_count || 0).toLocaleString()} · ${hhmmss(inc.first_seen)} → ${hhmmss(inc.last_seen)}</span>
+        <span class="k">Detección</span><span>${procedenciaDe(inc)}</span>
+        <span class="k">Falso pos.</span><span>${fp || "—"} <span class="fp-hint">${fpHint(fp)}</span></span>
+        ${an.contexto_historico ? html`<span class="k">Antecedentes</span><span>${an.contexto_historico}</span>` : ""}
+        ${lecciones.length ? html`<span class="k">Memoria</span><span>${lecciones.map(l => l.texto).join(" · ")}</span>` : ""}
+      </div>
+    </div>
+    <div class="confirmacion-seccion">
+      <div class="ev-section-title">La acción</div>
+      <p class="confirmacion-accion">${a.orden}. ${a.accion}</p>
+      <p class="who">${a.responsable} · plazo ${a.plazo} · impacto ${a.impacto}</p>
+      ${a.comando_sugerido ? html`<div class="cmd">$ ${a.comando_sugerido}</div>` : ""}
+      ${a.comando_explicacion ? html`<p class="sutil">${a.comando_explicacion}</p>` : ""}
+    </div>
+    ${!aprobar ? html`<div class="confirmacion-seccion">
+      <div class="ev-section-title">Tu motivo</div>
+      <p>${nota || "— sin motivo —"}</p></div>` : ""}
+    ${avisos}
+    <div class="confirmacion-seccion confirmacion-efecto">
+      <div class="ev-section-title">Qué pasa al confirmar</div>
+      <ul>
+        <li>Se registra ${aprobar ? "la aprobación" : "el descarte"} a tu nombre (<b>${sesion.usuario}</b>) en la auditoría append-only. No se puede editar ni borrar.</li>
+        ${aprobar ? html`<li><b>El sistema no ejecuta nada.</b> Aprobar registra la intención: el comando lo corre una persona, a mano.</li>` : ""}
+        <li>El caso se guarda en la memoria del agente y cuenta para sus próximas lecciones.</li>
+      </ul>
+    </div>`;
+  return preguntar(aprobar ? "Vas a aprobar esta acción" : "Vas a descartar esta sugerencia",
+                   cuerpo, aprobar ? "Aprobar" : "Descartar", aprobar ? "approve on" : "dismiss on");
+}
+
+const ALCANCE_TIPO = t => t ? attackLabel(t) : "cualquier tipo de ataque";
+function confirmarLeccion(leccionId, decision) {
+  const l = (lastData._memoria?.lecciones || []).find(x => x.leccion_id === leccionId);
+  if (!l) return Promise.resolve(true);
+  const aprobar = decision === "aprobar";
+  // `Map` y no un objeto literal: `l.tipo` viene del servidor (ver ATTACK_LABELS).
+  const alcance = `en los incidentes de ${ALCANCE_TIPO(l.attack_type)}${l.ip ? ` desde ${l.ip}` : ""}`;
+  const efecto = new Map([
+    ["falso_positivo", `marca la probabilidad de falso positivo como ALTA ${alcance}`],
+    ["reincidente", `marca la probabilidad de falso positivo como BAJA ${alcance}`],
+    ["manual", "se le muestra al agente y al analista como contexto; no cambia ningún valor"],
+  ]).get(l.tipo) || "se le muestra al agente como contexto";
+  const cuerpo = html`
+    <div class="confirmacion-seccion">
+      <div class="ev-section-title">La lección</div>
+      <p class="confirmacion-accion">${l.texto}</p>
+      <div class="grid">
+        <span class="k">Tipo</span><span>${TIPO_LECCION.get(l.tipo) || l.tipo}</span>
+        <span class="k">Aplica a</span><span>${ALCANCE_TIPO(l.attack_type)}${l.ip ? html` · IP <span class="ip-hl">${l.ip}</span>` : " · todas las IPs"}</span>
+        <span class="k">Propuesta por</span><span>${l.propuesta_por} · ${timeAgo(l.propuesta_en)}</span>
+        ${l.evidencia?.length ? html`<span class="k">Basada en</span><span>${l.evidencia.join(", ")}</span>` : ""}
+      </div>
+    </div>
+    ${advertencias([l.propuesta_por === sesion.usuario && aprobar
+      && "La propusiste vos: si se puede, que la apruebe otra persona."])}
+    <div class="confirmacion-seccion confirmacion-efecto">
+      <div class="ev-section-title">Qué pasa al confirmar</div>
+      <ul>
+        ${aprobar
+          ? html`<li>Desde el próximo análisis, el agente la usa: ${efecto}.</li>
+                 <li>Nunca cambia la severidad ni las acciones sugeridas.</li>`
+          : html`<li>El agente no la va a usar, y no la vuelve a proponer.</li>`}
+        <li>Queda registrada a tu nombre (<b>${sesion.usuario}</b>) en la actividad de auditoría. Una lección revisada no se reabre.</li>
+      </ul>
+    </div>`;
+  return preguntar(aprobar ? "Vas a aprobar esta lección" : "Vas a rechazar esta lección",
+                   cuerpo, aprobar ? "Aprobar lección" : "Rechazar lección", aprobar ? "approve on" : "dismiss on");
 }
 
 // S-02: delegación de eventos. Los datos viajan en atributos `data-*` y se leen
@@ -966,7 +1114,7 @@ function delegar(evt) {
     selectIncident(incidente);
   } else if (accion === "decidir") {
     evt.stopPropagation();
-    decide(incidente, actionId, decision);
+    aprobarAccion(incidente, actionId);
   } else if (accion === "pedir-motivo") {
     evt.stopPropagation();
     pedirMotivo(actionId);

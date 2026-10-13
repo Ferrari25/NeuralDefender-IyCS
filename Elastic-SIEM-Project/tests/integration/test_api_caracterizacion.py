@@ -133,6 +133,8 @@ def test_la_api_no_expone_ninguna_ruta_de_ejecucion(client):
         # Memoria del Agente 2: guardan y revisan TEXTO (documentos, lecciones).
         "/api/v1/memoria", "/api/v1/memoria/documentos", "/api/v1/memoria/lecciones",
         "/api/v1/memoria/lecciones/<leccion_id>/revision",
+        # Reportes: solo lectura de la auditoría.
+        "/api/v1/reportes",
     }
 
     for sospechosa in ("/api/execute", "/api/run", "/api/contain", "/api/block",

@@ -90,6 +90,23 @@
         <div class="side-card">
           <h2 class="panel-title"><svg class="ico"><use href="#i-archivo"></use></svg> Historial de Decisiones</h2>
           <div id="decisionHistory">cargando…</div>
+          <!-- Reportes: decisiones + actividad de la memoria, armados por el
+               servicio audit desde sus registros encadenados. -->
+          <details class="reportes">
+            <summary>Sacar un reporte</summary>
+            <form id="formReporte" class="memoria-form">
+              <label for="repDesde">Desde (opcional)</label>
+              <input id="repDesde" type="date">
+              <label for="repHasta">Hasta (opcional)</label>
+              <input id="repHasta" type="date">
+              <div class="reportes-ctrl">
+                <button type="submit" class="small" data-formato="csv">Descargar CSV</button>
+                <button type="submit" class="small ghost" data-formato="json">Ver JSON</button>
+              </div>
+              <p class="motivo-hint">Incluye cada decisión con su contexto, la actividad sobre la memoria
+                del agente y el estado de la cadena de hashes.</p>
+            </form>
+          </details>
         </div>
         <div class="side-card memoria">
           <h2 class="panel-title"><svg class="ico"><use href="#i-idea"></use></svg> Memoria del agente</h2>
@@ -138,6 +155,19 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Confirmación antes de cada decisión: resume lo importante de lo que el
+       analista está por registrar. El contenido lo arma app.js. -->
+  <dialog id="confirmacion" class="confirmacion" aria-labelledby="confirmacionTitulo">
+    <form method="dialog">
+      <h2 id="confirmacionTitulo"></h2>
+      <div id="confirmacionCuerpo"></div>
+      <div class="confirmacion-ctrl">
+        <button type="submit" value="no" class="ghost">Cancelar</button>
+        <button type="submit" value="si" id="confirmacionSi">Confirmar</button>
+      </div>
+    </form>
+  </dialog>
 
   <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>

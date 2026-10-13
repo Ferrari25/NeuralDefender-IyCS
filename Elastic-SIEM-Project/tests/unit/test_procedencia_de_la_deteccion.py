@@ -259,9 +259,13 @@ def test_el_panel_decide_la_severidad_en_un_solo_lugar():
     (`renderFeedItem` era uno de los seis) — el número importa menos que la
     garantía: cada sitio que pinta una severidad pasa por `severidadDe()`, nunca
     reimplementa la cadena de respaldos.
+
+    Volvió a seis con el cuadro de confirmación antes de decidir
+    (`confirmarDecision`), que muestra la severidad del incidente — por el
+    ayudante, que es justamente lo que esta prueba exige.
     """
     assert "const severidadDe = inc =>" in APP_JS
-    assert APP_JS.count("severidadDe(") == 5, "quedaron llamadas fuera del ayudante"
+    assert APP_JS.count("severidadDe(") == 6, "quedaron llamadas fuera del ayudante"
     assert "severidad_ajustada || " not in APP_JS, "sobrevivió una copia de la cadena"
 
 
