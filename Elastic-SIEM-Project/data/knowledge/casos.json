@@ -1,0 +1,16 @@
+[
+  {
+    "incident_id": "INC-AUTH-desconocida-32736251",
+    "action_id": "INC-AUTH-desconocida-32736251-bceba4",
+    "accion": "Habilitar rate-limiting / fail2ban en el servicio SSH",
+    "decision": "approved",
+    "note": "",
+    "analyst": "nico",
+    "attack_type": "ssh_brute_force",
+    "severity": "MEDIUM",
+    "source_ip": "desconocida",
+    "attacker_ips": [],
+    "target_users": [],
+    "ts": "2026-10-13T02:38:53.556970+00:00"
+  }
+]

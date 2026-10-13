@@ -1,14 +1,14 @@
 {
   "version": 1,
-  "actualizado": "2026-10-13T01:06:25.566683+00:00",
+  "actualizado": "2026-10-13T01:13:59.111201+00:00",
   "usuarios": [
     {
       "username": "nico",
       "rol": "analyst",
-      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$F0LDxrGi2aB5t+nlNI4Fvg$PMQsY6+k1bta3Tv28QHzHlZZgZsTXOWfDXvtSwtCu0g",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$PLoQEvlPOYJEiZf/w6HXzA$j8Zu5Bh0vaZc1pvBYy9GAQi+lDek2Ohh03VkMzGABjI",
       "activo": true,
-      "creado": "2026-10-13T01:06:25.566628+00:00",
-      "ultimo_acceso": null
+      "creado": "2026-10-13T01:11:11.598498+00:00",
+      "ultimo_acceso": "2026-10-13T01:13:59.111155+00:00"
     }
   ]
 }

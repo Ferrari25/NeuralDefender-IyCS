@@ -1,25 +1,26 @@
 {
-  "generated_at": "2026-10-13T01:13:41.953336+00:00",
+  "generated_at": "2026-10-13T02:36:50.707345+00:00",
   "incident_count": 1,
   "incidents": [
     {
-      "alert_event_count": 1436,
+      "alert_event_count": 1303,
       "analysis": {
-        "_source": "gemini",
-        "accion_recomendada": "Priorizar Habilitar rate-limiting / fail2ban en el servicio SSH, dado que el volumen masivo de 1436 intentos requiere mitigar de inmediato la exposición a la fuerza bruta.",
+        "_source": "fallback",
+        "accion_recomendada": "Habilitar rate-limiting / fail2ban en el servicio SSH",
+        "aprendizaje": {
+          "casos_similares": [],
+          "disponible": true,
+          "documentos": [],
+          "lecciones": []
+        },
         "contexto_campana": null,
         "contexto_historico": "Sin IP identificada para buscar antecedentes.",
-        "contexto_riesgo": "Si el ataque prospera contra el host 172.19.0.6, el atacante obtendría acceso remoto inicial con las credenciales comprometidas, permitiéndole escalar privilegios o moverse lateralmente en la red. Dado que el volumen de 1436 intentos superó ampliamente el umbral configurado de 20, existe un riesgo operativo latente si las contraseñas del servicio SSH son débiles o reutilizadas.",
-        "explicacion": "Se registró un ataque de fuerza bruta contra el host 172.19.0.6, acumulando un total de 1436 fallos de autenticación SSH en una única ventana temporal registrada el 2026-10-13T01:12:28.476Z. Este volumen masivo de intentos descarta por completo la posibilidad de un error humano puntual por parte de un usuario legítimo. Aunque la IP de origen figura como desconocida en los datos actuales, la intensidad del tráfico evidencia una actividad automatizada contra el servicio.",
+        "contexto_riesgo": "Si alguna credencial es débil, el atacante obtiene acceso interactivo al host y puede moverse lateralmente dentro de la red.",
+        "explicacion": "Se detectaron 1303 intentos de autenticación fallida contra SSH desde desconocida, apuntando a un usuario del sistema.",
         "falso_positivo_probabilidad": "LOW",
-        "metodologia": "Esta técnica consiste en realizar múltiples intentos sistemáticos de adivinación de credenciales para obtener acceso no autorizado a los sistemas. Los atacantes suelen utilizar scripts automatizados y herramientas como Hydra o Medusa para probar listas masivas de usuarios y contraseñas comunes contra servicios expuestos.",
-        "puntos_de_investigacion": [
-          "¿Desde qué IP o rango de red provienen las solicitudes si los registros detallan conexiones concurrentes hacia el host 172.19.0.6?",
-          "¿Existen registros previos o posteriores de inicio de sesión exitoso en el host 172.19.0.6 durante la ventana de tiempo del ataque?",
-          "¿Qué cuentas de usuario específicas fueron blanco de estos 1436 intentos de autenticación en el servicio SSH?"
-        ],
+        "metodologia": "Un ataque de fuerza bruta automatizado (ej. Hydra o Medusa) prueba miles de contraseñas en serie hasta encontrar una válida.",
         "referencias": [
-          "MITRE ATT&CK T1110 - Brute Force: https://attack.mitre.org/techniques/T1110/"
+          "T1110"
         ],
         "severidad_ajustada": "MEDIUM",
         "severidad_ajustada_sin_normalizar": "HIGH"
@@ -31,22 +32,22 @@
         "attack_type": "ssh_brute_force",
         "confidence": "alta",
         "factores": [
-          "1436 fallo(s) de autenticación registrados (umbral de fuerza bruta: 20)",
+          "1303 fallo(s) de autenticación registrados (umbral de fuerza bruta: 20)",
           "Host(s) atacado(s): 172.19.0.6",
           "Volumen muy por encima del umbral: descarta un error humano puntual",
           "Falso positivo: BAJA — este volumen es infrecuente en tráfico legítimo"
         ],
         "false_positive_likelihood": "baja",
         "mitre_technique": "T1110",
-        "rationale": "1436 fallos de autenticación desde una misma IP superan el umbral de 20; patrón de fuerza bruta automatizada (T1110).",
+        "rationale": "1303 fallos de autenticación desde una misma IP superan el umbral de 20; patrón de fuerza bruta automatizada (T1110).",
         "severity": "alta"
       },
       "detection_source": "elastic",
-      "event_count": 1436,
+      "event_count": 1303,
       "evidence": [],
-      "first_seen": "2026-10-13T01:12:28.476Z",
-      "incident_id": "INC-AUTH-desconocida-1fc14c57",
-      "last_seen": "2026-10-13T01:12:28.476Z",
+      "first_seen": "2026-10-13T02:34:15.197Z",
+      "incident_id": "INC-AUTH-desconocida-32736251",
+      "last_seen": "2026-10-13T02:34:15.197Z",
       "log_event_count": 0,
       "mitre": {
         "tactic": "Credential Access",
@@ -56,7 +57,7 @@
       "recommended_actions": [
         {
           "accion": "Habilitar rate-limiting / fail2ban en el servicio SSH",
-          "action_id": "INC-AUTH-desconocida-1fc14c57-bceba4",
+          "action_id": "INC-AUTH-desconocida-32736251-bceba4",
           "comando_argv": null,
           "comando_explicacion": "Instala fail2ban (monitorea los logs de auth y banea automáticamente IPs con demasiados fallos) y lo deja corriendo de forma permanente. Es la mitigación estructural: evita que haga falta bloquear IPs a mano cada vez que se repita este mismo patrón de ataque.",
           "comando_sugerido": "sudo apt-get install -y fail2ban && sudo systemctl enable --now fail2ban",
@@ -81,6 +82,6 @@
     }
   ],
   "source": "collector",
-  "analyzed_at": "2026-10-13T01:13:44.725761+00:00",
-  "analyst_mode": "gemini"
+  "analyzed_at": "2026-10-13T02:36:52.244855+00:00",
+  "analyst_mode": "fallback"
 }

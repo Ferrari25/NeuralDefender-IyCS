@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-13T01:13:41.949755+00:00",
+  "generated_at": "2026-10-13T02:36:50.703532+00:00",
   "context": "Elastic SIEM - Análisis de seguridad automatizado",
   "summary": {
     "total_alerts": 1,
@@ -15,8 +15,8 @@
   "alerts": [
     {
       "type": "security_alert",
-      "timestamp": "2026-10-13T01:12:28.476Z",
-      "alert_id": "f053c01dd61060ee...",
+      "timestamp": "2026-10-13T02:34:15.197Z",
+      "alert_id": "9ec32cfeabf9c6e6...",
       "rule_name": "SSH Brute Force – Basic Threshold",
       "severity": "medium",
       "risk_score": 47,
@@ -26,10 +26,10 @@
       "victim_host": "172.19.0.6",
       "target_user": null,
       "grouped_by": "host.ip.keyword",
-      "event_count": 1436,
+      "event_count": 1303,
       "time_window": {
-        "from": "2026-10-13T01:11:45.204Z",
-        "to": "2026-10-13T01:12:28.476Z"
+        "from": "2026-10-13T02:33:36.066Z",
+        "to": "2026-10-13T02:34:15.197Z"
       },
       "mitre": {
         "tactic": "Credential Access",
