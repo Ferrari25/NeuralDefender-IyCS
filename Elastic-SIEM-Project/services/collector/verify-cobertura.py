@@ -2,7 +2,7 @@
 """
 Demuestra que todo lo que disparó en el SIEM está representado en el panel.
 
-`prepare-for-ia.py` usa `alerts_query_por_regla` (tope de 5 alertas por regla,
+El collector usa `alerts_query_por_regla` (tope de 5 alertas por regla,
 ver D-01 en `docs/04-auditoria-pruebas-y-demostracion.md`) para que una regla ruidosa no tape
 a las demás frente al LLM — es una MUESTRA a propósito, no todo lo que hay en
 Elasticsearch. Este script hace la pregunta inversa, sin ese recorte: consulta
@@ -29,28 +29,34 @@ compararlos contra Elasticsearch acá — lo que sí se verifica es que la regla
 Kibana que corresponde a esos eventos (B1-B4, C1-C3) haya quedado prendida en
 el incidente, con el mismo criterio de "la más grave" que SSH.
 
-Uso:
-  export PYTHONPATH="$PWD/.devtools"
-  python3 src/verify-cobertura.py                  # ventana 24h, siem_incidents.json actual
-  python3 src/verify-cobertura.py --window 1h --size 2000
+Corre dentro del contenedor del collector (el único con acceso a Elasticsearch)
+y le pide los incidentes actuales al servicio pipeline:
+
+  docker compose exec collector python verify-cobertura.py
+  docker compose exec collector python verify-cobertura.py --window 1h --size 2000
+
+(`./scripts/siem.sh cobertura [args]` es el atajo.)
 """
 
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 
-from classifier import _RANGO_SEVERIDAD_SIEM
-from siem_lib import (
+from es_client import (
     ALERTS_INDEX,
     ESUnavailable,
     alerts_query,
     es_search,
     rol_del_campo_agrupado,
 )
+from siem_servicios import ServicioNoDisponible, llamar
 
-INCIDENTS_FILE = "data/siem_incidents.json"
+# Mismo orden de severidad que `classifier._RANGO_SEVERIDAD_SIEM`. Se repite acá
+# en vez de importarse: el collector no depende del código de otro servicio, y
+# esta tabla es la escala de severidades de Elastic, no una decisión del
+# clasificador. `tests/unit/test_alertas_por_regla.py` verifica que coincidan.
+_RANGO_SEVERIDAD_SIEM = {"low": 0, "medium": 1, "high": 2, "critical": 3}
 
 
 # A qué familia de detección pertenece cada técnica MITRE — mismas tres que
@@ -66,7 +72,7 @@ def alertas_por_ip_y_familia(
 ) -> dict[tuple[str, str], list[tuple[str, str]]]:
     """(IP atacante, familia) -> [(rule_name, severity), ...] de sus alertas
     reales, SIN el recorte de 5-por-regla que usa el pipeline. Mismo criterio de
-    rol que `prepare-for-ia.parse_alerts`: el valor agrupado solo cuenta como IP
+    rol que `collector.parse_alerts`: el valor agrupado solo cuenta como IP
     atacante si el campo por el que agrupó la regla representa al atacante."""
     hits = es_search(ALERTS_INDEX, alerts_query(size=size, window=window))
     por_ip: dict[tuple[str, str], list[tuple[str, str]]] = {}
@@ -137,11 +143,14 @@ def main() -> None:
         sys.exit(1)
 
     try:
-        with open(INCIDENTS_FILE, encoding="utf-8") as fh:
-            incidentes = json.load(fh)["incidents"]
-    except FileNotFoundError:
-        print(f"[ERROR] No existe '{INCIDENTS_FILE}'. Corré primero: python3 src/siem_pipeline.py")
+        respuesta = llamar("pipeline", "GET", "/v1/incidents")
+    except ServicioNoDisponible as e:
+        print(f"[ERROR] {e}")
         sys.exit(1)
+    if respuesta.status == 404:
+        print("[ERROR] Todavía no hay incidentes. Corré primero: ./scripts/siem.sh pipeline")
+        sys.exit(1)
+    incidentes = (respuesta.datos or {}).get("incidents", [])
 
     en_panel = reglas_en_el_panel(incidentes)
     total_alertas = sum(len(v) for v in reales.values())
@@ -160,7 +169,7 @@ def main() -> None:
     print(f"\n{'='*60}\n  RESULTADO\n{'='*60}")
     print(f"  Alertas reales en Elasticsearch              : {total_alertas}")
     print(f"  Pares (IP, técnica) distintos que dispararon : {len(reales)}")
-    print(f"  Incidentes en '{INCIDENTS_FILE}'              : {len(incidentes)}")
+    print(f"  Incidentes en el panel                       : {len(incidentes)}")
     print(f"  Pares (IP, técnica) con incidente en el panel : {len(en_panel)}")
     print()
 
@@ -179,7 +188,7 @@ def main() -> None:
               f"regla que NO es la más grave que disparó:")
         for ip, familia, esperada, mostrada in sorted(severidad_incorrecta):
             print(f"   - {ip} ({familia}): panel muestra «{mostrada}», debería ser «{esperada}»")
-    print("\n   Puede ser que el pipeline (siem_pipeline.py) no se haya vuelto a "
+    print("\n   Puede ser que el pipeline (siem.sh pipeline) no se haya vuelto a "
           "correr\n   después de la última alerta. Volvé a correrlo y repetí esta prueba.")
     sys.exit(1)
 

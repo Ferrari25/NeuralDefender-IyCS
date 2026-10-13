@@ -29,10 +29,10 @@ from pathlib import Path
 import pytest
 
 RAIZ = Path(__file__).resolve().parent.parent.parent
-PLANTILLAS = RAIZ / "templates"
+PLANTILLAS = RAIZ / "services" / "gateway" / "templates"
 SPRITE = PLANTILLAS / "_iconos.html"
-APP_JS = RAIZ / "static" / "app.js"
-ICONOS_CSS = RAIZ / "static" / "iconos.css"
+APP_JS = RAIZ / "services" / "gateway" / "static" / "app.js"
+ICONOS_CSS = RAIZ / "services" / "gateway" / "static" / "iconos.css"
 
 FUENTE_SPRITE = SPRITE.read_text(encoding="utf-8")
 FUENTE_JS = APP_JS.read_text(encoding="utf-8")
@@ -48,7 +48,7 @@ EMOJI_DE_COLOR = re.compile(
 
 
 def _consumidores() -> list[Path]:
-    return [*PLANTILLAS.glob("*.html"), APP_JS, RAIZ / "static" / "login.js"]
+    return [*PLANTILLAS.glob("*.html"), APP_JS, RAIZ / "services" / "gateway" / "static" / "login.js"]
 
 
 def sin_comentarios(texto: str) -> str:
@@ -223,7 +223,7 @@ def test_el_javascript_no_genera_declaraciones_css_en_linea():
 
 def _tipos_de_ataque_del_clasificador() -> set[str]:
     """Los tipos que `_classification` sabe nombrar, leídos de su propia tabla."""
-    fuente = (RAIZ / "src" / "classifier.py").read_text(encoding="utf-8")
+    fuente = (RAIZ / "services" / "classifier" / "classifier.py").read_text(encoding="utf-8")
     bloque = fuente[fuente.index("    table = {"):]
     bloque = bloque[:bloque.index("\n    }")]
     return set(re.findall(r'^\s{8}"(\w+)":', bloque, re.M))

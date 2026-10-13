@@ -28,7 +28,7 @@ from __future__ import annotations
 import pytest
 
 import classifier
-import siem_lib
+import es_client
 
 # ─── El mapeo de campo a rol ─────────────────────────────────────────────────
 
@@ -41,7 +41,7 @@ import siem_lib
     ("user.keyword", "usuario"),
 ])
 def test_reconoce_el_rol_del_campo(campo, esperado):
-    assert siem_lib.rol_del_campo_agrupado(campo) == esperado
+    assert es_client.rol_del_campo_agrupado(campo) == esperado
 
 
 @pytest.mark.parametrize("campo", [
@@ -50,13 +50,13 @@ def test_reconoce_el_rol_del_campo(campo, esperado):
 ])
 def test_un_campo_desconocido_no_se_interpreta(campo):
     """Ante la duda, no se asume: mejor sin atribución que con una falsa."""
-    assert siem_lib.rol_del_campo_agrupado(campo) is None
+    assert es_client.rol_del_campo_agrupado(campo) is None
 
 
 def test_el_sufijo_keyword_es_indiferente():
     """Es el mismo campo lógico; las reglas usan `.keyword` por el mapeo."""
-    assert (siem_lib.rol_del_campo_agrupado("source_ip")
-            == siem_lib.rol_del_campo_agrupado("source_ip.keyword"))
+    assert (es_client.rol_del_campo_agrupado("source_ip")
+            == es_client.rol_del_campo_agrupado("source_ip.keyword"))
 
 
 # ─── El parseo de la alerta ──────────────────────────────────────────────────
@@ -86,7 +86,7 @@ def _alerta(regla: str, campo: str | None, valor: str | None,
 def _parse(hits):
     import importlib.util
     import pathlib
-    ruta = pathlib.Path(__file__).resolve().parent.parent.parent / "src" / "prepare-for-ia.py"
+    ruta = pathlib.Path(__file__).resolve().parent.parent.parent / "services" / "collector" / "collector.py"
     spec = importlib.util.spec_from_file_location("prepare_for_ia", ruta)
     modulo = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(modulo)
@@ -272,7 +272,7 @@ def test_prepare_for_ia_no_vuelve_a_tirar_el_campo_agrupado():
     import pathlib
 
     fuente = (pathlib.Path(__file__).resolve().parent.parent.parent
-              / "src" / "prepare-for-ia.py").read_text(encoding="utf-8")
+              / "services" / "collector" / "collector.py").read_text(encoding="utf-8")
 
     assert "rol_del_campo_agrupado" in fuente
     assert '"victim_host"' in fuente

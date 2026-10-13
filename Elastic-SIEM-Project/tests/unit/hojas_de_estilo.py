@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-ESTATICOS = Path(__file__).resolve().parent.parent.parent / "static"
+ESTATICOS = Path(__file__).resolve().parent.parent.parent / "services" / "gateway" / "static"
 
 TOKENS_CSS = ESTATICOS / "tokens.css"
 HOJAS_QUE_CONSUMEN = (ESTATICOS / "app.css", ESTATICOS / "login.css",

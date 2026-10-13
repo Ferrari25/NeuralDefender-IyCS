@@ -22,7 +22,7 @@ import json
 
 import pytest
 
-import siem_lib
+import cadena
 
 
 def _una_accion(client):
@@ -198,7 +198,7 @@ def test_una_decision_valida_se_registra_y_encadena(client, sandbox_con_incident
 
     assert r.status_code == 201
     registro = r.get_json()["record"]
-    assert registro["prev_hash"] == siem_lib.GENESIS_HASH
+    assert registro["prev_hash"] == cadena.GENESIS_HASH
     assert registro["note"] == "verificado con el sysadmin"
 
     estado = client.get("/api/v1/incidents").get_json()["incidents"][0]

@@ -9,10 +9,12 @@ Antes de esto, "append-only e inmutable" describía una intención del diseño �
 nada impedía abrir el archivo y editar una decisión. Ahora es una propiedad que
 se puede comprobar, que es lo que un registro de auditoría tiene que ofrecer.
 
-Uso:
-    python3 src/audit_verify.py                           # data/decisions.jsonl y data/analysis_history.jsonl
-    python3 src/audit_verify.py data/decisions.jsonl      # un archivo puntual
-    python3 src/audit_verify.py --json                    # salida para máquinas
+Uso (dentro del contenedor del servicio de auditoría, donde `data/` es su volumen):
+    docker compose exec audit python audit_verify.py          # ambos registros
+    docker compose exec audit python audit_verify.py --json   # salida para máquinas
+
+Uso desde el host (lee el mismo volumen, montado en `data/audit/`):
+    python3 services/audit/audit_verify.py data/audit/decisions.jsonl
 
 Códigos de salida:  0 = cadena intacta · 1 = cadena rota · 2 = error de uso.
 
@@ -27,9 +29,10 @@ import json
 import sys
 from pathlib import Path
 
-from siem_lib import read_jsonl, verificar_cadena
+from cadena import read_jsonl, verificar_cadena
 
-REGISTROS_POR_DEFECTO = ["data/decisions.jsonl", "data/analysis_history.jsonl"]
+REGISTROS_POR_DEFECTO = ["data/decisions.jsonl", "data/analysis_history.jsonl",
+                         "data/actividad.jsonl"]
 
 
 def _resumen(path: Path) -> dict:
@@ -65,7 +68,7 @@ def _imprimir(resultado: dict) -> None:
         print("     existiera la cadena de hashes. NO hay indicio de manipulación:")
         print("     simplemente no se pueden verificar.")
         print("     Qué hacer: archivarlas con `./scripts/reset.sh` (que las mueve a")
-        print("     audit/archive/ en vez de borrarlas). Las decisiones nuevas ya")
+        print("     data/audit/archivo/ en vez de borrarlas). Las decisiones nuevas ya")
         print("     nacen encadenadas.")
         return
 

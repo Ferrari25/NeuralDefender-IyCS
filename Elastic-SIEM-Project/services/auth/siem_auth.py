@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Autenticación, sesiones y control de acceso por roles (hallazgo API-01).
+"""Autenticación y roles del servicio `auth` (hallazgo API-01).
+
+Dominio puro: almacén de usuarios, Argon2id, tabla de permisos y control de
+intentos. La sesión web (cookie, expiración, decoradores de permiso) vive en el
+gateway (`services/gateway/sesion_web.py`), que le pregunta a este servicio por
+HTTP quién es cada usuario y qué puede hacer.
 
 **El problema que cierra este módulo.** Hasta ahora, el campo `analyst` del
 registro inmutable salía de una variable de entorno:
@@ -33,7 +38,6 @@ Ver `docs/03-autenticacion-y-control-de-acceso.md`.
 from __future__ import annotations
 
 import fcntl
-import hashlib
 import json
 import os
 import re
@@ -41,13 +45,10 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from functools import wraps
 from pathlib import Path
 
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerifyMismatchError
-from flask import jsonify, request
-from flask_login import UserMixin, current_user
 
 # ─── Configuración ───────────────────────────────────────────────────────────
 
@@ -55,12 +56,6 @@ USERS_FILE = os.getenv("SIEM_USERS_FILE", "users.json")
 
 # El archivo de usuarios guarda hashes de contraseña: 0600, como la auditoría.
 USERS_FILE_MODE = 0o600
-
-# Expiración de sesión. Dos límites distintos y los dos necesarios: el de
-# inactividad protege una terminal desatendida; el absoluto acota el daño de una
-# cookie robada aunque el atacante la mantenga activa.
-INACTIVIDAD_MAX = timedelta(minutes=30)
-SESION_MAX = timedelta(hours=8)
 
 # Anti-fuerza bruta. Es irónico que un sistema que detecta fuerza bruta sea
 # vulnerable a ella, así que el panel se defiende con el mismo criterio que
@@ -110,8 +105,12 @@ def permisos_de(rol: str) -> frozenset[str]:
 # ─── Usuario ─────────────────────────────────────────────────────────────────
 
 @dataclass
-class Usuario(UserMixin):
-    """Un analista del SOC. `UserMixin` aporta lo que Flask-Login espera."""
+class Usuario:
+    """Un analista del SOC, tal como lo guarda el servicio de autenticación.
+
+    Ya no hereda de `UserMixin`: la sesión web es asunto del gateway, que arma
+    su propio objeto de sesión con lo que este servicio le devuelve.
+    """
 
     username: str
     rol: str
@@ -120,11 +119,8 @@ class Usuario(UserMixin):
     creado: str = ""
     ultimo_acceso: str | None = None
 
-    def get_id(self) -> str:  # Flask-Login
-        return self.username
-
     @property
-    def is_active(self) -> bool:  # Flask-Login: un usuario dado de baja no entra
+    def is_active(self) -> bool:  # un usuario dado de baja no entra
         return self.activo
 
     def puede(self, permiso: str) -> bool:
@@ -261,7 +257,8 @@ class _Intentos:
 class ControlDeIntentos:
     """Limita los intentos de login por (usuario, IP).
 
-    En memoria a propósito: el panel corre en un solo proceso y el estado no
+    En memoria a propósito: el servicio de autenticación corre en un solo
+    proceso (gunicorn con `--workers 1`; ver su Dockerfile) y el estado no
     tiene por qué sobrevivir a un reinicio — un atacante que reinicia el servidor
     ya tiene un problema mayor. Persistirlo agregaría un archivo más que proteger
     sin ganar nada en este alcance.
@@ -308,87 +305,6 @@ class ControlDeIntentos:
 
 
 control_intentos = ControlDeIntentos()
-
-
-# ─── Sesión ──────────────────────────────────────────────────────────────────
-
-def session_id_de(username: str, emitido_en: str) -> str:
-    """Identificador de sesión para el registro de auditoría.
-
-    **Derivado, no la cookie.** Guardar el identificador de sesión real en un
-    archivo append-only sería entregar un token de sesión válido a cualquiera que
-    lea la auditoría. Este valor permite agrupar las decisiones de una misma
-    sesión sin que sirva para suplantarla.
-    """
-    semilla = f"{username}|{emitido_en}"
-    return hashlib.sha256(semilla.encode(), usedforsecurity=False).hexdigest()[:16]
-
-
-def sesion_expirada(emitido_en: str | None, ultimo_uso: str | None,
-                    ahora: datetime | None = None) -> str | None:
-    """Devuelve el motivo de expiración, o `None` si la sesión sigue vigente."""
-    ahora = ahora or datetime.now(timezone.utc)
-
-    def _parse(valor):
-        if not valor:
-            return None
-        try:
-            return datetime.fromisoformat(valor)
-        except ValueError:
-            return None
-
-    inicio, uso = _parse(emitido_en), _parse(ultimo_uso)
-    if inicio is None or uso is None:
-        return "sesión sin marca temporal válida"
-    if ahora - inicio > SESION_MAX:
-        return f"sesión expirada: supera el máximo absoluto de {SESION_MAX}"
-    if ahora - uso > INACTIVIDAD_MAX:
-        return f"sesión expirada por inactividad de más de {INACTIVIDAD_MAX}"
-    return None
-
-
-# ─── Decoradores de autorización ─────────────────────────────────────────────
-
-def _sin_permiso(permiso: str):
-    return jsonify({
-        "error": f"el rol '{getattr(current_user, 'rol', '?')}' no tiene permiso "
-                 f"para '{permiso}'",
-        "permiso_requerido": permiso,
-    }), 403
-
-
-def requiere_permiso(permiso: str):
-    """Exige un permiso concreto, no un rol.
-
-    Pedir el permiso y no el rol es lo que permite cambiar la tabla `PERMISOS`
-    sin tocar una sola vista. Si esto exigiera `rol == "analyst"`, agregar un rol
-    nuevo obligaría a recorrer todos los endpoints.
-    """
-    if permiso in PERMISOS_PROHIBIDOS:
-        raise ValueError(
-            f"'{permiso}' no es un permiso válido: el sistema no ejecuta acciones. "
-            f"Ver siem_auth.PERMISOS_PROHIBIDOS y tests/test_no_autonomy.py.")
-
-    def decorador(vista):
-        @wraps(vista)
-        def envoltorio(*args, **kwargs):
-            if not current_user.is_authenticated:
-                return jsonify({"error": "se requiere autenticación"}), 401
-            if not current_user.puede(permiso):
-                return _sin_permiso(permiso)
-            return vista(*args, **kwargs)
-        return envoltorio
-    return decorador
-
-
-def requiere_sesion(vista):
-    """Solo exige estar autenticado, sin permiso puntual."""
-    @wraps(vista)
-    def envoltorio(*args, **kwargs):
-        if not current_user.is_authenticated:
-            return jsonify({"error": "se requiere autenticación"}), 401
-        return vista(*args, **kwargs)
-    return envoltorio
 
 
 # ─── Autenticación ───────────────────────────────────────────────────────────
@@ -439,23 +355,14 @@ def autenticar(username: object, password: object, ip: str) -> ResultadoLogin:
     return ResultadoLogin(True, usuario=usuario)
 
 
-def cargar_usuario_de_sesion(username: str) -> Usuario | None:
-    """`user_loader` de Flask-Login.
+def vista_publica(usuario: Usuario) -> dict:
+    """Lo que el servicio le cuenta de un usuario a otros servicios.
 
-    Relee el almacén en cada petición a propósito: dar de baja a un analista
-    tiene efecto inmediato, sin esperar a que caduque su cookie.
+    Nunca incluye el hash de la contraseña: ese dato no sale de este servicio.
     """
-    usuario = cargar_usuarios().get(username)
-    return usuario if usuario and usuario.activo else None
-
-
-def ip_del_cliente() -> str:
-    """IP del cliente, sin confiar en encabezados de proxy.
-
-    `X-Forwarded-For` lo pone el cliente y es trivial de falsificar; usarlo acá
-    permitiría esquivar el control de intentos cambiando un encabezado. El panel
-    se sirve en loopback, así que `remote_addr` es el dato real. Si algún día se
-    publica detrás de un proxy inverso, hay que usar `ProxyFix` con el número de
-    saltos conocido, no leer el encabezado a ciegas.
-    """
-    return request.remote_addr or "desconocida"
+    return {
+        "username": usuario.username,
+        "rol": usuario.rol,
+        "activo": usuario.activo,
+        "permisos": sorted(permisos_de(usuario.rol)),
+    }

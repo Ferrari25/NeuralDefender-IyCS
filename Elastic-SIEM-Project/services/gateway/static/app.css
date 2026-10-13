@@ -363,3 +363,39 @@ a { color: var(--accent); }
 .toast.visible { opacity: 1; transform: translateY(0); }
 .toast.ok    { background: var(--tenue-ok); color: var(--tenue-ok-texto); border-color: var(--ok); }
 .toast.error { background: var(--tenue-no); color: var(--tenue-no-texto); border-color: var(--no); }
+
+/* Memoria del agente — tarjeta lateral (lecciones y documentos) y sección
+ * "Lo que el agente recordó" en cada incidente. Una lección propuesta lleva
+ * borde de aviso: todavía NO la usa el agente y espera una decisión humana,
+ * igual que una acción pendiente. Una aprobada lleva el tinte de "ya pasó". */
+.memoria-intro { margin: 0 0 var(--sp-10); font-size: var(--fs-sm); color: var(--muted); line-height: 1.5; }
+.leccion { border: 1px solid var(--border); border-radius: var(--r-sm); padding: var(--sp-8) var(--sp-10);
+           margin-bottom: var(--sp-8); font-size: var(--fs-sm); display: flex; flex-direction: column; gap: var(--sp-4); }
+.leccion-propuesta { border-color: var(--med); background: var(--tenue-aviso); }
+.leccion-aprobada { border-color: var(--ok); background: var(--tenue-ok); }
+.leccion-cab { display: flex; flex-wrap: wrap; gap: var(--sp-8); align-items: baseline; }
+.leccion-tipo { font-weight: 600; color: var(--text); }
+.leccion-propuesta .leccion-tipo { color: var(--tenue-aviso-texto); }
+.leccion-aprobada .leccion-tipo { color: var(--tenue-ok-texto); }
+.leccion .who { color: var(--muted); font-size: var(--fs-xs); }
+.leccion-texto { color: var(--text); line-height: 1.5; }
+.leccion-ctrl { display: flex; gap: var(--sp-8); margin-top: var(--sp-4); }
+.memoria-docs { margin: 0; padding-left: var(--sp-18); font-size: var(--fs-sm); }
+.memoria-docs li { margin-bottom: var(--sp-4); }
+.memoria-docs .who { color: var(--muted); font-size: var(--fs-xs); }
+.memoria-forms { margin-top: var(--sp-12); display: flex; flex-direction: column; gap: var(--sp-8); }
+.memoria-forms summary { cursor: pointer; font-size: var(--fs-sm); font-weight: 600; color: var(--accent); }
+.memoria-form { display: flex; flex-direction: column; gap: var(--sp-6); margin-top: var(--sp-8); }
+.memoria-form label { font-size: var(--fs-xs); color: var(--muted); }
+.memoria-form input, .memoria-form select, .memoria-form textarea {
+  background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: var(--r-xs);
+  padding: var(--sp-6) var(--sp-8); font: inherit; font-size: var(--fs-sm); }
+.memoria-form textarea { resize: vertical; }
+.memoria-form input:focus, .memoria-form select:focus, .memoria-form textarea:focus { outline: none; border-color: var(--accent); }
+.memoria-form button { align-self: flex-start; }
+
+.aprendizaje { margin-top: var(--sp-14); border: 1px solid var(--border); border-left: 3px solid var(--ok-claro);
+               border-radius: var(--r-md); background: var(--panel2); padding: var(--sp-10) var(--sp-14) var(--sp-12); }
+.aprendizaje ul { margin: var(--sp-6) 0 0; padding-left: var(--sp-20); }
+.aprendizaje li { font-size: var(--fs-md); color: var(--text); line-height: 1.6; }
+.aprendizaje p { margin: var(--sp-6) 0 0; font-size: var(--fs-md); }

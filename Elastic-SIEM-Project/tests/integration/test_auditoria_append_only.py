@@ -16,11 +16,9 @@ from __future__ import annotations
 import json
 import os
 import re
-import subprocess
-import sys
 from pathlib import Path
 
-import siem_lib
+import cadena
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -55,7 +53,7 @@ def test_revisar_una_decision_agrega_no_edita(client, sandbox_con_incidentes):
             "incident_id": inc["incident_id"], "action_id": act_id,
             "decision": decision})
 
-    registros = siem_lib.read_jsonl(ruta)
+    registros = cadena.read_jsonl(ruta)
     assert len(registros) == 3
     assert [r["decision"] for r in registros] == ["approved", "dismissed", "approved"]
 
@@ -140,19 +138,29 @@ def test_cada_linea_es_json_valido_e_independiente(client, sandbox_con_incidente
 
 # ─── El pipeline tampoco pisa la auditoría ───────────────────────────────────
 
-def test_el_pipeline_nunca_reescribe_analysis_history(sandbox_con_incidentes):
-    """`siem_agent` agrega una línea por corrida; no reemplaza el historial."""
+def test_el_pipeline_nunca_reescribe_analysis_history(sandbox_con_incidentes, servicio_caido,
+                                                     monkeypatch):
+    """Cada ciclo del pipeline agrega una línea al historial; no lo reemplaza.
+
+    Antes se lanzaba `siem_agent.py` como proceso. Desde la migración, la corrida
+    la registra el orquestador a través del servicio audit, así que se dispara un
+    ciclo real — collector → classifier → analyst → audit — por la malla en
+    proceso. El collector se da por caído (no hay Elasticsearch en las pruebas):
+    es la etapa tolerable, y el ciclo tiene que completarse igual.
+    """
+    import pipeline_service
+
+    monkeypatch.setenv("GEMINI_API_KEY", "")
+    servicio_caido("collector")
     ruta = sandbox_con_incidentes / "data" / "analysis_history.jsonl"
-    siem_lib.append_jsonl(ruta, {"ts": "2026-09-16T10:00:00+00:00", "incident_count": 1})
+    cadena.append_jsonl(ruta, {"ts": "2026-09-16T10:00:00+00:00", "incident_count": 1})
     primera = ruta.read_bytes()
 
-    entorno = {**os.environ, "PYTHONPATH": str(PROJECT_ROOT), "GEMINI_API_KEY": ""}
-    resultado = subprocess.run(
-        [sys.executable, str(PROJECT_ROOT / "src" / "siem_agent.py")],
-        cwd=sandbox_con_incidentes, capture_output=True, text=True, timeout=120,
-        env=entorno, check=False,
-    )
-    assert resultado.returncode == 0, resultado.stderr
+    for _ in range(2):
+        r = pipeline_service.app.test_client().post(
+            "/v1/cycles", headers={"X-Internal-Token": os.environ["SIEM_INTERNAL_TOKEN"]})
+        assert r.status_code == 200, r.get_json()
 
     assert ruta.read_bytes().startswith(primera)
-    assert len(siem_lib.read_jsonl(ruta)) == 2
+    assert len(cadena.read_jsonl(ruta)) == 3
+    assert cadena.verificar_cadena(ruta)["estado"] == "ok"

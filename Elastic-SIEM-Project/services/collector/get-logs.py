@@ -2,14 +2,16 @@
 """
 Utilidad de inspección ad-hoc: imprime los últimos logs de auth fallida y las
 alertas de seguridad desde Elasticsearch. Para el pipeline real usá
-prepare-for-ia.py (que limpia y estructura). Este script es para mirar a mano.
+el servicio collector (que limpia y estructura). Este script es para mirar a mano:
+
+    docker compose exec collector python get-logs.py
 """
 
 from __future__ import annotations
 
 import json
 
-from siem_lib import (
+from es_client import (
     ALERTS_INDEX,
     ES_HOST,
     LOGS_INDEX,
@@ -17,8 +19,8 @@ from siem_lib import (
     alerts_query,
     auth_failure_query,
     es_search,
-    now_iso,
 )
+from siem_lib import now_iso
 
 
 def show(hits: list[dict], label: str) -> None:

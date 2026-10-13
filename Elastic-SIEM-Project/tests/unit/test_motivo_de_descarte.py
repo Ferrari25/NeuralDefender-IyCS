@@ -20,9 +20,9 @@ from __future__ import annotations
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent.parent
-APP_JS = (RAIZ / "static" / "app.js").read_text(encoding="utf-8")
-LOGIN_JS = (RAIZ / "static" / "login.js").read_text(encoding="utf-8")
-APP_CSS = (RAIZ / "static" / "app.css").read_text(encoding="utf-8")
+APP_JS = (RAIZ / "services" / "gateway" / "static" / "app.js").read_text(encoding="utf-8")
+LOGIN_JS = (RAIZ / "services" / "gateway" / "static" / "login.js").read_text(encoding="utf-8")
+APP_CSS = (RAIZ / "services" / "gateway" / "static" / "app.css").read_text(encoding="utf-8")
 ESLINT_CONFIG = (RAIZ / "eslint.config.js").read_text(encoding="utf-8")
 
 

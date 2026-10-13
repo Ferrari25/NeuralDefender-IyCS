@@ -61,14 +61,16 @@ def proyecto_falso(tmp_path, docker_falso):
     shutil.copy(RESET, tmp_path / "scripts" / "reset.sh")
     (tmp_path / "scripts" / "reset.sh").chmod(0o755)
     (tmp_path / "network_logs").mkdir()
-    (tmp_path / "data").mkdir()
+    # Un directorio de datos por servicio, como los volúmenes de docker-compose.yml.
+    for servicio in ("audit", "collector", "pipeline"):
+        (tmp_path / "data" / servicio).mkdir(parents=True)
 
     # Auditoría (no se puede perder).
-    (tmp_path / "data" / "decisions.jsonl").write_text(DECISION, encoding="utf-8")
-    (tmp_path / "data" / "analysis_history.jsonl").write_text(CORRIDA, encoding="utf-8")
+    (tmp_path / "data" / "audit" / "decisions.jsonl").write_text(DECISION, encoding="utf-8")
+    (tmp_path / "data" / "audit" / "analysis_history.jsonl").write_text(CORRIDA, encoding="utf-8")
     # Artefactos regenerables (sí se borran).
-    (tmp_path / "data" / "siem_clean.json").write_text("{}", encoding="utf-8")
-    (tmp_path / "data" / "siem_incidents.json").write_text("{}", encoding="utf-8")
+    (tmp_path / "data" / "collector" / "siem_clean.json").write_text("{}", encoding="utf-8")
+    (tmp_path / "data" / "pipeline" / "siem_incidents.json").write_text("{}", encoding="utf-8")
     (tmp_path / "data" / "ai_report.json").write_text("{}", encoding="utf-8")
     (tmp_path / "network_logs" / "port-scan-1.json").write_text("{}", encoding="utf-8")
     return tmp_path
@@ -86,7 +88,7 @@ def _correr_reset(directorio: Path, *args: str, entrada: str = "") -> subprocess
 
 
 def _auditoria_archivada(directorio: Path) -> list[Path]:
-    archivo = directorio / "audit" / "archive"
+    archivo = directorio / "data" / "audit" / "archivo"
     return sorted(archivo.rglob("*.jsonl")) if archivo.exists() else []
 
 
@@ -123,7 +125,8 @@ def test_los_artefactos_regenerables_si_se_borran(proyecto_falso):
     """El reset tiene que seguir haciendo su trabajo: dejar el sistema en cero."""
     _correr_reset(proyecto_falso, "--yes")
 
-    for regenerable in ("siem_clean.json", "siem_incidents.json", "ai_report.json"):
+    for regenerable in ("collector/siem_clean.json", "pipeline/siem_incidents.json",
+                        "ai_report.json"):
         assert not (proyecto_falso / "data" / regenerable).exists(), f"{regenerable} sobrevivió"
     assert list((proyecto_falso / "network_logs").glob("*.json")) == []
 
@@ -131,8 +134,8 @@ def test_los_artefactos_regenerables_si_se_borran(proyecto_falso):
 def test_el_dashboard_arranca_vacio_tras_el_reset(proyecto_falso):
     """El objetivo original del script se mantiene: panel en cero."""
     _correr_reset(proyecto_falso, "--yes")
-    assert not (proyecto_falso / "data" / "siem_incidents.json").exists()
-    assert not (proyecto_falso / "data" / "decisions.jsonl").exists(), \
+    assert not (proyecto_falso / "data" / "pipeline" / "siem_incidents.json").exists()
+    assert not (proyecto_falso / "data" / "audit" / "decisions.jsonl").exists(), \
         "se movió al archivo, no quedó en su lugar original"
 
 
@@ -151,10 +154,10 @@ def test_sin_auditoria_previa_no_falla(tmp_path, docker_falso):
 def test_dos_resets_seguidos_no_se_pisan(proyecto_falso):
     """Cada reset archiva en su propio directorio con timestamp."""
     _correr_reset(proyecto_falso, "--yes")
-    (proyecto_falso / "data" / "decisions.jsonl").write_text(DECISION, encoding="utf-8")
+    (proyecto_falso / "data" / "audit" / "decisions.jsonl").write_text(DECISION, encoding="utf-8")
     _correr_reset(proyecto_falso, "--yes")
 
-    directorios = sorted((proyecto_falso / "audit" / "archive").iterdir())
+    directorios = sorted((proyecto_falso / "data" / "audit" / "archivo").iterdir())
     assert len(directorios) == 2, "el segundo reset pisó el archivo del primero"
 
 
@@ -179,14 +182,14 @@ def test_wipe_audit_con_la_frase_exacta_si_borra(proyecto_falso):
     resultado = _correr_reset(proyecto_falso, "--yes", "--wipe-audit",
                               entrada="BORRAR AUDITORIA\n")
     assert "Auditoría archivada eliminada" in resultado.stdout
-    assert not (proyecto_falso / "audit" / "archive").exists()
+    assert not (proyecto_falso / "data" / "audit" / "archivo").exists()
 
 
 def test_una_opcion_desconocida_aborta(proyecto_falso):
     """Un typo como `--wipe_audit` no puede interpretarse como otra cosa."""
     resultado = _correr_reset(proyecto_falso, "--wipe_audit")
     assert resultado.returncode == 2
-    assert (proyecto_falso / "data" / "decisions.jsonl").exists()
+    assert (proyecto_falso / "data" / "audit" / "decisions.jsonl").exists()
 
 
 # ─── La garantía, dicha como invariante ──────────────────────────────────────
@@ -199,7 +202,7 @@ def test_ningun_rm_del_script_menciona_la_auditoria():
     """
     for linea in RESET.read_text(encoding="utf-8").splitlines():
         limpia = linea.strip()
-        if limpia.startswith("rm ") and "audit/archive" not in limpia:
+        if limpia.startswith("rm ") and "data/audit/archivo" not in limpia:
             assert "decisions.jsonl" not in limpia
             assert "analysis_history.jsonl" not in limpia
 
@@ -216,5 +219,5 @@ def test_si_docker_falla_no_se_toca_nada(proyecto_falso):
 
     resultado = _correr_reset(proyecto_falso, "--yes")
     assert resultado.returncode != 0
-    assert (proyecto_falso / "data" / "decisions.jsonl").read_text(encoding="utf-8") == DECISION
-    assert (proyecto_falso / "data" / "siem_clean.json").exists()
+    assert (proyecto_falso / "data" / "audit" / "decisions.jsonl").read_text(encoding="utf-8") == DECISION
+    assert (proyecto_falso / "data" / "collector" / "siem_clean.json").exists()

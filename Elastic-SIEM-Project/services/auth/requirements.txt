@@ -1,0 +1,8 @@
+# Base común de los servicios (Flask para la API, requests para hablar con
+# los otros servicios, gunicorn para servir en el contenedor).
+Flask>=3.0
+requests>=2.31
+gunicorn>=22.0
+
+# Hash de contraseñas con Argon2id (RFC 9106)
+argon2-cffi>=23.1

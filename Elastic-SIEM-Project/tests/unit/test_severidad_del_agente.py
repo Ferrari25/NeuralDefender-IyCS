@@ -25,7 +25,7 @@ import siem_agent
 
 RAIZ = Path(__file__).resolve().parent.parent.parent
 CLASES_CSS = set(re.findall(r"\.b-([A-Z]+)\s*\{",
-                            (RAIZ / "static" / "app.css").read_text(encoding="utf-8")))
+                            (RAIZ / "services" / "gateway" / "static" / "app.css").read_text(encoding="utf-8")))
 
 
 def _incidente(severidad_determinista: str = "alta", severity_siem: str | None = None) -> dict:
@@ -117,8 +117,8 @@ def _con_llm_que_devuelve(monkeypatch, severidad: object):
     entorno de pruebas y, sobre todo, lo que se verifica es qué hace
     `analyze_incident` con la respuesta — no cómo se obtiene.
     """
-    def falso(client, incident, historical, campaign):
-        del client, incident, historical, campaign
+    def falso(client, incident, historical, campaign, memoria=None):
+        del client, incident, historical, campaign, memoria
         return {"explicacion": "x", "metodologia": "x", "contexto_riesgo": "x",
                 "severidad_ajustada": severidad, "accion_recomendada": "revisar",
                 "falso_positivo_probabilidad": "LOW", "referencias": [],

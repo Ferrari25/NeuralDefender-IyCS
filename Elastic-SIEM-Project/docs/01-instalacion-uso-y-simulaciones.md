@@ -13,49 +13,62 @@ en paralelo.
 Resumen de un vistazo, una vez que `.env` está configurado:
 
 ```bash
-export PYTHONPATH="$PWD/.devtools"
-./scripts/start.sh                    # stack + despliegue de las 14 reglas
-python3 src/manage_users.py crear ana --rol analyst   # primer usuario, una vez
-python3 src/siem_pipeline.py          # extrae → clasifica → analiza
-python3 src/dashboard.py              # http://127.0.0.1:5000/login
+./scripts/start.sh                                   # stack Elastic + 14 reglas + microservicios
+./scripts/siem.sh usuarios crear ana --rol analyst   # primer usuario, una vez
+./scripts/siem.sh pipeline                           # extrae → clasifica → analiza
+# → http://127.0.0.1:5000/login
 ```
+
+La capa IA son ocho microservicios en Docker (ver
+[00 §Microservicios](00-arquitectura.md#microservicios-de-la-capa-ia)). No hace
+falta instalar dependencias Python en el host para correr el sistema: cada
+imagen trae las suyas. `.devtools/` solo se usa para las pruebas y los linters.
 
 ## Uso y ejecución
 
 ### Pipeline completo (un comando)
 
 ```bash
-python3 src/siem_pipeline.py
+./scripts/siem.sh pipeline
 ```
 
-Encadena tres etapas: `src/prepare-for-ia.py` (extrae de Elasticsearch →
-`data/siem_clean.json`; si ES no responde, **no pisa** el archivo y sigue con
-la última captura), `src/classifier.py` (Agente 1 → `data/siem_incidents.json`)
-y `src/siem_agent.py` (Agente 2 → agrega el análisis).
+Le pide un ciclo al servicio **pipeline**, que encadena por HTTP:
+**collector** (extrae de Elasticsearch → `data/collector/siem_clean.json`; si ES
+no responde, **no pisa** la captura y el ciclo sigue con la última),
+**classifier** (Agente 1), **analyst** (Agente 2) y **audit** (registra la
+corrida en `data/audit/analysis_history.jsonl`). El reporte queda en
+`data/pipeline/siem_incidents.json`. El CLI muestra el estado de cada etapa.
 
-### Etapa por etapa
+### Herramientas de cada servicio
+
+Corren dentro del contenedor del servicio dueño de los datos:
 
 ```bash
-python3 src/prepare-for-ia.py     # ES → data/siem_clean.json   (requiere stack arriba)
-python3 src/classifier.py         # Agente 1 → data/siem_incidents.json
-python3 src/siem_agent.py         # Agente 2 → análisis + data/analysis_history.jsonl
-python3 src/get-logs.py           # (opcional) inspección ad-hoc de ES
+./scripts/siem.sh usuarios listar     # servicio auth
+./scripts/siem.sh auditoria           # servicio audit: verifica la cadena de hashes
+./scripts/siem.sh cobertura           # servicio collector: SIEM ↔ panel
+./scripts/siem.sh logs-es             # servicio collector: inspección ad-hoc de ES
+./scripts/siem.sh estado              # estado de los contenedores de la capa IA
+docker compose logs -f pipeline       # salida de cada etapa del ciclo
 ```
 
 ### El dashboard
 
+Lo sirve el servicio **gateway**, que `start.sh` ya levanta:
+
 ```bash
-python3 src/dashboard.py
+docker compose up -d gateway   # (si hiciera falta levantarlo solo; trae sus dependencias)
 # abrir http://127.0.0.1:5000/login
 ```
 
 Guía completa panel por panel en [02 · Reglas y dashboard](02-reglas-y-dashboard.md#el-dashboard-de-supervisión).
 
-**Qué pasa cuando decidís.** Cada click registra una línea en
-`data/decisions.jsonl` (append-only e inmutable, firmada con el usuario de la
-sesión) con timestamp, incidente, acción, decisión y nota opcional. El estado
-se reconstruye haciendo *replay* de ese log, así que reiniciar el servidor no
-pierde las decisiones. El dashboard se refresca solo cada 15 s.
+**Qué pasa cuando decidís.** Cada click hace que el gateway le pida al
+servicio **audit** que agregue una línea a `data/audit/decisions.jsonl`
+(append-only e inmutable, firmada con el usuario de la sesión) con timestamp,
+incidente, acción, decisión y nota opcional. El estado se reconstruye haciendo
+*replay* de ese log, así que reiniciar cualquier servicio no pierde las
+decisiones. El dashboard se refresca solo cada 15 s.
 
 **Endpoints principales:**
 
@@ -81,18 +94,19 @@ pierde las decisiones. El dashboard se refresca solo cada 15 s.
   confiables** por system instruction y se entregan delimitados; el LLM nunca
   genera comandos (esos vienen del playbook del Agente 1).
 
-### Modo offline de punta a punta (sin Docker)
+### Modo offline: solo la capa IA, sin el stack Elastic
 
 ```bash
+docker compose up -d --build gateway     # los 8 microservicios, sin Elasticsearch
 bash simulation/run-port-scan.sh --offline
 bash simulation/run-phishing.sh  --offline
-python3 src/classifier.py && python3 src/siem_agent.py
-python3 src/dashboard.py          # http://127.0.0.1:5000 → 3 incidentes
+./scripts/siem.sh pipeline               # → http://127.0.0.1:5000
 ```
 
-En modo offline, `src/prepare-for-ia.py` no puede hablar con ES: el pipeline
-lo informa y continúa con los datos existentes. El Agente 2 usa el fallback
-determinístico.
+Sin Elasticsearch, el collector responde 503 y el ciclo lo informa
+(`collector sin_captura`) y sigue clasificando desde `network_logs/`. El
+Agente 2 usa el fallback determinístico. Las simulaciones `--offline` no
+necesitan Docker; la capa IA sí corre en contenedores.
 
 ---
 
@@ -123,7 +137,7 @@ Source IP* (Threshold) y, si hubo éxito después de los fallos, *SSH
 Successful Login After Brute Force* (EQL, severidad Critical: compromiso
 confirmado).
 
-**Detección en la capa IA:** `src/classifier.py` agrupa los fallos por IP; si
+**Detección en la capa IA:** `services/classifier/classifier.py` agrupa los fallos por IP; si
 superan el umbral (`BRUTE_FORCE_THRESHOLD = 20`) o hay técnica T1110 →
 `ssh_brute_force`.
 
@@ -158,17 +172,17 @@ GET y un POST con credenciales. **Detección:** `detect_phishing()` busca
 ```bash
 bash simulation/run-port-scan.sh --offline
 bash simulation/run-phishing.sh  --offline
-python3 src/siem_pipeline.py
-python3 src/dashboard.py     # http://127.0.0.1:5000
+./scripts/siem.sh pipeline
+docker compose up -d gateway     # http://127.0.0.1:5000
 ```
 
 ### Extender con un ataque nuevo
 
 1. Generar el log representativo (en `network_logs/` o un log que Filebeat ya
    recolecte).
-2. Agregar una función `detect_<tipo>()` en `src/classifier.py` con su
+2. Agregar una función `detect_<tipo>()` en `services/classifier/classifier.py` con su
    umbral, sus factores de explicabilidad, y un playbook en `_playbook()`.
-3. Agregar la rama del fallback en `src/siem_agent.py` (`_fallback_analysis`).
+3. Agregar la rama del fallback en `services/analyst/siem_agent.py` (`_fallback_analysis`).
 4. Si el ataque también puede detectarse en Kibana, sumar la regla
    correspondiente — ver [02 · Reglas de detección](02-reglas-y-dashboard.md).
 5. Documentar acá.

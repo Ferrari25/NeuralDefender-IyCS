@@ -70,30 +70,37 @@ obligaría a recorrer todos los endpoints.
 python3 -c "import secrets; print(secrets.token_urlsafe(48))"
 #   → agregar a .env como SECRET_KEY=<valor>
 
-# 2. Crear el primer usuario
-export PYTHONPATH="$PWD/.devtools"
-python3 src/manage_users.py crear ana --rol analyst
+# 2. Arrancar (start.sh levanta el stack y los microservicios, gateway incluido)
+./scripts/start.sh              # → http://127.0.0.1:5000/login
 
-# 3. Arrancar
-python3 src/dashboard.py     # → http://127.0.0.1:5000/login
+# 3. Crear el primer usuario (corre dentro del contenedor del servicio auth)
+./scripts/siem.sh usuarios crear ana --rol analyst
 ```
 
 Gestión de usuarios:
 
 ```bash
-python3 src/manage_users.py roles                    # qué puede cada rol
-python3 src/manage_users.py listar -v                # usuarios y permisos
-python3 src/manage_users.py crear beto --rol viewer
-python3 src/manage_users.py password ana             # cambiar contraseña
-python3 src/manage_users.py rol ana --rol auditor    # cambiar rol
-python3 src/manage_users.py baja ana                 # desactivar (no borra)
-python3 src/manage_users.py alta ana                 # reactivar
+./scripts/siem.sh usuarios roles                    # qué puede cada rol
+./scripts/siem.sh usuarios listar -v                # usuarios y permisos
+./scripts/siem.sh usuarios crear beto --rol viewer
+./scripts/siem.sh usuarios password ana             # cambiar contraseña
+./scripts/siem.sh usuarios rol ana --rol auditor    # cambiar rol
+./scripts/siem.sh usuarios baja ana                 # desactivar (no borra)
+./scripts/siem.sh usuarios alta ana                 # reactivar
 ```
 
 **La baja no borra** — borrar un usuario dejaría decisiones firmadas por
 alguien que ya no existe, y el registro es inmutable. **La baja tiene efecto
-inmediato** — el almacén se relee en cada petición, así que la sesión
-abierta de un usuario dado de baja deja de valer en la siguiente petición.
+inmediato** — el gateway le pregunta al servicio auth por el usuario en cada
+petición, así que la sesión abierta de un usuario dado de baja deja de valer en
+la siguiente.
+
+**Quién hace qué desde la migración a microservicios.** El servicio **auth**
+guarda los usuarios (`data/auth/users.json`), verifica las contraseñas con
+Argon2id y aplica el control de intentos; los hashes nunca salen de ahí. El
+**gateway** maneja la cookie de sesión, el CSRF, la expiración y exige los
+permisos (`services/gateway/sesion_web.py`). La tabla de permisos vive en auth,
+y el gateway la recibe con cada consulta.
 
 ## Decisiones técnicas y por qué
 
@@ -101,7 +108,7 @@ abierta de un usuario dado de baja deja de valer en la siguiente petición.
 |----------|----------|---------|
 | Hash de contraseña | **Argon2id** (`argon2-cffi`, RFC 9106) | Estándar recomendado actual; los parámetros van versionados en el hash, así que se puede endurecer sin migrar nada |
 | Rehash automático | Al iniciar sesión, si los parámetros quedaron viejos | Es el único momento en que la contraseña está disponible en claro |
-| Almacén | `users.json`, `0600`, gestionado por CLI | Sin base de datos: cero dependencias de infraestructura adicionales |
+| Almacén | `data/auth/users.json` (volumen del servicio auth), `0600`, gestionado por CLI | Sin base de datos: cero dependencias de infraestructura adicionales |
 | Alta de usuarios | Por línea de comandos, no por la web | Crear cuentas es administración del sistema; exponerlo en la web agrega superficie de ataque para ganar comodidad en algo puntual |
 | Sesión | `Flask-Login` + cookie firmada | `SECRET_KEY` desde `.env`; el servidor **no arranca** si falta |
 | Flags de cookie | `HttpOnly`, `SameSite=Lax`, `Secure` con TLS | `HttpOnly` la hace inaccesible desde JavaScript; `Lax` impide que viaje en un POST de otro sitio |
@@ -133,7 +140,7 @@ Decirlo por escrito vale más que simularlo.
 |-------------------|---------|
 | MFA / 2FA | Para un laboratorio con un puñado de analistas, Argon2id + bloqueo por intentos alcanzan |
 | SSO / LDAP | Requiere infraestructura de directorio que el proyecto no tiene |
-| Recuperación de contraseña | No hay servidor de correo; la reposición es `src/manage_users.py password` |
+| Recuperación de contraseña | No hay servidor de correo; la reposición es `services/auth/manage_users.py password` |
 | Alta de usuarios por interfaz | Decisión de diseño, no una carencia |
 | Multi-tenancy | Un solo SOC por despliegue |
 | TLS para el panel | Se sirve en `127.0.0.1`. `SIEM_TLS=true` activa el flag `Secure` cuando haya un proxy inverso delante |

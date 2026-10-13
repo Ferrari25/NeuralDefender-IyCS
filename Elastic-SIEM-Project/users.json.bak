@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "actualizado": "2026-09-30T00:27:28.723847+00:00",
+  "usuarios": [
+    {
+      "username": "nico",
+      "rol": "analyst",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$nCwqkziX/PuhTZgIQmgQNA$+cPscZvygRcumvX5o7s5vbUzmjXWuyw1c9AEEl6MDnI",
+      "activo": true,
+      "creado": "2026-09-30T00:27:28.723763+00:00",
+      "ultimo_acceso": null
+    }
+  ]
+}

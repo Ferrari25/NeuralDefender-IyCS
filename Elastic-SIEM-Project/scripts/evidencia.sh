@@ -83,9 +83,9 @@ ok "01-analisis-estatico.txt"
 paso "2/5 · Inyección de una vulnerabilidad real"
 
 RESPALDO=$(mktemp)
-cp src/siem_lib.py "$RESPALDO"
+cp libs/siem_lib.py "$RESPALDO"
 # shellcheck disable=SC2064
-trap "cp '$RESPALDO' src/siem_lib.py; rm -f '$RESPALDO'" EXIT INT TERM
+trap "cp '$RESPALDO' libs/siem_lib.py; rm -f '$RESPALDO'" EXIT INT TERM
 
 {
   echo "¿EL ANÁLISIS ESTÁTICO SIRVE DE ALGO?"
@@ -94,7 +94,7 @@ trap "cp '$RESPALDO' src/siem_lib.py; rm -f '$RESPALDO'" EXIT INT TERM
   echo
   echo "Un informe que dice «el análisis estático pasa» no prueba nada: podría"
   echo "estar mal configurado y pasar siempre. Acá se inyecta una vulnerabilidad"
-  echo "REAL en src/siem_lib.py y se muestra que la puerta la encuentra."
+  echo "REAL en libs/siem_lib.py y se muestra que la puerta la encuentra."
   echo
   echo "── Código inyectado ──"
   echo '    def _evidencia(x):'
@@ -106,24 +106,24 @@ trap "cp '$RESPALDO' src/siem_lib.py; rm -f '$RESPALDO'" EXIT INT TERM
 
 .devtools/bin/ruff check . >> "$DIR/02-la-puerta-atrapa.txt" 2>&1
 
-printf '\n\ndef _evidencia(x):\n    import hashlib\n    return hashlib.md5(x).hexdigest()\n' >> src/siem_lib.py
+printf '\n\ndef _evidencia(x):\n    import hashlib\n    return hashlib.md5(x).hexdigest()\n' >> libs/siem_lib.py
 
 {
   echo; echo "── ruff DESPUÉS de inyectar ──"
   .devtools/bin/ruff check . 2>&1 || true
   echo; echo "── bandit DESPUÉS de inyectar ──"
-  .devtools/bin/bandit src/siem_lib.py -ll 2>&1 | grep -A6 'Issue:' || true
+  .devtools/bin/bandit libs/siem_lib.py -ll 2>&1 | grep -A6 'Issue:' || true
 } >> "$DIR/02-la-puerta-atrapa.txt" 2>&1
 
 HALLAZGOS=$(.devtools/bin/ruff check . 2>&1 | grep -cE '^[A-Z]+[0-9]+' || true)
-cp "$RESPALDO" src/siem_lib.py
+cp "$RESPALDO" libs/siem_lib.py
 
 {
   echo; echo "── Tras revertir ──"
   .devtools/bin/ruff check . 2>&1 || true
   echo
   echo "El archivo quedó idéntico al original (verificado por SHA-256):"
-  sha256sum src/siem_lib.py
+  sha256sum libs/siem_lib.py
 } >> "$DIR/02-la-puerta-atrapa.txt" 2>&1
 
 if (( HALLAZGOS > 0 )); then
@@ -142,7 +142,7 @@ if $SIN_SERVICIOS; then
 elif [[ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 http://127.0.0.1:5000/api/v1/healthz 2>/dev/null)" != "200" ]]; then
   {
     echo "El panel no responde en http://127.0.0.1:5000"
-    echo "Levantalo con:  python3 src/dashboard.py"
+    echo "Levantalo con:  docker compose up -d gateway"
   } > "$DIR/03-pruebas-de-servicio.txt"
   mal "03 — el panel no responde; se omitieron las pruebas de servicio"
 else
@@ -215,8 +215,11 @@ fi
 
 paso "4/5 · Suite completa y cobertura"
 
-.devtools/bin/pytest -q --cov=classifier --cov=siem_lib --cov=dashboard \
-  --cov=siem_validators --cov=siem_auth --cov=manage_users \
+COBERTURA=(classifier siem_lib dashboard siem_validators siem_auth manage_users
+           siem_servicios sesion_web cadena orquestador audit_service auth_service
+           collector_service classifier_service analyst_service pipeline_service
+           memoria knowledge_service)
+.devtools/bin/pytest -q "${COBERTURA[@]/#/--cov=}" \
   --cov-report=term > "$DIR/04-suite-y-cobertura.txt" 2>&1
 TOTAL=$(grep -E '^[0-9]+ passed' "$DIR/04-suite-y-cobertura.txt" | tail -1)
 COBERTURA=$(grep -E '^TOTAL' "$DIR/04-suite-y-cobertura.txt" | awk '{print $NF}')
@@ -245,7 +248,7 @@ herramienta: no están editadas ni resumidas.
 | Archivo | Qué prueba |
 |---------|------------|
 | \`01-analisis-estatico.txt\` | Las cuatro herramientas corriendo sobre el código: **ruff** (reglas de seguridad, bugs, complejidad), **pylint + pylint-secure-coding-standard**, **bandit** y **ESLint + eslint-plugin-security + no-unsanitized**. |
-| \`02-la-puerta-atrapa.txt\` | **Lo que hace que esto sea una prueba y no una captura de pantalla.** Se inyecta una vulnerabilidad real (\`hashlib.md5\`) en \`src/siem_lib.py\`, se corre el análisis, se muestra que aparece el hallazgo, y se revierte verificando con SHA-256 que el archivo quedó idéntico. |
+| \`02-la-puerta-atrapa.txt\` | **Lo que hace que esto sea una prueba y no una captura de pantalla.** Se inyecta una vulnerabilidad real (\`hashlib.md5\`) en \`libs/siem_lib.py\`, se corre el análisis, se muestra que aparece el hallazgo, y se revierte verificando con SHA-256 que el archivo quedó idéntico. |
 
 Las líneas de base están en **cero**: la puerta falla ante cualquier hallazgo nuevo.
 

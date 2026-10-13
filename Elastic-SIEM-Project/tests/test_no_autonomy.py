@@ -13,10 +13,13 @@ Se analiza el AST y no el texto porque un `grep` se engaña con un comentario o
 un string, y se lo esquiva con `getattr(os, "sys" + "tem")`. El AST ve la
 estructura real del código.
 
-**Única excepción permitida:** `siem_pipeline.py` orquesta las tres etapas del
-propio pipeline con `subprocess.run`. Está en la allowlist y, además, se le
-verifican condiciones extra (§4): sin `shell=True`, con argumentos literales y
-sin ningún dato de log en el medio.
+**Sin excepciones.** Hasta la migración a microservicios, `siem_pipeline.py`
+orquestaba las etapas con `subprocess.run` y era la única entrada de la
+allowlist. Ahora las etapas son servicios y el orquestador les habla por HTTP,
+así que la allowlist quedó vacía. A cambio, §4 certifica la nueva superficie:
+toda llamada entre servicios tiene destino y ruta literales, el cliente interno
+solo conoce un registro cerrado de servicios, y ninguna API interna expone una
+operación que ejecute algo o modifique la auditoría.
 
 Si este archivo falla, **no lo silencies**: o el cambio introduce autonomía (y
 hay que revertirlo), o es una decisión consciente que exige actualizar
@@ -61,8 +64,8 @@ OS_PROHIBIDOS = {n for n in LLAMADAS_PROHIBIDAS if n not in {"run", "call", "Pop
                                                              "check_output", "getoutput",
                                                              "getstatusoutput"}}
 
-# La excepción, justificada y acotada. Ver §4 de este archivo.
-ALLOWLIST = {"siem_pipeline.py"}
+# Vacía desde la migración a microservicios. Ver §4 de este archivo.
+ALLOWLIST: set[str] = set()
 
 # Directorios que no son código del sistema.
 #
@@ -119,9 +122,10 @@ def test_hay_archivos_para_analizar():
     """Blindaje del propio test: si el descubrimiento falla, todo pasaría vacío."""
     archivos = _archivos_python()
     nombres = {p.name for p in archivos}
-    assert {"classifier.py", "siem_agent.py", "dashboard.py",
-            "siem_lib.py", "prepare-for-ia.py"} <= nombres
-    assert len(archivos) >= 7
+    assert {"classifier.py", "siem_agent.py", "dashboard.py", "siem_lib.py",
+            "collector.py", "siem_servicios.py", "orquestador.py"} <= nombres
+    assert set(SERVICIOS_DEL_PRODUCTO.values()) <= nombres
+    assert len(archivos) >= 20
     assert not any("tests" in p.parts for p in archivos)
 
 
@@ -179,84 +183,148 @@ def test_sin_llamadas_de_ejecucion(ruta: Path):
         "Se invocó una primitiva de ejecución:\n  " + "\n  ".join(hallazgos))
 
 
-# ─── 4. La excepción: siem_pipeline.py, acotada y verificada ─────────────────
+# ─── 4. Sin excepciones: la comunicación entre servicios, certificada ───────
 
-def test_allowlist_es_minima():
-    """Una sola excepción. Agregar otra es una decisión de arquitectura."""
-    assert {"siem_pipeline.py"} == ALLOWLIST
+def test_allowlist_vacia():
+    """Ningún módulo puede lanzar procesos. Agregar uno es una decisión de arquitectura."""
+    assert set() == ALLOWLIST
 
 
-def test_allowlist_pipeline_nunca_usa_shell():
-    """`shell=True` convertiría la lista de argumentos en una línea de comando."""
-    ruta = PROJECT_ROOT / "src" / "siem_pipeline.py"
+def _llamadas_a_servicios(ruta: Path) -> list[ast.Call]:
+    return [n for n in ast.walk(_arbol(ruta))
+            if isinstance(n, ast.Call) and _nombre_llamado(n) in ("llamar", "siem_servicios.llamar")]
+
+
+def test_el_orquestador_solo_llama_a_sus_propias_etapas():
+    """El sucesor de la allowlist: el orquestador no ejecuta procesos, y sus únicas
+    acciones son llamadas HTTP con destino, método y ruta LITERALES — exactamente
+    las etapas del pipeline, nada que venga de afuera."""
+    ruta = PROJECT_ROOT / "services" / "pipeline" / "orquestador.py"
+    etapas = set()
+    for nodo in _llamadas_a_servicios(ruta):
+        servicio, metodo, destino = nodo.args[:3]
+        for arg in (servicio, metodo, destino):
+            assert isinstance(arg, ast.Constant) and isinstance(arg.value, str), \
+                f"{_ubicacion(ruta, nodo)}: argumento no literal en una llamada del orquestador"
+        etapas.add((servicio.value, metodo.value, destino.value))
+
+    assert etapas == {
+        ("collector", "POST", "/v1/snapshots"),
+        ("collector", "GET", "/v1/snapshots/latest"),
+        ("classifier", "POST", "/v1/classify"),
+        ("analyst", "POST", "/v1/analyze"),
+        ("audit", "POST", "/v1/analysis-history"),
+    }
+
+
+def test_toda_llamada_entre_servicios_tiene_destino_literal():
+    """En TODO el producto, el servicio destino de `llamar()` es un literal del
+    registro: ningún dato (de un log, de una petición) decide a dónde se conecta
+    el sistema. La ruta es literal, o una f-string fija que empieza en `/v1/`."""
+    import siem_servicios
+
+    hallazgos = []
+    total = 0
+    for ruta in _archivos_python():
+        for nodo in _llamadas_a_servicios(ruta):
+            total += 1
+            servicio, metodo, destino = nodo.args[:3]
+            if not (isinstance(servicio, ast.Constant) and servicio.value in siem_servicios.SERVICIOS):
+                hallazgos.append(f"{_ubicacion(ruta, nodo)}: servicio no literal o desconocido")
+            if not isinstance(metodo, ast.Constant):
+                hallazgos.append(f"{_ubicacion(ruta, nodo)}: método no literal")
+            literal = isinstance(destino, ast.Constant) and destino.value.startswith("/v1/")
+            fstring = (isinstance(destino, ast.JoinedStr) and destino.values
+                       and isinstance(destino.values[0], ast.Constant)
+                       and destino.values[0].value.startswith("/v1/"))
+            if not (literal or fstring):
+                hallazgos.append(f"{_ubicacion(ruta, nodo)}: ruta no literal")
+
+    assert total >= 10, "se encontraron muy pocas llamadas: revisar el descubrimiento"
+    assert not hallazgos, "Llamada entre servicios con destino dinámico:\n  " + "\n  ".join(hallazgos)
+
+
+def test_el_cliente_interno_solo_conoce_el_registro():
+    """Aunque alguien le pase un destino armado, el cliente se niega."""
+    import siem_servicios
+
+    for destino in ("evil", "http://atacante", "elasticsearch", "gateway"):
+        with pytest.raises(ValueError):
+            siem_servicios.llamar(destino, "GET", "/v1/healthz")
+    with pytest.raises(ValueError):
+        siem_servicios.llamar("audit", "GET", "http://atacante/v1/x")
+
+
+def _rutas_flask(ruta: Path) -> list[tuple[str, str]]:
+    """(método, ruta) de cada vista: `@app.route/get/post(...)` y `add_url_rule`."""
+    rutas = []
     for nodo in ast.walk(_arbol(ruta)):
-        if isinstance(nodo, ast.Call):
-            for kw in nodo.keywords:
-                assert kw.arg != "shell" or not getattr(kw.value, "value", False), \
-                    f"{_ubicacion(ruta, nodo)}: shell=True en la allowlist"
+        if isinstance(nodo, ast.FunctionDef):
+            for deco in nodo.decorator_list:
+                if not (isinstance(deco, ast.Call) and deco.args
+                        and isinstance(deco.args[0], ast.Constant)):
+                    continue
+                nombre = (_nombre_llamado(deco) or "").split(".")[-1]
+                if nombre in ("get", "post", "put", "patch", "delete"):
+                    rutas.append((nombre.upper(), deco.args[0].value))
+                elif nombre == "route":
+                    metodos = next((kw.value for kw in deco.keywords if kw.arg == "methods"), None)
+                    valores = [e.value for e in metodos.elts] if metodos else ["GET"]
+                    rutas.extend((m, deco.args[0].value) for m in valores)
+        elif (isinstance(nodo, ast.Call) and (_nombre_llamado(nodo) or "").endswith("add_url_rule")
+              and nodo.args and isinstance(nodo.args[0], ast.Constant)):
+            rutas.append(("*", nodo.args[0].value))
+    return rutas
 
 
-def test_allowlist_pipeline_solo_ejecuta_sus_propias_etapas():
-    """Los comandos son literales del propio módulo: nada viene de afuera.
-
-    Cada entrada de STEPS es `[sys.executable, "<script>.py"]` — el intérprete
-    actual y un script del repo. No hay interpolación, ni f-strings, ni datos.
-    """
-    ruta = PROJECT_ROOT / "src" / "siem_pipeline.py"
-    arbol = _arbol(ruta)
-
-    steps = next((n for n in ast.walk(arbol)
-                  if isinstance(n, ast.Assign)
-                  and any(isinstance(t, ast.Name) and t.id == "STEPS" for t in n.targets)),
-                 None)
-    assert steps is not None, "no se encontró la constante STEPS"
-    assert isinstance(steps.value, ast.List)
-
-    scripts = []
-    for etapa in steps.value.elts:
-        assert isinstance(etapa, ast.Tuple), "cada etapa debe ser una tupla literal"
-        _titulo, cmd, _tolera = etapa.elts
-        assert isinstance(cmd, ast.List), "el comando debe ser una lista literal"
-
-        interprete, script = cmd.elts
-        # sys.executable — el mismo Python que corre el pipeline.
-        assert isinstance(interprete, ast.Attribute) and interprete.attr == "executable"
-        # El script: una constante, nunca una f-string ni una concatenación.
-        assert isinstance(script, ast.Constant) and isinstance(script.value, str), \
-            "el script debe ser una constante literal"
-        assert script.value.endswith(".py")
-        scripts.append(script.value)
-
-    assert scripts == ["src/prepare-for-ia.py", "src/classifier.py", "src/siem_agent.py"]
-    for nombre in scripts:
-        assert (PROJECT_ROOT / nombre).is_file(), f"{nombre} no existe en el repo"
+# Módulo con la API de cada servicio interno.
+SERVICIOS_DEL_PRODUCTO = {
+    "auth": "auth_service.py", "audit": "audit_service.py",
+    "collector": "collector_service.py", "classifier": "classifier_service.py",
+    "analyst": "analyst_service.py", "pipeline": "pipeline_service.py",
+    "knowledge": "knowledge_service.py",
+}
 
 
-def test_allowlist_pipeline_no_recibe_datos_externos():
-    """El módulo no lee incidentes, logs ni `.env`: solo encadena etapas.
+def test_las_apis_internas_son_exactamente_estas():
+    """La superficie completa de las APIs internas, enumerada. Una ruta nueva
+    tiene que aparecer acá, a la vista, para pasar la puerta."""
+    encontradas = {}
+    for servicio, archivo in SERVICIOS_DEL_PRODUCTO.items():
+        encontradas[servicio] = sorted(
+            _rutas_flask(PROJECT_ROOT / "services" / servicio / archivo))
 
-    Se mira el AST, no el texto: el orquestador *menciona* `siem_incidents.json`
-    en un `print` final, y eso no es acceso a datos. Lo que importa es que no
-    abra archivos, no importe `siem_lib` y no lea el entorno.
-    """
-    arbol = _arbol(PROJECT_ROOT / "src" / "siem_pipeline.py")
+    assert encontradas == {
+        "auth": [("GET", "/v1/users-summary"), ("GET", "/v1/users/<username>"),
+                 ("POST", "/v1/authenticate")],
+        "audit": [("GET", "/v1/analysis-history/verify"), ("GET", "/v1/decisions"),
+                  ("GET", "/v1/decisions/verify"), ("POST", "/v1/analysis-history"),
+                  ("POST", "/v1/decisions")],
+        "collector": [("GET", "/v1/snapshots/latest"), ("POST", "/v1/snapshots")],
+        "classifier": [("POST", "/v1/classify")],
+        "analyst": [("POST", "/v1/analyze")],
+        "pipeline": [("GET", "/v1/incidents"), ("GET", "/v1/incidents/<incident_id>"),
+                     ("POST", "/v1/cycles")],
+        # Memoria del Agente 2: guarda y devuelve texto. Ninguna ruta cambia una
+        # acción ni un comando; una lección solo da contexto, y solo aprobada.
+        "knowledge": [("GET", "/v1/documents"), ("GET", "/v1/lessons"),
+                      ("POST", "/v1/cases"), ("POST", "/v1/context"),
+                      ("POST", "/v1/documents"), ("POST", "/v1/lessons"),
+                      ("POST", "/v1/lessons/<leccion_id>/review")],
+    }
+    for rutas in encontradas.values():
+        for _metodo, r in rutas:
+            assert not any(v in r for v in ("execute", "run", "exec", "shell", "contain",
+                                            "block", "remediate", "command")), r
 
-    importados = set()
-    for nodo in ast.walk(arbol):
-        if isinstance(nodo, ast.Import):
-            importados.update(a.name.split(".")[0] for a in nodo.names)
-        elif isinstance(nodo, ast.ImportFrom):
-            importados.add((nodo.module or "").split(".")[0])
-    assert importados == {"subprocess", "sys", "__future__"}, \
-        f"el orquestador importa de más: {sorted(importados)}"
 
-    prohibidas = {"open", "load_json", "read_jsonl", "write_json", "append_jsonl",
-                  "getenv", "load_dotenv"}
-    for nodo in ast.walk(arbol):
-        if isinstance(nodo, ast.Call):
-            nombre = (_nombre_llamado(nodo) or "").split(".")[-1]
-            assert nombre not in prohibidas, \
-                f"{_ubicacion(PROJECT_ROOT / 'src' / 'siem_pipeline.py', nodo)}: {nombre}(...)"
+def test_la_auditoria_no_expone_modificacion_ni_borrado():
+    """Append-only también en la API: el servicio audit solo agrega, lee y verifica."""
+    rutas = _rutas_flask(PROJECT_ROOT / "services" / "audit" / "audit_service.py")
+    assert {m for m, _ in rutas} <= {"GET", "POST"}
+    for metodo, r in rutas:
+        if metodo == "POST":
+            assert r in ("/v1/decisions", "/v1/analysis-history"), r
 
 
 # ─── 5. Los comandos sugeridos son datos, nunca se ejecutan ──────────────────
@@ -307,7 +375,7 @@ def test_el_agente_llm_no_puede_generar_comandos():
     """
     import siem_agent
 
-    fuente = (PROJECT_ROOT / "src" / "siem_agent.py").read_text(encoding="utf-8")
+    fuente = (PROJECT_ROOT / "services" / "analyst" / "siem_agent.py").read_text(encoding="utf-8")
     assert "No generes comandos" in siem_agent.SYSTEM_INSTRUCTION
     for capacidad in ("tools=", "function_declarations", "FunctionDeclaration",
                       "automatic_function_calling", "code_execution"):
@@ -390,19 +458,32 @@ def test_sin_ejecucion_diferida_ni_clientes_de_infraestructura():
         "Import con capacidad de actuar sobre infraestructura:\n  " + "\n  ".join(hallazgos))
 
 
-def test_las_peticiones_de_red_solo_van_a_elasticsearch_y_al_llm():
-    """El único `requests` del proyecto apunta a `ES_HOST`; no hay webhooks."""
+def test_las_peticiones_de_red_solo_van_a_elasticsearch_y_a_los_servicios():
+    """`requests` aparece en dos lugares y solo en dos: el cliente de
+    Elasticsearch (collector) y el cliente entre servicios. No hay webhooks."""
+    usos = {}
+    for ruta in _archivos_python():
+        llamadas = [n for n in ast.walk(_arbol(ruta))
+                    if isinstance(n, ast.Call) and (_nombre_llamado(n) or "").startswith("requests.")]
+        if llamadas:
+            usos[ruta.name] = (ruta, llamadas)
 
-    fuente = (PROJECT_ROOT / "src" / "siem_lib.py").read_text(encoding="utf-8")
-    llamadas = [n for n in ast.walk(ast.parse(fuente))
-                if isinstance(n, ast.Call) and (_nombre_llamado(n) or "").startswith("requests.")]
-    assert llamadas, "cambió la forma de hablar con Elasticsearch: revisar este test"
-    for nodo in llamadas:
-        assert _nombre_llamado(nodo) == "requests.post"
+    assert set(usos) == {"es_client.py", "siem_servicios.py"}, sorted(usos)
 
-    assert "ES_HOST" in fuente
+    # Elasticsearch: solo búsquedas (POST a _search), siempre hacia ES_HOST.
+    ruta, llamadas = usos["es_client.py"]
+    fuente = ruta.read_text(encoding="utf-8")
+    assert all(_nombre_llamado(n) == "requests.post" for n in llamadas)
+    assert 'f"{ES_HOST}/{index}/_search"' in fuente
     for verbo in ("requests.put", "requests.delete", "requests.patch"):
         assert verbo not in fuente, f"{verbo}: escritura hacia un sistema externo"
+
+    # Entre servicios: una sola llamada, con la URL armada desde el registro.
+    ruta, llamadas = usos["siem_servicios.py"]
+    assert len(llamadas) == 1 and _nombre_llamado(llamadas[0]) == "requests.request"
+    url = llamadas[0].args[1]
+    assert (isinstance(url, ast.BinOp) and isinstance(url.left, ast.Call)
+            and _nombre_llamado(url.left) == "url_de"), "la URL no sale del registro de servicios"
 
 
 # ─── 7. La interfaz tampoco ejecuta nada ─────────────────────────────────────
@@ -414,7 +495,7 @@ def test_el_dashboard_no_define_rutas_de_ejecucion():
     `@app.route(...)` y las llamadas a `app.add_url_rule(...)` que dan
     compatibilidad con los caminos sin versionar.
     """
-    ruta = PROJECT_ROOT / "src" / "dashboard.py"
+    ruta = PROJECT_ROOT / "services" / "gateway" / "dashboard.py"
     rutas = []
     for nodo in ast.walk(_arbol(ruta)):
         if isinstance(nodo, ast.FunctionDef):
@@ -431,7 +512,9 @@ def test_el_dashboard_no_define_rutas_de_ejecucion():
         "/", "/api/decision", "/api/decisions", "/api/incidents",
         "/api/v1/audit/verify", "/api/v1/decision", "/api/v1/decisions",
         "/api/v1/healthz", "/api/v1/incidents", "/api/v1/incidents/<incident_id>",
-        "/api/v1/login", "/api/v1/logout", "/api/v1/me", "/login",
+        "/api/v1/login", "/api/v1/logout", "/api/v1/me",
+        "/api/v1/memoria", "/api/v1/memoria/documentos", "/api/v1/memoria/lecciones",
+        "/api/v1/memoria/lecciones/<leccion_id>/revision", "/login",
     ]
     for r in rutas:
         assert not any(v in r for v in ("execute", "run", "exec", "shell",
@@ -446,10 +529,10 @@ def test_el_cliente_no_ejecuta_nada():
     son solo marcado, así que se revisan las cuatro fuentes.
     """
     fuentes = {
-        "templates/index.html": PROJECT_ROOT / "templates" / "index.html",
-        "templates/login.html": PROJECT_ROOT / "templates" / "login.html",
-        "static/app.js": PROJECT_ROOT / "static" / "app.js",
-        "static/login.js": PROJECT_ROOT / "static" / "login.js",
+        "templates/index.html": PROJECT_ROOT / "services" / "gateway" / "templates" / "index.html",
+        "templates/login.html": PROJECT_ROOT / "services" / "gateway" / "templates" / "login.html",
+        "static/app.js": PROJECT_ROOT / "services" / "gateway" / "static" / "app.js",
+        "static/login.js": PROJECT_ROOT / "services" / "gateway" / "static" / "login.js",
     }
     textos = {n: ruta.read_text(encoding="utf-8") for n, ruta in fuentes.items()}
 
@@ -474,7 +557,7 @@ def test_el_cliente_no_ejecuta_nada():
 
 def test_la_ui_advierte_que_no_ejecuta():
     """La promesa de no-autonomía tiene que estar visible para el analista."""
-    html = (PROJECT_ROOT / "templates" / "index.html").read_text(encoding="utf-8").lower()
+    html = (PROJECT_ROOT / "services" / "gateway" / "templates" / "index.html").read_text(encoding="utf-8").lower()
     assert "aprobar" in html and "descartar" in html
     assert "ejecuta" in html or "sugerencia" in html or "sugiere" in html
 
@@ -496,7 +579,7 @@ def test_certificacion_resumen(capsys):
         print("  Herramientas del LLM            : ninguna")
         print("  ───────────────────────────────────────────────────────────")
 
-    assert con_subprocess == ["siem_pipeline.py"]
+    assert con_subprocess == []
 
 
 def test_el_andamiaje_de_pruebas_no_se_despliega():
@@ -512,8 +595,15 @@ def test_el_andamiaje_de_pruebas_no_se_despliega():
         assert "import tests" not in codigo, f"{modulo.name} importa la suite"
         assert "from tests" not in codigo, f"{modulo.name} importa la suite"
 
-    requisitos = (PROJECT_ROOT / "requirements.txt").read_text(encoding="utf-8")
-    assert "pytest" not in requisitos, "las dependencias de test entraron al runtime"
+    # Ni en el agregado ni en lo que instala la imagen de cada servicio.
+    for requisitos in [PROJECT_ROOT / "requirements.txt",
+                       *sorted((PROJECT_ROOT / "services").glob("*/requirements.txt"))]:
+        assert "pytest" not in requisitos.read_text(encoding="utf-8"), \
+            f"las dependencias de test entraron al runtime: {requisitos}"
+
+    # Y la imagen de un servicio no puede copiar la suite.
+    for dockerfile in sorted((PROJECT_ROOT / "services").glob("*/Dockerfile")):
+        assert "tests" not in dockerfile.read_text(encoding="utf-8"), dockerfile
 
     # Y la suite efectivamente importa subprocess solo donde se documentó.
     def _importa_subprocess(ruta: Path) -> bool:
@@ -526,9 +616,10 @@ def test_el_andamiaje_de_pruebas_no_se_despliega():
                 return True
         return False
 
-    # Andamiaje con subprocess, justificado archivo por archivo:
-    #   test_auditoria_append_only.py — lanza el pipeline real para verificar que
-    #       no reescribe el registro de auditoría.
+    # Andamiaje con subprocess, justificado archivo por archivo.
+    # (`test_auditoria_append_only.py` salió de la lista con la migración: el
+    # pipeline ya no es un proceso, y la prueba corre un ciclo por la malla en
+    # proceso.)
     #   test_s02_xss_dashboard.py     — ejecuta en Node el `esc()` real de la
     #       plantilla; reimplementarlo en Python probaría el test, no el código
     #       que se despliega.
@@ -552,7 +643,6 @@ def test_el_andamiaje_de_pruebas_no_se_despliega():
     #       no el código que se despliega.
     assert con_subprocess == ["test_a01_reset_preserva_auditoria.py",
                               "test_a02_a04_integridad.py",
-                              "test_auditoria_append_only.py",
                               "test_despliegue_de_reglas.py",
                               "test_iconos.py",
                               "test_s02_xss_dashboard.py",

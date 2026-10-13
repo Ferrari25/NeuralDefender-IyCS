@@ -130,6 +130,9 @@ def test_la_api_no_expone_ninguna_ruta_de_ejecucion(client):
         "/api/v1/healthz", "/api/v1/incidents", "/api/v1/incidents/<incident_id>",
         "/api/v1/decision", "/api/v1/decisions", "/api/v1/audit/verify",
         "/api/v1/login", "/api/v1/logout", "/api/v1/me",
+        # Memoria del Agente 2: guardan y revisan TEXTO (documentos, lecciones).
+        "/api/v1/memoria", "/api/v1/memoria/documentos", "/api/v1/memoria/lecciones",
+        "/api/v1/memoria/lecciones/<leccion_id>/revision",
     }
 
     for sospechosa in ("/api/execute", "/api/run", "/api/contain", "/api/block",
@@ -138,14 +141,18 @@ def test_la_api_no_expone_ninguna_ruta_de_ejecucion(client):
 
 
 def test_aprobar_una_accion_solo_escribe_una_linea(client, sandbox_con_incidentes):
-    """Aprobar registra una intención; no dispara nada ni toca otro archivo."""
+    """Aprobar registra una intención; no dispara nada.
+
+    Toca exactamente dos archivos: la línea del registro de auditoría y el caso
+    que aprende la memoria del Agente 2 (`casos.json`, servicio knowledge).
+    """
     antes = {p.name for p in (sandbox_con_incidentes / "data").iterdir()}
     inc_id, act_id = _una_accion(client)
     client.post("/api/decision", json={
         "incident_id": inc_id, "action_id": act_id, "decision": "approved"})
 
     despues = {p.name for p in (sandbox_con_incidentes / "data").iterdir()}
-    assert despues - antes == {"decisions.jsonl"}
+    assert despues - antes == {"decisions.jsonl", "casos.json"}
 
     lineas = (sandbox_con_incidentes / "data" / "decisions.jsonl").read_text(
         encoding="utf-8").strip().split("\n")

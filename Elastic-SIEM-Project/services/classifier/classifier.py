@@ -8,7 +8,8 @@ positivo. "O cumple el patrón o no": etapa rápida, barata y auditable, ANTES d
 gastar el LLM.
 
 Fuentes:
-  - siem_clean.json        → alertas + logs de auth fallida  (ataques SSH/auth)
+  - captura del SIEM       → alertas + logs de auth fallida  (ataques SSH/auth)
+    (la entrega el servicio collector; antes era `siem_clean.json`)
   - network_logs/*.json    → eventos de red/web (NDJSON)      (port scan, phishing)
     (es el mismo directorio que Filebeat envía a Elasticsearch; leerlo localmente
      permite detectar sin el stack levantado, en modo demo offline.)
@@ -19,7 +20,9 @@ Tipos de ataque soportados: ssh_brute_force, port_scan, credential_harvesting
 Cada incidente trae un playbook de acciones con COMANDOS FIJOS (de acá, no del
 LLM) para que el operador nunca reciba un comando alucinado o inyectado vía logs.
 
-Salida: `siem_incidents.json` (analysis = null; lo completa el Agente 2).
+Salida: el reporte de incidentes (analysis = null; lo completa el Agente 2), que
+el servicio classifier devuelve por HTTP al orquestador. Este módulo no lee ni
+escribe archivos de datos: eso es asunto de cada servicio.
 """
 
 from __future__ import annotations
@@ -30,12 +33,9 @@ import shlex
 from dataclasses import asdict, dataclass, field
 
 from siem_lib import (
-    load_json,
     now_iso,
-    read_network_logs,
     sanitize_for_prompt,
     ts_ordenable,
-    write_json,
 )
 from siem_validators import (
     IP_DESCONOCIDA,
@@ -44,9 +44,6 @@ from siem_validators import (
     valid_ip,
     valid_username,
 )
-
-SIEM_FILE      = "data/siem_clean.json"
-INCIDENTS_FILE = "data/siem_incidents.json"
 
 # Umbrales de detección (dentro de la ventana analizada).
 BRUTE_FORCE_THRESHOLD   = 20      # fallos de auth → fuerza bruta
@@ -65,7 +62,7 @@ _PHISHING_MITRE_TECHNIQUES  = {"T1566"}
 # reglas de Kibana disparan sobre la misma IP (ver `detect_auth_incidents`).
 _RANGO_SEVERIDAD_SIEM = {"low": 0, "medium": 1, "high": 2, "critical": 3}
 
-# Solo para la etiqueta que se imprime en consola (`main()`): el valor interno
+# Solo para la etiqueta que se imprime en consola (`reporte()`): el valor interno
 # de `severity` queda en español (lo usan las comparaciones y los tests), pero
 # el panel siempre pinta la severidad en inglés (`SEV_DETERMINISTICA` en
 # app.js, vía `severidad_ajustada` de siem_agent.py) — sin este mapeo la
@@ -928,40 +925,27 @@ def classify(siem_data: dict, network_events: list[dict] | None = None) -> list[
     return incidents
 
 
-def main() -> None:
+def reporte(siem_data: dict, network_events: list[dict]) -> dict:
+    """Clasifica y arma el reporte que consume el Agente 2.
+
+    `siem_data` vacío es un caso legítimo: sin captura previa de Elasticsearch
+    (el stack nunca estuvo arriba) se clasifica solo a partir de `network_logs/`,
+    en modo offline puro.
+
+    B-04: antes `main()` leía también `siem_data["network_events"]` y
+    `["web_events"]`, dos claves que el extractor NUNCA genera. `network_logs/`
+    es la única fuente real de eventos de red/web (no hay Suricata; ver docs/01).
+    """
     print("[Agente 1 - Clasificador] Aplicando reglas determinísticas...")
-    try:
-        siem_data = load_json(SIEM_FILE)
-    except FileNotFoundError:
-        # Sin captura previa de Elasticsearch (nunca corrió prepare-for-ia.py con el stack
-        # arriba): no es un error fatal, clasificamos solo a partir de network_logs/ (modo
-        # offline puro, ej. justo después de clonar el repo).
-        print(f"[INFO] No se encontró '{SIEM_FILE}' (sin captura previa de Elasticsearch). "
-              f"Clasificando solo a partir de network_logs/.")
-        siem_data = {}
-    # B-04: antes esto leía también `siem_data["network_events"]` y `["web_events"]`,
-    # dos claves que `prepare-for-ia.py` NUNCA genera — la rama siempre devolvía []
-    # y aparentaba una ruta de ingesta que no existe. `network_logs/` es la única
-    # fuente real de eventos de red/web (no hay Suricata; ver docs/01).
-    network_events = read_network_logs("network_logs")
-
     incidents = classify(siem_data, network_events)
-
-    report = {
-        "generated_at": now_iso(),
-        "source": SIEM_FILE,
-        "incident_count": len(incidents),
-        "incidents": incidents,
-    }
-    write_json(INCIDENTS_FILE, report)
-
     print(f"  Incidentes detectados: {len(incidents)}")
     for inc in incidents:
         c = inc["classification"]
         print(f"   • {inc['incident_id']}: {c['attack_type']} "
               f"[{_SEV_LABEL_EN.get(c['severity'], c['severity'].upper())}] — {inc['event_count']} eventos")
-    print(f"[OK] Clasificación guardada en '{INCIDENTS_FILE}'")
-
-
-if __name__ == "__main__":
-    main()
+    return {
+        "generated_at": now_iso(),
+        "source": "collector" if siem_data else "network_logs",
+        "incident_count": len(incidents),
+        "incidents": incidents,
+    }

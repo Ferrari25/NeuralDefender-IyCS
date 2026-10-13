@@ -20,7 +20,7 @@
 # los artefactos locales del pipeline. No baja Docker: el stack sigue arriba, así
 # que la limpieza tarda segundos y no minutos.
 #
-# El REGISTRO DE AUDITORÍA no se borra: se archiva en `audit/archive/`, igual que
+# El REGISTRO DE AUDITORÍA no se borra: se archiva en `data/audit/archivo/`, igual que
 # en `reset.sh` (hallazgo A-01). `decisions.jsonl` es la única prueba de que hubo
 # supervisión humana; un script que la borre junto a los datos de demo convierte
 # el registro en un archivo de trabajo.
@@ -94,12 +94,12 @@ n_docs()    { es "$ES/filebeat-*/_count" 2>/dev/null \
 n_incidentes() { python3 - <<'PY' 2>/dev/null || echo 0
 import json
 import pathlib
-p = pathlib.Path("data/siem_incidents.json")
+p = pathlib.Path("data/pipeline/siem_incidents.json")
 print(json.loads(p.read_text(encoding="utf-8"))["incident_count"] if p.exists() else 0)
 PY
 }
 
-# `src/prepare-for-ia.py` es una etapa TOLERABLE del pipeline: si Elasticsearch no
+# La captura del collector es una etapa TOLERABLE del pipeline: si Elasticsearch no
 # responde, el orquestador sigue con los datos que haya y termina con código 0. Eso
 # está bien para el modo offline, pero en una demostración desde cero es una trampa:
 # se mostrarían datos de una captura anterior justo cuando se afirma que no hay
@@ -110,7 +110,7 @@ import json
 import pathlib
 from datetime import datetime, timedelta, timezone
 
-p = pathlib.Path("data/siem_clean.json")
+p = pathlib.Path("data/collector/siem_clean.json")
 if not p.exists():
     print("FALTA")
     raise SystemExit
@@ -169,7 +169,7 @@ if ! $SIN_CONFIRMAR; then
   echo
   aviso "Se van a borrar las reglas desplegadas, las alertas, los índices de"
   aviso "Filebeat y los artefactos del pipeline. Todo eso es regenerable."
-  aviso "El registro de auditoría NO se borra: se archiva en audit/archive/."
+  aviso "El registro de auditoría NO se borra: se archiva en data/audit/archivo/."
   read -r -p "  ¿Seguir? [y/N] " r
   [[ "$r" =~ ^[yY]$ ]] || { echo "  Cancelado."; exit 0; }
 fi
@@ -182,11 +182,14 @@ paso "1/7 · Todo a cero"
 # reset.sh: `mktemp -d` en vez del timestamp solo, porque dos corridas dentro del
 # mismo segundo compartirían nombre y la segunda pisaría la evidencia de la primera.
 HAY_AUDITORIA=false
-for f in decisions.jsonl analysis_history.jsonl; do [[ -s "$f" ]] && HAY_AUDITORIA=true; done
+# Rutas del volumen del servicio audit (antes de la migración vivían en la raíz,
+# y este paso archivaba archivos que ya no existían).
+REGISTROS_AUDITORIA=(data/audit/decisions.jsonl data/audit/analysis_history.jsonl data/audit/actividad.jsonl)
+for f in "${REGISTROS_AUDITORIA[@]}"; do [[ -s "$f" ]] && HAY_AUDITORIA=true; done
 if $HAY_AUDITORIA; then
-  mkdir -p audit/archive
-  DESTINO=$(mktemp -d "audit/archive/$(date -u +%Y%m%dT%H%M%SZ)-XXXX")
-  for f in decisions.jsonl analysis_history.jsonl; do
+  mkdir -p data/audit/archivo
+  DESTINO=$(mktemp -d "data/audit/archivo/$(date -u +%Y%m%dT%H%M%SZ)-XXXX")
+  for f in "${REGISTROS_AUDITORIA[@]}"; do
     [[ -s "$f" ]] && mv "$f" "$DESTINO/"
   done
   chmod -R a-w "$DESTINO"
@@ -215,7 +218,7 @@ else
   ok "no había índices de Filebeat"
 fi
 
-rm -f siem_clean.json siem_incidents.json ai_report.json network_logs/*.json
+rm -f data/collector/siem_clean.json data/pipeline/siem_incidents.json data/ai_report.json network_logs/*.json
 ok "artefactos locales del pipeline limpiados"
 
 narrar "Estado después de limpiar"
@@ -339,7 +342,7 @@ pausa 4
 paso "7/7 · Clasificación, análisis y panel"
 
 detalle "Agente 1 (determinístico) → Agente 2 (explicación) → panel de supervisión"
-if ! python3 src/siem_pipeline.py >/tmp/desde-cero-pipeline.log 2>&1; then
+if ! ./scripts/siem.sh pipeline >/tmp/desde-cero-pipeline.log 2>&1; then
   mal "el pipeline falló (ver /tmp/desde-cero-pipeline.log)"
   exit 1
 fi
@@ -369,7 +372,7 @@ python3 - <<'PY' 2>/dev/null
 import json
 import pathlib
 
-p = pathlib.Path("data/siem_incidents.json")
+p = pathlib.Path("data/pipeline/siem_incidents.json")
 if not p.exists():
     raise SystemExit
 

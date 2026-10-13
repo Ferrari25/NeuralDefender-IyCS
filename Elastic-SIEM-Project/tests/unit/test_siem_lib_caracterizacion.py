@@ -12,6 +12,8 @@ import json
 import pytest
 import requests
 
+import cadena
+import es_client
 import siem_lib
 
 # ─── Saneamiento ─────────────────────────────────────────────────────────────
@@ -84,25 +86,25 @@ def test_write_y_load_json_ida_y_vuelta(sandbox):
 
 def test_read_jsonl_inexistente_devuelve_vacio(sandbox):
     """Que el dashboard arranque sin decisiones previas no es un error."""
-    assert siem_lib.read_jsonl(sandbox / "decisions.jsonl") == []
+    assert cadena.read_jsonl(sandbox / "decisions.jsonl") == []
 
 
 def test_append_jsonl_solo_agrega(sandbox):
     """La propiedad append-only en su forma más básica: el archivo solo crece."""
     ruta = sandbox / "decisions.jsonl"
-    siem_lib.append_jsonl(ruta, {"n": 1})
+    cadena.append_jsonl(ruta, {"n": 1})
     primera = ruta.read_bytes()
-    siem_lib.append_jsonl(ruta, {"n": 2})
+    cadena.append_jsonl(ruta, {"n": 2})
     segunda = ruta.read_bytes()
 
     assert segunda.startswith(primera), "se reescribió contenido previo"
-    assert len(siem_lib.read_jsonl(ruta)) == 2
+    assert len(cadena.read_jsonl(ruta)) == 2
 
 
 def test_read_jsonl_ignora_lineas_vacias(sandbox):
     ruta = sandbox / "d.jsonl"
     ruta.write_text('{"a":1}\n\n\n{"a":2}\n', encoding="utf-8")
-    assert siem_lib.read_jsonl(ruta) == [{"a": 1}, {"a": 2}]
+    assert cadena.read_jsonl(ruta) == [{"a": 1}, {"a": 2}]
 
 
 def test_read_jsonl_estricto_falla_con_linea_corrupta(sandbox):
@@ -110,7 +112,7 @@ def test_read_jsonl_estricto_falla_con_linea_corrupta(sandbox):
     ruta = sandbox / "d.jsonl"
     ruta.write_text('{"a":1}\n{roto\n', encoding="utf-8")
     with pytest.raises(json.JSONDecodeError):
-        siem_lib.read_jsonl(ruta)
+        cadena.read_jsonl(ruta)
 
 
 def test_read_jsonl_tolerante_no_tumba_el_panel(sandbox):
@@ -123,7 +125,7 @@ def test_read_jsonl_tolerante_no_tumba_el_panel(sandbox):
     """
     ruta = sandbox / "d.jsonl"
     ruta.write_text('{"a":1}\n{roto\n{"a":3}\n', encoding="utf-8")
-    registros = siem_lib.read_jsonl(ruta, tolerante=True)
+    registros = cadena.read_jsonl(ruta, tolerante=True)
     assert len(registros) == 3
     assert registros[1]["_linea_corrupta"] == 2
     assert registros[2] == {"a": 3}
@@ -148,9 +150,9 @@ def test_es_search_mapea_connection_error(monkeypatch):
     def falla(*a, **kw):
         raise requests.exceptions.ConnectionError("sin ruta al host")
 
-    monkeypatch.setattr(siem_lib.requests, "post", falla)
-    with pytest.raises(siem_lib.ESUnavailable):
-        siem_lib.es_search("filebeat-*", {})
+    monkeypatch.setattr(es_client.requests, "post", falla)
+    with pytest.raises(es_client.ESUnavailable):
+        es_client.es_search("filebeat-*", {})
 
 
 def test_es_search_404_no_es_fatal(monkeypatch):
@@ -168,21 +170,21 @@ def test_es_search_404_no_es_fatal(monkeypatch):
         def json(self):
             return {}
 
-    monkeypatch.setattr(siem_lib.requests, "post", lambda *a, **kw: Resp())
-    assert siem_lib.es_search("filebeat-*", {}) == []
+    monkeypatch.setattr(es_client.requests, "post", lambda *a, **kw: Resp())
+    assert es_client.es_search("filebeat-*", {}) == []
 
 
 # ─── Queries ─────────────────────────────────────────────────────────────────
 
 def test_las_queries_llevan_ventana_temporal():
     """Sin rango, cada corrida reprocesaría el índice entero."""
-    for query in (siem_lib.auth_failure_query(10), siem_lib.alerts_query(10),
-                  siem_lib.source_ip_aggregation()):
+    for query in (es_client.auth_failure_query(10), es_client.alerts_query(10),
+                  es_client.source_ip_aggregation()):
         filtros = query["query"]["bool"]["filter"]
         assert filtros[0]["range"]["@timestamp"]["gte"] == "now-24h"
 
 
 def test_auth_query_descarta_ruido_de_gpu():
     """El filtro `must_not` evita que Xorg/AMDGPU inunden la detección."""
-    frases = str(siem_lib.auth_failure_query(10)["query"]["bool"]["must_not"])
+    frases = str(es_client.auth_failure_query(10)["query"]["bool"]["must_not"])
     assert "Xorg" in frases and "AMDGPU" in frases

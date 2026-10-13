@@ -6,14 +6,18 @@ deliberadamente: crear cuentas es una operación de administración del sistema,
 no una función del panel del analista. Exponerla en la web agregaría superficie
 de ataque para ganar comodidad en algo que se hace una vez por integrante.
 
-Uso:
-    python3 src/manage_users.py crear ana --rol analyst
-    python3 src/manage_users.py listar
-    python3 src/manage_users.py password ana
-    python3 src/manage_users.py baja ana
-    python3 src/manage_users.py alta ana
-    python3 src/manage_users.py rol ana --rol auditor
-    python3 src/manage_users.py roles
+Corre dentro del contenedor del servicio `auth`, que es el dueño del almacén:
+
+    docker compose exec auth python manage_users.py crear ana --rol analyst
+    docker compose exec auth python manage_users.py listar
+    docker compose exec auth python manage_users.py password ana
+    docker compose exec auth python manage_users.py baja ana
+    docker compose exec auth python manage_users.py alta ana
+    docker compose exec auth python manage_users.py rol ana --rol auditor
+    docker compose exec auth python manage_users.py roles
+
+(`./scripts/siem.sh usuarios <args>` es el atajo.) También funciona desde el
+host sobre el volumen del servicio, con `SIEM_USERS_FILE=data/auth/users.json`.
 
 La contraseña se pide de forma interactiva (no se escribe en la línea de
 comandos, donde quedaría en el historial del shell). Para automatizar, se puede
@@ -82,7 +86,7 @@ def cmd_listar(args) -> int:
     usuarios = cargar_usuarios()
     if not usuarios:
         print(f"No hay usuarios en '{_ruta_usuarios()}'.")
-        print("Creá el primero con:  python3 src/manage_users.py crear <nombre> --rol analyst")
+        print("Creá el primero con:  ./scripts/siem.sh usuarios crear <nombre> --rol analyst")
         return 0
 
     print(f"{'USUARIO':<20} {'ROL':<10} {'ESTADO':<10} ÚLTIMO ACCESO")

@@ -1,31 +1,29 @@
 #!/usr/bin/env python3
 """
-Extrae y limpia datos del SIEM (alertas + logs de auth fallida) dentro de una
-ventana temporal, agrega por IP, y genera `siem_clean.json` para el Agente 1.
+Extracción del SIEM (antes `prepare-for-ia.py`): alertas + logs de auth fallida
+dentro de una ventana temporal, agregados por IP. El resultado es la "captura"
+que el servicio collector guarda en `data/siem_clean.json` y le entrega al
+clasificador (Agente 1).
 
-Si Elasticsearch no está accesible, NO sobreescribe el archivo existente: así no
-se pierde la última captura buena (útil para demos con el stack apagado).
+Si Elasticsearch no está accesible, NO se sobreescribe la captura existente: así
+no se pierde la última buena (útil para demos con el stack apagado).
 """
 
 from __future__ import annotations
 
-import sys
-
-from siem_lib import (
+from es_client import (
     ALERTS_INDEX,
     ES_HOST,
     LOGS_INDEX,
-    ESUnavailable,
     alerts_query_por_regla,
     auth_failure_query,
     es_aggregate,
     es_search,
     es_search_por_grupo,
-    now_iso,
     rol_del_campo_agrupado,
     source_ip_aggregation,
-    write_json,
 )
+from siem_lib import now_iso
 
 OUTPUT_FILE = "data/siem_clean.json"
 WINDOW = "24h"   # ventana temporal de análisis
@@ -120,41 +118,28 @@ def build_summary(alerts: list[dict], logs: list[dict], ip_buckets: list[dict]) 
     }
 
 
-def main() -> None:
-    print(f"Extrayendo datos del SIEM (ventana: {WINDOW}) desde {ES_HOST} ...")
-    try:
-        # Agrupadas POR REGLA: una regla ruidosa no puede tapar a las demás.
-        # Con `size=10` a secas, 96 alertas de una sola regla dejaban afuera a
-        # las otras siete —incluida la crítica de login exitoso tras fuerza
-        # bruta—. Ver siem_lib.alerts_query_por_regla.
-        alerts     = parse_alerts(es_search_por_grupo(
-            ALERTS_INDEX, alerts_query_por_regla(por_regla=5, window=WINDOW)))
-        logs       = parse_logs(es_search(LOGS_INDEX, auth_failure_query(size=20, window=WINDOW)))
-        ip_buckets = es_aggregate(LOGS_INDEX, source_ip_aggregation(WINDOW), "by_source_ip")
-    except ESUnavailable as e:
-        print(f"[ERROR] {e}")
-        print(f"[INFO] No se sobreescribe '{OUTPUT_FILE}' para preservar la última captura.")
-        sys.exit(1)
+def capturar(window: str = WINDOW) -> dict:
+    """Consulta Elasticsearch y arma la captura. Lanza `ESUnavailable` si no puede.
+
+    Agrupadas POR REGLA: una regla ruidosa no puede tapar a las demás. Con
+    `size=10` a secas, 96 alertas de una sola regla dejaban afuera a las otras
+    siete —incluida la crítica de login exitoso tras fuerza bruta—. Ver
+    es_client.alerts_query_por_regla.
+    """
+    print(f"Extrayendo datos del SIEM (ventana: {window}) desde {ES_HOST} ...")
+    alerts     = parse_alerts(es_search_por_grupo(
+        ALERTS_INDEX, alerts_query_por_regla(por_regla=5, window=window)))
+    logs       = parse_logs(es_search(LOGS_INDEX, auth_failure_query(size=20, window=window)))
+    ip_buckets = es_aggregate(LOGS_INDEX, source_ip_aggregation(window), "by_source_ip")
 
     summary = build_summary(alerts, logs, ip_buckets)
-    output = {
+    print(f"  Alertas: {summary['total_alerts']} ({summary['active_alerts']} activas, "
+          f"{summary['high_severity']} altas) · logs de auth fallida: "
+          f"{summary['total_auth_failures']} · técnicas: {summary['mitre_techniques']}")
+    return {
         "generated_at": now_iso(),
         "context": "Elastic SIEM - Análisis de seguridad automatizado",
         "summary": summary,
         "alerts": alerts,
         "auth_failure_logs": logs,
     }
-    write_json(OUTPUT_FILE, output)
-
-    print(f"\n{'='*50}\n  RESUMEN\n{'='*50}")
-    print(f"  Alertas de seguridad : {summary['total_alerts']}")
-    print(f"  Alertas activas      : {summary['active_alerts']}")
-    print(f"  Severidad alta       : {summary['high_severity']}")
-    print(f"  Logs auth fallida    : {summary['total_auth_failures']}")
-    print(f"  IPs origen (top)     : {list(summary['top_source_ips'].keys())}")
-    print(f"  Técnicas MITRE       : {summary['mitre_techniques']}")
-    print(f"\n[OK] JSON limpio guardado en '{OUTPUT_FILE}'.")
-
-
-if __name__ == "__main__":
-    main()

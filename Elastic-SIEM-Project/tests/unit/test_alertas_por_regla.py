@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import pytest
 
-import siem_lib
+import es_client
 
 
 def _hit(regla: str, ts: str, extra: dict | None = None) -> dict:
@@ -50,7 +50,7 @@ def _respuesta_agrupada(grupos: dict[str, list[dict]]) -> dict:
 # ─── La consulta ─────────────────────────────────────────────────────────────
 
 def test_la_consulta_agrupa_por_regla():
-    consulta = siem_lib.alerts_query_por_regla(por_regla=5)
+    consulta = es_client.alerts_query_por_regla(por_regla=5)
 
     terms = consulta["aggs"]["por_regla"]["terms"]
     assert terms["field"] == "kibana.alert.rule.name", "campo de agrupación"
@@ -58,51 +58,51 @@ def test_la_consulta_agrupa_por_regla():
 
 
 def test_la_consulta_trae_las_mas_recientes_de_cada_grupo():
-    top = siem_lib.alerts_query_por_regla()["aggs"]["por_regla"]["aggs"]["recientes"]
+    top = es_client.alerts_query_por_regla()["aggs"]["por_regla"]["aggs"]["recientes"]
     orden = top["top_hits"]["sort"][0]["@timestamp"]["order"]
     assert orden == "desc", "dentro de cada regla, las más recientes primero"
 
 
 def test_la_consulta_respeta_la_ventana_temporal():
-    consulta = siem_lib.alerts_query_por_regla(window="24h")
+    consulta = es_client.alerts_query_por_regla(window="24h")
     rango = consulta["query"]["bool"]["filter"][0]["range"]["@timestamp"]
     assert rango["gte"] == "now-24h"
 
 
 def test_el_limite_de_reglas_es_generoso():
     """Con 13 reglas en el catálogo, un tope de 50 deja margen de sobra."""
-    terms = siem_lib.alerts_query_por_regla()["aggs"]["por_regla"]["terms"]
+    terms = es_client.alerts_query_por_regla()["aggs"]["por_regla"]["terms"]
     assert terms["size"] >= 20
 
 
 def test_no_pide_documentos_sueltos():
     """`size: 0` — todo viene por la agregación, no por los hits de primer nivel."""
-    assert siem_lib.alerts_query_por_regla()["size"] == 0
+    assert es_client.alerts_query_por_regla()["size"] == 0
 
 
 # ─── El aplanado ─────────────────────────────────────────────────────────────
 
 def test_aplana_los_grupos_a_una_lista_de_hits(monkeypatch):
-    monkeypatch.setattr(siem_lib, "_es_request", lambda *a, **kw: _respuesta_agrupada({
+    monkeypatch.setattr(es_client, "_es_request", lambda *a, **kw: _respuesta_agrupada({
         "Regla ruidosa": [_hit("Regla ruidosa", "2026-09-25T10:00:00Z"),
                           _hit("Regla ruidosa", "2026-09-25T09:00:00Z")],
         "Regla crítica": [_hit("Regla crítica", "2026-09-25T08:00:00Z")],
     }))
 
-    hits = siem_lib.es_search_por_grupo(".alerts-*", {})
+    hits = es_client.es_search_por_grupo(".alerts-*", {})
     assert len(hits) == 3
     assert all("_source" in h for h in hits), "misma forma que es_search"
 
 
 def test_devuelve_los_hits_ordenados_por_tiempo(monkeypatch):
     """Aunque vengan de grupos distintos, el resultado es cronológico."""
-    monkeypatch.setattr(siem_lib, "_es_request", lambda *a, **kw: _respuesta_agrupada({
+    monkeypatch.setattr(es_client, "_es_request", lambda *a, **kw: _respuesta_agrupada({
         "A": [_hit("A", "2026-09-25T08:00:00Z")],
         "B": [_hit("B", "2026-09-25T12:00:00Z")],
         "C": [_hit("C", "2026-09-25T10:00:00Z")],
     }))
 
-    marcas = [h["_source"]["@timestamp"] for h in siem_lib.es_search_por_grupo(".alerts-*", {})]
+    marcas = [h["_source"]["@timestamp"] for h in es_client.es_search_por_grupo(".alerts-*", {})]
     assert marcas == sorted(marcas, reverse=True)
 
 
@@ -124,9 +124,9 @@ def test_una_regla_ruidosa_no_desplaza_a_las_demas(monkeypatch):
         "Credential Submission to Suspicious Login": [
             _hit("Credential Submission to Suspicious Login", "2026-09-25T09:10:00Z")],
     }
-    monkeypatch.setattr(siem_lib, "_es_request", lambda *a, **kw: _respuesta_agrupada(grupos))
+    monkeypatch.setattr(es_client, "_es_request", lambda *a, **kw: _respuesta_agrupada(grupos))
 
-    hits = siem_lib.es_search_por_grupo(".alerts-*", {})
+    hits = es_client.es_search_por_grupo(".alerts-*", {})
     reglas = {h["_source"]["kibana.alert.rule.name"] for h in hits}
 
     assert reglas == set(grupos), f"se perdieron reglas: {set(grupos) - reglas}"
@@ -135,27 +135,27 @@ def test_una_regla_ruidosa_no_desplaza_a_las_demas(monkeypatch):
 
 
 def test_sin_alertas_devuelve_lista_vacia(monkeypatch):
-    monkeypatch.setattr(siem_lib, "_es_request", lambda *a, **kw: {})
-    assert siem_lib.es_search_por_grupo(".alerts-*", {}) == []
+    monkeypatch.setattr(es_client, "_es_request", lambda *a, **kw: {})
+    assert es_client.es_search_por_grupo(".alerts-*", {}) == []
 
 
 def test_un_grupo_vacio_no_rompe(monkeypatch):
-    monkeypatch.setattr(siem_lib, "_es_request", lambda *a, **kw: {
+    monkeypatch.setattr(es_client, "_es_request", lambda *a, **kw: {
         "aggregations": {"por_regla": {"buckets": [
             {"key": "Sin hits", "doc_count": 0, "recientes": {"hits": {"hits": []}}},
             {"key": "Con hits", "doc_count": 1,
              "recientes": {"hits": {"hits": [_hit("Con hits", "2026-09-25T10:00:00Z")]}}},
         ]}}})
-    assert len(siem_lib.es_search_por_grupo(".alerts-*", {})) == 1
+    assert len(es_client.es_search_por_grupo(".alerts-*", {})) == 1
 
 
 def test_un_hit_sin_timestamp_no_rompe_el_orden(monkeypatch):
     """Un documento sin `@timestamp` no puede tumbar el `sorted()`."""
-    monkeypatch.setattr(siem_lib, "_es_request", lambda *a, **kw: _respuesta_agrupada({
+    monkeypatch.setattr(es_client, "_es_request", lambda *a, **kw: _respuesta_agrupada({
         "A": [{"_source": {"kibana.alert.rule.name": "A"}}],
         "B": [_hit("B", "2026-09-25T10:00:00Z")],
     }))
-    hits = siem_lib.es_search_por_grupo(".alerts-*", {})
+    hits = es_client.es_search_por_grupo(".alerts-*", {})
     assert len(hits) == 2
     assert hits[0]["_source"].get("@timestamp") == "2026-09-25T10:00:00Z"
 
@@ -167,7 +167,7 @@ def test_prepare_for_ia_usa_la_consulta_agrupada():
     import pathlib
 
     fuente = (pathlib.Path(__file__).resolve().parent.parent.parent
-              / "src" / "prepare-for-ia.py").read_text(encoding="utf-8")
+              / "services" / "collector" / "collector.py").read_text(encoding="utf-8")
 
     assert "alerts_query_por_regla" in fuente
     assert "es_search_por_grupo" in fuente
@@ -177,12 +177,30 @@ def test_prepare_for_ia_usa_la_consulta_agrupada():
 
 def test_la_consulta_sin_agrupar_sigue_existiendo_para_inspeccion():
     """`get-logs.py` la usa para mirar a mano; no se rompe su contrato."""
-    consulta = siem_lib.alerts_query(size=5)
+    consulta = es_client.alerts_query(size=5)
     assert consulta["size"] == 5
     assert "aggs" not in consulta
 
 
 @pytest.mark.parametrize("por_regla", [1, 3, 5, 10])
 def test_el_tamano_por_regla_es_configurable(por_regla):
-    consulta = siem_lib.alerts_query_por_regla(por_regla=por_regla)
+    consulta = es_client.alerts_query_por_regla(por_regla=por_regla)
     assert consulta["aggs"]["por_regla"]["aggs"]["recientes"]["top_hits"]["size"] == por_regla
+
+
+def test_verify_cobertura_usa_la_misma_escala_que_el_clasificador():
+    """`verify-cobertura.py` (collector) repite la escala de severidades en vez de
+    importarla de `classifier` — un servicio no depende del código de otro. Esta
+    prueba es la que garantiza que las dos copias no se separen."""
+    import importlib.util
+    import pathlib
+
+    import classifier
+
+    ruta = (pathlib.Path(__file__).resolve().parent.parent.parent
+            / "services" / "collector" / "verify-cobertura.py")
+    spec = importlib.util.spec_from_file_location("verify_cobertura", ruta)
+    modulo = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(modulo)
+
+    assert modulo._RANGO_SEVERIDAD_SIEM == classifier._RANGO_SEVERIDAD_SIEM

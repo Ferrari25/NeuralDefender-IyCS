@@ -33,8 +33,8 @@ from pathlib import Path
 import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-PLANTILLA = PROJECT_ROOT / "templates" / "index.html"
-APP_JS = PROJECT_ROOT / "static" / "app.js"
+PLANTILLA = PROJECT_ROOT / "services" / "gateway" / "templates" / "index.html"
+APP_JS = PROJECT_ROOT / "services" / "gateway" / "static" / "app.js"
 
 # Payloads de XSS pensados para romper cada contexto de interpolación.
 PAYLOADS_XSS = [
@@ -304,7 +304,7 @@ def test_la_plantilla_no_tiene_javascript_embebido(html):
 
 def test_eslint_analiza_archivos_reales():
     """La configuración apunta a archivos que existen y tienen contenido."""
-    estaticos = sorted((PROJECT_ROOT / "static").glob("*.js"))
+    estaticos = sorted((PROJECT_ROOT / "services" / "gateway" / "static").glob("*.js"))
     assert len(estaticos) >= 2, "ESLint no tendría nada que analizar"
     for archivo in estaticos:
         assert len(archivo.read_text(encoding="utf-8").splitlines()) > 20

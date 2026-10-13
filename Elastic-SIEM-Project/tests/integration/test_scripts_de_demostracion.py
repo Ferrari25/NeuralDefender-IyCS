@@ -339,19 +339,20 @@ def laboratorio_auditoria(tmp_path: Path) -> Path:
     contra el registro que encuentra ahí. En `tmp_path` eso es un archivo de prueba,
     nunca el del equipo.
     """
-    import siem_lib
+    import cadena
 
     (tmp_path / "scripts").mkdir()
-    (tmp_path / "data").mkdir()
-    (tmp_path / "src").mkdir()
+    (tmp_path / "data" / "audit").mkdir(parents=True)
+    (tmp_path / "services" / "audit").mkdir(parents=True)
     shutil.copy(DEMO_AUDITORIA, tmp_path / "scripts" / DEMO_AUDITORIA.name)
-    for modulo in ("audit_verify.py", "siem_lib.py", "siem_validators.py"):
-        (tmp_path / "src" / modulo).symlink_to(RAIZ / "src" / modulo)
+    for modulo in ("audit_verify.py", "cadena.py"):
+        (tmp_path / "services" / "audit" / modulo).symlink_to(
+            RAIZ / "services" / "audit" / modulo)
     (tmp_path / ".devtools").symlink_to(RAIZ / ".devtools")
 
-    registro = tmp_path / "data" / "decisions.jsonl"
+    registro = tmp_path / "data" / "audit" / "decisions.jsonl"
     for n in range(1, 4):
-        siem_lib.append_jsonl(registro, {
+        cadena.append_jsonl(registro, {
             "ts": f"2026-09-0{n}T10:00:00+00:00", "incident_id": f"INC-T-{n}",
             "action_id": f"INC-T-{n}-a1", "decision": "approved",
             "analyst": "prueba", "source_ip": "198.51.100.5"})
@@ -379,7 +380,7 @@ def test_la_ruptura_de_la_cadena_se_detecta(laboratorio_auditoria: Path):
 
 def test_la_demostracion_no_modifica_el_registro(laboratorio_auditoria: Path):
     """La propiedad que hace que este script se pueda correr sin miedo."""
-    registro = laboratorio_auditoria / "data" / "decisions.jsonl"
+    registro = laboratorio_auditoria / "data" / "audit" / "decisions.jsonl"
     antes = registro.read_bytes()
 
     _demostrar_ruptura(laboratorio_auditoria)
@@ -424,11 +425,11 @@ def test_alterar_el_ultimo_registro_no_es_detectable(tmp_path: Path):
     siembra, la demostración mostraría la cadena intacta después de alterarla —
     exactamente lo contrario de lo que afirma.
     """
-    import siem_lib
+    import cadena
 
     registro = tmp_path / "decisions.jsonl"
     for n in (1, 2):
-        siem_lib.append_jsonl(registro, {"ts": f"2026-09-0{n}T10:00:00+00:00",
+        cadena.append_jsonl(registro, {"ts": f"2026-09-0{n}T10:00:00+00:00",
                                          "decision": "approved", "analyst": "prueba"})
 
     lineas = registro.read_text(encoding="utf-8").splitlines()
@@ -437,7 +438,7 @@ def test_alterar_el_ultimo_registro_no_es_detectable(tmp_path: Path):
     lineas[-1] = json.dumps(ultimo, ensure_ascii=False)
     registro.write_text("\n".join(lineas) + "\n", encoding="utf-8")
 
-    assert siem_lib.verificar_cadena(registro)["chain_ok"] is True, (
+    assert cadena.verificar_cadena(registro)["chain_ok"] is True, (
         "si esto empieza a fallar, el encadenado protege también el último registro "
         "(p. ej. por un ancla externa) y demo-auditoria.sh puede dejar de sembrar")
 
@@ -448,7 +449,7 @@ def test_alterar_el_ultimo_registro_no_es_detectable(tmp_path: Path):
     lineas[0] = json.dumps(primero, ensure_ascii=False)
     registro.write_text("\n".join(lineas) + "\n", encoding="utf-8")
 
-    assert siem_lib.verificar_cadena(registro)["chain_ok"] is False
+    assert cadena.verificar_cadena(registro)["chain_ok"] is False
 
 
 # ─── El guion no puede mandar a un script que no existe ─────────────────────

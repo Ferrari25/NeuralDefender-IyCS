@@ -152,8 +152,163 @@ services:
     networks:
       - elastic-net
 
+  # ════════════════════════════════════════════════════════════════════════
+  # Capa IA — microservicios (ver docs/00-arquitectura.md §Microservicios)
+  #
+  # Solo el gateway se publica al host. El resto vive en la red interna
+  # `ia-net` y exige el token interno (SIEM_INTERNAL_TOKEN). Cada servicio
+  # recibe SOLO los secretos que usa, y es dueño de su propio directorio de
+  # datos (bind mount a data/<servicio>/). La capa IA no depende del stack
+  # Elastic para arrancar: `docker compose up -d gateway` la levanta sola, y el
+  # collector responde 503 hasta que Elasticsearch esté disponible.
+  # ════════════════════════════════════════════════════════════════════════
+
+  # Autenticación: dueño del almacén de usuarios (hashes Argon2id).
+  auth:
+    build: { context: ., dockerfile: services/auth/Dockerfile }
+    container_name: siem-auth
+    restart: unless-stopped
+    user: "${SIEM_UID:-1000}:${SIEM_GID:-1000}"
+    environment:
+      - SIEM_INTERNAL_TOKEN=${SIEM_INTERNAL_TOKEN:?falta SIEM_INTERNAL_TOKEN en .env}
+      - SIEM_USERS_FILE=data/users.json
+    volumes:
+      - ./data/auth:/app/service/data
+    networks: [ia-net]
+    healthcheck: &salud-interna
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/v1/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  # Auditoría: ÚNICO escritor de decisions.jsonl y analysis_history.jsonl.
+  audit:
+    build: { context: ., dockerfile: services/audit/Dockerfile }
+    container_name: siem-audit
+    restart: unless-stopped
+    user: "${SIEM_UID:-1000}:${SIEM_GID:-1000}"
+    environment:
+      - SIEM_INTERNAL_TOKEN=${SIEM_INTERNAL_TOKEN:?falta SIEM_INTERNAL_TOKEN en .env}
+    volumes:
+      - ./data/audit:/app/service/data
+    networks: [ia-net]
+    healthcheck: *salud-interna
+
+  # Collector: el único con credenciales de Elasticsearch y el único que
+  # está en las DOS redes (elastic-net para consultar, ia-net para responder).
+  collector:
+    build: { context: ., dockerfile: services/collector/Dockerfile }
+    container_name: siem-collector
+    restart: unless-stopped
+    user: "${SIEM_UID:-1000}:${SIEM_GID:-1000}"
+    environment:
+      - SIEM_INTERNAL_TOKEN=${SIEM_INTERNAL_TOKEN:?falta SIEM_INTERNAL_TOKEN en .env}
+      - ES_HOST=http://elasticsearch:9200
+      - ES_USER=elastic
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      # B-02: HTTP hacia un host que no es loopback está bloqueado por defecto.
+      # Acá el tráfico no sale de la red Docker `elastic-net` (no publicada), que
+      # es exactamente el "laboratorio aislado" para el que existe esta escotilla.
+      - ES_ALLOW_INSECURE_HTTP=true
+    volumes:
+      - ./data/collector:/app/service/data
+    networks: [ia-net, elastic-net]
+    healthcheck: *salud-interna
+
+  # Agente 1: sin estado. Lee network_logs/ en solo lectura (la entrada "IDS").
+  classifier:
+    build: { context: ., dockerfile: services/classifier/Dockerfile }
+    container_name: siem-classifier
+    restart: unless-stopped
+    user: "${SIEM_UID:-1000}:${SIEM_GID:-1000}"
+    environment:
+      - SIEM_INTERNAL_TOKEN=${SIEM_INTERNAL_TOKEN:?falta SIEM_INTERNAL_TOKEN en .env}
+    volumes:
+      - ./network_logs:/app/service/network_logs:ro
+    networks: [ia-net]
+    healthcheck: *salud-interna
+
+  # Memoria del Agente 2: documentos, casos resueltos y lecciones (aprobadas a
+  # mano). Dueño de data/knowledge. No tiene secretos ni salida a internet.
+  knowledge:
+    build: { context: ., dockerfile: services/knowledge/Dockerfile }
+    container_name: siem-knowledge
+    restart: unless-stopped
+    user: "${SIEM_UID:-1000}:${SIEM_GID:-1000}"
+    environment:
+      - SIEM_INTERNAL_TOKEN=${SIEM_INTERNAL_TOKEN:?falta SIEM_INTERNAL_TOKEN en .env}
+    volumes:
+      - ./data/knowledge:/app/service/data
+    networks: [ia-net]
+    healthcheck: *salud-interna
+
+  # Agente 2: sin estado. El único con la key de Gemini (salida HTTPS a internet).
+  # Consulta su memoria al servicio knowledge (si no responde, analiza sin ella).
+  analyst:
+    build: { context: ., dockerfile: services/analyst/Dockerfile }
+    container_name: siem-analyst
+    restart: unless-stopped
+    user: "${SIEM_UID:-1000}:${SIEM_GID:-1000}"
+    environment:
+      - SIEM_INTERNAL_TOKEN=${SIEM_INTERNAL_TOKEN:?falta SIEM_INTERNAL_TOKEN en .env}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - SIEM_USE_LLM=${SIEM_USE_LLM:-false}
+    networks: [ia-net]
+    depends_on:
+      audit: { condition: service_healthy }
+      knowledge: { condition: service_healthy }
+    healthcheck: *salud-interna
+
+  # Orquestador: encadena collector → classifier → analyst → audit por HTTP y
+  # guarda el reporte de incidentes. Se dispara con ./scripts/siem.sh pipeline.
+  pipeline:
+    build: { context: ., dockerfile: services/pipeline/Dockerfile }
+    container_name: siem-pipeline
+    restart: unless-stopped
+    user: "${SIEM_UID:-1000}:${SIEM_GID:-1000}"
+    environment:
+      - SIEM_INTERNAL_TOKEN=${SIEM_INTERNAL_TOKEN:?falta SIEM_INTERNAL_TOKEN en .env}
+    volumes:
+      - ./data/pipeline:/app/service/data
+    networks: [ia-net]
+    depends_on:
+      collector: { condition: service_healthy }
+      classifier: { condition: service_healthy }
+      analyst: { condition: service_healthy }
+      audit: { condition: service_healthy }
+    healthcheck: *salud-interna
+
+  # Gateway: el panel de supervisión. ÚNICO puerto de la capa IA publicado al
+  # host, y solo en loopback.
+  gateway:
+    build: { context: ., dockerfile: services/gateway/Dockerfile }
+    container_name: siem-gateway
+    restart: unless-stopped
+    user: "${SIEM_UID:-1000}:${SIEM_GID:-1000}"
+    environment:
+      - SIEM_INTERNAL_TOKEN=${SIEM_INTERNAL_TOKEN:?falta SIEM_INTERNAL_TOKEN en .env}
+      - SECRET_KEY=${SECRET_KEY:?falta SECRET_KEY en .env}
+      - SIEM_TLS=${SIEM_TLS:-false}
+    ports:
+      - "127.0.0.1:5000:5000"
+    networks: [ia-net]
+    depends_on:
+      auth: { condition: service_healthy }
+      audit: { condition: service_healthy }
+      knowledge: { condition: service_healthy }
+      pipeline: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/api/v1/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
 networks:
   elastic-net:
+    driver: bridge
+  # Red de la capa IA. No es `internal: true` porque el analyst necesita salir
+  # a la API de Gemini; los puertos internos (8000) igual no se publican.
+  ia-net:
     driver: bridge
 volumes:
   elasticsearch-data:

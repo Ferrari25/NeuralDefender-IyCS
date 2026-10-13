@@ -39,6 +39,10 @@
         <li><b>Explicabilidad</b> — la severidad y la probabilidad de falso positivo no son una caja
         negra: cada incidente muestra los factores concretos (umbral superado, confirmación del SIEM,
         etc.) que llevaron a esa conclusión.</li>
+        <li><b>Memoria</b> — aprende de cada decisión y de los documentos que se le cargan. Cuando
+        un mismo patrón se decide igual dos veces, propone una <i>lección</i>, que no usa hasta que
+        un analista la aprueba (tarjeta «Memoria del agente»). Una lección solo ajusta la
+        probabilidad de falso positivo: nunca la severidad ni las acciones.</li>
       </ul>
       <p>Los tres se calculan siempre en Python (no los redacta el LLM) por el mismo motivo que los
       comandos: son hechos auditables, no una interpretación que pueda variar entre corridas.</p>
@@ -86,6 +90,48 @@
         <div class="side-card">
           <h2 class="panel-title"><svg class="ico"><use href="#i-archivo"></use></svg> Historial de Decisiones</h2>
           <div id="decisionHistory">cargando…</div>
+        </div>
+        <div class="side-card memoria">
+          <h2 class="panel-title"><svg class="ico"><use href="#i-idea"></use></svg> Memoria del agente</h2>
+          <p class="memoria-intro">El agente aprende de las decisiones y de los documentos que le cargues.
+            Nada de lo que propone se usa hasta que un analista lo aprueba.</p>
+          <div id="memoriaLecciones">cargando…</div>
+          <div id="memoriaDocumentos"></div>
+          <!-- Formularios fuera de lo que se repinta cada 15 s: si vivieran
+               adentro, el refresco borraría lo que el analista está escribiendo. -->
+          <div class="ctrl memoria-forms">
+            <details>
+              <summary>Enseñarle algo al agente</summary>
+              <form id="formLeccion" class="memoria-form">
+                <label for="leccionTexto">Lección (queda propuesta hasta que alguien la apruebe)</label>
+                <textarea id="leccionTexto" rows="3" maxlength="400" required
+                  placeholder="Ej.: el 10.0.5.20 es el escáner Nessus interno; sus escaneos de los lunes son esperables."></textarea>
+                <label for="leccionTipo">Aplica a</label>
+                <select id="leccionTipo">
+                  <option value="">Cualquier tipo de ataque</option>
+                  <option value="ssh_brute_force">Fuerza bruta SSH</option>
+                  <option value="port_scan">Escaneo de puertos</option>
+                  <option value="credential_harvesting">Phishing / robo de credenciales</option>
+                  <option value="suspicious_auth">Autenticación sospechosa</option>
+                </select>
+                <input id="leccionIp" type="text" maxlength="64" placeholder="Solo para esta IP (opcional)">
+                <button type="submit" class="small">Proponer lección</button>
+              </form>
+            </details>
+            <details>
+              <summary>Cargar un documento</summary>
+              <form id="formDocumento" class="memoria-form">
+                <label for="docTitulo">Título</label>
+                <input id="docTitulo" type="text" maxlength="120" required placeholder="Ej.: Inventario de red">
+                <label for="docArchivo">Archivo de texto (.txt o .md, hasta 32 KB)</label>
+                <input id="docArchivo" type="file" accept=".txt,.md,text/plain,text/markdown">
+                <label for="docContenido">…o pegá el contenido</label>
+                <textarea id="docContenido" rows="4" maxlength="32768"
+                  placeholder="Párrafos separados por una línea en blanco: el agente cita el párrafo relevante, no el documento entero."></textarea>
+                <button type="submit" class="small">Cargar documento</button>
+              </form>
+            </details>
+          </div>
         </div>
       </aside>
     </div>

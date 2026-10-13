@@ -34,8 +34,8 @@ import dashboard
 from tests.unit.hojas_de_estilo import color, regla, sin_comentarios
 
 RAIZ = Path(__file__).resolve().parent.parent.parent
-APP_CSS = sin_comentarios((RAIZ / "static" / "app.css").read_text(encoding="utf-8"))
-APP_JS = (RAIZ / "static" / "app.js").read_text(encoding="utf-8")
+APP_CSS = sin_comentarios((RAIZ / "services" / "gateway" / "static" / "app.css").read_text(encoding="utf-8"))
+APP_JS = (RAIZ / "services" / "gateway" / "static" / "app.js").read_text(encoding="utf-8")
 
 # `pending` es el estado por defecto cuando no hay decisión registrada
 # (`dashboard.py`: `act["status"] = rec["decision"] if rec else "pending"`).

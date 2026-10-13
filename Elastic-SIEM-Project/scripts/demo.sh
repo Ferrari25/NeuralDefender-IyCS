@@ -63,7 +63,7 @@ incidentes_actuales() {
   python3 - <<'PY' 2>/dev/null || echo 0
 import json
 import pathlib
-p = pathlib.Path("data/siem_incidents.json")
+p = pathlib.Path("data/pipeline/siem_incidents.json")
 print(json.loads(p.read_text(encoding="utf-8"))["incident_count"] if p.exists() else 0)
 PY
 }
@@ -92,11 +92,18 @@ diagnostico() {
     printf '\033[31mfalta\033[0m  → el panel no arranca\n'; listo=false
   fi
 
+  printf '  %-34s' "Capa IA (microservicios)"
+  if [[ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:5000/api/v1/healthz 2>/dev/null)" == "200" ]]; then
+    printf '\033[32marriba\033[0m\n'
+  else
+    printf '\033[31mno responde\033[0m  → ./scripts/start.sh  (o: docker compose up -d gateway)\n'; listo=false
+  fi
+
   printf '  %-34s' "Usuarios del panel"
   local n_usuarios
   n_usuarios=$(python3 -c "
 import json, os, pathlib
-p = pathlib.Path(os.getenv('SIEM_USERS_FILE', 'users.json'))
+p = pathlib.Path('data/auth/users.json')
 print(len(json.loads(p.read_text())['usuarios']) if p.exists() else 0)" 2>/dev/null || echo 0)
   if (( n_usuarios > 0 )); then printf '\033[32m%s\033[0m\n' "$n_usuarios"
   else printf '\033[33mninguno\033[0m (se crean solos)\n'; fi
@@ -219,12 +226,12 @@ paso "2/5 · Usuarios del panel"
 crear_si_falta() { # usuario rol password
   if python3 -c "
 import json, os, pathlib, sys
-p = pathlib.Path(os.getenv('SIEM_USERS_FILE', 'users.json'))
+p = pathlib.Path('data/auth/users.json')
 usuarios = json.loads(p.read_text())['usuarios'] if p.exists() else []
 sys.exit(0 if any(u['username'] == '$1' for u in usuarios) else 1)" 2>/dev/null; then
     amarillo "'$1' ya existe"
   else
-    SIEM_NEW_PASSWORD="$3" python3 src/manage_users.py crear "$1" --rol "$2" >/dev/null 2>&1 \
+    SIEM_NEW_PASSWORD="$3" ./scripts/siem.sh usuarios crear "$1" --rol "$2" >/dev/null 2>&1 \
       && verde "'$1' creado (rol $2)" || rojo "no se pudo crear '$1'"
   fi
 }
@@ -294,13 +301,13 @@ if [[ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:5601/api/status
   verde "alertas del SIEM disponibles: ${N_AL:-0}"
 fi
 
-if python3 src/siem_pipeline.py >/tmp/demo-pipeline.log 2>&1; then
+if ./scripts/siem.sh pipeline >/tmp/demo-pipeline.log 2>&1; then
   N=$(incidentes_actuales)
   verde "$N incidente(s) clasificado(s) y analizado(s)"
   python3 - <<'PY'
 import json
 import pathlib
-d = json.loads(pathlib.Path("data/siem_incidents.json").read_text(encoding="utf-8"))
+d = json.loads(pathlib.Path("data/pipeline/siem_incidents.json").read_text(encoding="utf-8"))
 for i in d["incidents"]:
     c = i["classification"]
     campana = "  \U0001f517 campaña" if i.get("campaign_id") else ""
@@ -323,7 +330,7 @@ fi
 
 if ! curl -s -o /dev/null --max-time 2 http://127.0.0.1:5000/api/v1/healthz 2>/dev/null; then
   paso "Falta levantar el panel"
-  echo "     python3 src/dashboard.py     → http://127.0.0.1:5000/login"
+  echo "     docker compose up -d gateway     → http://127.0.0.1:5000/login"
 fi
 
 imprimir_guion

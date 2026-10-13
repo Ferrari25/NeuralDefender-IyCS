@@ -33,21 +33,27 @@ sin necesidad de Docker).
 
 ## La capa de IA, en 4 pasos
 
-1. **`src/prepare-for-ia.py`** — extrae y limpia alertas + logs de auth desde Elasticsearch.
-2. **`src/classifier.py`** (Agente 1, determinístico) — clasifica por reglas/umbrales,
+1. **`services/collector/collector.py`** — extrae y limpia alertas + logs de auth desde Elasticsearch.
+2. **`services/classifier/classifier.py`** (Agente 1, determinístico) — clasifica por reglas/umbrales,
    arma un playbook de acciones con comandos fijos y su explicación, la lista
    de factores detrás de cada severidad, y correlación de campañas (incidentes
    que comparten IP atacante, incluso entre distintos tipos de ataque).
-3. **`src/siem_agent.py`** (Agente 2, LLM + fallback) — explica el incidente en
+3. **`services/analyst/siem_agent.py`** (Agente 2, LLM + fallback) — explica el incidente en
    lenguaje claro, con antecedentes de esa IP si ya hubo una decisión previa.
    Funciona completo sin conexión con el análisis determinístico de respaldo.
-4. **`src/dashboard.py`** (Flask) — el analista aprueba/descarta cada acción desde
+4. **`services/gateway/dashboard.py`** (Flask) — el analista aprueba/descarta cada acción desde
    la tabla de Eventos de Seguridad Activos; cada decisión queda en un
-   registro append-only (`data/decisions.jsonl`), encadenado por hash.
+   registro append-only (`data/audit/decisions.jsonl`), encadenado por hash.
+
+Cada paso es un **microservicio** en su propio contenedor (más `auth`, `audit`
+y el orquestador `pipeline`); ver
+[`docs/00-arquitectura.md` §Microservicios](./docs/00-arquitectura.md#microservicios-de-la-capa-ia).
 
 ```bash
-python3 src/siem_pipeline.py    # extrae → clasifica → analiza
-python3 src/dashboard.py        # http://127.0.0.1:5000/login
+./scripts/start.sh                                  # stack Elastic + reglas + microservicios
+./scripts/siem.sh usuarios crear ana --rol analyst  # primer usuario
+./scripts/siem.sh pipeline                          # extrae → clasifica → analiza
+# → http://127.0.0.1:5000/login
 ```
 
 Detalle completo, y panel por panel, en
@@ -65,16 +71,20 @@ y [`docs/02-reglas-y-dashboard.md`](./docs/02-reglas-y-dashboard.md).
 - `simulation/` — scripts de simulación de ataque
 - `network_logs/` — punto de entrada de eventos de red/web (Filebeat + detección offline)
 
-**Capa de IA y dashboard**
-- `src/siem_lib.py` — módulo común (acceso a ES, queries, saneamiento)
-- `src/prepare-for-ia.py`, `src/classifier.py`, `src/siem_agent.py` — extraer → clasificar → analizar
-- `src/siem_pipeline.py` — orquestador de un solo comando
-- `src/dashboard.py` + `templates/` + `static/` — GUI de supervisión (Flask)
-- `src/siem_auth.py`, `src/manage_users.py` — autenticación y gestión de usuarios del panel
-- `src/verify-cobertura.py` — demuestra que todo lo que dispara en el SIEM llega al panel
+**Capa de IA y dashboard — microservicios** (`services/<servicio>/`, cada uno con `Dockerfile`)
+- `services/gateway/` — panel de supervisión (Flask, `templates/`, `static/`); único servicio publicado
+- `services/auth/` — autenticación, roles y gestión de usuarios (`manage_users.py`)
+- `services/audit/` — registro append-only encadenado por hash y su verificador
+- `services/collector/` — extracción desde Elasticsearch (+ `verify-cobertura.py`, `get-logs.py`)
+- `services/classifier/` — Agente 1, clasificación determinística y playbook
+- `services/analyst/` — Agente 2, análisis LLM con fallback
+- `services/pipeline/` — orquestador del ciclo y reporte de incidentes
+- `libs/` — librería compartida (`siem_lib`, `siem_validators`, `siem_servicios`)
+- `data/<servicio>/` — los datos de cada servicio (volúmenes)
 
 **Scripts operativos** (`scripts/`)
 - `start.sh` / `reset.sh` — levantar el stack / reiniciar de cero
+- `siem.sh` — atajos para operar la capa IA (`pipeline`, `usuarios`, `auditoria`, `cobertura`)
 - `deploy-rules.sh` / `export-rules.sh` — reglas de detección como código
 - `pruebas_de_codigo_estatico.sh` / `pruebas_de_servicio.sh` / `pruebas_completas.sh` —
   la puerta de calidad (ver

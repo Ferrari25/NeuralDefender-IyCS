@@ -193,3 +193,4 @@ node_modules/
 coverage.xml
 htmlcov/
 evidencia/
+data/dashboard.pid

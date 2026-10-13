@@ -17,7 +17,7 @@ hace falta profundizar.
 |---|---|---|
 | **Docker** + **Docker Compose v2** | Todo el stack Elastic (Elasticsearch, Kibana, Logstash, Filebeat) y los contenedores de simulación de ataque | `docker --version` / `docker compose version` |
 | **Python 3.11+** | Los scripts del pipeline (Agente 1, Agente 2), el dashboard Flask, los tests | `python3 --version` |
-| **Node.js 18+** (opcional) | Solo para correr ESLint sobre `static/app.js` (análisis estático del frontend) | `node --version` |
+| **Node.js 18+** (opcional) | Solo para correr ESLint sobre `services/gateway/static/app.js` (análisis estático del frontend) | `node --version` |
 | **openssl** | Generar contraseñas/claves aleatorias para `.env` | suele venir en el sistema |
 | **git** | Clonar el repo y versionar los cambios | `git --version` |
 
@@ -127,12 +127,20 @@ determinístico — nunca se corta el pipeline por esto.
 
 Los demás valores (`STACK_VERSION`, `CLUSTER_NAME`, `MEM_LIMIT`, `ES_HOST`,
 `SIEM_USERS_FILE`, `SIEM_TLS`) ya vienen con valores razonables en
-`.env.example` — no hace falta tocarlos para un uso normal. `SIEM_TLS=true`
+`.env.example` — no hace falta tocarlos para un uso normal.
+
+`SIEM_INTERNAL_TOKEN` es el token con el que se autentican entre sí los
+microservicios de la capa IA. Ninguno arranca sin él, pero no hace falta
+generarlo a mano: `./scripts/start.sh` lo agrega a `.env` si falta. `SIEM_TLS=true`
 solo si vas a servir el dashboard por HTTPS de verdad.
 
 ---
 
-## 4. Instalar las dependencias de Python
+## 4. Instalar las dependencias de Python (solo para pruebas y linters)
+
+**Para correr el sistema no hace falta este paso.** La capa IA son siete
+microservicios en Docker, y cada imagen trae sus propias dependencias. Esto es
+solo para correr la suite de pruebas y el análisis estático en el host:
 
 ```bash
 python3 -m pip install --target=.devtools -r requirements.txt
@@ -150,13 +158,15 @@ también las dependencias de desarrollo, en el mismo comando para que
 `.devtools/bin/` termine con todos los ejecutables juntos:
 
 ```bash
-python3 -m pip install --target=.devtools -r requirements.txt -r requirements-dev.txt
+python3 -m pip install --upgrade --target=.devtools -r requirements.txt -r requirements-dev.txt
 ```
 
-> **Importante:** si instalás con `pip install --target=.devtools` en
-> llamadas SEPARADAS (una para cada paquete), cada llamada nueva puede pisar
-> `.devtools/bin/` y dejarlo solo con los ejecutables de esa última llamada.
-> Instalá siempre TODO junto, en un solo comando con `-r archivo.txt`.
+> **Importante:** `pip install --target` NO toca `.devtools/bin/` si ya
+> existe (solo avisa *"Target directory … already exists"*): los paquetes se
+> instalan pero sus ejecutables (`ruff`, `pylint`, `pytest`…) no. Y con
+> `--upgrade` hace lo contrario: reemplaza `bin/` entero con los de esa
+> llamada. Por eso: instalá siempre TODO junto, en un solo comando con los dos
+> `-r` y `--upgrade`.
 
 ### 4.1 Dependencias de Node (opcional, solo para ESLint)
 
@@ -202,20 +212,22 @@ curl -s -u elastic:$ELASTIC_PASSWORD http://127.0.0.1:9200/_cluster/health
 Abrí **http://127.0.0.1:5601** y entrá con usuario `elastic` y el
 `ELASTIC_PASSWORD` que pusiste en `.env`.
 
-### Opción B — demo sin Docker (sin Elasticsearch)
+### Opción B — demo sin el stack Elastic
 
-Sirve para ver detección + análisis + dashboard sin levantar nada de
-infraestructura, usando datos sintéticos generados localmente:
+Sirve para ver detección + análisis + dashboard sin levantar Elasticsearch,
+Kibana ni Logstash. Solo arrancan los microservicios de la capa IA, con datos
+sintéticos generados localmente:
 
 ```bash
+mkdir -p data/auth data/audit data/collector data/pipeline   # (start.sh lo hace solo)
+docker compose up -d --build gateway     # trae las dependencias del gateway
 bash simulation/run-port-scan.sh --offline
 bash simulation/run-phishing.sh  --offline
-python3 src/siem_pipeline.py
-python3 src/dashboard.py
+./scripts/siem.sh pipeline
 ```
 
-`src/prepare-for-ia.py` detecta que no hay Elasticsearch, no falla el pipeline, y
-sigue con lo que ya haya en `network_logs/`.
+El collector detecta que no hay Elasticsearch y responde 503. El pipeline lo
+informa (`collector sin_captura`) y sigue con lo que haya en `network_logs/`.
 
 ---
 
@@ -225,8 +237,7 @@ El dashboard **exige login** — sin usuarios, nadie entra, ni siquiera en modo
 lectura:
 
 ```bash
-export PYTHONPATH="$PWD/.devtools"
-python3 src/manage_users.py crear ana --rol analyst
+./scripts/siem.sh usuarios crear ana --rol analyst
 ```
 
 Te pide la contraseña **dos veces** (para confirmar) de forma interactiva —
@@ -259,7 +270,7 @@ bash simulation/run-phishing.sh  --offline
 
 # Clasificar + analizar (Agente 1 determinístico + Agente 2, con o sin Gemini
 # según SIEM_USE_LLM en .env):
-python3 src/siem_pipeline.py
+./scripts/siem.sh pipeline
 ```
 
 **Qué esperar ver.** El pipeline imprime algo como:
@@ -273,30 +284,33 @@ python3 src/siem_pipeline.py
 
 Con las reglas ya desplegadas (paso 5), Kibana tarda hasta su intervalo de
 ejecución (`interval`, normalmente algunos minutos) en generar la alerta
-real — si `src/siem_pipeline.py` corre antes de que la alerta exista, el
+real — si `services/pipeline/siem_pipeline.py` corre antes de que la alerta exista, el
 Agente 1 igual detecta el patrón por su cuenta desde los logs crudos (el
 sistema no depende del SIEM para funcionar; en la columna "Regla disparada"
 del panel vas a ver "Sin regla SIEM (detección propia)"). Esperá un par de
-minutos y volvé a correr `python3 src/siem_pipeline.py` para ver la alerta
+minutos y volvé a correr `./scripts/siem.sh pipeline` para ver la alerta
 real de Kibana reflejada ahí en su lugar.
 
 ---
 
 ## 8. Abrir el dashboard
 
+`./scripts/start.sh` ya lo dejó corriendo (servicio `gateway`). Si lo
+levantaste por partes:
+
 ```bash
-python3 src/dashboard.py
+docker compose up -d gateway
 ```
 
 Abrí **http://127.0.0.1:5000/login**, entrá con el usuario que creaste en el
-paso 6. Cada aprobación/descarte queda en `data/decisions.jsonl` (append-only,
+paso 6. Cada aprobación/descarte queda en `data/audit/decisions.jsonl` (append-only,
 encadenado por hash, firmado con el usuario de la sesión — nunca con una
 variable de entorno).
 
 Verificar en cualquier momento que el registro de auditoría no fue alterado:
 
 ```bash
-python3 src/audit_verify.py
+./scripts/siem.sh auditoria
 ```
 
 ---
@@ -305,17 +319,16 @@ python3 src/audit_verify.py
 
 Herramienta de este mismo proyecto para demostrar que todo lo que disparó una
 alerta real en Elasticsearch tiene su incidente correspondiente en el panel,
-con la regla más grave que corresponde (ver `src/verify-cobertura.py` para el
+con la regla más grave que corresponde (ver `services/collector/verify-cobertura.py` para el
 detalle de qué compara exactamente):
 
 ```bash
-export PYTHONPATH="$PWD/.devtools"
-python3 src/verify-cobertura.py
+./scripts/siem.sh cobertura
 ```
 
 Sale `✅` si todo está cubierto, o lista exactamente qué (IP, técnica) disparó
-en Kibana y no aparece todavía en `data/siem_incidents.json` (normalmente porque
-falta volver a correr `python3 src/siem_pipeline.py` después de la última alerta).
+en Kibana y no aparece todavía en `data/pipeline/siem_incidents.json` (normalmente porque
+falta volver a correr `./scripts/siem.sh pipeline` después de la última alerta).
 
 ---
 
@@ -342,7 +355,7 @@ Qué es cada cosa, en el vocabulario del propio proyecto
   `ruff` (estilo/imports), `pylint` + `pylint-secure-coding-standard`
   (calidad + reglas de seguridad, umbral ≥ 9.0/10), `bandit` (vulnerabilidades
   conocidas en Python: `subprocess`, hashes débiles, etc.), `eslint` +
-  `eslint-plugin-security` (mismo criterio para `static/app.js`).
+  `eslint-plugin-security` (mismo criterio para `services/gateway/static/app.js`).
 - **Pruebas de servicio** (carpeta `tests/integration/`): ejercitan el
   contrato real de un componente — la API HTTP del dashboard, `deploy-rules.sh`
   contra un Kibana simulado, `reset.sh` contra un sandbox real, la
@@ -374,8 +387,8 @@ docker compose --profile simulation down
 ./scripts/start.sh
 ```
 
-`reset.sh` **nunca** borra `data/decisions.jsonl`/`data/analysis_history.jsonl`: los
-archiva en `audit/archive/<timestamp>/` con permisos de solo lectura.
+`reset.sh` **nunca** borra `data/audit/decisions.jsonl`/`data/audit/analysis_history.jsonl`: los
+archiva en `data/audit/archivo/<timestamp>/` con permisos de solo lectura.
 
 ---
 
@@ -398,14 +411,14 @@ archiva en `audit/archive/<timestamp>/` con permisos de solo lectura.
 | Quiero… | Comando |
 |---|---|
 | Configurar secretos | `cp .env.example .env` y completar (ver §3) |
-| Instalar dependencias Python | `python3 -m pip install --target=.devtools -r requirements.txt -r requirements-dev.txt` |
+| Instalar dependencias Python | `python3 -m pip install --upgrade --target=.devtools -r requirements.txt -r requirements-dev.txt` |
 | Levantar todo (stack + reglas) | `./scripts/start.sh` |
-| Crear el primer usuario del panel | `python3 src/manage_users.py crear <nombre> --rol analyst` |
+| Crear el primer usuario del panel | `./scripts/siem.sh usuarios crear <nombre> --rol analyst` |
 | Lanzar un ataque SSH | `docker compose --profile simulation up -d ssh-target hydra-attacker && bash simulation/run-brute-force.sh` |
-| Correr la capa de IA | `python3 src/siem_pipeline.py` |
-| Abrir el dashboard | `python3 src/dashboard.py` → http://127.0.0.1:5000/login |
-| Verificar la auditoría | `python3 src/audit_verify.py` |
-| Verificar cobertura SIEM ↔ panel | `python3 src/verify-cobertura.py` |
+| Correr la capa de IA | `./scripts/siem.sh pipeline` |
+| Abrir el dashboard | `docker compose up -d gateway` → http://127.0.0.1:5000/login |
+| Verificar la auditoría | `./scripts/siem.sh auditoria` |
+| Verificar cobertura SIEM ↔ panel | `./scripts/siem.sh cobertura` |
 | Demostrar linters + SAST + pruebas | `./scripts/pruebas_completas.sh` |
 | Reset completo | `./scripts/reset.sh --yes && ./scripts/start.sh` |
 | Apagar todo | `docker compose --profile simulation down` |

@@ -29,7 +29,7 @@ import re
 
 import pytest
 
-import siem_lib
+import es_client
 
 # Campos que YA son `keyword` en su índice y no llevan sufijo. Las alertas las
 # escribe el motor de detección de Kibana, con mapeo explícito.
@@ -64,7 +64,7 @@ def test_la_agregacion_por_ip_origen_usa_keyword():
     Sin `.keyword`, esta consulta devuelve 400 y se pierde toda la captura del
     SIEM: alertas, logs de autenticación y el historial por IP.
     """
-    campos = _campos_de_agregacion(siem_lib.source_ip_aggregation())
+    campos = _campos_de_agregacion(es_client.source_ip_aggregation())
 
     assert campos == ["source_ip.keyword"], (
         f"agregación sobre {campos}: en filebeat-* eso es un campo `text` y "
@@ -74,7 +74,7 @@ def test_la_agregacion_por_ip_origen_usa_keyword():
 def test_la_agregacion_sigue_devolviendo_el_mismo_bucket():
     """`.keyword` no cambia las claves: siguen siendo las IP, que es lo que
     `build_summary` pone en `top_source_ips`."""
-    consulta = siem_lib.source_ip_aggregation()
+    consulta = es_client.source_ip_aggregation()
     assert "by_source_ip" in consulta["aggs"], "cambió el nombre de la agregación"
     assert consulta["size"] == 0
 
@@ -82,8 +82,8 @@ def test_la_agregacion_sigue_devolviendo_el_mismo_bucket():
 # ─── La regla general, para que no vuelva por otro lado ──────────────────────
 
 @pytest.mark.parametrize("constructor", [
-    siem_lib.source_ip_aggregation,
-    siem_lib.alerts_query_por_regla,
+    es_client.source_ip_aggregation,
+    es_client.alerts_query_por_regla,
 ])
 def test_ninguna_agregacion_usa_un_campo_de_texto_sin_sufijo(constructor):
     """Barrido sobre las consultas que construye `siem_lib`.
@@ -106,7 +106,7 @@ def test_el_codigo_fuente_no_deja_agregaciones_sin_sufijo():
     dentro de una función que estas pruebas no llaman igual queda señalada."""
     import inspect
 
-    fuente = inspect.getsource(siem_lib)
+    fuente = inspect.getsource(es_client)
     campos = re.findall(r'"terms":\s*\{"field":\s*"([^"]+)"', fuente)
     campos += re.findall(r'"field":\s*"([^"]+)",\s*"size"', fuente)
 
@@ -114,7 +114,7 @@ def test_el_codigo_fuente_no_deja_agregaciones_sin_sufijo():
                    if not c.endswith(".keyword") and c not in CAMPOS_YA_KEYWORD
                    and not c.startswith("kibana.")}
 
-    assert not sospechosos, f"agregaciones sin `.keyword` en siem_lib: {sospechosos}"
+    assert not sospechosos, f"agregaciones sin `.keyword` en es_client: {sospechosos}"
 
 
 # ─── El catálogo de reglas, que ya lo había corregido ────────────────────────

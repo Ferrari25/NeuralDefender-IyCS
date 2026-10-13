@@ -16,7 +16,7 @@ from __future__ import annotations
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent.parent
-APP_JS = (RAIZ / "static" / "app.js").read_text(encoding="utf-8")
+APP_JS = (RAIZ / "services" / "gateway" / "static" / "app.js").read_text(encoding="utf-8")
 
 
 def _cuerpo_de(nombre_funcion: str) -> str:

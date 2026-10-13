@@ -14,7 +14,7 @@ consola, y cuáles conviene tener activas — el NDJSON es la fuente de verdad,
 > Sin regla no hay alerta: Logstash ingiere los logs a Elasticsearch, pero es
 > la regla la que evalúa el umbral y escribe en
 > `.alerts-security.alerts-default` — el índice que después lee
-> `src/prepare-for-ia.py`.
+> `services/collector/collector.py`.
 
 ### Cómo se cruza cada tipo de ataque con las reglas
 
@@ -57,7 +57,7 @@ datos ya en `filebeat-*` (corré al menos una vez `run-brute-force.sh`).
 > ¿Por qué 5 y no un número más chico? Con un umbral muy bajo (2-3) cualquier
 > usuario que se equivoca de contraseña dispara la regla — puro ruido. Este
 > umbral (el de la **regla de Kibana**) es independiente del
-> `BRUTE_FORCE_THRESHOLD = 20` de `src/classifier.py` (el umbral con el que
+> `BRUTE_FORCE_THRESHOLD = 20` de `services/classifier/classifier.py` (el umbral con el que
 > el **Agente 1** corrobora el patrón por su cuenta): son dos capas de
 > detección a propósito, no un valor inconsistente.
 
@@ -236,14 +236,14 @@ con C1+C2), A7 (umbral 1 a propósito — ver abajo).
 
 ## El dashboard de supervisión
 
-`http://127.0.0.1:5000` (`src/dashboard.py` + `templates/index.html`) —
+`http://127.0.0.1:5000` (`services/gateway/dashboard.py` + `services/gateway/templates/index.html`) —
 abrilo en vivo junto con esta guía para ver cada elemento descripto acá.
 
 > **Los iconos son SVG monocromos, no emoji.** Un emoji se dibuja con la
 > paleta del sistema operativo, cambia de forma entre plataformas y no
 > hereda el color del texto — en un panel donde el color significa
 > severidad, eso compite con la información. El sprite vive en
-> `templates/_iconos.html` y usa `currentColor`.
+> `services/gateway/templates/_iconos.html` y usa `currentColor`.
 
 ### Vista general
 
@@ -309,15 +309,15 @@ severidad, IP y tiempo relativo. Vista de "qué pasó últimamente", sin filtro.
 Agrupado **por incidente**, no por acción individual (con muchas acciones por
 incidente, un historial plano se vuelve ilegible). Cada fila resume un
 incidente ("N ✔ · M ✘") y se expande con un click para ver el detalle de
-cada decisión. El archivo `data/decisions.jsonl` es append-only — cada click
+cada decisión. El archivo `data/audit/decisions.jsonl` es append-only — cada click
 agrega una línea nueva y nunca se borra nada. El panel deduplica por acción y
 muestra la decisión más reciente de cada una; el archivo completo, con cada
-revisión, se sigue auditando leyendo `data/decisions.jsonl` o vía
+revisión, se sigue auditando leyendo `data/audit/decisions.jsonl` o vía
 `GET /api/v1/decisions`.
 
 ### Correlación entre incidentes
 
-Implementada en `src/classifier.py::_link_campaigns()`. Al terminar de
+Implementada en `services/classifier/classifier.py::_link_campaigns()`. Al terminar de
 clasificar todos los incidentes de una corrida, el Agente 1 revisa si alguno
 comparte IP atacante con otro — aunque vengan de detecciones distintas.
 Ejemplo real: una misma IP hizo un escaneo de puertos y, poco después,
@@ -327,15 +327,15 @@ sola campaña de 2+ frentes, que es lo que realmente está pasando.
 
 ### Contexto histórico
 
-Implementado en `src/siem_agent.py::historical_context()`. Antes de generar
-el análisis, el Agente 2 busca en `data/decisions.jsonl` si ya hubo alguna
+Implementado en `services/analyst/siem_agent.py::historical_context()`. Antes de generar
+el análisis, el Agente 2 busca en `data/audit/decisions.jsonl` si ya hubo alguna
 decisión sobre alguna de las IPs de este incidente, tomada en **otro**
 incidente. Si encuentra algo, arma un resumen: cuántas decisiones previas,
 cuántas aprobadas/descartadas, cuál fue la más reciente y quién la tomó.
 
 ### Explicabilidad
 
-Implementado en `src/classifier.py::_classification()`, parámetro
+Implementado en `services/classifier/classifier.py::_classification()`, parámetro
 `factores`. Cada rama de detección arma una lista de señales concretas que
 sustentan la severidad — se puede señalar exactamente qué umbral se superó,
 si el SIEM confirmó el patrón, cuántos hosts/usuarios están afectados. Es la
@@ -346,10 +346,10 @@ verificable, no una caja negra.
 
 | Archivo | Qué contiene |
 |---------|--------------|
-| `templates/index.html` | Solo marcado (98 líneas). Referencia los estáticos con `url_for` |
-| `static/app.js` | Toda la lógica del cliente |
-| `static/app.css` | La hoja de estilos |
-| `templates/login.html` + `static/login.js` | Pantalla de inicio de sesión |
+| `services/gateway/templates/index.html` | Solo marcado (98 líneas). Referencia los estáticos con `url_for` |
+| `services/gateway/static/app.js` | Toda la lógica del cliente |
+| `services/gateway/static/app.css` | La hoja de estilos |
+| `services/gateway/templates/login.html` + `services/gateway/static/login.js` | Pantalla de inicio de sesión |
 
 **Por qué se separó del HTML.** Mientras el `<script>` vivía dentro de la
 plantilla, ESLint no lo analizaba — corría sobre cero archivos. **Cómo se

@@ -11,7 +11,7 @@
 # Uso:  ./scripts/pruebas_de_codigo_estatico.sh
 #
 # Requiere las dependencias de desarrollo instaladas (una sola vez):
-#   python3 -m pip install --target=.devtools -r requirements-dev.txt
+#   python3 -m pip install --upgrade --target=.devtools -r requirements.txt -r requirements-dev.txt
 #   npm install
 # ─────────────────────────────────────────────────────────────────────────────
 set -uo pipefail
@@ -21,6 +21,19 @@ export PYTHONPATH="$PWD/.devtools${PYTHONPATH:+:$PYTHONPATH}"
 BIN=".devtools/bin"
 EXCLUIR='./.devtools,./.venv,./node_modules,./tests,./elasticsearch'
 FALLOS=0
+
+# Sin esto, una herramienta ausente se disfraza de resultado: `grep -c` sobre
+# una salida vacía da 0 ("sin hallazgos") y bandit cae al valor por defecto 99.
+faltan=()
+for herramienta in ruff pylint bandit; do
+  [[ -x "$BIN/$herramienta" ]] || faltan+=("$herramienta")
+done
+if (( ${#faltan[@]} )); then
+  printf '\033[31mFaltan ejecutables en %s: %s\033[0m\n' "$BIN" "${faltan[*]}"
+  echo "Instalalos (el --upgrade es necesario si $BIN ya existe):"
+  echo "  python3 -m pip install --upgrade --target=.devtools -r requirements.txt -r requirements-dev.txt"
+  exit 1
+fi
 
 declare -A CAT_FALLOS CAT_COLOR
 ORDEN_CATEGORIAS=()
@@ -81,17 +94,20 @@ paso "ruff · tests/"                  $BIN/ruff check tests/
 n_ruff=$($BIN/ruff check . --output-format=concise 2>/dev/null | grep -cE '^[^ ]+\.py:[0-9]+')
 linea_base "ruff · proyecto" "$BASE_RUFF" "${n_ruff:-99}" "Ver: .devtools/bin/ruff check ."
 if [[ -d node_modules ]]; then
-  paso "eslint (static/app.js)"       node_modules/.bin/eslint \
-       --no-error-on-unmatched-pattern 'static/**/*.js'
+  paso "eslint (gateway/static/*.js)" node_modules/.bin/eslint \
+       --no-error-on-unmatched-pattern 'services/gateway/static/**/*.js'
 else
-  printf '    %-32s\033[33mOMITIDO\033[0m (falta npm install)\n' "eslint (static/app.js)"
+  printf '    %-32s\033[33mOMITIDO\033[0m (falta npm install)\n' "eslint (gateway/static/*.js)"
 fi
 
 titulo 35 "SAST" "— seguridad: vulnerabilidades conocidas, no ejecuta nada"
+# Todo el código del producto: la librería compartida y cada microservicio.
+# `--init-hook` arma el mismo PYTHONPATH que tiene cada contenedor, para que
+# pylint resuelva los imports entre módulos de un servicio y de libs/.
+mapfile -t CODIGO < <(find libs services -name '*.py' -not -path '*/__pycache__/*' | sort)
 paso "pylint + secure-coding-standard" $BIN/pylint --fail-under=9.0 \
-     src/classifier.py src/siem_lib.py src/dashboard.py src/siem_agent.py src/siem_pipeline.py \
-     src/siem_validators.py src/siem_auth.py src/manage_users.py src/audit_verify.py \
-     src/get-logs.py src/prepare-for-ia.py src/verify-cobertura.py
+     --init-hook="import sys, glob; sys.path[:0] = ['libs', *sorted(glob.glob('services/*'))]" \
+     "${CODIGO[@]}"
 
 n_bandit=$($BIN/bandit -r . -x "$EXCLUIR" -f json -q 2>/dev/null \
   | python3 -c 'import json,sys; print(sum(1 for r in json.load(sys.stdin)["results"] if r["issue_severity"]=="HIGH"))' 2>/dev/null)

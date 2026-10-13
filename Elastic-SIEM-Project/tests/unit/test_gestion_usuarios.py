@@ -18,6 +18,7 @@ import os
 import pytest
 
 import manage_users
+import sesion_web
 import siem_auth
 from siem_auth import ErrorUsuarios
 
@@ -200,7 +201,7 @@ def test_listar_sin_usuarios_explica_como_crear_el_primero(almacen, capsys):
     assert _cli("listar") == 0
     salida = capsys.readouterr().out
     assert "No hay usuarios" in salida
-    assert "manage_users.py crear" in salida
+    assert "usuarios crear" in salida
 
 
 def test_listar_muestra_rol_y_estado(almacen, capsys):
@@ -291,20 +292,20 @@ def test_sin_subcomando_es_error_de_uso():
 # ─── Sesión ──────────────────────────────────────────────────────────────────
 
 def test_el_session_id_es_estable_y_corto():
-    uno = siem_auth.session_id_de("ana", "2026-09-17T10:00:00+00:00")
-    dos = siem_auth.session_id_de("ana", "2026-09-17T10:00:00+00:00")
+    uno = sesion_web.session_id_de("ana", "2026-09-17T10:00:00+00:00")
+    dos = sesion_web.session_id_de("ana", "2026-09-17T10:00:00+00:00")
     assert uno == dos and len(uno) == 16
 
 
 def test_el_session_id_cambia_con_la_sesion():
     """Dos sesiones del mismo usuario se distinguen en la auditoría."""
-    assert siem_auth.session_id_de("ana", "2026-09-17T10:00:00+00:00") != \
-        siem_auth.session_id_de("ana", "2026-09-17T11:00:00+00:00")
+    assert sesion_web.session_id_de("ana", "2026-09-17T10:00:00+00:00") != \
+        sesion_web.session_id_de("ana", "2026-09-17T11:00:00+00:00")
 
 
 def test_el_session_id_no_permite_recuperar_al_usuario():
     """Es un resumen, no el nombre codificado."""
-    assert "ana" not in siem_auth.session_id_de("ana", "2026-09-17T10:00:00+00:00")
+    assert "ana" not in sesion_web.session_id_de("ana", "2026-09-17T10:00:00+00:00")
 
 
 # ─── Permisos ────────────────────────────────────────────────────────────────

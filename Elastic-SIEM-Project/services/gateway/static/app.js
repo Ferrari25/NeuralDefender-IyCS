@@ -243,8 +243,20 @@ async function load() {
   }
   lastData = await incR.json();
   lastData._decisions = await decR.json();
+  lastData._memoria = await cargarMemoria();
   populateTypeFilter(lastData.incidents || []);
   render();
+}
+
+// La memoria del agente es un extra: si el servicio knowledge no responde, el
+// panel sigue mostrando incidentes y decisiones, y la tarjeta lo dice.
+async function cargarMemoria() {
+  try {
+    const r = await fetch("/api/v1/memoria");
+    return r.ok ? await r.json() : null;
+  } catch {
+    return null;
+  }
 }
 
 function populateTypeFilter(incs) {
@@ -296,6 +308,7 @@ function render() {
   renderDetail(incs);
   renderRecentAttacks(incs);
   renderDecisionHistory(lastData._decisions || []);
+  renderMemoria(lastData._memoria);
 }
 
 // En inglés, igual que los badges de severidad (`${sev}` en las tarjetas/tabla):
@@ -378,7 +391,7 @@ function renderEventsTable(incs) {
   pintar(wrap, html`
     <table class="events">
       <thead><tr>
-        <th>ID</th><th>Estado</th><th>IP origen</th><th>Tipo de ataque</th><th>Regla disparada</th><th>Análisis de IA</th>
+        <th>ID</th><th>Severidad</th><th>IP origen</th><th>Tipo de ataque</th><th>Regla disparada</th><th>Análisis de IA</th>
       </tr></thead>
       <tbody>
         ${incs.map(rowHtml)}
@@ -457,6 +470,33 @@ function renderPuntosDeInvestigacion(an) {
     </div>`;
 }
 
+// Lo que el agente recordó para ESTE incidente: lecciones aprobadas, casos
+// parecidos ya resueltos y párrafos de documentos. Lo arma Python
+// (`_aprendizaje` en siem_agent.py), no el LLM: es un hecho auditable.
+function renderAprendizaje(apr) {
+  if (!apr) return "";
+  if (!apr.disponible) {
+    return html`<div class="aprendizaje"><div class="ev-section-title">${ico("i-idea")} Memoria del agente</div>
+      <p class="sutil">La memoria no estaba disponible cuando se analizó este incidente.</p></div>`;
+  }
+  const lecciones = apr.lecciones || [], casos = apr.casos_similares || [], docs = apr.documentos || [];
+  if (!lecciones.length && !casos.length && !docs.length) {
+    return html`<div class="aprendizaje"><div class="ev-section-title">${ico("i-idea")} Memoria del agente</div>
+      <p class="sutil">Nada parecido en la memoria todavía: es la primera vez que el agente ve algo así.</p></div>`;
+  }
+  return html`
+    <div class="aprendizaje">
+      <div class="ev-section-title">${ico("i-idea")} Lo que el agente recordó</div>
+      ${lecciones.length ? html`<ul>${lecciones.map(l => html`
+        <li><b>Lección ${l.leccion_id}</b> (aprobada por ${l.revisada_por}): ${l.texto}</li>`)}</ul>` : ""}
+      ${casos.length ? html`<ul>${casos.map(c => html`
+        <li><b>Caso ${c.incident_id}</b> (${c.motivo}): «${c.accion}» — ${estadoTexto(c.decision)}
+          por ${c.analyst}${c.note ? html` · nota: ${c.note}` : ""}</li>`)}</ul>` : ""}
+      ${docs.length ? html`<ul>${docs.map(d => html`
+        <li><b>${d.titulo}</b>: ${d.fragmento}</li>`)}</ul>` : ""}
+    </div>`;
+}
+
 function renderCard(inc) {
   const an = inc.analysis || {};
   const sev = severidadDe(inc);
@@ -479,7 +519,9 @@ function renderCard(inc) {
           <span class="k">Detección</span><span>${procedenciaDe(inc)}</span>
           <span class="k">Eventos</span><span>${(inc.event_count||0).toLocaleString()}</span>
           <span class="k">MITRE ATT&amp;CK</span><span>${mitreLink(inc.mitre)}</span>
-          <span class="k">Falso pos.</span><span>${an.falso_positivo_probabilidad || "—"} <span class="fp-hint">${fpHint(an.falso_positivo_probabilidad)}</span></span>
+          <span class="k">Falso pos.</span><span>${an.falso_positivo_probabilidad || "—"} <span class="fp-hint">${fpHint(an.falso_positivo_probabilidad)}</span>${
+            an.falso_positivo_ajustado_por ? html` <span class="fp-hint">· ajustado por la lección ${an.falso_positivo_ajustado_por}${
+              an.falso_positivo_sin_lecciones ? ` (antes: ${an.falso_positivo_sin_lecciones})` : ""}</span>` : ""}</span>
           <span class="k">Ventana</span><span>${inc.first_seen} → ${inc.last_seen}</span>
         </div>
         <div class="analysis">
@@ -490,6 +532,7 @@ function renderCard(inc) {
           ${refs ? html`<p><span class="lbl">Referencias:</span> ${refs}</p>` : ""}
           ${an.contexto_historico ? html`<p><span class="lbl">${ico("i-reloj")} Antecedentes de esta IP:</span> ${an.contexto_historico}</p>` : ""}
           ${renderPuntosDeInvestigacion(an)}
+          ${renderAprendizaje(an.aprendizaje)}
         </div>
         ${factores.length ? html`
         <div class="factors">
@@ -746,6 +789,100 @@ function renderDecisionHistory(decisions) {
   })}`);
 }
 
+const TIPO_LECCION = new Map([
+  ["falso_positivo", "probable falso positivo"], ["reincidente", "atacante reincidente"],
+  ["manual", "escrita por un analista"],
+]);
+function renderMemoria(memoria) {
+  const caja = document.getElementById("memoriaLecciones");
+  const cajaDocs = document.getElementById("memoriaDocumentos");
+  if (!memoria) {
+    pintar(caja, html`<div class="meta">La memoria del agente no está disponible.</div>`);
+    pintar(cajaDocs, html``);
+    return;
+  }
+  const lecciones = memoria.lecciones || [];
+  const propuestas = lecciones.filter(l => l.estado === "propuesta");
+  const aprobadas = lecciones.filter(l => l.estado === "aprobada");
+  const leccion = (l, conBotones) => html`
+    <div class="leccion leccion-${l.estado}">
+      <div class="leccion-cab"><span class="leccion-tipo">${TIPO_LECCION.get(l.tipo) || l.tipo}</span>
+        <span class="who">${l.leccion_id} · ${l.propuesta_por}${
+          l.revisada_por ? ` · aprobada por ${l.revisada_por}` : ""}</span></div>
+      <div class="leccion-texto">${l.texto}</div>
+      ${l.evidencia?.length ? html`<div class="who">basada en: ${l.evidencia.join(", ")}</div>` : ""}
+      ${conBotones ? html`<div class="ctrl leccion-ctrl">
+        <button type="button" class="approve small" data-accion="revisar-leccion"
+          data-leccion="${l.leccion_id}" data-decision="aprobar">Aprobar</button>
+        <button type="button" class="dismiss small" data-accion="revisar-leccion"
+          data-leccion="${l.leccion_id}" data-decision="rechazar">Rechazar</button>
+      </div>` : ""}
+    </div>`;
+  pintar(caja, html`
+    <div class="ev-section-title">Propuestas para revisar (${propuestas.length})</div>
+    ${propuestas.length ? propuestas.map(l => leccion(l, true))
+      : html`<div class="meta">Ninguna. El agente propone una cuando un mismo patrón se decide igual dos veces.</div>`}
+    <div class="ev-section-title">Lo que ya aprendió (${aprobadas.length})</div>
+    ${aprobadas.length ? aprobadas.map(l => leccion(l, false)) : html`<div class="meta">Todavía nada aprobado.</div>`}`);
+  const docs = memoria.documentos || [];
+  pintar(cajaDocs, html`
+    <div class="ev-section-title">Documentos (${docs.length})</div>
+    ${docs.length ? html`<ul class="memoria-docs">${docs.map(d => html`
+      <li><b>${d.titulo}</b> <span class="who">${d.subido_por} · ${timeAgo(d.ts)} · ${d.caracteres.toLocaleString()} caracteres</span></li>`)}</ul>`
+      : html`<div class="meta">Ninguno cargado.</div>`}`);
+}
+
+async function enviarMemoria(ruta, cuerpo) {
+  const r = await fetch(ruta, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-CSRFToken": sesion.csrf_token || "" },
+    body: JSON.stringify(cuerpo)
+  });
+  if (r.status === 401) { window.location.href = "/login"; return null; }
+  const datos = await r.json().catch(() => ({}));
+  if (!r.ok) { mostrarAviso(datos.error || "No se pudo guardar en la memoria.", "error"); return null; }
+  return datos;
+}
+
+async function revisarLeccion(leccionId, decision) {
+  const ok = await enviarMemoria(`/api/v1/memoria/lecciones/${encodeURIComponent(leccionId)}/revision`, { decision });
+  if (!ok) return;
+  mostrarAviso(decision === "aprobar" ? "✔ Lección aprobada: el agente la va a usar desde el próximo análisis"
+                                      : "✘ Lección rechazada", "ok");
+  load();
+}
+
+document.getElementById("formLeccion").addEventListener("submit", async evt => {
+  evt.preventDefault();
+  const texto = document.getElementById("leccionTexto");
+  const ok = await enviarMemoria("/api/v1/memoria/lecciones", {
+    texto: texto.value,
+    attack_type: document.getElementById("leccionTipo").value || null,
+    ip: document.getElementById("leccionIp").value.trim() || null,
+  });
+  if (!ok) return;
+  evt.target.reset();
+  mostrarAviso("Lección propuesta: falta que un analista la apruebe", "ok");
+  load();
+});
+
+const MAX_DOCUMENTO = 32 * 1024;
+document.getElementById("formDocumento").addEventListener("submit", async evt => {
+  evt.preventDefault();
+  const archivo = document.getElementById("docArchivo").files[0];
+  let contenido = document.getElementById("docContenido").value;
+  if (archivo) {
+    if (archivo.size > MAX_DOCUMENTO) { mostrarAviso("El archivo supera los 32 KB.", "error"); return; }
+    contenido = await archivo.text();
+  }
+  const ok = await enviarMemoria("/api/v1/memoria/documentos", {
+    titulo: document.getElementById("docTitulo").value, contenido });
+  if (!ok) return;
+  evt.target.reset();
+  mostrarAviso("Documento cargado: el agente lo consulta desde el próximo análisis", "ok");
+  load();
+});
+
 function toggleAbout() {
   document.getElementById("aboutPanel").classList.toggle("open");
 }
@@ -786,7 +923,12 @@ async function decide(incident_id, action_id, decision, note = "") {
     mostrarAviso(datos.error || "No se pudo registrar la decisión.", "error");
     return;
   }
-  mostrarAviso(decision === "approved" ? "✔ Acción aprobada" : "✘ Acción descartada", "ok");
+  const datos = await r.json().catch(() => ({}));
+  const base = decision === "approved" ? "✔ Acción aprobada" : "✘ Acción descartada";
+  const propuestas = datos.lecciones_propuestas || 0;
+  mostrarAviso(propuestas
+    ? `${base} · el agente propuso ${plural(propuestas, "lección", "lecciones")} para revisar`
+    : base, "ok");
   load();
 }
 
@@ -817,7 +959,7 @@ function confirmarDescarte(incident_id, action_id) {
 function delegar(evt) {
   const el = evt.target.closest("[data-accion]");
   if (!el) return;
-  const { accion, incidente, evidencia, actionId, decision } = el.dataset;
+  const { accion, incidente, evidencia, actionId, decision, leccion } = el.dataset;
 
   if (accion === "seleccionar") {
     evt.preventDefault();
@@ -840,6 +982,9 @@ function delegar(evt) {
     toggleEv(evidencia);
   } else if (accion === "about") {
     toggleAbout();
+  } else if (accion === "revisar-leccion") {
+    evt.stopPropagation();
+    revisarLeccion(leccion, decision);
   }
 }
 

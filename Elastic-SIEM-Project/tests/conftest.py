@@ -1,9 +1,17 @@
 """Fixtures compartidas de la suite.
 
 Regla de oro de esta suite: **ningún test toca los datos reales del proyecto.**
-Los módulos del SIEM usan rutas relativas al CWD (`siem_incidents.json`,
-`decisions.jsonl`, `network_logs/`), así que cada test que escriba algo corre
-dentro de un `tmp_path` con el CWD cambiado (ver `sandbox`).
+Los servicios usan rutas relativas al CWD (`data/siem_incidents.json`,
+`data/decisions.jsonl`, `network_logs/`), así que cada test que escriba algo
+corre dentro de un `tmp_path` con el CWD cambiado (ver `sandbox`).
+
+**La malla de microservicios corre en proceso.** En Docker, cada servicio es un
+contenedor y se hablan por HTTP. Acá, `malla_en_proceso` reemplaza el
+transporte HTTP de `siem_servicios.llamar` por uno que entrega cada petición al
+cliente de prueba de Flask del servicio destino. Las rutas, los códigos, el
+token interno y los cuerpos JSON son los mismos; lo único que no hay es red.
+Como en las pruebas todos los servicios comparten el CWD, todos ven el mismo
+`data/` — en Docker, cada uno tiene el suyo.
 """
 
 from __future__ import annotations
@@ -16,11 +24,83 @@ from pathlib import Path
 
 import pytest
 
-# El código vive en la raíz del proyecto, un nivel arriba de tests/.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-SRC = PROJECT_ROOT / "src"
+LIBS = PROJECT_ROOT / "libs"
+SERVICES = PROJECT_ROOT / "services"
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
-sys.path.insert(0, str(SRC))
+
+# Cada microservicio es su propia raíz de imports, más la librería compartida:
+# es el mismo PYTHONPATH que tiene cada contenedor (ver sus Dockerfile).
+for _directorio in [LIBS, *sorted(d for d in SERVICES.iterdir() if d.is_dir())]:
+    sys.path.insert(0, str(_directorio))
+
+# Token interno fijo para las pruebas. Los servicios se niegan a construirse
+# sin él, y se construyen al importarse, así que tiene que estar en el entorno
+# antes del primer import de cualquier servicio.
+TOKEN_INTERNO_DE_PRUEBA = "token-interno-de-prueba-no-usar-0123456789abcdef"
+os.environ.setdefault("SIEM_INTERNAL_TOKEN", TOKEN_INTERNO_DE_PRUEBA)
+
+# Módulo con la aplicación Flask de cada servicio interno.
+MODULOS_DE_SERVICIO = {
+    "auth": "auth_service",
+    "audit": "audit_service",
+    "collector": "collector_service",
+    "classifier": "classifier_service",
+    "analyst": "analyst_service",
+    "pipeline": "pipeline_service",
+    "knowledge": "knowledge_service",
+}
+
+
+# ─── Malla de microservicios en proceso ──────────────────────────────────────
+
+def transporte_en_proceso(servicio: str, metodo: str, ruta: str, cuerpo, timeout: float):
+    """Entrega la petición al cliente de prueba Flask del servicio destino."""
+    del timeout
+    import importlib
+
+    import siem_servicios
+
+    modulo = importlib.import_module(MODULOS_DE_SERVICIO[servicio])
+    respuesta = modulo.app.test_client().open(
+        ruta, method=metodo, json=cuerpo,
+        headers={siem_servicios.ENCABEZADO_TOKEN: siem_servicios.token_interno()})
+    return respuesta.status_code, respuesta.get_json(silent=True)
+
+
+@pytest.fixture(autouse=True)
+def malla_en_proceso():
+    """Todas las pruebas hablan con los servicios en proceso, nunca por red."""
+    import siem_servicios
+
+    siem_servicios.instalar_transporte(transporte_en_proceso)
+    yield
+    siem_servicios.instalar_transporte(None)
+
+
+@pytest.fixture
+def servicio_caido(monkeypatch):
+    """Simula que uno o más servicios no responden (como un contenedor caído).
+
+        def test_x(servicio_caido):
+            servicio_caido("audit")
+    """
+    import siem_servicios
+
+    caidos: set[str] = set()
+
+    def _transporte(servicio, metodo, ruta, cuerpo, timeout):
+        if servicio in caidos:
+            raise siem_servicios.ServicioNoDisponible(
+                f"no se pudo conectar con el servicio '{servicio}'")
+        return transporte_en_proceso(servicio, metodo, ruta, cuerpo, timeout)
+
+    siem_servicios.instalar_transporte(_transporte)
+
+    def _caer(*servicios: str):
+        caidos.update(servicios)
+
+    return _caer
 
 
 # ─── Datos ───────────────────────────────────────────────────────────────────
@@ -157,10 +237,11 @@ def entorno_auth(sandbox, monkeypatch):
 
 @pytest.fixture
 def app_dashboard(sandbox_con_incidentes, entorno_auth):
-    """Recarga `dashboard` dentro del sandbox, con autenticación configurada.
+    """Recarga `dashboard` (el gateway) dentro del sandbox, con autenticación configurada.
 
-    El módulo resuelve rutas y construye la aplicación al importarse, así que hay
-    que recargarlo DESPUÉS del `chdir` y de tener SECRET_KEY en el entorno.
+    El módulo construye la aplicación al importarse, así que hay que recargarlo
+    DESPUÉS del `chdir` y de tener SECRET_KEY en el entorno. Los servicios a los
+    que llama (pipeline, audit, auth) los atiende `malla_en_proceso`.
     """
     import importlib
 

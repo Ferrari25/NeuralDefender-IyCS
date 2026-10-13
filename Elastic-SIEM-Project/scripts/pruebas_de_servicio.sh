@@ -7,7 +7,8 @@
 #   ESTÁTICO   — certificación por AST de que nada ejecuta comandos (no
 #                corre el sistema, pero vive acá por ser una prueba pytest).
 #   UNITARIAS  — una función o módulo aislado (tests/unit/).
-#   SERVICIO   — el contrato real: API HTTP, deploy-rules.sh contra un Kibana
+#   SERVICIO   — el contrato real: API HTTP del panel y de cada microservicio
+#                (la malla corre en proceso), deploy-rules.sh contra un Kibana
 #                simulado, reset.sh contra un sandbox real (tests/integration/).
 #                Le da nombre al script porque es la parte que de verdad
 #                ejercita un servicio corriendo, no una función suelta.
@@ -17,7 +18,7 @@
 # Uso:  ./scripts/pruebas_de_servicio.sh
 #
 # Requiere las dependencias de desarrollo instaladas (una sola vez):
-#   python3 -m pip install --target=.devtools -r requirements-dev.txt
+#   python3 -m pip install --upgrade --target=.devtools -r requirements.txt -r requirements-dev.txt
 # ─────────────────────────────────────────────────────────────────────────────
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -73,10 +74,14 @@ titulo 96 "SERVICIO" "— contrato real: API, deploy-rules.sh, reset.sh (tests/i
 paso "pytest tests/integration"       $BIN/pytest -q tests/integration
 
 titulo 1 "COBERTURA" "— ≥ 80% sobre el alcance declarado"
-paso "6 módulos del alcance"          $BIN/pytest -q \
-     --cov=classifier --cov=siem_lib --cov=dashboard \
-     --cov=siem_validators --cov=siem_auth --cov=manage_users \
-     --cov-fail-under=80 --cov-report=
+# Los 6 módulos del alcance original más los 10 que agregó la migración a
+# microservicios (APIs de cada servicio, cliente interno, cadena, orquestador).
+COBERTURA=(classifier siem_lib dashboard siem_validators siem_auth manage_users
+           siem_servicios sesion_web cadena orquestador audit_service auth_service
+           collector_service classifier_service analyst_service pipeline_service
+           memoria knowledge_service)
+paso "${#COBERTURA[@]} módulos del alcance"         $BIN/pytest -q \
+     "${COBERTURA[@]/#/--cov=}" --cov-fail-under=80 --cov-report=
 
 printf '\n\033[1m════════════════════════════════════════════════════════════\033[0m\n'
 printf '\033[1m  RESUMEN — PRUEBAS\033[0m\n'

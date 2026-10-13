@@ -1,0 +1,9 @@
+# Base común de los servicios (Flask para la API, requests para hablar con
+# los otros servicios, gunicorn para servir en el contenedor).
+Flask>=3.0
+requests>=2.31
+gunicorn>=22.0
+
+# Sesiones y usuario autenticado, protección CSRF (hallazgo API-01)
+Flask-Login>=0.6
+Flask-WTF>=1.2

@@ -3,7 +3,7 @@
 # Instalación sin tocar el Python del sistema (Debian/Ubuntu marcan el intérprete
 # como "externally managed", PEP 668):
 #
-#     python3 -m pip install --target=.devtools -r requirements-dev.txt
+#     python3 -m pip install --upgrade --target=.devtools -r requirements.txt -r requirements-dev.txt
 #     export PYTHONPATH="$PWD/.devtools"
 #     .devtools/bin/pytest
 

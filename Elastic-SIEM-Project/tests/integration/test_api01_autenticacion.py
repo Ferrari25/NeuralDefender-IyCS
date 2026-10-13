@@ -26,6 +26,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+import sesion_web
 import siem_auth
 from tests.conftest import PASSWORD_DE_PRUEBA
 
@@ -316,7 +317,7 @@ def test_el_session_id_no_es_la_cookie(client):
 
 def test_la_sesion_expira_por_inactividad(client):
     with client.session_transaction() as sesion:
-        viejo = datetime.now(timezone.utc) - siem_auth.INACTIVIDAD_MAX - timedelta(minutes=1)
+        viejo = datetime.now(timezone.utc) - sesion_web.INACTIVIDAD_MAX - timedelta(minutes=1)
         sesion["ultimo_uso"] = viejo.isoformat()
 
     respuesta = client.get("/api/v1/incidents")
@@ -329,7 +330,7 @@ def test_la_sesion_expira_por_maximo_absoluto(client):
     """Aunque el analista siga activo: acota el daño de una cookie robada."""
     ahora = datetime.now(timezone.utc)
     with client.session_transaction() as sesion:
-        sesion["emitido_en"] = (ahora - siem_auth.SESION_MAX - timedelta(minutes=1)).isoformat()
+        sesion["emitido_en"] = (ahora - sesion_web.SESION_MAX - timedelta(minutes=1)).isoformat()
         sesion["ultimo_uso"] = ahora.isoformat()
 
     respuesta = client.get("/api/v1/incidents")
@@ -361,12 +362,12 @@ def test_una_sesion_sin_marca_temporal_se_rechaza(client):
     ("no es fecha", "tampoco", "sin marca temporal"),
 ])
 def test_sesion_expirada_detecta_marcas_invalidas(emitido, uso, esperado):
-    assert esperado in siem_auth.sesion_expirada(emitido, uso)
+    assert esperado in sesion_web.sesion_expirada(emitido, uso)
 
 
 def test_sesion_recien_creada_no_expira():
     ahora = datetime.now(timezone.utc).isoformat()
-    assert siem_auth.sesion_expirada(ahora, ahora) is None
+    assert sesion_web.sesion_expirada(ahora, ahora) is None
 
 
 # ─── CSRF ────────────────────────────────────────────────────────────────────
@@ -570,10 +571,10 @@ def test_ningun_rol_puede_ejecutar_acciones():
 def test_el_decorador_rechaza_un_permiso_de_ejecucion():
     """Ni siquiera se puede declarar una vista con un permiso de ese tipo."""
     with pytest.raises(ValueError, match="no ejecuta acciones"):
-        siem_auth.requiere_permiso("ejecutar")
+        sesion_web.requiere_permiso("ejecutar")
 
     with pytest.raises(ValueError, match="no ejecuta acciones"):
-        siem_auth.requiere_permiso("bloquear_ip")
+        sesion_web.requiere_permiso("bloquear_ip")
 
 
 def test_me_declara_explicitamente_que_no_ejecuta(client):

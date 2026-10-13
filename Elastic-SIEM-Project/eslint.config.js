@@ -22,7 +22,7 @@ export default [
   js.configs.recommended,
   security.configs.recommended,
   {
-    files: ["static/**/*.js"],
+    files: ["services/gateway/static/**/*.js"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "script",

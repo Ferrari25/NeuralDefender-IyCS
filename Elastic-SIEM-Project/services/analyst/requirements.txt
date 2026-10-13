@@ -1,0 +1,8 @@
+# Base común de los servicios (Flask para la API, requests para hablar con
+# los otros servicios, gunicorn para servir en el contenedor).
+Flask>=3.0
+requests>=2.31
+gunicorn>=22.0
+
+# Agente 2 (LLM analista). Opcional: sin key, hay fallback determinístico.
+google-genai>=2.0

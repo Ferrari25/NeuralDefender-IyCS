@@ -28,7 +28,7 @@ from pathlib import Path
 
 import pytest
 
-import siem_lib
+import cadena
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -38,7 +38,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 def test_el_registro_se_crea_con_permisos_restrictivos(sandbox):
     """La auditoría no la lee cualquier usuario del sistema."""
     ruta = sandbox / "decisions.jsonl"
-    siem_lib.append_jsonl(ruta, {"decision": "approved"})
+    cadena.append_jsonl(ruta, {"decision": "approved"})
     assert ruta.stat().st_mode & 0o777 == 0o600
 
 
@@ -49,7 +49,7 @@ def test_append_usa_bloqueo_y_fsync():
     energía no se puede provocar en una prueba, pero sí se puede exigir que el
     código la pida.
     """
-    fuente = (PROJECT_ROOT / "src" / "siem_lib.py").read_text(encoding="utf-8")
+    fuente = (PROJECT_ROOT / "services" / "audit" / "cadena.py").read_text(encoding="utf-8")
     cuerpo = fuente.split("def append_jsonl")[1].split("\ndef ")[0]
     assert "flock" in cuerpo and "LOCK_EX" in cuerpo
     assert "fsync" in cuerpo
@@ -65,7 +65,7 @@ def test_escrituras_concurrentes_no_se_entrelazan(sandbox):
     ruta = sandbox / "decisions.jsonl"
 
     def escribir(n: int) -> None:
-        siem_lib.append_jsonl(ruta, {"n": n, "decision": "approved",
+        cadena.append_jsonl(ruta, {"n": n, "decision": "approved",
                                      "note": "x" * 200})
 
     with ThreadPoolExecutor(max_workers=8) as pool:
@@ -87,9 +87,9 @@ def test_escrituras_concurrentes_mantienen_la_cadena(sandbox):
     ruta = sandbox / "decisions.jsonl"
 
     with ThreadPoolExecutor(max_workers=8) as pool:
-        list(pool.map(lambda n: siem_lib.append_jsonl(ruta, {"n": n}), range(20)))
+        list(pool.map(lambda n: cadena.append_jsonl(ruta, {"n": n}), range(20)))
 
-    assert siem_lib.verificar_cadena(ruta)["chain_ok"] is True
+    assert cadena.verificar_cadena(ruta)["chain_ok"] is True
 
 
 # ─── A-04 · la cadena de hashes ──────────────────────────────────────────────
@@ -97,20 +97,20 @@ def test_escrituras_concurrentes_mantienen_la_cadena(sandbox):
 def test_cada_registro_lleva_el_hash_del_anterior(sandbox):
     ruta = sandbox / "decisions.jsonl"
     for n in range(3):
-        siem_lib.append_jsonl(ruta, {"n": n})
+        cadena.append_jsonl(ruta, {"n": n})
 
-    registros = siem_lib.read_jsonl(ruta)
-    assert registros[0]["prev_hash"] == siem_lib.GENESIS_HASH
+    registros = cadena.read_jsonl(ruta)
+    assert registros[0]["prev_hash"] == cadena.GENESIS_HASH
     for anterior, siguiente in zip(registros, registros[1:], strict=False):
-        assert siguiente["prev_hash"] == siem_lib._hash_registro(anterior)
+        assert siguiente["prev_hash"] == cadena._hash_registro(anterior)
 
 
 def test_una_cadena_intacta_se_verifica(sandbox):
     ruta = sandbox / "decisions.jsonl"
     for n in range(5):
-        siem_lib.append_jsonl(ruta, {"n": n, "decision": "approved"})
+        cadena.append_jsonl(ruta, {"n": n, "decision": "approved"})
 
-    resultado = siem_lib.verificar_cadena(ruta)
+    resultado = cadena.verificar_cadena(ruta)
     assert resultado == {"estado": "ok", "chain_ok": True, "records": 5,
                          "first_broken": None, "reason": None}
 
@@ -119,7 +119,7 @@ def test_editar_una_linea_del_medio_rompe_la_cadena(sandbox):
     """El caso que antes pasaba inadvertido: cambiar una decisión ya tomada."""
     ruta = sandbox / "decisions.jsonl"
     for n in range(5):
-        siem_lib.append_jsonl(ruta, {"n": n, "decision": "approved"})
+        cadena.append_jsonl(ruta, {"n": n, "decision": "approved"})
 
     lineas = ruta.read_text(encoding="utf-8").strip().split("\n")
     manipulado = json.loads(lineas[2])
@@ -127,7 +127,7 @@ def test_editar_una_linea_del_medio_rompe_la_cadena(sandbox):
     lineas[2] = json.dumps(manipulado, ensure_ascii=False)
     ruta.write_text("\n".join(lineas) + "\n", encoding="utf-8")
 
-    resultado = siem_lib.verificar_cadena(ruta)
+    resultado = cadena.verificar_cadena(ruta)
     assert resultado["chain_ok"] is False
     assert resultado["first_broken"] == 4, "se detecta en el eslabón siguiente"
     assert "modificado o eliminado" in resultado["reason"]
@@ -136,23 +136,23 @@ def test_editar_una_linea_del_medio_rompe_la_cadena(sandbox):
 def test_borrar_una_linea_rompe_la_cadena(sandbox):
     ruta = sandbox / "decisions.jsonl"
     for n in range(5):
-        siem_lib.append_jsonl(ruta, {"n": n})
+        cadena.append_jsonl(ruta, {"n": n})
 
     lineas = ruta.read_text(encoding="utf-8").strip().split("\n")
     del lineas[2]
     ruta.write_text("\n".join(lineas) + "\n", encoding="utf-8")
 
-    assert siem_lib.verificar_cadena(ruta)["chain_ok"] is False
+    assert cadena.verificar_cadena(ruta)["chain_ok"] is False
 
 
 def test_una_linea_corrupta_rompe_la_cadena(sandbox):
     ruta = sandbox / "decisions.jsonl"
     for n in range(3):
-        siem_lib.append_jsonl(ruta, {"n": n})
+        cadena.append_jsonl(ruta, {"n": n})
     with open(ruta, "a", encoding="utf-8") as f:
         f.write("{esto no es json\n")
 
-    resultado = siem_lib.verificar_cadena(ruta)
+    resultado = cadena.verificar_cadena(ruta)
     assert resultado["chain_ok"] is False
     assert resultado["reason"] == "línea malformada"
 
@@ -161,11 +161,11 @@ def test_agregar_al_final_no_rompe_nada(sandbox):
     """Append legítimo: la cadena sigue válida, que es el punto."""
     ruta = sandbox / "decisions.jsonl"
     for n in range(3):
-        siem_lib.append_jsonl(ruta, {"n": n})
-    assert siem_lib.verificar_cadena(ruta)["chain_ok"]
+        cadena.append_jsonl(ruta, {"n": n})
+    assert cadena.verificar_cadena(ruta)["chain_ok"]
 
-    siem_lib.append_jsonl(ruta, {"n": 99})
-    resultado = siem_lib.verificar_cadena(ruta)
+    cadena.append_jsonl(ruta, {"n": 99})
+    resultado = cadena.verificar_cadena(ruta)
     assert resultado["chain_ok"] and resultado["records"] == 4
 
 
@@ -173,27 +173,28 @@ def test_un_registro_pegado_a_mano_al_final_no_pasa(sandbox):
     """Ni siquiera agregar al final funciona sin conocer el hash previo."""
     ruta = sandbox / "decisions.jsonl"
     for n in range(3):
-        siem_lib.append_jsonl(ruta, {"n": n})
+        cadena.append_jsonl(ruta, {"n": n})
 
     with open(ruta, "a", encoding="utf-8") as f:
         f.write(json.dumps({"n": 4, "decision": "approved",
                             "prev_hash": "0" * 64}) + "\n")
 
-    assert siem_lib.verificar_cadena(ruta)["chain_ok"] is False
+    assert cadena.verificar_cadena(ruta)["chain_ok"] is False
 
 
 def test_registro_vacio_o_inexistente_es_valido(sandbox):
-    assert siem_lib.verificar_cadena(sandbox / "no-existe.jsonl")["chain_ok"]
+    assert cadena.verificar_cadena(sandbox / "no-existe.jsonl")["chain_ok"]
     (sandbox / "vacio.jsonl").write_text("", encoding="utf-8")
-    assert siem_lib.verificar_cadena(sandbox / "vacio.jsonl")["chain_ok"]
+    assert cadena.verificar_cadena(sandbox / "vacio.jsonl")["chain_ok"]
 
 
 # ─── A-04 · el verificador como herramienta ──────────────────────────────────
 
 def _correr_verificador(directorio: Path, *args: str) -> subprocess.CompletedProcess:
-    entorno = {**os.environ, "PYTHONPATH": str(PROJECT_ROOT)}
+    entorno = {**os.environ, "PYTHONPATH": os.pathsep.join(
+        filter(None, [str(PROJECT_ROOT), os.environ.get("PYTHONPATH")]))}
     return subprocess.run(
-        [sys.executable, str(PROJECT_ROOT / "src" / "audit_verify.py"), *args],
+        [sys.executable, str(PROJECT_ROOT / "services" / "audit" / "audit_verify.py"), *args],
         cwd=directorio, capture_output=True, text=True, timeout=60,
         env=entorno, check=False)
 
@@ -201,7 +202,7 @@ def _correr_verificador(directorio: Path, *args: str) -> subprocess.CompletedPro
 def test_audit_verify_sale_con_cero_si_la_cadena_esta_intacta(sandbox):
     ruta = sandbox / "data" / "decisions.jsonl"
     for n in range(3):
-        siem_lib.append_jsonl(ruta, {"n": n, "decision": "approved", "analyst": "ana"})
+        cadena.append_jsonl(ruta, {"n": n, "decision": "approved", "analyst": "ana"})
 
     resultado = _correr_verificador(sandbox)
     assert resultado.returncode == 0
@@ -212,7 +213,7 @@ def test_audit_verify_sale_con_uno_si_esta_rota(sandbox):
     """Código de salida 1: sirve como puerta en CI."""
     ruta = sandbox / "data" / "decisions.jsonl"
     for n in range(3):
-        siem_lib.append_jsonl(ruta, {"n": n})
+        cadena.append_jsonl(ruta, {"n": n})
     lineas = ruta.read_text(encoding="utf-8").strip().split("\n")
     lineas[1] = json.dumps({"n": "manipulado", "prev_hash": "0" * 64})
     ruta.write_text("\n".join(lineas) + "\n", encoding="utf-8")
@@ -225,7 +226,7 @@ def test_audit_verify_sale_con_uno_si_esta_rota(sandbox):
 
 def test_audit_verify_tiene_salida_json(sandbox):
     ruta = sandbox / "data" / "decisions.jsonl"
-    siem_lib.append_jsonl(ruta, {"decision": "approved", "analyst": "ana"})
+    cadena.append_jsonl(ruta, {"decision": "approved", "analyst": "ana"})
 
     resultado = _correr_verificador(sandbox, "--json")
     datos = json.loads(resultado.stdout)
@@ -237,7 +238,7 @@ def test_audit_verify_no_modifica_nada(sandbox):
     """Un verificador que pudiera reparar el archivo que audita no serviría."""
     ruta = sandbox / "data" / "decisions.jsonl"
     for n in range(3):
-        siem_lib.append_jsonl(ruta, {"n": n})
+        cadena.append_jsonl(ruta, {"n": n})
     antes = ruta.read_bytes()
 
     _correr_verificador(sandbox)
@@ -320,7 +321,7 @@ def test_las_decisiones_del_dashboard_quedan_encadenadas(client, sandbox_con_inc
             "incident_id": inc["incident_id"], "action_id": accion["action_id"],
             "decision": "approved"})
 
-    resultado = siem_lib.verificar_cadena(sandbox_con_incidentes / "data" / "decisions.jsonl")
+    resultado = cadena.verificar_cadena(sandbox_con_incidentes / "data" / "decisions.jsonl")
     assert resultado["chain_ok"] is True
     assert resultado["records"] == len(inc["recommended_actions"])
 
@@ -342,7 +343,7 @@ def test_manipular_una_decision_se_detecta_desde_el_flujo_real(client,
     lineas[0] = json.dumps(falsificado, ensure_ascii=False)
     ruta.write_text("\n".join(lineas) + "\n", encoding="utf-8")
 
-    assert siem_lib.verificar_cadena(ruta)["chain_ok"] is False
+    assert cadena.verificar_cadena(ruta)["chain_ok"] is False
 
 
 @pytest.mark.parametrize("campo", ["decision", "analyst", "ts", "note", "incident_id"])
@@ -350,7 +351,7 @@ def test_cambiar_cualquier_campo_rompe_la_cadena(sandbox, campo):
     """La protección no depende de qué campo se toque."""
     ruta = sandbox / "decisions.jsonl"
     for n in range(3):
-        siem_lib.append_jsonl(ruta, {
+        cadena.append_jsonl(ruta, {
             "ts": f"2026-09-16T10:0{n}:00+00:00", "incident_id": f"INC-{n}",
             "decision": "approved", "analyst": "ana", "note": ""})
 
@@ -360,7 +361,7 @@ def test_cambiar_cualquier_campo_rompe_la_cadena(sandbox, campo):
     lineas[0] = json.dumps(registro, ensure_ascii=False)
     ruta.write_text("\n".join(lineas) + "\n", encoding="utf-8")
 
-    assert siem_lib.verificar_cadena(ruta)["chain_ok"] is False
+    assert cadena.verificar_cadena(ruta)["chain_ok"] is False
 
 
 # ─── Registros heredados: no verificables ≠ manipulados ──────────────────────
@@ -385,7 +386,7 @@ def test_un_registro_heredado_no_se_reporta_como_manipulado(sandbox):
     ruta = sandbox / "decisions.jsonl"
     _escribir_sin_encadenar(ruta, 5)
 
-    resultado = siem_lib.verificar_cadena(ruta)
+    resultado = cadena.verificar_cadena(ruta)
     assert resultado["estado"] == "heredado"
     assert resultado["records"] == 5
     assert resultado["first_broken"] is None
@@ -411,7 +412,7 @@ def test_quitar_prev_hash_a_un_registro_si_es_manipulacion(sandbox):
     """
     ruta = sandbox / "decisions.jsonl"
     for n in range(3):
-        siem_lib.append_jsonl(ruta, {"n": n})
+        cadena.append_jsonl(ruta, {"n": n})
 
     lineas = ruta.read_text(encoding="utf-8").strip().split("\n")
     sin_campo = json.loads(lineas[2])
@@ -419,7 +420,7 @@ def test_quitar_prev_hash_a_un_registro_si_es_manipulacion(sandbox):
     lineas[2] = json.dumps(sin_campo, ensure_ascii=False)
     ruta.write_text("\n".join(lineas) + "\n", encoding="utf-8")
 
-    resultado = siem_lib.verificar_cadena(ruta)
+    resultado = cadena.verificar_cadena(ruta)
     assert resultado["estado"] == "roto"
     assert "el campo fue eliminado" in resultado["reason"]
 
@@ -428,7 +429,7 @@ def test_quitar_prev_hash_al_primero_tampoco_alcanza(sandbox):
     """Aunque se ataque el primer registro, los siguientes delatan el cambio."""
     ruta = sandbox / "decisions.jsonl"
     for n in range(3):
-        siem_lib.append_jsonl(ruta, {"n": n})
+        cadena.append_jsonl(ruta, {"n": n})
 
     lineas = ruta.read_text(encoding="utf-8").strip().split("\n")
     sin_campo = json.loads(lineas[0])
@@ -436,19 +437,19 @@ def test_quitar_prev_hash_al_primero_tampoco_alcanza(sandbox):
     lineas[0] = json.dumps(sin_campo, ensure_ascii=False)
     ruta.write_text("\n".join(lineas) + "\n", encoding="utf-8")
 
-    assert siem_lib.verificar_cadena(ruta)["estado"] == "roto"
+    assert cadena.verificar_cadena(ruta)["estado"] == "roto"
 
 
 def test_decisiones_nuevas_sobre_un_registro_heredado_se_encadenan(sandbox):
     """El caso de la migración: se sigue escribiendo sobre el archivo viejo."""
     ruta = sandbox / "decisions.jsonl"
     _escribir_sin_encadenar(ruta, 3)
-    assert siem_lib.verificar_cadena(ruta)["estado"] == "heredado"
+    assert cadena.verificar_cadena(ruta)["estado"] == "heredado"
 
     for n in range(2):
-        siem_lib.append_jsonl(ruta, {"n": n, "decision": "approved"})
+        cadena.append_jsonl(ruta, {"n": n, "decision": "approved"})
 
-    resultado = siem_lib.verificar_cadena(ruta)
+    resultado = cadena.verificar_cadena(ruta)
     assert resultado["estado"] == "ok"
     assert resultado["records"] == 5
     assert "3 registro(s) heredados al inicio" in resultado["reason"]
@@ -459,7 +460,7 @@ def test_manipular_el_tramo_encadenado_tras_uno_heredado_se_detecta(sandbox):
     ruta = sandbox / "decisions.jsonl"
     _escribir_sin_encadenar(ruta, 2)
     for n in range(3):
-        siem_lib.append_jsonl(ruta, {"n": n, "decision": "approved"})
+        cadena.append_jsonl(ruta, {"n": n, "decision": "approved"})
 
     lineas = ruta.read_text(encoding="utf-8").strip().split("\n")
     manipulado = json.loads(lineas[3])
@@ -467,7 +468,7 @@ def test_manipular_el_tramo_encadenado_tras_uno_heredado_se_detecta(sandbox):
     lineas[3] = json.dumps(manipulado, ensure_ascii=False)
     ruta.write_text("\n".join(lineas) + "\n", encoding="utf-8")
 
-    assert siem_lib.verificar_cadena(ruta)["estado"] == "roto"
+    assert cadena.verificar_cadena(ruta)["estado"] == "roto"
 
 
 def test_el_api_tambien_distingue_los_tres_estados(client_como, sandbox_con_incidentes):

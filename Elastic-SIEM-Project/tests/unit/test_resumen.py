@@ -31,8 +31,8 @@ import pytest
 import siem_agent
 
 RAIZ = Path(__file__).resolve().parent.parent.parent
-APP_JS = (RAIZ / "static" / "app.js").read_text(encoding="utf-8")
-APP_CSS = (RAIZ / "static" / "app.css").read_text(encoding="utf-8")
+APP_JS = (RAIZ / "services" / "gateway" / "static" / "app.js").read_text(encoding="utf-8")
+APP_CSS = (RAIZ / "services" / "gateway" / "static" / "app.css").read_text(encoding="utf-8")
 
 RESUMEN = APP_JS[APP_JS.index("function renderSummary"):
                  APP_JS.index("function renderRecentAttacks")]

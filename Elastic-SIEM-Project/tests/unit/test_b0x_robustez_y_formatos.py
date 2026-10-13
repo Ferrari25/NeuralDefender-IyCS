@@ -25,6 +25,7 @@ import pytest
 import requests
 
 import classifier
+import es_client
 import siem_lib
 
 # ─── B-01 · todos los fallos de red dan el mismo error accionable ────────────
@@ -39,19 +40,19 @@ import siem_lib
 ])
 def test_todo_fallo_de_red_se_traduce_a_esunavailable(monkeypatch, excepcion):
     """El caller solo necesita saber una cosa: ES no está disponible."""
-    monkeypatch.setattr(siem_lib.requests, "post",
+    monkeypatch.setattr(es_client.requests, "post",
                         lambda *a, **kw: (_ for _ in ()).throw(excepcion))
-    with pytest.raises(siem_lib.ESUnavailable):
-        siem_lib.es_search("filebeat-*", {})
+    with pytest.raises(es_client.ESUnavailable):
+        es_client.es_search("filebeat-*", {})
 
 
 def test_el_read_timeout_explica_qué_pasó(monkeypatch):
     """El mensaje tiene que servirle a quien lo lee a las 3 de la mañana."""
-    monkeypatch.setattr(siem_lib.requests, "post", lambda *a, **kw: (_ for _ in ()).throw(
+    monkeypatch.setattr(es_client.requests, "post", lambda *a, **kw: (_ for _ in ()).throw(
         requests.exceptions.ReadTimeout("timeout")))
 
-    with pytest.raises(siem_lib.ESUnavailable) as error:
-        siem_lib.es_search("filebeat-*", {}, timeout=7)
+    with pytest.raises(es_client.ESUnavailable) as error:
+        es_client.es_search("filebeat-*", {}, timeout=7)
     assert "7s" in str(error.value)
     assert "saturado" in str(error.value)
 
@@ -67,9 +68,9 @@ def test_una_respuesta_no_json_tambien_se_traduce(monkeypatch):
         def json(self):
             raise ValueError("no es JSON")
 
-    monkeypatch.setattr(siem_lib.requests, "post", lambda *a, **kw: Resp())
-    with pytest.raises(siem_lib.ESUnavailable, match="no-JSON"):
-        siem_lib.es_search("filebeat-*", {})
+    monkeypatch.setattr(es_client.requests, "post", lambda *a, **kw: Resp())
+    with pytest.raises(es_client.ESUnavailable, match="no-JSON"):
+        es_client.es_search("filebeat-*", {})
 
 
 def test_es_aggregate_comparte_el_mismo_manejo(monkeypatch):
@@ -78,10 +79,10 @@ def test_es_aggregate_comparte_el_mismo_manejo(monkeypatch):
     `es_aggregate` se tragaba los HTTPError devolviendo `[]`, así que un 401 por
     credenciales vencidas se veía igual que "no hay datos".
     """
-    monkeypatch.setattr(siem_lib.requests, "post", lambda *a, **kw: (_ for _ in ()).throw(
+    monkeypatch.setattr(es_client.requests, "post", lambda *a, **kw: (_ for _ in ()).throw(
         requests.exceptions.ReadTimeout("timeout")))
-    with pytest.raises(siem_lib.ESUnavailable):
-        siem_lib.es_aggregate("filebeat-*", {}, "by_source_ip")
+    with pytest.raises(es_client.ESUnavailable):
+        es_client.es_aggregate("filebeat-*", {}, "by_source_ip")
 
 
 def test_un_indice_inexistente_sigue_sin_ser_fatal(monkeypatch):
@@ -95,9 +96,9 @@ def test_un_indice_inexistente_sigue_sin_ser_fatal(monkeypatch):
         def json(self):
             return {}
 
-    monkeypatch.setattr(siem_lib.requests, "post", lambda *a, **kw: Resp())
-    assert siem_lib.es_search("filebeat-*", {}) == []
-    assert siem_lib.es_aggregate("filebeat-*", {}, "by_source_ip") == []
+    monkeypatch.setattr(es_client.requests, "post", lambda *a, **kw: Resp())
+    assert es_client.es_search("filebeat-*", {}) == []
+    assert es_client.es_aggregate("filebeat-*", {}, "by_source_ip") == []
 
 
 # ─── B-02 · credenciales en claro solo dentro de la máquina ──────────────────
@@ -108,8 +109,8 @@ def test_un_indice_inexistente_sigue_sin_ser_fatal(monkeypatch):
 def test_http_a_loopback_esta_permitido(monkeypatch, host):
     """Es la configuración por defecto: los puertos están bindeados a 127.0.0.1
     y las credenciales nunca salen del host."""
-    monkeypatch.setattr(siem_lib, "ES_HOST", host)
-    siem_lib._verificar_transporte()  # no levanta
+    monkeypatch.setattr(es_client, "ES_HOST", host)
+    es_client._verificar_transporte()  # no levanta
 
 
 @pytest.mark.parametrize("host", [
@@ -117,22 +118,22 @@ def test_http_a_loopback_esta_permitido(monkeypatch, host):
 ])
 def test_http_a_un_host_remoto_se_bloquea(monkeypatch, host):
     """Apuntar ES_HOST a otra máquina por HTTP expondría el Basic Auth en la red."""
-    monkeypatch.setattr(siem_lib, "ES_HOST", host)
-    monkeypatch.setattr(siem_lib, "ES_ALLOW_INSECURE_HTTP", False)
-    with pytest.raises(siem_lib.ESInsecureTransport, match="en claro"):
-        siem_lib._verificar_transporte()
+    monkeypatch.setattr(es_client, "ES_HOST", host)
+    monkeypatch.setattr(es_client, "ES_ALLOW_INSECURE_HTTP", False)
+    with pytest.raises(es_client.ESInsecureTransport, match="en claro"):
+        es_client._verificar_transporte()
 
 
 def test_https_remoto_esta_permitido(monkeypatch):
-    monkeypatch.setattr(siem_lib, "ES_HOST", "https://elastic.interno:9200")
-    siem_lib._verificar_transporte()
+    monkeypatch.setattr(es_client, "ES_HOST", "https://elastic.interno:9200")
+    es_client._verificar_transporte()
 
 
 def test_la_escotilla_de_escape_es_explicita(monkeypatch):
     """Un laboratorio aislado puede optar por HTTP, pero tiene que decirlo."""
-    monkeypatch.setattr(siem_lib, "ES_HOST", "http://192.168.1.50:9200")
-    monkeypatch.setattr(siem_lib, "ES_ALLOW_INSECURE_HTTP", True)
-    siem_lib._verificar_transporte()
+    monkeypatch.setattr(es_client, "ES_HOST", "http://192.168.1.50:9200")
+    monkeypatch.setattr(es_client, "ES_ALLOW_INSECURE_HTTP", True)
+    es_client._verificar_transporte()
 
 
 def test_las_peticiones_pasan_verify(monkeypatch):
@@ -152,8 +153,8 @@ def test_las_peticiones_pasan_verify(monkeypatch):
         capturado.update(kwargs)
         return Resp()
 
-    monkeypatch.setattr(siem_lib.requests, "post", post)
-    siem_lib.es_search("filebeat-*", {})
+    monkeypatch.setattr(es_client.requests, "post", post)
+    es_client.es_search("filebeat-*", {})
     assert "verify" in capturado
     assert "timeout" in capturado
 
@@ -208,11 +209,18 @@ def test_first_seen_y_last_seen_con_formatos_mezclados():
 # ─── B-04 · sin ramas muertas en la orquestación ─────────────────────────────
 
 def test_ya_no_se_leen_claves_inexistentes():
-    """`network_events` y `web_events` nunca las generó `prepare-for-ia.py`."""
-    fuente = Path(classifier.__file__).read_text(encoding="utf-8")
-    cuerpo = fuente.split("def main()")[1]
-    assert 'get("network_events"' not in cuerpo
-    assert 'get("web_events"' not in cuerpo
+    """`network_events` y `web_events` nunca las generó el extractor (collector).
+
+    Antes se miraba solo el `main()` del clasificador; desde la migración, la
+    entrada la arman `classifier.reporte()` y el servicio, así que se revisa el
+    módulo y el servicio enteros.
+    """
+    import classifier_service
+
+    for modulo in (classifier, classifier_service):
+        fuente = Path(modulo.__file__).read_text(encoding="utf-8")
+        assert 'get("network_events"' not in fuente, modulo.__name__
+        assert 'get("web_events"' not in fuente, modulo.__name__
 
 
 def test_prepare_for_ia_sigue_sin_generarlas(siem_clean):
@@ -273,7 +281,7 @@ def test_la_ventana_coincide_con_la_de_elasticsearch():
     firma = inspect.signature(siem_lib.read_network_logs)
     assert firma.parameters["window_hours"].default == 24
 
-    rango = siem_lib.auth_failure_query(10)["query"]["bool"]["filter"][0]
+    rango = es_client.auth_failure_query(10)["query"]["bool"]["filter"][0]
     assert rango["range"]["@timestamp"]["gte"] == "now-24h"
 
 

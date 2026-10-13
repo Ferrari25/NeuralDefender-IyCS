@@ -15,8 +15,8 @@
 | Objetivo | Estado | Cómo se demuestra |
 |----------|:------:|--------------------|
 | **Pruebas de código estático** | ✅ | `./scripts/pruebas_de_codigo_estatico.sh` — ruff, eslint (linters) + pylint+secure-coding-standard, bandit (SAST). Líneas de base en cero, verificado contra mutaciones inyectadas a propósito. |
-| **Pruebas de servicio** | ✅ | `./scripts/pruebas_de_servicio.sh` — 232 pruebas de integración sobre la API HTTP real, `deploy-rules.sh` contra un Kibana simulado, `reset.sh` contra un sandbox, autenticación completa. |
-| **Desarrollo e implementación en entorno de simulación** | ✅ | Los tres ataques se simulan y detectan de punta a punta; el panel exige login; las 14 reglas se despliegan como código; `src/verify-cobertura.py` demuestra que ninguna alerta real del SIEM se pierde en el camino al panel. Falta la suite E2E de navegador (ver Pendientes, más abajo). |
+| **Pruebas de servicio** | ✅ | `./scripts/pruebas_de_servicio.sh` — 270 pruebas de integración sobre la API HTTP real del panel y de cada microservicio (la malla corre en proceso), `deploy-rules.sh` contra un Kibana simulado, `reset.sh` contra un sandbox, autenticación completa. |
+| **Desarrollo e implementación en entorno de simulación** | ✅ | Los tres ataques se simulan y detectan de punta a punta; el panel exige login; las 14 reglas se despliegan como código; `services/collector/verify-cobertura.py` demuestra que ninguna alerta real del SIEM se pierde en el camino al panel. Falta la suite E2E de navegador (ver Pendientes, más abajo). |
 
 Comando único para reproducir todo: `./scripts/pruebas_completas.sh`.
 
@@ -44,13 +44,13 @@ una prueba que falla si el problema vuelve a aparecer.
 | F-04 | No hay pruebas de navegador (E2E) | ⚠️ ABIERTO — ver Pendientes |
 | F-05 | El contrato de `/api/v1/incidents` es inconsistente entre endpoints | 🔸 MENOR |
 | F-06 | La demo depende de haber atacado en las últimas 24h | ✅ MITIGADO — los scripts de demo preparan todo desde cero |
-| F-07 | Cobertura desigual: `src/siem_agent.py` muy por debajo del resto (depende de la API de Gemini, la parte menos verificable sin red) | 🔸 PARCIAL — 39%, con pruebas dedicadas para la normalización de severidad |
+| F-07 | Cobertura desigual: `services/analyst/siem_agent.py` muy por debajo del resto (depende de la API de Gemini, la parte menos verificable sin red) | 🔸 PARCIAL — 39%, con pruebas dedicadas para la normalización de severidad |
 | F-08 | La suite dependía de la fecha del sistema | ✅ RESUELTO — fixtures centralizados + guarda de regresión |
 | D-01 | Una regla ruidosa de Kibana tapaba a las demás en la muestra que ve el LLM | ✅ RESUELTO — agrupa por regla, no por recencia global |
 | D-02 | La víctima aparecía como atacante en las alertas agrupadas por host | ✅ RESUELTO — distingue atacante/víctima/usuario por el campo agrupado |
 | D-11 | El panel atribuía a una regla de Elastic detecciones que en realidad hizo el clasificador propio, con nombres inventados | ✅ RESUELTO — `detection_source` declara la procedencia real; ningún `rule_name` se escribe a mano (certificado por AST) |
 | D-12 | Una agregación sin `.keyword` sobre `filebeat-*` rompía toda la captura del SIEM | ✅ RESUELTO |
-| D-13 | Las alertas de escaneo de puertos y phishing nunca se cruzaban contra los incidentes — solo SSH lo hacía | ✅ RESUELTO — `src/classifier.py` cruza esas alertas por IP y técnica; sigue sin existir un detector genérico para una técnica MITRE completamente nueva (decisión de diseño) |
+| D-13 | Las alertas de escaneo de puertos y phishing nunca se cruzaban contra los incidentes — solo SSH lo hacía | ✅ RESUELTO — `services/classifier/classifier.py` cruza esas alertas por IP y técnica; sigue sin existir un detector genérico para una técnica MITRE completamente nueva (decisión de diseño) |
 
 ### Pendiente, por prioridad
 
@@ -107,11 +107,11 @@ python3 -m pytest tests/test_no_autonomy.py -q   # solo la certificación por AS
 | **Estático (SAST + linters)** | Lee el código, no lo ejecuta. Busca vulnerabilidades conocidas (`bandit`, `pylint-secure-coding-standard`) y estilo/prolijidad (`ruff`, `eslint`) | `subprocess.run(..., shell=True)` sin justificar |
 | **Estático (AST, propio)** | `tests/test_no_autonomy.py` recorre el AST del proyecto para certificar una propiedad del producto: nada ejecuta comandos | Detecta `os.system()` disfrazado como `getattr(os, "sys"+"tem")` |
 | **Unitaria** (`tests/unit/`) | Una función o módulo aislado, sin contactar nada externo | `classifier.detect_port_scans()` con eventos sintéticos |
-| **Servicio** (`tests/integration/`) | El contrato real de un componente completo — API HTTP con cliente Flask real, scripts como procesos reales contra un sandbox | Login completo con CSRF y cookies de sesión reales |
+| **Servicio** (`tests/integration/`) | El contrato real de un componente completo — API HTTP con cliente Flask real (la malla de microservicios en proceso, ver `malla_en_proceso` en `tests/conftest.py`), scripts como procesos reales contra un sandbox | Login completo con CSRF y cookies de sesión reales |
 
-### Inventario, última corrida (28-09-2026)
+### Inventario, última corrida (12-10-2026, tras la migración a microservicios)
 
-**Unitarias — 846 pruebas, 5 omitidas, ~4s.** Los archivos más grandes:
+**Unitarias — 855 pruebas, 5 omitidas, ~8s.** Los archivos más grandes:
 `test_validators.py` (91, validadores de entrada no confiable),
 `test_reglas_como_codigo.py` (155, catálogo de reglas versionado),
 `test_iconos.py` (67, sprite SVG sin huérfanos), `test_gestion_usuarios.py`
@@ -122,7 +122,9 @@ por copiar-pegar), `test_contraste_de_la_interfaz.py` (53, WCAG AA),
 El resto (18 archivos más) cubre desde la identidad de incidentes hasta el
 tag de "resuelto" y el interruptor del LLM, uno por función específica.
 
-**Servicio — 232 pruebas, ~46s.** `test_api01_autenticacion.py` (60, login/
+**Servicio — 270 pruebas, ~45s.** `test_microservicios.py` (38, contratos de la
+malla: token interno, qué etapa del ciclo tolera fallar, segunda barrera del
+servicio audit, el panel ante un servicio caído), `test_api01_autenticacion.py` (60, login/
 roles/sesión/CSRF/fuerza bruta), `test_api_v1.py` (38, contrato completo con
 cliente Flask), `test_scripts_de_demostracion.py` (40, los guiones de demo no
 ejecutan nada al imprimirse y nombran scripts reales),
@@ -131,11 +133,15 @@ ejecutan nada al imprimirse y nombran scripts reales),
 simulado), `test_api_caracterizacion.py` (17), `test_a01_reset_preserva_auditoria.py`
 (12, `reset.sh` real contra un sandbox), `test_auditoria_append_only.py` (7).
 
-**Estático (AST) — 38 pruebas, 2 omitidas, ~15s.** `tests/test_no_autonomy.py`:
+**Estático (AST) — 64 pruebas, ~2s.** `tests/test_no_autonomy.py`:
 certificación de que ningún módulo ejecuta procesos, abre una shell o se
-conecta a un host remoto por su cuenta.
+conecta a un host remoto por su cuenta. Desde la migración, la allowlist de
+`subprocess` quedó vacía (el orquestador habla HTTP), y además certifica que
+toda llamada entre servicios tiene destino y ruta literales, enumera la API
+completa de cada servicio y exige que la auditoría no exponga modificación ni
+borrado.
 
-**Total: 1116 pruebas.**
+**Total: 1189 pruebas.**
 
 ### Cobertura
 
@@ -143,9 +149,13 @@ conecta a un host remoto por su cuenta.
 ./scripts/pruebas_de_servicio.sh   # incluye el paso de cobertura al final
 ```
 
-Umbral: **≥ 80%** sobre `src/classifier.py`, `src/siem_lib.py`,
-`src/dashboard.py`, `src/siem_validators.py`, `src/siem_auth.py`,
-`src/manage_users.py`. `src/siem_agent.py` queda fuera del alcance estricto a
+Umbral: **≥ 80%** sobre `services/classifier/classifier.py`, `libs/siem_lib.py`,
+`services/gateway/dashboard.py`, `libs/siem_validators.py`, `services/auth/siem_auth.py`,
+`services/auth/manage_users.py`, más los 10 módulos que agregó la migración a
+microservicios: `libs/siem_servicios.py`, `services/gateway/sesion_web.py`,
+`services/audit/cadena.py`, `services/pipeline/orquestador.py` y la API de cada
+servicio (`*_service.py`). Última corrida: 93% sobre los 16.
+`services/analyst/siem_agent.py` queda fuera del alcance estricto a
 propósito: su camino principal depende de la API de Gemini, y solo se
 prueban el respaldo determinístico y un cliente LLM hostil simulado (F-07,
 más arriba).
@@ -187,7 +197,7 @@ más abajo, "Los dos caminos de detección").
 
 Qué tener abierto: terminal con el guion, Kibana en dos pestañas (Security →
 Rules y Security → Alerts), el panel (`http://127.0.0.1:5000/login`), y una
-terminal libre para `src/audit_verify.py` al final. Los usuarios de
+terminal libre para `services/audit/audit_verify.py` al final. Los usuarios de
 laboratorio los crea `./scripts/demo.sh` (`analista`/`observador`/`auditor`,
 credenciales conocidas a propósito — los secretos reales están en `.env`,
 sin versionar).
@@ -208,7 +218,7 @@ Va narrado y con pausas, pide confirmación antes de borrar.
 
 1. **Todo a cero** — borra reglas, alertas, índices de Filebeat y artefactos
    del pipeline. No baja Docker. El registro de auditoría **no** se borra: se
-   archiva en `audit/archive/` (hallazgo A-01) — decirlo antes de que lo
+   archiva en `data/audit/archivo/` (hallazgo A-01) — decirlo antes de que lo
    pregunten.
 2. **Mostrar que no hay nada** — recargar Kibana (0 reglas, 0 alertas) y el
    panel (vacío) a la vista de todos.
@@ -244,10 +254,10 @@ Va narrado y con pausas, pide confirmación antes de borrar.
 
 **Si preguntan por qué un escaneo o un phishing aparecen "sin regla SIEM":**
 puede pasar, pero ya no es la regla general (hallazgo D-13, resuelto). Si en
-el momento de correr `src/siem_pipeline.py` la alerta de Kibana todavía no
+el momento de correr `services/pipeline/siem_pipeline.py` la alerta de Kibana todavía no
 disparó, el incidente queda como "Sin regla SIEM (detección propia)"
 temporalmente — volver a correr el pipeline un rato después, ya con la
-alerta indexada, lo actualiza a la regla real. `src/verify-cobertura.py` es
+alerta indexada, lo actualiza a la regla real. `services/collector/verify-cobertura.py` es
 la herramienta para demostrar esto: compara las alertas reales de
 Elasticsearch contra lo que muestra el panel y avisa si algo quedó sin
 actualizar.
@@ -269,7 +279,7 @@ Copia el registro, altera una decisión aprobada para que diga "descartada", y
 el verificador la detecta señalando la línea y terminando con código 1.
 Trabaja sobre una copia y prueba con SHA-256 que el archivo real no cambió —
 el registro no es imposible de editar, es **detectable**, y por eso sirve
-como evidencia. **No editar `data/decisions.jsonl` a mano para esto:** es el
+como evidencia. **No editar `data/audit/decisions.jsonl` a mano para esto:** es el
 registro de auditoría real y no hay forma prolija de deshacer el cambio.
 
 ### Si algo falla
@@ -278,9 +288,9 @@ registro de auditoría real y no hay forma prolija de deshacer el cambio.
 |---------|----------|-----------|
 | `Kibana no responde` | El stack está abajo | `./scripts/start.sh` y esperar a que libere la consola |
 | **La captura de Elasticsearch no se renovó** | El pipeline siguió con datos viejos | No presentar así. Revisar el log del pipeline — suele ser un 400 en una consulta |
-| `todavía no hay alertas` | Las reglas no llegaron a correr | No es un error: el Agente 1 detecta igual. Esperar y correr `python3 src/siem_pipeline.py` de nuevo |
+| `todavía no hay alertas` | Las reglas no llegaron a correr | No es un error: el Agente 1 detecta igual. Esperar y correr `./scripts/siem.sh pipeline` de nuevo |
 | La fuerza bruta no completa | Faltan los contenedores de simulación | `docker compose --profile simulation up -d ssh-target hydra-attacker` |
-| El panel muestra el diseño viejo | Jinja cachea las plantillas | Reiniciar `python3 src/dashboard.py` |
+| El panel muestra el diseño viejo | La imagen del gateway es anterior al cambio | Reconstruirla: `docker compose up -d --build gateway` |
 
 ### Preguntas probables
 
@@ -288,10 +298,10 @@ registro de auditoría real y no hay forma prolija de deshacer el cambio.
 |----------|-----------------|
 | ¿Cómo sé que no son datos preparados? | Se acaba de construir desde cuatro ceros, recargando el navegador en cada paso. |
 | ¿El sistema puede bloquear una IP? | No. No existe ninguna ruta que ejecute nada — certificado por `tests/test_no_autonomy.py`, que recorre el AST de todo el código. |
-| ¿Y si la IA alucina un comando? | Los comandos salen de un catálogo fijo en `src/classifier.py`; el LLM no tiene *function calling*. Hay una prueba con un LLM hostil simulado. |
+| ¿Y si la IA alucina un comando? | Los comandos salen de un catálogo fijo en `services/classifier/classifier.py`; el LLM no tiene *function calling*. Hay una prueba con un LLM hostil simulado. |
 | ¿Por qué a veces el escaneo aparece sin regla del SIEM? | El clasificador lo detecta sin esperar a Kibana; si la alerta real ya disparó para esa IP, el panel la muestra. Ver "Los dos caminos de detección". |
 | ¿Puedo reproducir esto desde cero? | Es literalmente lo que se acaba de hacer: `./scripts/start.sh` levanta el stack y despliega las 14 reglas. |
-| ¿Cuánto está probado? | 1116 pruebas, ≥80% de cobertura sobre el alcance declarado, y la puerta de calidad corre SAST además de los tests. |
+| ¿Cuánto está probado? | 1189 pruebas, ≥80% de cobertura sobre el alcance declarado, y la puerta de calidad corre SAST además de los tests. |
 
 ### Comandos, en una tarjeta
 
@@ -299,14 +309,14 @@ registro de auditoría real y no hay forma prolija de deshacer el cambio.
 # Antes
 ./scripts/demo-desde-cero.sh --estado      # ¿en qué estado está?
 ./scripts/start.sh                         # si el stack está abajo
-python3 src/dashboard.py                   # el panel, en otra terminal
+./scripts/siem.sh estado                   # ¿están arriba los microservicios?
 
 # La demostración
 ./scripts/demo-desde-cero.sh               # el guion completo, narrado
 
 # Después
 ./scripts/demo-auditoria.sh                # romper la cadena y detectarlo
-python3 src/audit_verify.py                # verificar el registro real
+./scripts/siem.sh auditoria                # verificar el registro real
 
 # Variantes
 ./scripts/demo-desde-cero.sh --limpiar     # solo dejar todo en cero
