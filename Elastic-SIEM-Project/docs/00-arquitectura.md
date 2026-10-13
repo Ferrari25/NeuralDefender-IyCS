@@ -288,7 +288,7 @@ corresponde a algo que antes se podía violar por convención y ahora no:
 | Servicio | Rutas |
 |----------|-------|
 | auth | `POST /v1/authenticate` · `GET /v1/users/<username>` · `GET /v1/users-summary` |
-| audit | `POST /v1/decisions` · `GET /v1/decisions` · `GET /v1/decisions/verify` · `POST /v1/analysis-history` · `GET /v1/analysis-history/verify` |
+| audit | `POST /v1/decisions` · `GET /v1/decisions` · `GET /v1/decisions/verify` · `POST /v1/analysis-history` · `GET /v1/analysis-history/verify` · `POST /v1/activity` · `GET /v1/activity` · `GET /v1/activity/verify` · `GET /v1/reports` |
 | collector | `POST /v1/snapshots` · `GET /v1/snapshots/latest` |
 | classifier | `POST /v1/classify` |
 | analyst | `POST /v1/analyze` |
@@ -299,7 +299,25 @@ La API del gateway hacia el navegador (`/api/v1/...`) no cambió con la
 migración. La memoria del agente agregó cuatro rutas: `GET /api/v1/memoria`,
 `POST /api/v1/memoria/documentos`, `POST /api/v1/memoria/lecciones` y
 `POST /api/v1/memoria/lecciones/<leccion_id>/revision` (las tres de escritura
-exigen el permiso `decidir`).
+exigen el permiso `decidir`). Los reportes agregaron `GET /api/v1/reportes`
+(permiso `ver_auditoria`).
+
+### Reportes
+
+`services/audit/reportes.py` arma un reporte de solo lectura a partir de los
+registros encadenados: `decisions.jsonl` (cada decisión, con el contexto del
+incidente al momento de decidir: acción, tipo de ataque, severidad, falso
+positivo, procedencia) y `actividad.jsonl` (documentos cargados y lecciones
+propuestas, aprobadas o rechazadas, con quién y cuándo). Incluye un resumen por
+analista, por tipo de ataque, por severidad y por estado, y **el estado de la
+cadena de hashes**: si la cadena está rota, el reporte lo dice.
+
+- Panel: *Historial de Decisiones → Sacar un reporte* (CSV descargable o JSON).
+- Terminal: `./scripts/siem.sh reporte --formato csv --desde 2026-10-01`, que
+  lo guarda en `reportes/`.
+- El CSV antepone `'` a las celdas que empiezan con `=`, `+`, `-` o `@`, para
+  que una nota o un dato de un log no se ejecute como fórmula al abrirlo en
+  una planilla.
 
 ### El ciclo del pipeline
 
@@ -374,7 +392,8 @@ así que el agente aprende aunque `SIEM_USE_LLM=false`.
 embeddings: alcanza para la demo y no depende de ninguna API, pero no
 encuentra sinónimos. Una lección revisada no se reabre, y una rechazada no se
 vuelve a proponer. `reset.sh` no borra la memoria. Los cambios de estado de una
-lección guardan quién y cuándo, pero no van a la cadena de hash de `audit`.
+lección quedan en `data/audit/actividad.jsonl`, encadenados por hash como el
+resto de la auditoría.
 
 ### Limitaciones conocidas
 

@@ -218,7 +218,7 @@ paso "4/5 · Suite completa y cobertura"
 COBERTURA=(classifier siem_lib dashboard siem_validators siem_auth manage_users
            siem_servicios sesion_web cadena orquestador audit_service auth_service
            collector_service classifier_service analyst_service pipeline_service
-           memoria knowledge_service)
+           memoria knowledge_service reportes)
 .devtools/bin/pytest -q "${COBERTURA[@]/#/--cov=}" \
   --cov-report=term > "$DIR/04-suite-y-cobertura.txt" 2>&1
 TOTAL=$(grep -E '^[0-9]+ passed' "$DIR/04-suite-y-cobertura.txt" | tail -1)

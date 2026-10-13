@@ -79,7 +79,7 @@ titulo 1 "COBERTURA" "— ≥ 80% sobre el alcance declarado"
 COBERTURA=(classifier siem_lib dashboard siem_validators siem_auth manage_users
            siem_servicios sesion_web cadena orquestador audit_service auth_service
            collector_service classifier_service analyst_service pipeline_service
-           memoria knowledge_service)
+           memoria knowledge_service reportes)
 paso "${#COBERTURA[@]} módulos del alcance"         $BIN/pytest -q \
      "${COBERTURA[@]/#/--cov=}" --cov-fail-under=80 --cov-report=
 

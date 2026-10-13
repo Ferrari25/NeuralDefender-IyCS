@@ -113,9 +113,16 @@ def test_cada_registro_conserva_el_contexto_del_momento(client):
     registro = r.get_json()["record"]
     # API-01 sumó la identidad de la sesión: quién decidió, con qué rol, en qué
     # sesión y desde qué cliente.
-    assert set(registro) == {"ts", "incident_id", "action_id", "decision",
-                             "analyst", "analyst_rol", "session_id", "user_agent",
-                             "note", "source_ip", "attacker_ips", "prev_hash"}
+    base = {"ts", "incident_id", "action_id", "decision",
+            "analyst", "analyst_rol", "session_id", "user_agent",
+            "note", "source_ip", "attacker_ips", "prev_hash"}
+    # Para los reportes se sumó el contexto del incidente al decidir. Cada uno
+    # aparece si el incidente lo tiene (este, sin análisis, no trae severidad).
+    contexto = {"accion", "attack_type", "severidad", "falso_positivo", "detection_source"}
+    assert base <= set(registro) <= base | contexto
+    assert registro["accion"] == inc["recommended_actions"][0]["accion"]
+    assert registro["attack_type"] == inc["classification"]["attack_type"]
+    assert not any(k.startswith("comando") for k in registro), "el registro nunca guarda el comando"
     assert re.match(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}", registro["ts"])
     assert registro["analyst"] == "ana" and registro["analyst_rol"] == "analyst"
     assert registro["session_id"], "cada decisión se atribuye a una sesión concreta"

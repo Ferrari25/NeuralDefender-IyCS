@@ -299,6 +299,26 @@ De arriba hacia abajo:
   pide el motivo antes de confirmar — queda en la auditoría y le da contexto
   al Agente 2 la próxima vez.
 
+### Confirmación antes de decidir
+
+Ningún Aprobar/Descartar (de una acción o de una lección del agente) se
+registra al primer clic. Antes se abre un cuadro con lo importante de lo que
+se está por firmar:
+
+- **El incidente**: tipo, severidad, IP atacante, volumen y ventana,
+  procedencia de la detección, probabilidad de falso positivo, antecedentes de
+  la IP y lecciones aprobadas que aplican.
+- **La acción**: texto, responsable, plazo, impacto, y el comando con su
+  explicación (como texto, nunca se ejecuta).
+- **Advertencias calculadas de los datos**: falso positivo ALTO al aprobar,
+  impacto ALTO, una decisión previa de otra persona que se va a reemplazar, un
+  descarte sin motivo, o una lección que aprueba quien la propuso.
+- **Qué pasa al confirmar**: a nombre de quién queda, que el sistema no
+  ejecuta nada y que el caso alimenta la memoria del agente.
+
+Es un `<dialog>` nativo (atrapa el foco; Escape cancela). El código está en
+`confirmarDecision` y `confirmarLeccion` (`services/gateway/static/app.js`).
+
 ### Ataques Recientes
 
 Barra lateral, ordenada por severidad y luego por `last_seen`: ícono de tipo,
@@ -314,6 +334,10 @@ agrega una línea nueva y nunca se borra nada. El panel deduplica por acción y
 muestra la decisión más reciente de cada una; el archivo completo, con cada
 revisión, se sigue auditando leyendo `data/audit/decisions.jsonl` o vía
 `GET /api/v1/decisions`.
+
+Debajo, **Sacar un reporte** descarga un CSV (o abre un JSON) con las
+decisiones y la actividad sobre la memoria del agente, filtrable por fechas.
+Ver `docs/00-arquitectura.md` §Reportes.
 
 ### Correlación entre incidentes
 

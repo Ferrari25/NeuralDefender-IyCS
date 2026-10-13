@@ -45,8 +45,8 @@ sin necesidad de Docker).
    la tabla de Eventos de Seguridad Activos; cada decisión queda en un
    registro append-only (`data/audit/decisions.jsonl`), encadenado por hash.
 
-Cada paso es un **microservicio** en su propio contenedor (más `auth`, `audit`
-y el orquestador `pipeline`); ver
+Cada paso es un **microservicio** en su propio contenedor (más `auth`, `audit`,
+la memoria del agente `knowledge` y el orquestador `pipeline`); ver
 [`docs/00-arquitectura.md` §Microservicios](./docs/00-arquitectura.md#microservicios-de-la-capa-ia).
 
 ```bash
@@ -60,31 +60,62 @@ Detalle completo, y panel por panel, en
 [`docs/01-instalacion-uso-y-simulaciones.md`](./docs/01-instalacion-uso-y-simulaciones.md)
 y [`docs/02-reglas-y-dashboard.md`](./docs/02-reglas-y-dashboard.md).
 
-## Estructura del repositorio
+## Dónde está todo
 
-**Stack Elastic**
-- `docker-compose.yml` — Elasticsearch, Kibana, Logstash, Filebeat + servicio
-  `setup` + perfil `simulation` (contenedores de ataque, no arrancan por defecto)
-- `elasticsearch/`, `kibana/`, `logstash/`, `filebeat/` — configuración por servicio
-- `.env` / `.env.example` — variables de entorno (`.env` real gitignored)
-- `rules/ndjson/` — catálogo de reglas de detección versionadas
-- `simulation/` — scripts de simulación de ataque
-- `network_logs/` — punto de entrada de eventos de red/web (Filebeat + detección offline)
+Tres reglas ordenan el repositorio:
 
-**Capa de IA y dashboard — microservicios** (`services/<servicio>/`, cada uno con `Dockerfile`)
-- `services/gateway/` — panel de supervisión (Flask, `templates/`, `static/`); único servicio publicado
-- `services/auth/` — autenticación, roles y gestión de usuarios (`manage_users.py`)
-- `services/audit/` — registro append-only encadenado por hash y su verificador
-- `services/collector/` — extracción desde Elasticsearch (+ `verify-cobertura.py`, `get-logs.py`)
-- `services/classifier/` — Agente 1, clasificación determinística y playbook
-- `services/analyst/` — Agente 2, análisis LLM con fallback
-- `services/pipeline/` — orquestador del ciclo y reporte de incidentes
-- `libs/` — librería compartida (`siem_lib`, `siem_validators`, `siem_servicios`)
-- `data/<servicio>/` — los datos de cada servicio (volúmenes)
+1. **El código de cada microservicio vive en `services/<servicio>/`.**
+2. **Todo lo que el sistema genera vive en `data/<servicio>/`**, y solo lo
+   escribe el servicio dueño de esa carpeta.
+3. **Lo que una persona saca para leer va a `reportes/`.**
+
+```
+Elastic-SIEM-Project/
+├── services/                   código de la capa IA (un microservicio por carpeta)
+│   ├── gateway/                panel web: dashboard.py, templates/, static/   (único publicado, :5000)
+│   ├── auth/                   usuarios y roles: siem_auth.py, manage_users.py
+│   ├── audit/                  auditoría append-only: cadena.py, audit_verify.py, reportes.py
+│   ├── collector/              extracción desde Elasticsearch
+│   ├── classifier/             Agente 1: reglas, umbrales y playbook de acciones
+│   ├── analyst/                Agente 2: siem_agent.py + perfil_agente.md (la parte "Gem")
+│   ├── knowledge/              memoria del Agente 2: memoria.py (documentos, casos, lecciones)
+│   └── pipeline/               orquestador del ciclo collector → classifier → analyst → audit
+├── libs/                       código compartido por todos los servicios
+├── data/                       TODO lo que el sistema genera (volúmenes de Docker)
+│   ├── audit/                  decisions.jsonl · analysis_history.jsonl · actividad.jsonl
+│   │   └── archivo/            auditoría archivada por reset.sh (solo lectura, nunca se borra)
+│   ├── auth/                   users.json (hashes Argon2id)
+│   ├── knowledge/              documentos.json · casos.json · lecciones.json
+│   ├── collector/              siem_clean.json (última captura del SIEM)
+│   └── pipeline/               siem_incidents.json (lo que muestra el panel)
+├── reportes/                   reportes generados con ./scripts/siem.sh reporte
+├── scripts/                    operación: start, reset, siem.sh, demos, puerta de calidad
+├── simulation/                 scripts de ataque (brute force, port scan, phishing)
+├── network_logs/               eventos de red/web: entrada de Filebeat y del Agente 1
+├── rules/ndjson/               reglas de detección de Kibana, como código
+├── elasticsearch/ kibana/ logstash/ filebeat/    configuración del stack Elastic
+├── tests/                      unit/ · integration/ · test_no_autonomy.py
+└── docs/                       documentación técnica (índice en 00-arquitectura.md)
+```
+
+**¿Dónde busco…?**
+
+| Quiero… | Está en |
+|---------|---------|
+| ver qué decidió cada analista | `data/audit/decisions.jsonl`, o desde el panel: **Historial de Decisiones → Sacar un reporte** |
+| sacar un reporte (CSV/JSON) | panel, o `./scripts/siem.sh reporte --formato csv [--desde AAAA-MM-DD] [--hasta AAAA-MM-DD]` → `reportes/` |
+| ver qué aprendió el agente | panel, tarjeta **Memoria del agente**, o `data/knowledge/lecciones.json` |
+| ver quién aprobó cada lección o cargó un documento | `data/audit/actividad.jsonl` (también figura en el reporte) |
+| cambiar la "personalidad" del agente | `services/analyst/perfil_agente.md` |
+| cambiar las acciones y los comandos sugeridos | `services/classifier/classifier.py` (`_playbook`) |
+| verificar que nadie tocó la auditoría | `./scripts/siem.sh auditoria` |
+| el incidente que muestra el panel | `data/pipeline/siem_incidents.json` |
 
 **Scripts operativos** (`scripts/`)
-- `start.sh` / `reset.sh` — levantar el stack / reiniciar de cero
-- `siem.sh` — atajos para operar la capa IA (`pipeline`, `usuarios`, `auditoria`, `cobertura`)
+- `start.sh` / `reset.sh` — levantar el stack / reiniciar de cero (la auditoría
+  y la memoria del agente se conservan)
+- `siem.sh` — atajos para operar la capa IA (`pipeline`, `usuarios`, `auditoria`,
+  `reporte`, `cobertura`, `estado`)
 - `deploy-rules.sh` / `export-rules.sh` — reglas de detección como código
 - `pruebas_de_codigo_estatico.sh` / `pruebas_de_servicio.sh` / `pruebas_completas.sh` —
   la puerta de calidad (ver

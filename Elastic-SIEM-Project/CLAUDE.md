@@ -35,7 +35,7 @@ más una librería compartida (`libs/`). Cada servicio es dueño de sus datos en
 |----------|----------------|-----|
 | `gateway` | `dashboard.py`, `sesion_web.py`, `templates/`, `static/` | Panel de supervisión (Flask). **Único publicado** (127.0.0.1:5000). Sesión, CSRF, RBAC. |
 | `auth` | `siem_auth.py`, `manage_users.py` (CLI) | Usuarios, Argon2id, roles, anti-fuerza bruta → `data/auth/users.json`. |
-| `audit` | `cadena.py`, `audit_verify.py` (CLI) | **Único escritor** de los registros append-only encadenados → `data/audit/`. |
+| `audit` | `cadena.py`, `audit_verify.py` (CLI), `reportes.py` | **Único escritor** de los registros append-only encadenados (decisiones, corridas, actividad de memoria) → `data/audit/`. Arma los reportes. |
 | `collector` | `collector.py`, `es_client.py` | El único con credenciales de ES. Captura → `data/collector/siem_clean.json`. |
 | `classifier` | `classifier.py` | Agente 1 determinístico (reglas/umbral + playbook). Sin estado; lee `network_logs/` (ro). |
 | `analyst` | `siem_agent.py`, `perfil_agente.md` | Agente 2 (Gemini con fallback). Sin estado; el único con `GEMINI_API_KEY`. Consulta su memoria a `knowledge`. |
@@ -60,7 +60,9 @@ bash simulation/run-port-scan.sh --offline && ./scripts/siem.sh pipeline
 ```
 
 Las herramientas de cada servicio corren DENTRO de su contenedor:
-`./scripts/siem.sh {pipeline|usuarios|auditoria|cobertura|logs-es|estado}`.
+`./scripts/siem.sh {pipeline|usuarios|auditoria|reporte|cobertura|logs-es|estado}`.
+Mapa de carpetas y "¿dónde busco…?": `README.md` §Dónde está todo. Regla: código en
+`services/`, todo lo generado en `data/<servicio>/`, reportes en `reportes/`.
 
 ## Notas que ahorran tiempo
 
@@ -72,6 +74,10 @@ Las herramientas de cada servicio corren DENTRO de su contenedor:
   `docs/00-arquitectura.md` §Memoria del Agente 2). Cada decisión del panel es un caso;
   un patrón repetido genera una lección *propuesta* que no se usa hasta que un analista
   la aprueba. Una lección solo ajusta `falso_positivo_probabilidad`, nunca severidad ni acciones.
+- **Toda decisión pasa por un cuadro de confirmación** (`confirmarDecision` /
+  `confirmarLeccion` en `static/app.js`) que resume incidente, acción, comando y
+  advertencias. Cada decisión guarda su contexto (acción, tipo, severidad, FP) para los
+  reportes — nunca el comando. Reportes: `GET /api/v1/reportes?formato=csv|json`.
 - **Los comandos de respuesta salen del playbook de `services/classifier/classifier.py`, no del LLM**
   (mitigación de inyección de prompt vía logs), y los datos que se interpolan en
   ellos pasan por `libs/siem_validators.py`: si no validan, la acción no se ofrece.
