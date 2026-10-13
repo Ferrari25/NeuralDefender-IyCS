@@ -46,6 +46,7 @@ SCRIPTS_DE_DEMOSTRACION = [
     SIMULACION / "run-port-scan.sh",
     SIMULACION / "run-phishing.sh",
     SIMULACION / "run-brute-force.sh",
+    SIMULACION / "run-pentest.sh",
 ]
 
 # IP por defecto de cada simulación, fijadas en docs/05 y usadas por las pruebas de

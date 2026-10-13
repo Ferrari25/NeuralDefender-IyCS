@@ -73,6 +73,9 @@ paso "pytest tests/unit"              $BIN/pytest -q tests/unit
 titulo 96 "SERVICIO" "— contrato real: API, deploy-rules.sh, reset.sh (tests/integration/)"
 paso "pytest tests/integration"       $BIN/pytest -q tests/integration
 
+titulo 35 "PENTEST" "— ataques evasivos por el clasificador real (sin regresiones)"
+paso "pytest test_pentest"            $BIN/pytest -q tests/integration/test_pentest.py
+
 titulo 1 "COBERTURA" "— ≥ 80% sobre el alcance declarado"
 # Los 6 módulos del alcance original más los 10 que agregó la migración a
 # microservicios (APIs de cada servicio, cliente interno, cadena, orquestador).

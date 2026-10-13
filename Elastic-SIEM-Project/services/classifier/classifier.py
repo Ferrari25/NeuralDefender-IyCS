@@ -50,6 +50,25 @@ BRUTE_FORCE_THRESHOLD   = 20      # fallos de auth → fuerza bruta
 CRITICAL_FAILURE_COUNT  = 5000    # por encima → severidad crítica
 PORT_SCAN_DISTINCT_PORTS = 10     # puertos distintos sondeados → port scan
 
+# Cómo se relacionan las acciones principales de cada playbook entre sí:
+#   "pasos"     — un procedimiento a seguir EN ORDEN (contener → investigar →
+#                 remediar → endurecer). Cada acción avanza sobre la anterior.
+#   "distintas" — acciones independientes; el analista aplica las que
+#                 correspondan, sin un orden obligatorio.
+# Esta marca la decide el Agente 1 por tipo de ataque, y el panel la anuncia.
+# Las alternativas ("otras formas de hacerlo") de una acción son SIEMPRE
+# distintas entre sí, sin importar este modo: son formas de lograr esa acción.
+MODO_SOLUCION_POR_ATAQUE = {
+    "ssh_brute_force":       "pasos",      # bloquear → ver si entró → rotar → endurecer
+    "port_scan":             "pasos",      # bloquear → relevar → cerrar → monitorear
+    "credential_harvesting": "distintas",  # bloquear, resetear, avisar y blocklist son paralelas
+}
+MODO_SOLUCION_DEFECTO = "pasos"
+
+
+def _modo_solucion(attack_type: str) -> str:
+    return MODO_SOLUCION_POR_ATAQUE.get(attack_type, MODO_SOLUCION_DEFECTO)
+
 # Técnicas MITRE que detect_auth_incidents() acepta como "esto es una alerta de autenticación".
 # Sin esta lista, cualquier alerta de Kibana (port scan, phishing) se procesaría acá también.
 _AUTH_MITRE_TECHNIQUES = {"T1110"}
@@ -192,7 +211,8 @@ def _cmd(plantilla: str, **partes: str) -> str:
 
 def _accion(orden: int, accion: str, responsable: str, plazo: str, impacto: str,
             comando: str | None = None, argv: list[str] | None = None,
-            explicacion: str | None = None, resultado_simulado: str | None = None) -> dict:
+            explicacion: str | None = None, resultado_simulado: str | None = None,
+            alternativas: list[dict] | None = None) -> dict:
     """Construye una acción del playbook con su forma canónica.
 
     `resultado_simulado` es una VISTA PREVIA de texto, escrita a mano acá,
@@ -201,6 +221,9 @@ def _accion(orden: int, accion: str, responsable: str, plazo: str, impacto: str,
     certifica); esto existe para que el analista entienda el impacto antes de
     decidir, no para simular que algo ya pasó. El panel lo rotula sin
     ambigüedad como simulado — ver `renderResultadoSimulado` en app.js.
+
+    `alternativas` son otras formas de lograr lo mismo (ver `_alternativa`).
+    `_finalize` las aplana en la lista de acciones, justo después de esta.
     """
     return {
         "orden": orden, "accion": accion,
@@ -211,7 +234,140 @@ def _accion(orden: int, accion: str, responsable: str, plazo: str, impacto: str,
         "comando_explicacion": explicacion,
         "resultado_simulado": resultado_simulado,
         "responsable": responsable, "plazo": plazo, "impacto": impacto,
+        "alternativas": alternativas or [],
     }
+
+
+def _alternativa(accion: str, comando: str, explicacion: str, resultado_simulado: str,
+                 ventajas: str, desventajas: str, argv: list[str] | None = None) -> dict:
+    """Otra forma de resolver lo mismo que una acción del playbook.
+
+    Un entorno real no siempre tiene UFW, ni `/var/log/auth.log`, ni conviene
+    siempre la misma respuesta: el analista elige según su infraestructura y
+    según cuánto quiere arriesgar. Por eso cada alternativa declara sus
+    `ventajas` y `desventajas` —el trade-off concreto— en vez de presentarse
+    como "la" respuesta.
+
+    Mismas reglas que una acción: el comando es una plantilla literal de este
+    archivo armada con `_cmd`, nunca texto del LLM ni del log, y nada lo
+    ejecuta. `_finalize` le da su propio `action_id` y la marca con
+    `alternativa_de`, así que se aprueba o descarta por separado y queda en el
+    registro de auditoría como cualquier otra decisión.
+    """
+    alt = _accion(0, accion, "", "", "", comando=comando, argv=argv,
+                  explicacion=explicacion, resultado_simulado=resultado_simulado)
+    alt["ventajas"] = ventajas
+    alt["desventajas"] = desventajas
+    return alt
+
+
+# ─── Catálogo de alternativas ────────────────────────────────────────────────
+# Familias reutilizadas por más de un tipo de ataque. Todas reciben datos YA
+# validados por `_playbook`.
+
+def _alt_bloqueo_entrante(ip: str) -> list[dict]:
+    """Bloquear una IP sin depender de UFW: iptables, nftables o firewalld."""
+    return [
+        _alternativa(
+            "Bloquear la IP con iptables (sin UFW)",
+            _cmd("sudo iptables -I INPUT -s {ip} -j DROP", ip=ip),
+            argv=["sudo", "iptables", "-I", "INPUT", "-s", ip, "-j", "DROP"],
+            explicacion=(
+                "Inserta al principio de la cadena INPUT una regla que descarta todo paquete "
+                "con origen en esa IP. Es la capa que UFW usa por debajo, disponible en casi "
+                "cualquier Linux."),
+            resultado_simulado=(
+                "Chain INPUT (policy ACCEPT)\n"
+                "num  target  prot  source           destination\n"
+                f"1    DROP    all   {ip}    0.0.0.0/0\n"
+                "La regla aplicaría de inmediato, por delante de cualquier otra."),
+            ventajas="Funciona aunque UFW no esté instalado; efecto inmediato.",
+            desventajas=("No sobrevive a un reinicio sin iptables-persistent; si el host usa "
+                         "UFW o firewalld, la regla queda fuera de su gestión y es fácil "
+                         "olvidarla.")),
+        _alternativa(
+            "Bloquear la IP con nftables",
+            _cmd("sudo nft add rule inet filter input ip saddr {ip} drop", ip=ip),
+            argv=["sudo", "nft", "add", "rule", "inet", "filter", "input",
+                  "ip", "saddr", ip, "drop"],
+            explicacion=(
+                "Agrega la regla de descarte en nftables, el firewall por defecto en Debian 11+, "
+                "Ubuntu 22.04+ y RHEL 9. Requiere que exista la tabla 'inet filter' con la "
+                "cadena 'input'."),
+            resultado_simulado=(
+                "table inet filter {\n"
+                "  chain input {\n"
+                f"    ip saddr {ip} drop\n"
+                "  }\n"
+                "}"),
+            ventajas="Es el firewall nativo de las distribuciones actuales; reglas más legibles.",
+            desventajas=("Falla si la tabla/cadena no existe con ese nombre; tampoco persiste "
+                         "sin guardarla en /etc/nftables.conf.")),
+        _alternativa(
+            "Bloquear la IP con firewalld (Fedora / RHEL / CentOS)",
+            # Sin `argv`: la regla es un único argumento con espacios, y
+            # `comando_argv` solo lleva partes que pasan `safe_token`.
+            _cmd("sudo firewall-cmd --add-rich-rule='rule family=ipv4 source address={ip} drop'",
+                 ip=ip),
+            explicacion=(
+                "Agrega una 'rich rule' de firewalld que descarta el tráfico de esa IP en la zona "
+                "activa. Sin --permanent es solo en tiempo de ejecución: útil para contener ya y "
+                "decidir después si se vuelve definitiva."),
+            resultado_simulado=(
+                "success\n"
+                f"rule family=\"ipv4\" source address=\"{ip}\" drop\n"
+                "La regla duraría hasta el próximo reload/reinicio de firewalld."),
+            ventajas="Es lo que traen Fedora/RHEL por defecto; la regla temporal es fácil de revertir.",
+            desventajas=("Sin --permanent se pierde al recargar; con --permanent hay que "
+                         "acordarse de quitarla si la IP resulta legítima.")),
+    ]
+
+
+def _alt_credenciales(usr: str) -> list[dict]:
+    """Contener una cuenta expuesta sin depender de un cambio de contraseña interactivo."""
+    return [
+        _alternativa(
+            f"Bloquear la cuenta ({usr}) en vez de cambiarle la contraseña",
+            _cmd("sudo passwd -l {usr}", usr=usr),
+            argv=["sudo", "passwd", "-l", usr],
+            explicacion=(
+                "Bloquea el login por contraseña de la cuenta sin necesidad de inventar una "
+                "nueva en el momento. Se revierte con 'passwd -u'."),
+            resultado_simulado=(
+                f"Locking password for user {usr}.\n"
+                "passwd: Success\n"
+                f"Nadie podría entrar como {usr} con contraseña hasta desbloquearla."),
+            ventajas="Inmediato; corta el uso de la contraseña filtrada aunque nadie esté disponible para elegir otra.",
+            desventajas=("Deja sin acceso al usuario legítimo; no cierra sesiones ya abiertas "
+                         "ni invalida claves SSH autorizadas.")),
+        _alternativa(
+            f"Forzar a {usr} a cambiar la contraseña en el próximo login",
+            _cmd("sudo chage -d 0 {usr}", usr=usr),
+            argv=["sudo", "chage", "-d", "0", usr],
+            explicacion=(
+                "Marca la contraseña como vencida: el próximo inicio de sesión obliga a "
+                "elegir una nueva. Es la opción menos disruptiva para el usuario."),
+            resultado_simulado=(
+                f"Last password change para {usr}: password must be changed\n"
+                "El próximo login pediría una contraseña nueva antes de dar acceso."),
+            ventajas="No interrumpe al usuario ni requiere coordinar una contraseña nueva.",
+            desventajas=("Si el atacante ya conoce la contraseña, puede ser él quien inicie "
+                         "sesión primero y la cambie: no usar si hubo un login exitoso.")),
+        _alternativa(
+            f"Cerrar todas las sesiones activas de {usr}",
+            _cmd("sudo loginctl terminate-user {usr}", usr=usr),
+            argv=["sudo", "loginctl", "terminate-user", usr],
+            explicacion=(
+                "Termina todas las sesiones abiertas de la cuenta (SSH, consola, gráficas). "
+                "Es lo que corta a un atacante que YA entró; complementa, no reemplaza, "
+                "al cambio o bloqueo de la contraseña."),
+            resultado_simulado=(
+                f"Todas las sesiones de {usr} se cerrarían; cualquier shell abierta con esa "
+                "cuenta se cortaría en el acto."),
+            ventajas="Expulsa a un atacante que ya tiene una sesión abierta.",
+            desventajas=("También cierra las sesiones legítimas; si la contraseña sigue "
+                         "válida, el atacante puede volver a entrar.")),
+    ]
 
 
 def _playbook(attack_type: str, ip: str | None, user: str | None, *,
@@ -255,7 +411,21 @@ def _playbook(attack_type: str, ip: str | None, user: str | None, *,
                     f"Regla añadida a UFW:\n"
                     f"  [ 3] Anywhere                   DENY IN    {ip}\n"
                     f"Desde ahora, todo paquete entrante con origen {ip} se descarta "
-                    f"silenciosamente — el atacante ve la conexión como caída, no rechazada.")))
+                    f"silenciosamente — el atacante ve la conexión como caída, no rechazada."),
+                alternativas=[*_alt_bloqueo_entrante(ip), _alternativa(
+                    "Banear la IP en fail2ban (bloqueo temporal que expira solo)",
+                    _cmd("sudo fail2ban-client set sshd banip {ip}", ip=ip),
+                    argv=["sudo", "fail2ban-client", "set", "sshd", "banip", ip],
+                    explicacion=(
+                        "Agrega la IP a la lista de baneados de la jail 'sshd' de fail2ban. El "
+                        "ban dura lo que diga 'bantime' y después expira solo."),
+                    resultado_simulado=(
+                        "1\n"
+                        f"La IP {ip} quedaría baneada en la jail sshd hasta que venza el bantime."),
+                    ventajas=("Expira solo: ideal si la IP podría ser compartida (NAT, VPN, "
+                              "oficina) y un bloqueo permanente cortaría a usuarios legítimos."),
+                    desventajas=("Requiere fail2ban instalado con la jail sshd activa; solo "
+                                 "bloquea SSH, no el resto de los puertos."))]))
             acciones.append(_accion(
                 2, "Verificar si hubo algún login EXITOSO desde la IP atacante",
                 "sysadmin", "inmediata", "alto",
@@ -270,7 +440,36 @@ def _playbook(attack_type: str, ip: str | None, user: str | None, *,
                     f"  · Sin coincidencias → ningún login exitoso desde {ip}, la fuerza bruta\n"
                     "    no llegó a acertar una contraseña.\n"
                     f"  · Con coincidencias (ej. 'Accepted password for testuser from {ip}')\n"
-                    "    → tratar la cuenta como comprometida de inmediato, no como sospecha.")))
+                    "    → tratar la cuenta como comprometida de inmediato, no como sospecha."),
+                alternativas=[
+                    _alternativa(
+                        "Buscar logins exitosos en el journal de systemd (sin /var/log/auth.log)",
+                        _cmd("sudo journalctl -u ssh -u sshd --since -7d | grep Accepted | grep {ip}",
+                             ip=ip),
+                        explicacion=(
+                            "Misma búsqueda de solo lectura, pero sobre journald. Fedora, RHEL y "
+                            "Arch no escriben /var/log/auth.log: ahí el grep de la acción "
+                            "principal no encontraría nada aunque el atacante haya entrado."),
+                        resultado_simulado=(
+                            "Sin salida → ningún login aceptado desde esa IP en 7 días.\n"
+                            f"Con salida (ej. 'Accepted password for testuser from {ip}') → "
+                            "cuenta comprometida."),
+                        ventajas="Funciona en distribuciones que no tienen /var/log/auth.log.",
+                        desventajas="Solo ve lo que el journal retuvo; si rota rápido, se pierde historia."),
+                    _alternativa(
+                        "Revisar el historial de sesiones abiertas desde la IP (last)",
+                        _cmd("last -i | grep {ip}", ip=ip),
+                        explicacion=(
+                            "Lista las sesiones que efectivamente se abrieron (wtmp), con IP y "
+                            "duración. Confirma no solo que el login funcionó sino cuánto tiempo "
+                            "estuvo adentro."),
+                        resultado_simulado=(
+                            f"testuser pts/0  {ip}  Mon Oct 13 02:38 - 02:51  (00:13)\n"
+                            "(ejemplo: la salida real depende del host)"),
+                        ventajas="Muestra la duración de cada sesión: ayuda a dimensionar el daño.",
+                        desventajas=("No registra intentos fallidos; un atacante con root "
+                                     "puede borrar wtmp.")),
+                ]))
         if usr:
             acciones.append(_accion(
                 3, f"Forzar rotación de credenciales del usuario objetivo ({usr})",
@@ -287,7 +486,8 @@ def _playbook(attack_type: str, ip: str | None, user: str | None, *,
                     "Retype new password: \n"
                     "passwd: password updated successfully\n"
                     f"La contraseña anterior de {usr} queda inválida de inmediato — cualquier "
-                    "sesión que dependiera de ella hay que volver a abrirla.")))
+                    "sesión que dependiera de ella hay que volver a abrirla."),
+                alternativas=_alt_credenciales(usr)))
         # Con volumen crítico, esperar 48h a la mitigación estructural deja la
         # misma ventana abierta que ya se cruzó con miles de intentos —
         # `magnitud_critica` la sube a la misma urgencia que bloquear la IP.
@@ -314,7 +514,37 @@ def _playbook(attack_type: str, ip: str | None, user: str | None, *,
                 "● fail2ban.service - Fail2Ban Service\n"
                 "     Active: active (running)\n"
                 "A partir de ahora, cualquier IP con demasiados fallos de SSH se banea sola, "
-                "sin depender de que un analista lo haga a mano cada vez.")))
+                "sin depender de que un analista lo haga a mano cada vez."),
+            alternativas=[
+                _alternativa(
+                    "Limitar la tasa de conexiones SSH con UFW (sin instalar nada)",
+                    "sudo ufw limit ssh", argv=["sudo", "ufw", "limit", "ssh"],
+                    explicacion=(
+                        "UFW rechaza a una IP que abra 6 o más conexiones SSH en 30 segundos. "
+                        "Frena la fuerza bruta automatizada con una sola línea."),
+                    resultado_simulado=(
+                        "Rule updated\nRule updated (v6)\n"
+                        "22/tcp  LIMIT IN  Anywhere"),
+                    ventajas="Una línea, sin paquetes nuevos; frena herramientas tipo Hydra.",
+                    desventajas=("Umbral fijo (6 en 30 s) que no se configura; no frena un ataque "
+                                 "lento ni uno distribuido entre muchas IPs.")),
+                _alternativa(
+                    "Deshabilitar el login por contraseña en SSH (solo claves)",
+                    "sudo sed -i 's/^#\\?PasswordAuthentication.*/PasswordAuthentication no/' "
+                    "/etc/ssh/sshd_config && sudo systemctl reload sshd",
+                    explicacion=(
+                        "Cambia sshd para que solo acepte autenticación por clave pública. "
+                        "Elimina la fuerza bruta de contraseñas de raíz: no hay contraseña "
+                        "que adivinar."),
+                    resultado_simulado=(
+                        "PasswordAuthentication no\n"
+                        "sshd recargaría la configuración sin cortar las sesiones abiertas; "
+                        "los intentos con contraseña pasarían a fallar con 'Permission denied "
+                        "(publickey)'."),
+                    ventajas="Es la mitigación de fondo: vuelve inútil cualquier diccionario.",
+                    desventajas=("Si algún usuario (o el propio admin) no tiene su clave SSH "
+                                 "cargada, pierde el acceso: verificar antes de aplicarlo.")),
+            ]))
 
     elif attack_type == "port_scan":
         if ip:
@@ -329,7 +559,8 @@ def _playbook(attack_type: str, ip: str | None, user: str | None, *,
                     f"Regla añadida a UFW:\n"
                     f"  [ 3] Anywhere                   DENY IN    {ip}\n"
                     "El escaneo en curso deja de recibir respuesta de ningún puerto — desde la "
-                    "perspectiva del atacante, el host entero pasa a verse caído.")))
+                    "perspectiva del atacante, el host entero pasa a verse caído."),
+                alternativas=_alt_bloqueo_entrante(ip)))
         acciones.append(_accion(
             2, "Revisar qué servicios/puertos quedaron expuestos en el host objetivo",
             "sysadmin", "24h", "medio",
@@ -344,13 +575,53 @@ def _playbook(attack_type: str, ip: str | None, user: str | None, *,
                 "tcp    LISTEN  0.0.0.0:22           \"sshd\"\n"
                 "tcp    LISTEN  0.0.0.0:5601         \"node\" (kibana)\n"
                 "tcp    LISTEN  0.0.0.0:9200         \"java\" (elasticsearch)\n"
-                "(salida real: depende de qué haya expuesto el host que se está revisando)")))
+                "(salida real: depende de qué haya expuesto el host que se está revisando)"),
+            alternativas=[_alternativa(
+                "Listar los puertos en escucha con lsof",
+                "sudo lsof -i -P -n -sTCP:LISTEN",
+                argv=["sudo", "lsof", "-i", "-P", "-n", "-sTCP:LISTEN"],
+                explicacion=(
+                    "Misma consulta de solo lectura con otra herramienta: lista cada socket TCP "
+                    "en escucha con el proceso y el usuario dueños."),
+                resultado_simulado=(
+                    "COMMAND  PID  USER  FD  TYPE  NODE  NAME\n"
+                    "sshd     812  root  3u  IPv4  TCP   *:22 (LISTEN)\n"
+                    "(salida real: depende del host)"),
+                ventajas="Muestra el usuario dueño de cada proceso; está en hosts sin iproute2.",
+                desventajas="Solo TCP con este filtro; más lento que ss en hosts con muchos sockets.")]))
         acciones.append(_accion(
             3, "Cerrar puertos innecesarios y segmentar el host afectado",
-            "sysadmin", "24h", "medio"))
+            "sysadmin", "24h", "medio",
+            alternativas=[_alternativa(
+                "Pasar a política de denegar todo lo entrante salvo SSH (lista blanca)",
+                "sudo ufw allow 22/tcp && sudo ufw default deny incoming && sudo ufw enable",
+                explicacion=(
+                    "En vez de cerrar puerto por puerto, invierte la lógica: todo lo entrante se "
+                    "deniega y solo queda abierto lo que se permite explícitamente (acá, SSH)."),
+                resultado_simulado=(
+                    "Rule added\n"
+                    "Default incoming policy changed to 'deny'\n"
+                    "Firewall is active and enabled on system startup\n"
+                    "Un nuevo escaneo vería solo el puerto 22 abierto."),
+                ventajas="Lo que no se permitió no queda expuesto, aunque alguien levante un servicio nuevo.",
+                desventajas=("Corta cualquier servicio que se olvide permitir (o SSH si corre "
+                             "en otro puerto): aplicarlo con una consola de respaldo a mano."))]))
         acciones.append(_accion(
             4, "Desplegar IDS de red (Suricata) para visibilidad de futuros escaneos",
-            "SOC", "48h", "bajo"))
+            "SOC", "48h", "bajo",
+            alternativas=[_alternativa(
+                "Instalar psad (detección de escaneos a partir de los logs del firewall)",
+                "sudo apt-get install -y psad",
+                argv=["sudo", "apt-get", "install", "-y", "psad"],
+                explicacion=(
+                    "psad analiza los paquetes que el firewall registra y alerta (o bloquea) "
+                    "cuando detecta un patrón de escaneo. No necesita un sensor de red aparte."),
+                resultado_simulado=(
+                    "Setting up psad (2.4.6-2) ...\n"
+                    "psad quedaría leyendo los logs de iptables y alertando ante nuevos escaneos."),
+                ventajas="Mucho más liviano que un IDS completo; se instala en el mismo host.",
+                desventajas=("Requiere logging de iptables habilitado; solo ve el tráfico que "
+                             "llega a ese host, no el de toda la red."))]))
 
     elif attack_type == "credential_harvesting":
         if ip:
@@ -367,7 +638,35 @@ def _playbook(attack_type: str, ip: str | None, user: str | None, *,
                     f"Regla añadida a UFW:\n"
                     f"  [ 3] Anywhere                   DENY OUT   {ip}\n"
                     "Ningún equipo de esta red vuelve a poder llegar a esa IP — pero la página "
-                    "falsa sigue en línea para el resto de internet, fuera de nuestro control.")))
+                    "falsa sigue en línea para el resto de internet, fuera de nuestro control."),
+                alternativas=[
+                    _alternativa(
+                        "Bloquear el tráfico SALIENTE hacia el servidor de phishing (UFW)",
+                        _cmd("sudo ufw deny out to {ip}", ip=ip),
+                        argv=["sudo", "ufw", "deny", "out", "to", ip],
+                        explicacion=(
+                            "Bloquea las conexiones que salen de este host HACIA esa IP. Es lo "
+                            "que impide que otro usuario vuelva a entregar credenciales a la "
+                            "página falsa: 'deny from' filtra el tráfico que ENTRA desde ella."),
+                        resultado_simulado=(
+                            f"Rule added\n  {ip}  DENY OUT  Anywhere\n"
+                            "Cualquier intento de abrir la página falsa desde este host fallaría."),
+                        ventajas="Ataca la dirección correcta del problema: la víctima es la que se conecta.",
+                        desventajas=("Protege solo a este host; para toda la red hace falta "
+                                     "hacerlo en el firewall perimetral o el proxy.")),
+                    _alternativa(
+                        "Bloquear el tráfico saliente con iptables (cadena OUTPUT)",
+                        _cmd("sudo iptables -I OUTPUT -d {ip} -j DROP", ip=ip),
+                        argv=["sudo", "iptables", "-I", "OUTPUT", "-d", ip, "-j", "DROP"],
+                        explicacion=(
+                            "Equivalente sin UFW: descarta todo paquete de este host con destino "
+                            "a la IP del servidor de phishing."),
+                        resultado_simulado=(
+                            "Chain OUTPUT (policy ACCEPT)\n"
+                            f"1    DROP    all   0.0.0.0/0    {ip}"),
+                        ventajas="Funciona sin UFW; efecto inmediato.",
+                        desventajas="No persiste tras reiniciar sin iptables-persistent."),
+                ]))
         if usr:
             acciones.append(_accion(
                 2, f"Forzar reset de credenciales del usuario que envió datos ({usr})",
@@ -384,7 +683,8 @@ def _playbook(attack_type: str, ip: str | None, user: str | None, *,
                     "Retype new password: \n"
                     "passwd: password updated successfully\n"
                     f"La contraseña que {usr} envió a la página falsa deja de servirle al "
-                    "atacante para entrar con ella.")))
+                    "atacante para entrar con ella."),
+                alternativas=_alt_credenciales(usr)))
         acciones.append(_accion(
             3, "Alertar a los usuarios afectados y reforzar concientización",
             "SOC", "inmediata", "medio"))
@@ -434,7 +734,7 @@ def _classification(attack_type: str, magnitude: int, detail: str,
     }
 
 
-def _finalize(incident_id: str, actions: list[dict]) -> list[dict]:
+def _finalize(incident_id: str, actions: list[dict], modo: str = MODO_SOLUCION_DEFECTO) -> list[dict]:
     """Asigna identidad y estado inicial a cada acción del playbook.
 
     A-03: el `action_id` se deriva del CONTENIDO de la acción (qué hace y qué
@@ -445,9 +745,17 @@ def _finalize(incident_id: str, actions: list[dict]) -> list[dict]:
     inmutable: no se puede corregir después.
 
     El `orden` sigue existiendo para mostrar, pero ya no define identidad.
+
+    Las alternativas de cada acción se aplanan en la misma lista, justo
+    después de su acción, con `alternativa_de` apuntando a ella. Así cada
+    alternativa se decide con el mismo `POST /api/decision` y queda en
+    `decisions.jsonl` igual que cualquier acción, y el `action_id` de las
+    acciones que ya existían no cambia (se deriva solo de su propio texto y
+    comando).
     """
     vistos: dict[str, int] = {}
-    for act in actions:
+
+    def identificar(act: dict) -> str:
         semilla = f"{act['accion']}|{act.get('comando_sugerido') or ''}"
         corto = _hash_corto(semilla, 6)
         # Dos acciones idénticas en un mismo incidente no deberían existir, pero
@@ -456,7 +764,28 @@ def _finalize(incident_id: str, actions: list[dict]) -> list[dict]:
         sufijo = corto if vistos[corto] == 1 else f"{corto}-{vistos[corto]}"
         act["action_id"] = f"{incident_id}-{sufijo}"
         act["status"] = "pending"
-    return actions
+        return act["action_id"]
+
+    planas: list[dict] = []
+    for act in actions:
+        alternativas = act.pop("alternativas", [])
+        act["alternativa_de"] = None
+        # El modo describe cómo se relacionan las acciones PRINCIPALES entre sí
+        # (ver MODO_SOLUCION_POR_ATAQUE). El panel lo lee para anunciar "pasos en
+        # orden" o "soluciones distintas".
+        act["modo"] = modo
+        padre = identificar(act)
+        planas.append(act)
+        for alt in alternativas:
+            alt.pop("alternativas", None)
+            identificar(alt)
+            # Una alternativa es, por definición, una opción distinta de su acción
+            # y de las demás alternativas: su modo propio es siempre "distintas".
+            alt.update(alternativa_de=padre, modo="distintas", orden=act["orden"],
+                       responsable=act["responsable"], plazo=act["plazo"],
+                       impacto=act["impacto"])
+            planas.append(alt)
+    return planas
 
 
 # ─── Detección: SSH / auth ───────────────────────────────────────────────────
@@ -629,7 +958,8 @@ def detect_auth_incidents(siem_data: dict) -> list[dict]:
         incident_id = _incident_id("AUTH", ip, inc["first_seen"])
         actions = _finalize(incident_id, _playbook(
             attack_type, attacker_ip, user,
-            magnitud_critica=total >= CRITICAL_FAILURE_COUNT))
+            magnitud_critica=total >= CRITICAL_FAILURE_COUNT),
+            modo=_modo_solucion(attack_type))
 
         if not inc["mitre"] and classification["mitre_technique"]:
             inc["mitre"] = {"tactic": "Credential Access", "technique": "Brute Force",
@@ -748,7 +1078,8 @@ def detect_port_scans(events: list[dict], alerts: list[dict] | None = None) -> l
         ]
         classification = _classification("port_scan", len(b["ports"]), detail, factors)
         incident_id = _incident_id("SCAN", ip, ts_sorted[0])
-        actions = _finalize(incident_id, _playbook("port_scan", ip_atacante, None))
+        actions = _finalize(incident_id, _playbook("port_scan", ip_atacante, None),
+                            modo=_modo_solucion("port_scan"))
         out.append(Incident(
             incident_id=incident_id, source_ip=ip,
             attacker_ips=[ip_atacante] if ip_atacante else [],
@@ -828,7 +1159,8 @@ def detect_phishing(events: list[dict], alerts: list[dict] | None = None) -> lis
         incident_id = _incident_id("PHISH", ip, ts_sorted[0])
         user = next(iter(sorted(b["users"])), None)
         ip_servidor = resolver_ip_atacante(sorted(b["dests"]), valid_ip(ip))
-        actions = _finalize(incident_id, _playbook("credential_harvesting", ip_servidor, user))
+        actions = _finalize(incident_id, _playbook("credential_harvesting", ip_servidor, user),
+                            modo=_modo_solucion("credential_harvesting"))
         out.append(Incident(
             incident_id=incident_id, source_ip=ip,
             attacker_ips=sorted(b["dests"]) or ([ip] if valid_ip(ip) else []),

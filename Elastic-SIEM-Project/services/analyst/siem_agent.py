@@ -205,9 +205,13 @@ def _llm_analysis(client, incident: dict, historical: str, campaign: str | None,
     # panel, dos "recomendaciones" en paralelo que no siempre coincidían. Nunca
     # se manda el comando — el LLM no necesita verlo para nombrar la acción, y
     # no tiene sentido que pueda influir en su redacción.
+    #
+    # Solo las acciones principales: las alternativas son otras formas de hacer
+    # lo mismo, y el analista las elige en el panel según su infraestructura.
     acciones_disponibles = [
         {"orden": a["orden"], "accion": a["accion"], "impacto": a["impacto"], "plazo": a["plazo"]}
         for a in (incident.get("recommended_actions") or [])
+        if not a.get("alternativa_de")
     ]
 
     # Solo campos necesarios y saneados — nada de strings crudos sin delimitar.
@@ -504,6 +508,9 @@ def print_report(incidents: list[dict]) -> None:
         print("\n  Acciones supervisables:")
         for a in inc.get("recommended_actions", []):
             cmd = f"  →  $ {a['comando_sugerido']}" if a.get("comando_sugerido") else ""
+            if a.get("alternativa_de"):
+                print(f"        ↳ alternativa [{a['status']}] {a['accion']}{cmd}")
+                continue
             print(f"   [{a['status']}] {a['orden']}. ({a['responsable']}/{a['plazo']}) {a['accion']}{cmd}")
 
 

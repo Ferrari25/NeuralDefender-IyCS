@@ -175,11 +175,24 @@ def test_los_comandos_salen_del_playbook_no_del_llm(incidents):
     """Ningún comando puede provenir del Agente 2: el Agente 1 los fija acá."""
     catalogo = ("sudo ufw deny from", "grep 'Accepted password'", "sudo passwd",
                 "sudo apt-get install -y fail2ban", "sudo ss -tulnp")
+    # Las alternativas tienen su propio catálogo cerrado: agregar una es un
+    # cambio consciente en classifier.py y en esta lista, no algo que se cuele.
+    catalogo_alternativas = (
+        "sudo iptables -I INPUT -s", "sudo iptables -I OUTPUT -d",
+        "sudo nft add rule inet filter input ip saddr",
+        "sudo firewall-cmd --add-rich-rule='rule family=ipv4 source address=",
+        "sudo fail2ban-client set sshd banip", "sudo journalctl -u ssh -u sshd",
+        "last -i |", "sudo passwd -l", "sudo chage -d 0", "sudo loginctl terminate-user",
+        "sudo ufw limit ssh", "sudo sed -i 's/^#\\?PasswordAuthentication",
+        "sudo lsof -i -P -n -sTCP:LISTEN", "sudo ufw allow 22/tcp && sudo ufw default deny",
+        "sudo apt-get install -y psad", "sudo ufw deny out to")
     for inc in incidents:
         for act in inc["recommended_actions"]:
             cmd = act["comando_sugerido"]
-            if cmd is not None:
-                assert cmd.startswith(catalogo), f"comando fuera del catálogo: {cmd}"
+            if cmd is None:
+                continue
+            permitidos = catalogo_alternativas if act["alternativa_de"] else catalogo
+            assert cmd.startswith(permitidos), f"comando fuera del catálogo: {cmd}"
 
 
 # ─── Saneamiento heredado ────────────────────────────────────────────────────

@@ -1,35 +1,553 @@
 {
-  "generated_at": "2026-10-13T02:36:50.703532+00:00",
+  "generated_at": "2026-10-13T20:49:25.526454+00:00",
   "context": "Elastic SIEM - Análisis de seguridad automatizado",
   "summary": {
-    "total_alerts": 1,
+    "total_alerts": 20,
     "total_auth_failures": 0,
-    "active_alerts": 1,
-    "high_severity": 0,
+    "active_alerts": 20,
+    "high_severity": 2,
     "window": "24h",
     "top_source_ips": {},
     "mitre_techniques": [
-      "T1110"
+      "T1046",
+      "T1110",
+      "T1566"
     ]
   },
   "alerts": [
     {
       "type": "security_alert",
-      "timestamp": "2026-10-13T02:34:15.197Z",
-      "alert_id": "9ec32cfeabf9c6e6...",
+      "timestamp": "2026-10-13T20:42:20.150Z",
+      "alert_id": "922da7e3c8430820...",
       "rule_name": "SSH Brute Force – Basic Threshold",
       "severity": "medium",
       "risk_score": 47,
       "status": "active",
       "reason": "event created medium alert SSH Brute Force – Basic Threshold.",
       "source_ip": null,
-      "victim_host": "172.19.0.6",
+      "victim_host": "172.19.0.4",
       "target_user": null,
       "grouped_by": "host.ip.keyword",
-      "event_count": 1303,
+      "event_count": 29,
       "time_window": {
-        "from": "2026-10-13T02:33:36.066Z",
-        "to": "2026-10-13T02:34:15.197Z"
+        "from": "2026-10-13T20:36:59.454Z",
+        "to": "2026-10-13T20:42:20.150Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuarios que olvidaron su contraseña y reintentaron varias veces."
+      ],
+      "rule_query": "tags:authentication_failure or message:*Failed password*"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T20:37:25.765Z",
+      "alert_id": "d44232a379b3fea2...",
+      "rule_name": "Credential Submission to Suspicious Login",
+      "severity": "high",
+      "risk_score": 68,
+      "status": "active",
+      "reason": "event on d3b6241f6951 created high alert Credential Submission to Suspicious Login.",
+      "source_ip": "172.18.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-10-13T20:37:25.765Z"
+      },
+      "mitre": {
+        "tactic": "Initial Access",
+        "technique": "Phishing",
+        "technique_id": "T1566"
+      },
+      "false_positives": [
+        "Logins legitimos a aplicaciones internas que casualmente matcheen el patron."
+      ],
+      "rule_query": "event_type:http_request and credential_submission:true and url:*login*"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T20:37:25.759Z",
+      "alert_id": "933936fec2d4bba2...",
+      "rule_name": "Port Scan – Many Distinct Ports",
+      "severity": "high",
+      "risk_score": 73,
+      "status": "active",
+      "reason": "event created high alert Port Scan – Many Distinct Ports.",
+      "source_ip": "203.0.113.55",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 26,
+      "time_window": {
+        "from": "2026-10-13T20:36:27.000Z",
+        "to": "2026-10-13T20:37:25.759Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [
+        "Herramientas de monitoreo/inventario autorizadas (ej. Nessus, escaneres internos)."
+      ],
+      "rule_query": "event_type:network_flow"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T20:37:17.196Z",
+      "alert_id": "2b89ac43fc4131f1...",
+      "rule_name": "SSH Brute Force – Basic Threshold",
+      "severity": "medium",
+      "risk_score": 47,
+      "status": "active",
+      "reason": "event created medium alert SSH Brute Force – Basic Threshold.",
+      "source_ip": null,
+      "victim_host": "172.19.0.4",
+      "target_user": null,
+      "grouped_by": "host.ip.keyword",
+      "event_count": 26,
+      "time_window": {
+        "from": "2026-10-13T20:32:10.950Z",
+        "to": "2026-10-13T20:37:17.196Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuarios que olvidaron su contraseña y reintentaron varias veces."
+      ],
+      "rule_query": "tags:authentication_failure or message:*Failed password*"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T20:37:17.081Z",
+      "alert_id": "4ec539d7e957916d...",
+      "rule_name": "Sensitive Port Probe",
+      "severity": "medium",
+      "risk_score": 55,
+      "status": "active",
+      "reason": "event on d3b6241f6951 created medium alert Sensitive Port Probe.",
+      "source_ip": "203.0.113.55",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-10-13T20:37:17.081Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [
+        "Health-checks internos hacia esos puertos."
+      ],
+      "rule_query": "event_type:network_flow and dest_port:(22 or 23 or 445 or 3306 or 3389 or 5432 or 9200)"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T20:37:17.074Z",
+      "alert_id": "88a756ea0b86d14d...",
+      "rule_name": "Sensitive Port Probe",
+      "severity": "medium",
+      "risk_score": 55,
+      "status": "active",
+      "reason": "event on d3b6241f6951 created medium alert Sensitive Port Probe.",
+      "source_ip": "203.0.113.55",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-10-13T20:37:17.074Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [
+        "Health-checks internos hacia esos puertos."
+      ],
+      "rule_query": "event_type:network_flow and dest_port:(22 or 23 or 445 or 3306 or 3389 or 5432 or 9200)"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T20:37:17.072Z",
+      "alert_id": "5290b176257d3ecc...",
+      "rule_name": "Sensitive Port Probe",
+      "severity": "medium",
+      "risk_score": 55,
+      "status": "active",
+      "reason": "event on d3b6241f6951 created medium alert Sensitive Port Probe.",
+      "source_ip": "203.0.113.55",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-10-13T20:37:17.072Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [
+        "Health-checks internos hacia esos puertos."
+      ],
+      "rule_query": "event_type:network_flow and dest_port:(22 or 23 or 445 or 3306 or 3389 or 5432 or 9200)"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T20:37:17.071Z",
+      "alert_id": "87332c250b2292e9...",
+      "rule_name": "Sensitive Port Probe",
+      "severity": "medium",
+      "risk_score": 55,
+      "status": "active",
+      "reason": "event on d3b6241f6951 created medium alert Sensitive Port Probe.",
+      "source_ip": "203.0.113.55",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-10-13T20:37:17.071Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [
+        "Health-checks internos hacia esos puertos."
+      ],
+      "rule_query": "event_type:network_flow and dest_port:(22 or 23 or 445 or 3306 or 3389 or 5432 or 9200)"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T20:37:17.068Z",
+      "alert_id": "7123dd64f2c03bfb...",
+      "rule_name": "Sensitive Port Probe",
+      "severity": "medium",
+      "risk_score": 55,
+      "status": "active",
+      "reason": "event on d3b6241f6951 created medium alert Sensitive Port Probe.",
+      "source_ip": "203.0.113.55",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-10-13T20:37:17.068Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [
+        "Health-checks internos hacia esos puertos."
+      ],
+      "rule_query": "event_type:network_flow and dest_port:(22 or 23 or 445 or 3306 or 3389 or 5432 or 9200)"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T20:37:17.010Z",
+      "alert_id": "5099b8e779acb64d...",
+      "rule_name": "Phishing Page Visit + Submission",
+      "severity": "medium",
+      "risk_score": 60,
+      "status": "active",
+      "reason": "event on d3b6241f6951 created medium alert Phishing Page Visit + Submission.",
+      "source_ip": "172.18.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-10-13T20:37:17.010Z"
+      },
+      "mitre": {
+        "tactic": "Initial Access",
+        "technique": "Phishing",
+        "technique_id": "T1566"
+      },
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=5m\n  [any where event_type.keyword == \"http_request\" and http_method.keyword == \"GET\"]\n  [any where event_type.keyword == \"http_request\" and credential_submission == true]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T20:37:17.008Z",
+      "alert_id": "260af2e281cacf06...",
+      "rule_name": "Phishing Page Visit + Submission",
+      "severity": "medium",
+      "risk_score": 60,
+      "status": "active",
+      "reason": "event on d3b6241f6951 created medium alert Phishing Page Visit + Submission.",
+      "source_ip": "172.18.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-10-13T20:37:17.008Z"
+      },
+      "mitre": {
+        "tactic": "Initial Access",
+        "technique": "Phishing",
+        "technique_id": "T1566"
+      },
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=5m\n  [any where event_type.keyword == \"http_request\" and http_method.keyword == \"GET\"]\n  [any where event_type.keyword == \"http_request\" and credential_submission == true]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T20:37:17.005Z",
+      "alert_id": "a9e22fdfb04c3360...",
+      "rule_name": "Phishing Page Visit + Submission",
+      "severity": "medium",
+      "risk_score": 60,
+      "status": "active",
+      "reason": "event on d3b6241f6951 created medium alert Phishing Page Visit + Submission.",
+      "source_ip": "172.18.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-10-13T20:37:17.005Z"
+      },
+      "mitre": {
+        "tactic": "Initial Access",
+        "technique": "Phishing",
+        "technique_id": "T1566"
+      },
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=5m\n  [any where event_type.keyword == \"http_request\" and http_method.keyword == \"GET\"]\n  [any where event_type.keyword == \"http_request\" and credential_submission == true]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T20:37:14.178Z",
+      "alert_id": "73b9d1f604655ca0...",
+      "rule_name": "Port Scan – Rapid Sequential Probe",
+      "severity": "medium",
+      "risk_score": 50,
+      "status": "active",
+      "reason": "event on d3b6241f6951 created medium alert Port Scan – Rapid Sequential Probe.",
+      "source_ip": "203.0.113.55",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-10-13T20:37:14.178Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=30s\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T20:37:14.177Z",
+      "alert_id": "96707ec89cff2132...",
+      "rule_name": "Port Scan – Rapid Sequential Probe",
+      "severity": "medium",
+      "risk_score": 50,
+      "status": "active",
+      "reason": "event on d3b6241f6951 created medium alert Port Scan – Rapid Sequential Probe.",
+      "source_ip": "203.0.113.55",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-10-13T20:37:14.177Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=30s\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T20:37:14.169Z",
+      "alert_id": "cba51a98552b6060...",
+      "rule_name": "Port Scan – Rapid Sequential Probe",
+      "severity": "medium",
+      "risk_score": 50,
+      "status": "active",
+      "reason": "event on d3b6241f6951 created medium alert Port Scan – Rapid Sequential Probe.",
+      "source_ip": "203.0.113.55",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-10-13T20:37:14.169Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=30s\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T20:37:14.168Z",
+      "alert_id": "eb23febf71e720c0...",
+      "rule_name": "Port Scan – Rapid Sequential Probe",
+      "severity": "medium",
+      "risk_score": 50,
+      "status": "active",
+      "reason": "event on d3b6241f6951 created medium alert Port Scan – Rapid Sequential Probe.",
+      "source_ip": "203.0.113.55",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-10-13T20:37:14.168Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=30s\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T20:37:14.166Z",
+      "alert_id": "7ea98943f0000910...",
+      "rule_name": "Port Scan – Rapid Sequential Probe",
+      "severity": "medium",
+      "risk_score": 50,
+      "status": "active",
+      "reason": "event on d3b6241f6951 created medium alert Port Scan – Rapid Sequential Probe.",
+      "source_ip": "203.0.113.55",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-10-13T20:37:14.166Z"
+      },
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=30s\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]\n  [any where event_type.keyword == \"network_flow\"]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T19:40:07.240Z",
+      "alert_id": "bedb935a07579fbf...",
+      "rule_name": "SSH Brute Force – Basic Threshold",
+      "severity": "medium",
+      "risk_score": 47,
+      "status": "active",
+      "reason": "event created medium alert SSH Brute Force – Basic Threshold.",
+      "source_ip": null,
+      "victim_host": "172.19.0.4",
+      "target_user": null,
+      "grouped_by": "host.ip.keyword",
+      "event_count": 9,
+      "time_window": {
+        "from": "2026-10-13T19:35:00.777Z",
+        "to": "2026-10-13T19:40:07.240Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuarios que olvidaron su contraseña y reintentaron varias veces."
+      ],
+      "rule_query": "tags:authentication_failure or message:*Failed password*"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T19:12:41.727Z",
+      "alert_id": "881874f8d3c36233...",
+      "rule_name": "SSH Brute Force – Basic Threshold",
+      "severity": "medium",
+      "risk_score": 47,
+      "status": "active",
+      "reason": "event created medium alert SSH Brute Force – Basic Threshold.",
+      "source_ip": null,
+      "victim_host": "172.19.0.4",
+      "target_user": null,
+      "grouped_by": "host.ip.keyword",
+      "event_count": 23,
+      "time_window": {
+        "from": "2026-10-13T19:07:10.011Z",
+        "to": "2026-10-13T19:12:41.727Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuarios que olvidaron su contraseña y reintentaron varias veces."
+      ],
+      "rule_query": "tags:authentication_failure or message:*Failed password*"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-10-13T19:07:38.723Z",
+      "alert_id": "196636f5f99435c0...",
+      "rule_name": "SSH Brute Force – Basic Threshold",
+      "severity": "medium",
+      "risk_score": 47,
+      "status": "active",
+      "reason": "event created medium alert SSH Brute Force – Basic Threshold.",
+      "source_ip": null,
+      "victim_host": "172.19.0.4",
+      "target_user": null,
+      "grouped_by": "host.ip.keyword",
+      "event_count": 23,
+      "time_window": {
+        "from": "2026-10-13T19:02:38.831Z",
+        "to": "2026-10-13T19:07:38.723Z"
       },
       "mitre": {
         "tactic": "Credential Access",

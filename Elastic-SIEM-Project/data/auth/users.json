@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "actualizado": "2026-10-13T02:35:37.779030+00:00",
+  "actualizado": "2026-10-13T19:07:55.529378+00:00",
   "usuarios": [
     {
       "username": "nico",
@@ -8,7 +8,7 @@
       "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$WjteZVdDLBrBOCWUi0ps7w$nEgYMUGSqQUm7891YVZ75L6nRNHVAT93XVnZSgS6pMU",
       "activo": true,
       "creado": "2026-10-13T02:33:01.506812+00:00",
-      "ultimo_acceso": "2026-10-13T02:35:37.778996+00:00"
+      "ultimo_acceso": "2026-10-13T19:07:55.529320+00:00"
     }
   ]
 }

@@ -230,5 +230,10 @@ def test_los_comandos_provienen_del_catalogo_fijo(incidents):
     """El catálogo vive en `classifier.py` y no cambia por lo que diga un log."""
     catalogo = ("sudo ufw deny from", "grep 'Accepted password'", "sudo passwd",
                 "sudo apt-get install -y fail2ban", "sudo ss -tulnp")
-    for cmd in _comandos(incidents):
-        assert cmd.startswith(catalogo), f"comando fuera del catálogo: {cmd}"
+    # Las alternativas de remediación tienen su propio catálogo cerrado, que
+    # verifica `test_classifier_caracterizacion.py`; acá, las acciones principales.
+    for inc in incidents:
+        for a in inc["recommended_actions"]:
+            cmd = a.get("comando_sugerido")
+            if cmd and not a["alternativa_de"]:
+                assert cmd.startswith(catalogo), f"comando fuera del catálogo: {cmd}"

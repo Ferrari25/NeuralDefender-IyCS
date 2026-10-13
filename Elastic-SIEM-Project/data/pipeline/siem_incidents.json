@@ -1,14 +1,26 @@
 {
-  "generated_at": "2026-10-13T02:36:50.707345+00:00",
-  "incident_count": 1,
+  "generated_at": "2026-10-13T20:49:25.533237+00:00",
+  "incident_count": 3,
   "incidents": [
     {
-      "alert_event_count": 1303,
+      "alert_event_count": 110,
       "analysis": {
         "_source": "fallback",
         "accion_recomendada": "Habilitar rate-limiting / fail2ban en el servicio SSH",
         "aprendizaje": {
-          "casos_similares": [],
+          "casos_similares": [
+            {
+              "accion": "Habilitar rate-limiting / fail2ban en el servicio SSH",
+              "analyst": "nico",
+              "attack_type": "ssh_brute_force",
+              "decision": "approved",
+              "incident_id": "INC-AUTH-desconocida-32736251",
+              "motivo": "mismo tipo de ataque",
+              "note": "",
+              "similitud": 3,
+              "ts": "2026-10-13T02:38:53.556970+00:00"
+            }
+          ],
           "disponible": true,
           "documentos": [],
           "lecciones": []
@@ -16,7 +28,7 @@
         "contexto_campana": null,
         "contexto_historico": "Sin IP identificada para buscar antecedentes.",
         "contexto_riesgo": "Si alguna credencial es débil, el atacante obtiene acceso interactivo al host y puede moverse lateralmente dentro de la red.",
-        "explicacion": "Se detectaron 1303 intentos de autenticación fallida contra SSH desde desconocida, apuntando a un usuario del sistema.",
+        "explicacion": "Se detectaron 110 intentos de autenticación fallida contra SSH desde desconocida, apuntando a un usuario del sistema.",
         "falso_positivo_probabilidad": "LOW",
         "metodologia": "Un ataque de fuerza bruta automatizado (ej. Hydra o Medusa) prueba miles de contraseñas en serie hasta encontrar una válida.",
         "referencias": [
@@ -32,22 +44,22 @@
         "attack_type": "ssh_brute_force",
         "confidence": "alta",
         "factores": [
-          "1303 fallo(s) de autenticación registrados (umbral de fuerza bruta: 20)",
-          "Host(s) atacado(s): 172.19.0.6",
+          "110 fallo(s) de autenticación registrados (umbral de fuerza bruta: 20)",
+          "Host(s) atacado(s): 172.19.0.4",
           "Volumen muy por encima del umbral: descarta un error humano puntual",
           "Falso positivo: BAJA — este volumen es infrecuente en tráfico legítimo"
         ],
         "false_positive_likelihood": "baja",
         "mitre_technique": "T1110",
-        "rationale": "1303 fallos de autenticación desde una misma IP superan el umbral de 20; patrón de fuerza bruta automatizada (T1110).",
+        "rationale": "110 fallos de autenticación desde una misma IP superan el umbral de 20; patrón de fuerza bruta automatizada (T1110).",
         "severity": "alta"
       },
       "detection_source": "elastic",
-      "event_count": 1303,
+      "event_count": 110,
       "evidence": [],
-      "first_seen": "2026-10-13T02:34:15.197Z",
-      "incident_id": "INC-AUTH-desconocida-32736251",
-      "last_seen": "2026-10-13T02:34:15.197Z",
+      "first_seen": "2026-10-13T19:07:38.723Z",
+      "incident_id": "INC-AUTH-desconocida-e3410cc3",
+      "last_seen": "2026-10-13T20:42:20.150Z",
       "log_event_count": 0,
       "mitre": {
         "tactic": "Credential Access",
@@ -57,16 +69,57 @@
       "recommended_actions": [
         {
           "accion": "Habilitar rate-limiting / fail2ban en el servicio SSH",
-          "action_id": "INC-AUTH-desconocida-32736251-bceba4",
+          "action_id": "INC-AUTH-desconocida-e3410cc3-bceba4",
+          "alternativa_de": null,
           "comando_argv": null,
           "comando_explicacion": "Instala fail2ban (monitorea los logs de auth y banea automáticamente IPs con demasiados fallos) y lo deja corriendo de forma permanente. Es la mitigación estructural: evita que haga falta bloquear IPs a mano cada vez que se repita este mismo patrón de ataque.",
           "comando_sugerido": "sudo apt-get install -y fail2ban && sudo systemctl enable --now fail2ban",
           "impacto": "medio",
+          "modo": "pasos",
           "orden": 1,
           "plazo": "48h",
           "responsable": "sysadmin",
           "resultado_simulado": "Setting up fail2ban (0.11.2-6) ...\nCreated symlink /etc/systemd/system/multi-user.target.wants/fail2ban.service\n  → /lib/systemd/system/fail2ban.service.\n● fail2ban.service - Fail2Ban Service\n     Active: active (running)\nA partir de ahora, cualquier IP con demasiados fallos de SSH se banea sola, sin depender de que un analista lo haga a mano cada vez.",
           "status": "pending"
+        },
+        {
+          "accion": "Limitar la tasa de conexiones SSH con UFW (sin instalar nada)",
+          "action_id": "INC-AUTH-desconocida-e3410cc3-d99515",
+          "alternativa_de": "INC-AUTH-desconocida-e3410cc3-bceba4",
+          "comando_argv": [
+            "sudo",
+            "ufw",
+            "limit",
+            "ssh"
+          ],
+          "comando_explicacion": "UFW rechaza a una IP que abra 6 o más conexiones SSH en 30 segundos. Frena la fuerza bruta automatizada con una sola línea.",
+          "comando_sugerido": "sudo ufw limit ssh",
+          "desventajas": "Umbral fijo (6 en 30 s) que no se configura; no frena un ataque lento ni uno distribuido entre muchas IPs.",
+          "impacto": "medio",
+          "modo": "distintas",
+          "orden": 1,
+          "plazo": "48h",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Rule updated\nRule updated (v6)\n22/tcp  LIMIT IN  Anywhere",
+          "status": "pending",
+          "ventajas": "Una línea, sin paquetes nuevos; frena herramientas tipo Hydra."
+        },
+        {
+          "accion": "Deshabilitar el login por contraseña en SSH (solo claves)",
+          "action_id": "INC-AUTH-desconocida-e3410cc3-9f3bc4",
+          "alternativa_de": "INC-AUTH-desconocida-e3410cc3-bceba4",
+          "comando_argv": null,
+          "comando_explicacion": "Cambia sshd para que solo acepte autenticación por clave pública. Elimina la fuerza bruta de contraseñas de raíz: no hay contraseña que adivinar.",
+          "comando_sugerido": "sudo sed -i 's/^#\\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config && sudo systemctl reload sshd",
+          "desventajas": "Si algún usuario (o el propio admin) no tiene su clave SSH cargada, pierde el acceso: verificar antes de aplicarlo.",
+          "impacto": "medio",
+          "modo": "distintas",
+          "orden": 1,
+          "plazo": "48h",
+          "responsable": "sysadmin",
+          "resultado_simulado": "PasswordAuthentication no\nsshd recargaría la configuración sin cortar las sesiones abiertas; los intentos con contraseña pasarían a fallar con 'Permission denied (publickey)'.",
+          "status": "pending",
+          "ventajas": "Es la mitigación de fondo: vuelve inútil cualquier diccionario."
         }
       ],
       "related_incidents": [],
@@ -77,11 +130,629 @@
       "source_ip": "desconocida",
       "target_users": [],
       "victim_hosts": [
-        "172.19.0.6"
+        "172.19.0.4"
       ]
+    },
+    {
+      "alert_event_count": 0,
+      "analysis": {
+        "_source": "fallback",
+        "accion_recomendada": "Bloquear la IP que realiza el escaneo en el firewall",
+        "aprendizaje": {
+          "casos_similares": [],
+          "disponible": true,
+          "documentos": [],
+          "lecciones": []
+        },
+        "contexto_campana": null,
+        "contexto_historico": "Sin antecedentes previos para 203.0.113.55: es la primera vez que se registra actividad de esta IP.",
+        "contexto_riesgo": "Es típicamente la fase de reconocimiento previa a un ataque dirigido: revela qué servicios están expuestos y son atacables.",
+        "explicacion": "Se detectó un escaneo de 26 puertos distintos desde 203.0.113.55 contra 172.18.0.5.",
+        "falso_positivo_probabilidad": "LOW",
+        "metodologia": "Un escaneo de puertos (ej. Nmap) sondea servicios abiertos para mapear la superficie de ataque antes de un intento de intrusión.",
+        "referencias": [
+          "T1046"
+        ],
+        "severidad_ajustada": "HIGH"
+      },
+      "attacker_ips": [
+        "203.0.113.55"
+      ],
+      "campaign_id": null,
+      "campaign_shared_ips": [],
+      "classification": {
+        "attack_type": "port_scan",
+        "confidence": "alta",
+        "factores": [
+          "26 puerto(s) distinto(s) sondeado(s) (umbral: 10)",
+          "1 host(s) de destino distintos sondeados",
+          "Confirmado por una regla activa del SIEM: 'Port Scan – Many Distinct Ports'",
+          "Patrón de barrido secuencial de puertos, poco común en tráfico legítimo",
+          "Falso positivo: BAJA — salvo que la IP sea un scanner de vulnerabilidades autorizado"
+        ],
+        "false_positive_likelihood": "baja",
+        "mitre_technique": "T1046",
+        "rationale": "26 puertos distintos sondeados desde 203.0.113.55 (umbral 10); patrón de reconocimiento de red.",
+        "severity": "alta"
+      },
+      "detection_source": "elastic",
+      "event_count": 26,
+      "evidence": [
+        {
+          "detail": "probe → 172.18.0.5:21/tcp",
+          "ts": "2026-10-13T20:36:27.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:22/tcp",
+          "ts": "2026-10-13T20:36:28.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:23/tcp",
+          "ts": "2026-10-13T20:36:29.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:25/tcp",
+          "ts": "2026-10-13T20:36:30.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:53/tcp",
+          "ts": "2026-10-13T20:36:31.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:80/tcp",
+          "ts": "2026-10-13T20:36:32.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:110/tcp",
+          "ts": "2026-10-13T20:36:33.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:135/tcp",
+          "ts": "2026-10-13T20:36:34.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:139/tcp",
+          "ts": "2026-10-13T20:36:35.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:143/tcp",
+          "ts": "2026-10-13T20:36:36.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:443/tcp",
+          "ts": "2026-10-13T20:36:37.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:445/tcp",
+          "ts": "2026-10-13T20:36:38.000Z"
+        }
+      ],
+      "first_seen": "2026-10-13T20:36:27.000Z",
+      "incident_id": "INC-SCAN-203.0.113.55-54486ca9",
+      "last_seen": "2026-10-13T20:36:52.000Z",
+      "log_event_count": 26,
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "recommended_actions": [
+        {
+          "accion": "Bloquear la IP que realiza el escaneo en el firewall",
+          "action_id": "INC-SCAN-203.0.113.55-54486ca9-c55623",
+          "alternativa_de": null,
+          "comando_argv": [
+            "sudo",
+            "ufw",
+            "deny",
+            "from",
+            "203.0.113.55"
+          ],
+          "comando_explicacion": "Igual que en fuerza bruta: agrega una regla de firewall que descarta todo el tráfico de esa IP puntual, cortando el reconocimiento en curso.",
+          "comando_sugerido": "sudo ufw deny from 203.0.113.55",
+          "impacto": "alto",
+          "modo": "pasos",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "Regla añadida a UFW:\n  [ 3] Anywhere                   DENY IN    203.0.113.55\nEl escaneo en curso deja de recibir respuesta de ningún puerto — desde la perspectiva del atacante, el host entero pasa a verse caído.",
+          "status": "pending"
+        },
+        {
+          "accion": "Bloquear la IP con iptables (sin UFW)",
+          "action_id": "INC-SCAN-203.0.113.55-54486ca9-5b3ca4",
+          "alternativa_de": "INC-SCAN-203.0.113.55-54486ca9-c55623",
+          "comando_argv": [
+            "sudo",
+            "iptables",
+            "-I",
+            "INPUT",
+            "-s",
+            "203.0.113.55",
+            "-j",
+            "DROP"
+          ],
+          "comando_explicacion": "Inserta al principio de la cadena INPUT una regla que descarta todo paquete con origen en esa IP. Es la capa que UFW usa por debajo, disponible en casi cualquier Linux.",
+          "comando_sugerido": "sudo iptables -I INPUT -s 203.0.113.55 -j DROP",
+          "desventajas": "No sobrevive a un reinicio sin iptables-persistent; si el host usa UFW o firewalld, la regla queda fuera de su gestión y es fácil olvidarla.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "Chain INPUT (policy ACCEPT)\nnum  target  prot  source           destination\n1    DROP    all   203.0.113.55    0.0.0.0/0\nLa regla aplicaría de inmediato, por delante de cualquier otra.",
+          "status": "pending",
+          "ventajas": "Funciona aunque UFW no esté instalado; efecto inmediato."
+        },
+        {
+          "accion": "Bloquear la IP con nftables",
+          "action_id": "INC-SCAN-203.0.113.55-54486ca9-3acadf",
+          "alternativa_de": "INC-SCAN-203.0.113.55-54486ca9-c55623",
+          "comando_argv": [
+            "sudo",
+            "nft",
+            "add",
+            "rule",
+            "inet",
+            "filter",
+            "input",
+            "ip",
+            "saddr",
+            "203.0.113.55",
+            "drop"
+          ],
+          "comando_explicacion": "Agrega la regla de descarte en nftables, el firewall por defecto en Debian 11+, Ubuntu 22.04+ y RHEL 9. Requiere que exista la tabla 'inet filter' con la cadena 'input'.",
+          "comando_sugerido": "sudo nft add rule inet filter input ip saddr 203.0.113.55 drop",
+          "desventajas": "Falla si la tabla/cadena no existe con ese nombre; tampoco persiste sin guardarla en /etc/nftables.conf.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "table inet filter {\n  chain input {\n    ip saddr 203.0.113.55 drop\n  }\n}",
+          "status": "pending",
+          "ventajas": "Es el firewall nativo de las distribuciones actuales; reglas más legibles."
+        },
+        {
+          "accion": "Bloquear la IP con firewalld (Fedora / RHEL / CentOS)",
+          "action_id": "INC-SCAN-203.0.113.55-54486ca9-78f187",
+          "alternativa_de": "INC-SCAN-203.0.113.55-54486ca9-c55623",
+          "comando_argv": null,
+          "comando_explicacion": "Agrega una 'rich rule' de firewalld que descarta el tráfico de esa IP en la zona activa. Sin --permanent es solo en tiempo de ejecución: útil para contener ya y decidir después si se vuelve definitiva.",
+          "comando_sugerido": "sudo firewall-cmd --add-rich-rule='rule family=ipv4 source address=203.0.113.55 drop'",
+          "desventajas": "Sin --permanent se pierde al recargar; con --permanent hay que acordarse de quitarla si la IP resulta legítima.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "success\nrule family=\"ipv4\" source address=\"203.0.113.55\" drop\nLa regla duraría hasta el próximo reload/reinicio de firewalld.",
+          "status": "pending",
+          "ventajas": "Es lo que traen Fedora/RHEL por defecto; la regla temporal es fácil de revertir."
+        },
+        {
+          "accion": "Revisar qué servicios/puertos quedaron expuestos en el host objetivo",
+          "action_id": "INC-SCAN-203.0.113.55-54486ca9-c0fb68",
+          "alternativa_de": null,
+          "comando_argv": [
+            "sudo",
+            "ss",
+            "-tulnp"
+          ],
+          "comando_explicacion": "Lista los puertos TCP/UDP (-t/-u) en escucha (-l) en este host, con el proceso dueño de cada uno (-p) y sin resolver nombres (-n, más rápido). Es de solo lectura: sirve para ver exactamente qué encontró el atacante al escanear, antes de decidir qué cerrar.",
+          "comando_sugerido": "sudo ss -tulnp",
+          "impacto": "medio",
+          "modo": "pasos",
+          "orden": 2,
+          "plazo": "24h",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Netid  State   Local Address:Port   Process\ntcp    LISTEN  0.0.0.0:22           \"sshd\"\ntcp    LISTEN  0.0.0.0:5601         \"node\" (kibana)\ntcp    LISTEN  0.0.0.0:9200         \"java\" (elasticsearch)\n(salida real: depende de qué haya expuesto el host que se está revisando)",
+          "status": "pending"
+        },
+        {
+          "accion": "Listar los puertos en escucha con lsof",
+          "action_id": "INC-SCAN-203.0.113.55-54486ca9-ae79db",
+          "alternativa_de": "INC-SCAN-203.0.113.55-54486ca9-c0fb68",
+          "comando_argv": [
+            "sudo",
+            "lsof",
+            "-i",
+            "-P",
+            "-n",
+            "-sTCP:LISTEN"
+          ],
+          "comando_explicacion": "Misma consulta de solo lectura con otra herramienta: lista cada socket TCP en escucha con el proceso y el usuario dueños.",
+          "comando_sugerido": "sudo lsof -i -P -n -sTCP:LISTEN",
+          "desventajas": "Solo TCP con este filtro; más lento que ss en hosts con muchos sockets.",
+          "impacto": "medio",
+          "modo": "distintas",
+          "orden": 2,
+          "plazo": "24h",
+          "responsable": "sysadmin",
+          "resultado_simulado": "COMMAND  PID  USER  FD  TYPE  NODE  NAME\nsshd     812  root  3u  IPv4  TCP   *:22 (LISTEN)\n(salida real: depende del host)",
+          "status": "pending",
+          "ventajas": "Muestra el usuario dueño de cada proceso; está en hosts sin iproute2."
+        },
+        {
+          "accion": "Cerrar puertos innecesarios y segmentar el host afectado",
+          "action_id": "INC-SCAN-203.0.113.55-54486ca9-456bc0",
+          "alternativa_de": null,
+          "comando_argv": null,
+          "comando_explicacion": null,
+          "comando_sugerido": null,
+          "impacto": "medio",
+          "modo": "pasos",
+          "orden": 3,
+          "plazo": "24h",
+          "responsable": "sysadmin",
+          "resultado_simulado": null,
+          "status": "pending"
+        },
+        {
+          "accion": "Pasar a política de denegar todo lo entrante salvo SSH (lista blanca)",
+          "action_id": "INC-SCAN-203.0.113.55-54486ca9-f010d1",
+          "alternativa_de": "INC-SCAN-203.0.113.55-54486ca9-456bc0",
+          "comando_argv": null,
+          "comando_explicacion": "En vez de cerrar puerto por puerto, invierte la lógica: todo lo entrante se deniega y solo queda abierto lo que se permite explícitamente (acá, SSH).",
+          "comando_sugerido": "sudo ufw allow 22/tcp && sudo ufw default deny incoming && sudo ufw enable",
+          "desventajas": "Corta cualquier servicio que se olvide permitir (o SSH si corre en otro puerto): aplicarlo con una consola de respaldo a mano.",
+          "impacto": "medio",
+          "modo": "distintas",
+          "orden": 3,
+          "plazo": "24h",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Rule added\nDefault incoming policy changed to 'deny'\nFirewall is active and enabled on system startup\nUn nuevo escaneo vería solo el puerto 22 abierto.",
+          "status": "pending",
+          "ventajas": "Lo que no se permitió no queda expuesto, aunque alguien levante un servicio nuevo."
+        },
+        {
+          "accion": "Desplegar IDS de red (Suricata) para visibilidad de futuros escaneos",
+          "action_id": "INC-SCAN-203.0.113.55-54486ca9-eb2160",
+          "alternativa_de": null,
+          "comando_argv": null,
+          "comando_explicacion": null,
+          "comando_sugerido": null,
+          "impacto": "bajo",
+          "modo": "pasos",
+          "orden": 4,
+          "plazo": "48h",
+          "responsable": "SOC",
+          "resultado_simulado": null,
+          "status": "pending"
+        },
+        {
+          "accion": "Instalar psad (detección de escaneos a partir de los logs del firewall)",
+          "action_id": "INC-SCAN-203.0.113.55-54486ca9-c48483",
+          "alternativa_de": "INC-SCAN-203.0.113.55-54486ca9-eb2160",
+          "comando_argv": [
+            "sudo",
+            "apt-get",
+            "install",
+            "-y",
+            "psad"
+          ],
+          "comando_explicacion": "psad analiza los paquetes que el firewall registra y alerta (o bloquea) cuando detecta un patrón de escaneo. No necesita un sensor de red aparte.",
+          "comando_sugerido": "sudo apt-get install -y psad",
+          "desventajas": "Requiere logging de iptables habilitado; solo ve el tráfico que llega a ese host, no el de toda la red.",
+          "impacto": "bajo",
+          "modo": "distintas",
+          "orden": 4,
+          "plazo": "48h",
+          "responsable": "SOC",
+          "resultado_simulado": "Setting up psad (2.4.6-2) ...\npsad quedaría leyendo los logs de iptables y alertando ante nuevos escaneos.",
+          "status": "pending",
+          "ventajas": "Mucho más liviano que un IDS completo; se instala en el mismo host."
+        }
+      ],
+      "related_incidents": [],
+      "risk_score": 73,
+      "rule_name": "Port Scan – Many Distinct Ports",
+      "sample_messages": [
+        "scan 203.0.113.55 -> 172.18.0.5 puertos [21, 22, 23, 25, 53, 80, 110, 135, 139, 143, 443, 445]"
+      ],
+      "scanned_ports": [
+        21,
+        22,
+        23,
+        25,
+        53,
+        80,
+        110,
+        135,
+        139,
+        143,
+        443,
+        445,
+        993,
+        995,
+        1433,
+        1521,
+        2222,
+        3306,
+        3389,
+        5432,
+        5601,
+        6379,
+        8080,
+        8443,
+        9200,
+        9300
+      ],
+      "severity_siem": "high",
+      "source_ip": "203.0.113.55",
+      "target_hosts": [
+        "172.18.0.5"
+      ],
+      "target_users": [],
+      "victim_hosts": [
+        "172.18.0.5"
+      ]
+    },
+    {
+      "alert_event_count": 0,
+      "analysis": {
+        "_source": "fallback",
+        "accion_recomendada": "Dar de baja / bloquear el servidor de phishing (página falsa)",
+        "aprendizaje": {
+          "casos_similares": [],
+          "disponible": true,
+          "documentos": [],
+          "lecciones": []
+        },
+        "contexto_campana": null,
+        "contexto_historico": "Sin antecedentes previos para 172.18.0.9, 203.0.113.56: es la primera vez que se registra actividad de esta IP.",
+        "contexto_riesgo": "Las credenciales capturadas dan acceso directo con identidad válida, evadiendo controles que asumen que el usuario es legítimo.",
+        "explicacion": "Se registraron 1 envío(s) de credenciales de testuser hacia una página de login sospechosa desde 203.0.113.56.",
+        "falso_positivo_probabilidad": "MEDIUM",
+        "metodologia": "El phishing presenta una página falsa que imita un login legítimo para capturar usuario y contraseña cuando la víctima los ingresa.",
+        "referencias": [
+          "T1566"
+        ],
+        "severidad_ajustada": "HIGH"
+      },
+      "attacker_ips": [
+        "203.0.113.56"
+      ],
+      "campaign_id": null,
+      "campaign_shared_ips": [],
+      "classification": {
+        "attack_type": "credential_harvesting",
+        "confidence": "media",
+        "factores": [
+          "1 envío(s) de credenciales detectado(s) hacia una URL marcada como sospechosa",
+          "1 usuario(s) distinto(s) afectado(s)",
+          "Confirmado por una regla activa del SIEM: 'Credential Submission to Suspicious Login'",
+          "Falso positivo: MEDIA — depende de qué tan confiable sea la fuente que marcó la URL como sospechosa"
+        ],
+        "false_positive_likelihood": "media",
+        "mitre_technique": "T1566",
+        "rationale": "1 envío(s) de credenciales hacia una página de login sospechosa (/login); posible captura de credenciales (phishing).",
+        "severity": "alta"
+      },
+      "detection_source": "elastic",
+      "event_count": 1,
+      "evidence": [
+        {
+          "detail": "POST /login (user=testuser, creds=sí)",
+          "ts": "2026-10-13T20:36:31.000Z"
+        }
+      ],
+      "first_seen": "2026-10-13T20:36:31.000Z",
+      "incident_id": "INC-PHISH-172.18.0.9-2fd59849",
+      "last_seen": "2026-10-13T20:36:31.000Z",
+      "log_event_count": 1,
+      "mitre": {
+        "tactic": "Initial Access",
+        "technique": "Phishing",
+        "technique_id": "T1566"
+      },
+      "phishing_urls": [
+        "/login"
+      ],
+      "recommended_actions": [
+        {
+          "accion": "Dar de baja / bloquear el servidor de phishing (página falsa)",
+          "action_id": "INC-PHISH-172.18.0.9-2fd59849-4e280b",
+          "alternativa_de": null,
+          "comando_argv": [
+            "sudo",
+            "ufw",
+            "deny",
+            "from",
+            "203.0.113.56"
+          ],
+          "comando_explicacion": "Bloquea en el firewall la IP que aloja la página de phishing, cortando el acceso desde esta red hacia ese servidor — no da de baja la página en sí (está fuera de nuestro control), pero corta la exposición local.",
+          "comando_sugerido": "sudo ufw deny from 203.0.113.56",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "Regla añadida a UFW:\n  [ 3] Anywhere                   DENY OUT   203.0.113.56\nNingún equipo de esta red vuelve a poder llegar a esa IP — pero la página falsa sigue en línea para el resto de internet, fuera de nuestro control.",
+          "status": "pending"
+        },
+        {
+          "accion": "Bloquear el tráfico SALIENTE hacia el servidor de phishing (UFW)",
+          "action_id": "INC-PHISH-172.18.0.9-2fd59849-68763e",
+          "alternativa_de": "INC-PHISH-172.18.0.9-2fd59849-4e280b",
+          "comando_argv": [
+            "sudo",
+            "ufw",
+            "deny",
+            "out",
+            "to",
+            "203.0.113.56"
+          ],
+          "comando_explicacion": "Bloquea las conexiones que salen de este host HACIA esa IP. Es lo que impide que otro usuario vuelva a entregar credenciales a la página falsa: 'deny from' filtra el tráfico que ENTRA desde ella.",
+          "comando_sugerido": "sudo ufw deny out to 203.0.113.56",
+          "desventajas": "Protege solo a este host; para toda la red hace falta hacerlo en el firewall perimetral o el proxy.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "Rule added\n  203.0.113.56  DENY OUT  Anywhere\nCualquier intento de abrir la página falsa desde este host fallaría.",
+          "status": "pending",
+          "ventajas": "Ataca la dirección correcta del problema: la víctima es la que se conecta."
+        },
+        {
+          "accion": "Bloquear el tráfico saliente con iptables (cadena OUTPUT)",
+          "action_id": "INC-PHISH-172.18.0.9-2fd59849-c19223",
+          "alternativa_de": "INC-PHISH-172.18.0.9-2fd59849-4e280b",
+          "comando_argv": [
+            "sudo",
+            "iptables",
+            "-I",
+            "OUTPUT",
+            "-d",
+            "203.0.113.56",
+            "-j",
+            "DROP"
+          ],
+          "comando_explicacion": "Equivalente sin UFW: descarta todo paquete de este host con destino a la IP del servidor de phishing.",
+          "comando_sugerido": "sudo iptables -I OUTPUT -d 203.0.113.56 -j DROP",
+          "desventajas": "No persiste tras reiniciar sin iptables-persistent.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "Chain OUTPUT (policy ACCEPT)\n1    DROP    all   0.0.0.0/0    203.0.113.56",
+          "status": "pending",
+          "ventajas": "Funciona sin UFW; efecto inmediato."
+        },
+        {
+          "accion": "Forzar reset de credenciales del usuario que envió datos (testuser)",
+          "action_id": "INC-PHISH-172.18.0.9-2fd59849-a4b178",
+          "alternativa_de": null,
+          "comando_argv": [
+            "sudo",
+            "passwd",
+            "testuser"
+          ],
+          "comando_explicacion": "Cambia la contraseña del usuario que envió sus credenciales a la página falsa. Es la acción más urgente del incidente: esa contraseña ya está en manos del atacante, tratarla como comprometida de inmediato, no como sospecha.",
+          "comando_sugerido": "sudo passwd testuser",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 2,
+          "plazo": "inmediata",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Changing password for user testuser.\nNew password: \nRetype new password: \npasswd: password updated successfully\nLa contraseña que testuser envió a la página falsa deja de servirle al atacante para entrar con ella.",
+          "status": "pending"
+        },
+        {
+          "accion": "Bloquear la cuenta (testuser) en vez de cambiarle la contraseña",
+          "action_id": "INC-PHISH-172.18.0.9-2fd59849-05995a",
+          "alternativa_de": "INC-PHISH-172.18.0.9-2fd59849-a4b178",
+          "comando_argv": [
+            "sudo",
+            "passwd",
+            "-l",
+            "testuser"
+          ],
+          "comando_explicacion": "Bloquea el login por contraseña de la cuenta sin necesidad de inventar una nueva en el momento. Se revierte con 'passwd -u'.",
+          "comando_sugerido": "sudo passwd -l testuser",
+          "desventajas": "Deja sin acceso al usuario legítimo; no cierra sesiones ya abiertas ni invalida claves SSH autorizadas.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 2,
+          "plazo": "inmediata",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Locking password for user testuser.\npasswd: Success\nNadie podría entrar como testuser con contraseña hasta desbloquearla.",
+          "status": "pending",
+          "ventajas": "Inmediato; corta el uso de la contraseña filtrada aunque nadie esté disponible para elegir otra."
+        },
+        {
+          "accion": "Forzar a testuser a cambiar la contraseña en el próximo login",
+          "action_id": "INC-PHISH-172.18.0.9-2fd59849-3b862b",
+          "alternativa_de": "INC-PHISH-172.18.0.9-2fd59849-a4b178",
+          "comando_argv": [
+            "sudo",
+            "chage",
+            "-d",
+            "0",
+            "testuser"
+          ],
+          "comando_explicacion": "Marca la contraseña como vencida: el próximo inicio de sesión obliga a elegir una nueva. Es la opción menos disruptiva para el usuario.",
+          "comando_sugerido": "sudo chage -d 0 testuser",
+          "desventajas": "Si el atacante ya conoce la contraseña, puede ser él quien inicie sesión primero y la cambie: no usar si hubo un login exitoso.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 2,
+          "plazo": "inmediata",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Last password change para testuser: password must be changed\nEl próximo login pediría una contraseña nueva antes de dar acceso.",
+          "status": "pending",
+          "ventajas": "No interrumpe al usuario ni requiere coordinar una contraseña nueva."
+        },
+        {
+          "accion": "Cerrar todas las sesiones activas de testuser",
+          "action_id": "INC-PHISH-172.18.0.9-2fd59849-075416",
+          "alternativa_de": "INC-PHISH-172.18.0.9-2fd59849-a4b178",
+          "comando_argv": [
+            "sudo",
+            "loginctl",
+            "terminate-user",
+            "testuser"
+          ],
+          "comando_explicacion": "Termina todas las sesiones abiertas de la cuenta (SSH, consola, gráficas). Es lo que corta a un atacante que YA entró; complementa, no reemplaza, al cambio o bloqueo de la contraseña.",
+          "comando_sugerido": "sudo loginctl terminate-user testuser",
+          "desventajas": "También cierra las sesiones legítimas; si la contraseña sigue válida, el atacante puede volver a entrar.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 2,
+          "plazo": "inmediata",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Todas las sesiones de testuser se cerrarían; cualquier shell abierta con esa cuenta se cortaría en el acto.",
+          "status": "pending",
+          "ventajas": "Expulsa a un atacante que ya tiene una sesión abierta."
+        },
+        {
+          "accion": "Alertar a los usuarios afectados y reforzar concientización",
+          "action_id": "INC-PHISH-172.18.0.9-2fd59849-ba031a",
+          "alternativa_de": null,
+          "comando_argv": null,
+          "comando_explicacion": null,
+          "comando_sugerido": null,
+          "impacto": "medio",
+          "modo": "distintas",
+          "orden": 3,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": null,
+          "status": "pending"
+        },
+        {
+          "accion": "Agregar el indicador (IP/dominio) a la blocklist / threat intel",
+          "action_id": "INC-PHISH-172.18.0.9-2fd59849-5d0f50",
+          "alternativa_de": null,
+          "comando_argv": null,
+          "comando_explicacion": null,
+          "comando_sugerido": null,
+          "impacto": "medio",
+          "modo": "distintas",
+          "orden": 4,
+          "plazo": "24h",
+          "responsable": "SOC",
+          "resultado_simulado": null,
+          "status": "pending"
+        }
+      ],
+      "related_incidents": [],
+      "risk_score": 68,
+      "rule_name": "Credential Submission to Suspicious Login",
+      "sample_messages": [
+        "POST /login usuario=testuser desde 172.18.0.9"
+      ],
+      "severity_siem": "high",
+      "source_ip": "172.18.0.9",
+      "target_users": [
+        "testuser"
+      ],
+      "victim_hosts": []
     }
   ],
   "source": "collector",
-  "analyzed_at": "2026-10-13T02:36:52.244855+00:00",
+  "analyzed_at": "2026-10-13T20:49:27.593722+00:00",
   "analyst_mode": "fallback"
 }

@@ -233,6 +233,18 @@ let lastData = { incidents: [] };
 let selectedId = null;
 const collapsed = new Map(); // estado de colapso de evidencia por incidente
 let pidiendoMotivo = null; // action_id que está mostrando el formulario de "por qué se descarta"
+const alternativasAbiertas = new Set(); // action_id de las acciones con sus alternativas desplegadas
+
+// Las alternativas viajan en la misma lista que las acciones (así se deciden
+// con el mismo POST y quedan en la misma auditoría), marcadas con
+// `alternativa_de`. Para contar y para pintar, la unidad es la acción
+// principal: está decidida si se decidió ella o cualquiera de sus alternativas.
+const principales = inc => (inc.recommended_actions || []).filter(a => !a.alternativa_de);
+const alternativasDe = (inc, a) =>
+  (inc.recommended_actions || []).filter(x => x.alternativa_de === a.action_id);
+const alternativaAprobada = (inc, a) => alternativasDe(inc, a).find(x => x.status === "approved");
+const decidida = (inc, a) =>
+  a.status !== "pending" || alternativasDe(inc, a).some(x => x.status !== "pending");
 const decisionesAbiertas = new Set(); // incident_id con el detalle de decisiones expandido
 
 async function load() {
@@ -338,9 +350,9 @@ function renderSummary(incs) {
     return;
   }
 
-  const totalActions = incs.reduce((a, i) => a + (i.recommended_actions || []).length, 0);
+  const totalActions = incs.reduce((a, i) => a + principales(i).length, 0);
   const pending = incs.reduce((a, i) =>
-    a + (i.recommended_actions || []).filter(x => x.status === "pending").length, 0);
+    a + principales(i).filter(x => !decidida(i, x)).length, 0);
   // `Map` con las cuatro severidades conocidas: una severidad inesperada no crea
   // una clave nueva ni toca el prototipo (era otro `detect-object-injection`).
   const porSeveridad = new Map([["CRITICAL", 0], ["HIGH", 0], ["MEDIUM", 0], ["LOW", 0]]);
@@ -500,7 +512,7 @@ function renderAprendizaje(apr) {
 function renderCard(inc) {
   const an = inc.analysis || {};
   const sev = severidadDe(inc);
-  const actions = (inc.recommended_actions || []).map(a => renderAction(inc, a));
+  const actions = principales(inc).map(a => renderAction(inc, a));
   const refs = (an.referencias || []).join(", ");
   const factores = inc.classification?.factores || [];
   return html`
@@ -542,10 +554,33 @@ function renderCard(inc) {
         ${renderEvidence(inc)}
         <div class="actions">
           <h3>Acciones sugeridas — el analista decide</h3>
+          ${renderModoSolucion(inc)}
           ${actions}
         </div>
       </div>
     </div>`;
+}
+
+// Avisa cómo se relacionan las acciones principales entre sí, según el `modo`
+// que marcó el Agente 1 (classifier.py):
+//   "pasos"     → un procedimiento a seguir en orden.
+//   "distintas" → soluciones independientes; se aplican las que correspondan.
+// Sin acciones principales (o sin modo) no muestra nada.
+function renderModoSolucion(inc) {
+  const princ = principales(inc);
+  if (princ.length < 2) return "";
+  const modo = princ[0].modo;
+  if (modo === "pasos") {
+    return html`<div class="modo-solucion modo-pasos">${ico("i-enlace")}
+      <b>Plan de respuesta:</b> seguí estos pasos en orden de prioridad — cada uno
+      avanza sobre el anterior (contener → investigar → remediar → endurecer).</div>`;
+  }
+  if (modo === "distintas") {
+    return html`<div class="modo-solucion modo-distintas">${ico("i-advertencia")}
+      <b>Son soluciones distintas:</b> aplicá las que correspondan a tu entorno.
+      No es un orden obligatorio ni hace falta hacerlas todas.</div>`;
+  }
+  return "";
 }
 
 function renderCampaignBanner(inc) {
@@ -611,12 +646,21 @@ function renderAction(inc, a) {
   // una sugerencia, no algo que el analista "decidió" y quiera ver en acción
   // (ver `renderResultadoSimulado`).
   const simulado = a.status === "approved" ? renderResultadoSimulado(a) : "";
+  const esAlternativa = Boolean(a.alternativa_de);
+  const elegida = esAlternativa ? null : alternativaAprobada(inc, a);
+  // Etiqueta de la acción principal según el modo del playbook:
+  //   "pasos"     → "Paso N" (procedimiento en orden).
+  //   "distintas" → "•"      (solución independiente; el número de orden es solo prioridad).
+  // Una alternativa no lleva etiqueta: ya se muestra anidada bajo su acción.
+  const etiqueta = esAlternativa ? ""
+    : a.modo === "pasos" ? html`<span class="paso">Paso ${a.orden}</span> `
+    : new FragmentoSeguro("• ");
   return html`
-    <div class="action">
+    <div class="action${esAlternativa ? " alternativa" : ""}">
       <div class="top">
         <span class="state s-${a.status}">${estadoTexto(a.status)}</span>
-        <span class="who">${a.responsable} · ${a.plazo}</span>
-        <span class="desc">${a.orden}. ${a.accion}</span>
+        ${esAlternativa ? "" : html`<span class="who">${a.responsable} · ${a.plazo}</span>`}
+        <span class="desc">${etiqueta}${a.accion}</span>
         <span class="ctrl">
           <button class="approve ${a.status==='approved'?'on':''}" type="button"
             data-accion="decidir" data-decision="approved"
@@ -626,8 +670,46 @@ function renderAction(inc, a) {
             data-incidente="${inc.incident_id}" data-action-id="${a.action_id}">Descartar</button>
         </span>
       </div>
-      ${cmd}${pidiendoMotivo === a.action_id ? renderMotivoForm(inc, a) : ""}${decided}${simulado}
+      ${cmd}${esAlternativa ? renderTradeoff(a) : ""}${
+        elegida ? html`<div class="alt-elegida">${ico("i-idea")} Se aprobó una alternativa: «${elegida.accion}»</div>` : ""}${
+        pidiendoMotivo === a.action_id ? renderMotivoForm(inc, a) : ""}${decided}${simulado}${
+        esAlternativa ? "" : renderAlternativas(inc, a)}
     </div>`;
+}
+
+// Otras formas de lograr lo mismo que la acción principal (otro firewall, otra
+// fuente de logs, una contención más o menos drástica). Salen del playbook de
+// classifier.py igual que la acción: el LLM no las genera ni las modifica.
+function renderAlternativas(inc, a) {
+  const alts = alternativasDe(inc, a);
+  if (!alts.length) return "";
+  const abiertas = alternativasAbiertas.has(a.action_id);
+  const panelId = "alt-" + a.action_id;
+  return html`
+    <div class="alternativas">
+      <button class="alt-head" type="button" data-accion="alternativas" data-action-id="${a.action_id}"
+              aria-expanded="${abiertas ? "true" : "false"}" aria-controls="${panelId}">
+        <span class="chev">${abiertas ? "▾" : "▸"}</span> Otras formas de hacerlo (${alts.length})
+      </button>
+      <div class="alt-body${abiertas ? "" : " oculto"}" id="${panelId}">
+        ${alts.map(x => renderAction(inc, x))}
+      </div>
+    </div>`;
+}
+
+function renderTradeoff(a) {
+  if (!a.ventajas && !a.desventajas) return "";
+  return html`
+    <ul class="tradeoff">
+      ${a.ventajas ? html`<li class="pro"><b>A favor:</b> ${a.ventajas}</li>` : ""}
+      ${a.desventajas ? html`<li class="contra"><b>En contra:</b> ${a.desventajas}</li>` : ""}
+    </ul>`;
+}
+
+function toggleAlternativas(actionId) {
+  if (alternativasAbiertas.has(actionId)) alternativasAbiertas.delete(actionId);
+  else alternativasAbiertas.add(actionId);
+  render();
 }
 
 // Qué PASARÍA si este comando corriera — nunca qué pasó. El texto sale del
@@ -1128,6 +1210,9 @@ function delegar(evt) {
     toggleDecisiones(incidente);
   } else if (accion === "evidencia") {
     toggleEv(evidencia);
+  } else if (accion === "alternativas") {
+    evt.stopPropagation();
+    toggleAlternativas(actionId);
   } else if (accion === "about") {
     toggleAbout();
   } else if (accion === "revisar-leccion") {
