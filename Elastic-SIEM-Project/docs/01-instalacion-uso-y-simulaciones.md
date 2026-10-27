@@ -32,7 +32,9 @@ imagen trae las suyas. `.devtools/` solo se usa para las pruebas y los linters.
 ./scripts/siem.sh pipeline
 ```
 
-Le pide un ciclo al servicio **pipeline**, que encadena por HTTP:
+El servicio **pipeline** ya corre un ciclo solo cada 2 minutos
+(`SIEM_PIPELINE_INTERVALO`, ver `.env.example`); este comando fuerza uno en el
+momento. Le pide un ciclo al servicio **pipeline**, que encadena por HTTP:
 **collector** (extrae de Elasticsearch → `data/collector/siem_clean.json`; si ES
 no responde, **no pisa** la captura y el ciclo sigue con la última),
 **classifier** (Agente 1), **analyst** (Agente 2) y **audit** (registra la
@@ -70,6 +72,11 @@ incidente, acción, decisión y nota opcional. El estado se reconstruye haciendo
 *replay* de ese log, así que reiniciar cualquier servicio no pierde las
 decisiones. El dashboard se refresca solo cada 15 s.
 
+Cada decisión también se guarda como **caso** en la memoria del Agente 2
+(servicio **knowledge**, `data/knowledge/casos.json`). Cuando un patrón se
+repite, el agente propone una lección que hay que aprobar a mano. Cómo
+funciona y dónde verlo: [05 · El "Gem"](05-gem-memoria-del-agente.md).
+
 **Endpoints principales:**
 
 | Método | Ruta | Qué hace |
@@ -98,8 +105,9 @@ decisiones. El dashboard se refresca solo cada 15 s.
 
 ```bash
 docker compose up -d --build gateway     # los 8 microservicios, sin Elasticsearch
-bash simulation/run-port-scan.sh --offline
-bash simulation/run-phishing.sh  --offline
+bash simulation/run-brute-force.sh --offline
+bash simulation/run-port-scan.sh   --offline
+bash simulation/run-phishing.sh    --offline
 ./scripts/siem.sh pipeline               # → http://127.0.0.1:5000
 ```
 
@@ -107,6 +115,46 @@ Sin Elasticsearch, el collector responde 503 y el ciclo lo informa
 (`collector sin_captura`) y sigue clasificando desde `network_logs/`. El
 Agente 2 usa el fallback determinístico. Las simulaciones `--offline` no
 necesitan Docker; la capa IA sí corre en contenedores.
+
+### Umbrales y ventana (RNF-MANT-04 / RNF-PORT-05)
+
+Se ajustan en `.env`, sin reconstruir imágenes: `SIEM_UMBRAL_FUERZA_BRUTA` (20),
+`SIEM_UMBRAL_CRITICO` (5000), `SIEM_UMBRAL_PUERTOS` (10), `SIEM_VENTANA` (`24h`; vale
+`90m`, `7d`…) y `SIEM_ES_HOST` (otro cluster). Se aplican con
+`docker compose up -d classifier collector`. Un valor inválido no se ignora: el
+servicio no arranca y su log dice qué variable está mal.
+
+### Respaldo y restauración (RQ-SEC-05)
+
+El servicio `backup` respalda todos los días a las 03:00 (`SIEM_RESPALDO_HORA`, zona
+`TZ`) los índices `filebeat-*` y las alertas (snapshot de Elasticsearch) más
+`data/audit/`, en un único archivo cifrado con AES-256 (`SIEM_RESPALDO_CLAVE`) y su
+`.sha256`. Conserva los últimos 7 (`SIEM_RESPALDO_RETENCION`) en
+`data/backup/archivo/` o en `SIEM_RESPALDO_DIR` (mejor otro disco).
+
+```bash
+./scripts/siem.sh respaldo                                    # uno ya, a mano
+docker logs siem-backup                                       # resultado de cada corrida
+./scripts/siem.sh restaurar siem-respaldo-<UTC>.tar.gz.enc    # cluster vacío (desastre)
+./scripts/siem.sh restaurar siem-respaldo-<UTC>.tar.gz.enc --renombrar   # al lado de los actuales
+```
+
+La restauración verifica el SHA-256 antes de descifrar y nunca pisa `data/audit/`:
+deja la auditoría en `data/backup/archivo/restaurados/<respaldo>/` para que una
+persona la compare y la reemplace. Cada respaldo es completo, así que restaurar es
+un solo archivo: minutos, dentro del RTO de 30 min.
+
+### Retención de datos personales (RQ-SEC-17)
+
+`./scripts/deploy-ilm.sh` (lo corre `start.sh`) borra los índices `filebeat-*` y
+los de alertas a los `SIEM_RETENCION_DIAS` días (30) **de la fecha de sus datos**.
+`--dry-run` muestra qué índices caerían sin tocar nada.
+
+### Salud y reinicio automático (RNF-CONF-05)
+
+Elasticsearch, Kibana, Logstash y Filebeat se verifican cada 30 s; con 3 fallos
+seguidos (≤ 90 s) quedan `unhealthy` y `siem-autoheal` los reinicia. Docker por sí
+solo no lo hace: `restart: unless-stopped` solo actúa si el proceso termina.
 
 ---
 
@@ -126,8 +174,21 @@ contenedores) o **`--offline`** (solo generan logs detectables, sin Docker).
 
 ```bash
 docker compose --profile simulation up -d
-bash simulation/run-brute-force.sh
+bash simulation/run-brute-force.sh                       # Hydra real contra ssh-target
+bash simulation/run-brute-force.sh --offline             # solo logs, sin Docker
+bash simulation/run-brute-force.sh --offline --ip 203.0.113.9   # IP propia, para demos
 ```
+
+`--offline` (RF-SIM-05) escribe en `network_logs/brute-force-<timestamp-unix>.json`
+las mismas líneas de sshd que deja `ssh-target` (24 `Failed password` y un
+`Accepted password`). El clasificador las toma de ahí (`auth_logs_de_red()`), así
+que el ataque se detecta sin Elasticsearch. Con el stack arriba no se cuentan dos
+veces: Filebeat las indexa como `network_traffic`, y la consulta de auth fallida
+del collector solo mira `ssh-target` y los logs del sistema.
+
+Los contenedores de ataque (`ssh-target`, `hydra-attacker`) viven en su propia
+red, `sim-net`, separada de la del SIEM y de la capa IA (RQ-SEC-24). Los
+escaneos reales con nmap apuntan solo a la víctima del laboratorio.
 
 El script crea un diccionario, descubre la IP del `ssh-target` y lanza Hydra
 (`hydra -l testuser -P passwords.txt <ip> -s 2222 ssh`). Genera una ráfaga de
@@ -138,8 +199,8 @@ Successful Login After Brute Force* (EQL, severidad Critical: compromiso
 confirmado).
 
 **Detección en la capa IA:** `services/classifier/classifier.py` agrupa los fallos por IP; si
-superan el umbral (`BRUTE_FORCE_THRESHOLD = 20`) o hay técnica T1110 →
-`ssh_brute_force`.
+superan el umbral (`BRUTE_FORCE_THRESHOLD`, 20 por defecto, `SIEM_UMBRAL_FUERZA_BRUTA`
+en `.env`) o hay técnica T1110 → `ssh_brute_force`.
 
 ### 2. Port Scan (T1046)
 
@@ -153,7 +214,8 @@ Genera un evento por puerto en `network_logs/port-scan-<timestamp-unix>.json`
 — nombre único por corrida a propósito: Filebeat (`filestream`) identifica
 archivos por inodo, y reescribir siempre el mismo nombre puede desincronizar
 el offset. **Detección:** `detect_port_scans()` agrupa por IP origen y cuenta
-puertos **distintos**; si ≥ `PORT_SCAN_DISTINCT_PORTS = 10` → `port_scan`.
+puertos **distintos**; si ≥ `PORT_SCAN_DISTINCT_PORTS` (10 por defecto,
+`SIEM_UMBRAL_PUERTOS` en `.env`) → `port_scan`.
 
 ### 3. Phishing / captura de credenciales (T1566)
 
@@ -170,8 +232,9 @@ GET y un POST con credenciales. **Detección:** `detect_phishing()` busca
 ### Correr los tres y verlos en el dashboard
 
 ```bash
-bash simulation/run-port-scan.sh --offline
-bash simulation/run-phishing.sh  --offline
+bash simulation/run-brute-force.sh --offline
+bash simulation/run-port-scan.sh   --offline
+bash simulation/run-phishing.sh    --offline
 ./scripts/siem.sh pipeline
 docker compose up -d gateway     # http://127.0.0.1:5000
 ```

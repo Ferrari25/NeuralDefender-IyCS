@@ -320,3 +320,14 @@ def test_los_elementos_interactivos_son_alcanzables_por_teclado(app_js):
     evidencia = app_js.split("function renderEvidence(")[1].split("\n}")[0]
     assert "<button class=\"ev-head\"" in evidencia
     assert "aria-expanded=" in evidencia and "aria-controls=" in evidencia
+
+
+def test_la_fila_se_abre_con_enter_y_espacio(app_js):
+    """RNF-USA-08: `role="button"` no alcanza — el navegador solo activa con el
+    teclado los botones nativos. La fila llegaba al foco con Tab pero Enter no
+    la abría. Un manejador de `keydown` la activa con Enter y Espacio."""
+    manejador = app_js.split('document.addEventListener("keydown"')[1].split("\n});")[0]
+    assert '"Enter"' in manejador and '" "' in manejador
+    assert 'role="button"' in manejador, "solo debe actuar sobre los falsos botones"
+    assert "preventDefault()" in manejador, "Espacio no tiene que desplazar la página"
+    assert "delegar(evt)" in manejador, "tiene que hacer lo mismo que el clic"

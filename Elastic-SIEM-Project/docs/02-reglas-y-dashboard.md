@@ -98,7 +98,7 @@ curl -s -u elastic:$ELASTIC_PASSWORD -X POST \
     "severity": "high", "risk_score": 73,
     "index": ["filebeat-*"],
     "query": "tags:authentication_failure", "language": "kuery",
-    "threshold": {"field": ["source_ip.keyword"], "value": 3},
+    "threshold": {"field": ["source_ip.keyword"], "value": 10},
     "from": "now-2m", "interval": "1m", "enabled": true,
     "threat": [{
       "framework": "MITRE ATT&CK",
@@ -208,7 +208,8 @@ evitar.
 Brute Force – Multiple Users Targeted*, detecta password spraying), B3
 (*Sensitive Port Probe*, un solo intento contra 3389/445/3306 ya es
 relevante), C2 (*Repeated Credential Harvesting*, escala severidad cuando C1
-ya disparó).
+ya disparó — ojo: hoy agrupa por la IP de la víctima, ver D-14 en
+[04](04-auditoria-pruebas-y-demostracion.md)).
 
 **Nivel 3 — opcionales:** A3 (*SSH Invalid User Enumeration*, un typo también
 la dispara), B2 (*Port Scan Horizontal*, necesita una red con más hosts para
@@ -230,7 +231,8 @@ con C1+C2), A7 (umbral 1 a propósito — ver abajo).
 - **No usar `For each alert` en severidades bajas/medias** — reservarlo para
   High/Critical.
 - **No dejar `False positives` vacío** — es lo que le permite al analista
-  descartar rápido sin dudar.
+  descartar rápido sin dudar. (Hoy A6, B2, B4, C2 y C3 se despliegan con ese
+  campo vacío: es una mejora pendiente del catálogo.)
 
 ---
 
@@ -254,7 +256,9 @@ abrilo en vivo junto con esta guía para ver cada elemento descripto acá.
    desglose por severidad como barra apilada con las 4 severidades — incluso
    las que están en cero (un cero informa: "se miró y no hay críticos").
 3. **Eventos de Seguridad Activos** (tabla, filtrable).
-4. **Ataques Recientes** y **Historial de Decisiones** (columna lateral).
+4. **Ataques Recientes**, **Historial de Decisiones** (con *Sacar un reporte*)
+   y **Memoria del agente** (columna lateral) — esta última se explica en
+   [05 · El "Gem"](05-gem-memoria-del-agente.md#en-el-panel-http1270015000).
 
 ### Eventos de Seguridad Activos
 
@@ -294,8 +298,15 @@ De arriba hacia abajo:
   usó para clasificar.
 - **Evidencia** (lupa) — cronología cruda de eventos, puertos sondeados,
   URLs, usuarios objetivo, colapsable.
+- **Memoria del agente** — qué recordó el Agente 2 para este
+  incidente: lecciones aprobadas que aplican, casos parecidos ya resueltos,
+  fragmentos de documentos, y si una lección ajustó la probabilidad de falso
+  positivo. Ver [05](05-gem-memoria-del-agente.md).
 - **Acciones sugeridas** — responsable, plazo, comando con su explicación en
-  lenguaje claro, y botones **Aprobar**/**Descartar**. Al descartar, el panel
+  lenguaje claro, y botones **Aprobar**/**Descartar**. Debajo de cada acción,
+  **Otras formas de hacerlo (N)** despliega alternativas (otro firewall, otra
+  contención) con sus ventajas y desventajas; cada una se decide por separado
+  (ver [`pruebas_de_penetracion.md`](../pruebas_de_penetracion.md) §2). Al descartar, el panel
   pide el motivo antes de confirmar — queda en la auditoría y le da contexto
   al Agente 2 la próxima vez.
 
@@ -370,9 +381,11 @@ verificable, no una caja negra.
 
 | Archivo | Qué contiene |
 |---------|--------------|
-| `services/gateway/templates/index.html` | Solo marcado (98 líneas). Referencia los estáticos con `url_for` |
+| `services/gateway/templates/index.html` | Solo marcado (~170 líneas). Referencia los estáticos con `url_for` |
 | `services/gateway/static/app.js` | Toda la lógica del cliente |
-| `services/gateway/static/app.css` | La hoja de estilos |
+| `services/gateway/static/app.css` | La hoja de estilos del panel (solo consume tokens) |
+| `services/gateway/static/tokens.css` | Los tokens de diseño: paleta, tipografía, radios, espaciado |
+| `services/gateway/templates/_iconos.html` | El sprite SVG de iconos |
 | `services/gateway/templates/login.html` + `services/gateway/static/login.js` | Pantalla de inicio de sesión |
 
 **Por qué se separó del HTML.** Mientras el `<script>` vivía dentro de la

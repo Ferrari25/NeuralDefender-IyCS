@@ -1,11 +1,12 @@
 # 00 · Contexto, arquitectura y requerimientos
 
-> **Índice de `docs/`** (5 documentos):
+> **Índice de `docs/`** (6 documentos):
 > **00 · Contexto, arquitectura y requerimientos** (este archivo) ·
 > [01 · Instalación, uso y simulaciones](01-instalacion-uso-y-simulaciones.md) ·
 > [02 · Reglas de detección y dashboard](02-reglas-y-dashboard.md) ·
 > [03 · Autenticación y control de acceso](03-autenticacion-y-control-de-acceso.md) ·
-> [04 · Auditoría, pruebas y demostración](04-auditoria-pruebas-y-demostracion.md).
+> [04 · Auditoría, pruebas y demostración](04-auditoria-pruebas-y-demostracion.md) ·
+> [05 · El "Gem": perfil y memoria del Agente 2](05-gem-memoria-del-agente.md).
 >
 > Para levantar el proyecto desde cero en un equipo nuevo, ver
 > [`nicotito.md`](../nicotito.md) en la raíz.
@@ -118,7 +119,7 @@ Detalle de por qué se partió así, cómo se hablan y qué garantiza cada front
 |----------|--------|---------------|-----|
 | **gateway** | `services/gateway/` (`dashboard.py`, `sesion_web.py`, `templates/`, `static/`) | — | Panel de supervisión humana (Flask). Ver [02 · Dashboard](02-reglas-y-dashboard.md). |
 | **auth** | `services/auth/` (`siem_auth.py`, `manage_users.py`) | `data/auth/users.json` | Usuarios, Argon2id, permisos por rol, anti-fuerza bruta. |
-| **audit** | `services/audit/` (`cadena.py`, `audit_verify.py`) | `data/audit/*.jsonl` | Registros append-only encadenados por hash: decisiones e historial de corridas. |
+| **audit** | `services/audit/` (`cadena.py`, `audit_verify.py`, `reportes.py`) | `data/audit/*.jsonl` | Registros append-only encadenados por hash: decisiones (`decisions.jsonl`), corridas del pipeline (`analysis_history.jsonl`) y actividad sobre la memoria del agente (`actividad.jsonl`). Arma los reportes. |
 | **collector** | `services/collector/` (`collector.py`, `es_client.py`) | `data/collector/siem_clean.json` | Extrae y limpia alertas + logs desde Elasticsearch. |
 | **classifier** | `services/classifier/classifier.py` | — (lee `network_logs/`, ro) | **Agente 1 determinístico.** Detecta `ssh_brute_force`, `port_scan`, `credential_harvesting`; asigna playbook, factores de explicabilidad y correlación de campañas. |
 | **analyst** | `services/analyst/siem_agent.py`, `perfil_agente.md` | — | **Agente 2.** Análisis en lenguaje claro vía LLM (Gemini) con fallback determinístico. Enriquece con contexto histórico y con su memoria. |
@@ -200,7 +201,7 @@ y base de servidor entre servicios).
 |----------|---------|----------|
 | Docker Engine | 20.10+ | Correr el stack. |
 | Docker Compose | **v2** (`docker compose`) | Orquestación. |
-| Python | 3.10+ (probado en 3.13) | Pruebas, linters y scripts auxiliares. La capa IA corre en contenedores (`python:3.13-slim`). |
+| Python | 3.10+ (probado en 3.12 y 3.13) | Pruebas, linters y scripts auxiliares. La capa IA corre en contenedores (`python:3.13-slim`). |
 | `openssl` | cualquiera | Generar certificados/claves. |
 | Node.js 18+ | opcional | Solo para ESLint sobre `services/gateway/static/app.js`. |
 
@@ -321,7 +322,14 @@ cadena de hashes**: si la cadena está rota, el reporte lo dice.
 
 ### El ciclo del pipeline
 
-`POST /v1/cycles` (o `./scripts/siem.sh pipeline`) corre, en orden:
+El ciclo corre **solo, cada 2 minutos** (`SIEM_PIPELINE_INTERVALO=120` en
+`docker-compose.yml`; `0` lo apaga, mínimo 30 s), o a mano con `POST /v1/cycles`
+(`./scripts/siem.sh pipeline`). La corrida automática vive en
+`services/pipeline/programador.py`: usa el mismo ciclo y el mismo candado, así
+que si hay una corrida manual en curso, el turno automático se saltea. **Con
+`SIEM_USE_LLM=true`, cada corrida llama a Gemini una vez por incidente.**
+
+Cada ciclo corre, en orden:
 
 1. **collector** — captura nueva de Elasticsearch. **Tolerable:** si ES no
    responde, se usa la última captura guardada; si no hay ninguna, se clasifica
@@ -334,7 +342,9 @@ cadena de hashes**: si la cadena está rota, el reporte lo dice.
    incidente queda con `aprendizaje.disponible = false`.
 4. **audit** — registra la corrida en `analysis_history.jsonl`.
 
-Un candado impide dos ciclos simultáneos (el segundo recibe 409).
+Un candado impide dos ciclos simultáneos (el segundo recibe 409). Con el panel
+refrescándose cada 15 s, una alerta nueva llega al analista en menos de
+~2,5 minutos.
 
 ### Operación
 
@@ -360,9 +370,14 @@ transporte HTTP de `siem_servicios` por uno que entrega cada petición al client
 de prueba Flask del servicio destino. Rutas, códigos, token y cuerpos son los
 mismos. `servicio_caido("audit", ...)` simula contenedores caídos.
 `tests/integration/test_microservicios.py` cubre los contratos propios de la
-malla.
+malla. Qué prueba cada archivo, y la verificación 80/20 que demuestra que las
+pruebas detectan defectos: [04 · Registro de pruebas](04-auditoria-pruebas-y-demostracion.md#registro-de-pruebas).
 
 ### Memoria del Agente 2
+
+> Guía completa —cómo funciona paso a paso y **dónde ver todo lo que guarda**
+> (panel, archivos y API)— en [05 · El "Gem"](05-gem-memoria-del-agente.md).
+> Acá queda el resumen de arquitectura.
 
 Un "Gem" de Gemini es un prompt fijo más archivos de conocimiento: no aprende
 con el uso, y no se puede invocar por API. El Agente 2 replica lo útil de esa
@@ -371,7 +386,7 @@ idea y le suma aprendizaje supervisado:
 | Pieza | Dónde | Cómo crece |
 |-------|-------|------------|
 | **Perfil** (la parte "Gem") | `services/analyst/perfil_agente.md` | Se edita a mano y se versiona. Define personalidad y forma de trabajar. Las reglas de seguridad (no seguir instrucciones de los logs, no generar comandos) quedan en el código, fuera del perfil editable. |
-| **Documentos** | `data/knowledge/documentos.json` | Un analista los carga desde el panel (`.txt`/`.md`, hasta 32 KB). Ante cada incidente se buscan los **párrafos** que mencionan sus IPs, usuarios, hosts o el tipo de ataque. |
+| **Documentos** | `data/knowledge/documentos.json` | Un analista los carga desde el panel (`.txt`/`.md`, hasta 32 KB, máximo 50). Ante cada incidente se buscan hasta 3 **párrafos** que mencionan sus IPs, usuarios, hosts o el tipo de ataque. |
 | **Casos** | `data/knowledge/casos.json` | Cada aprobación/descarte del panel se guarda como caso resuelto. Ante un incidente nuevo se citan hasta 3 parecidos (mismo tipo de ataque, misma IP, mismo usuario). |
 | **Lecciones** | `data/knowledge/lecciones.json` | El sistema propone una cuando el mismo patrón (tipo de ataque + IP) se decide igual en 2 incidentes distintos — `falso_positivo` si siempre se descartó, `reincidente` si siempre se aprobó. Un analista también puede escribir una. **Toda lección nace "propuesta" y solo se usa una vez aprobada por alguien con permiso `decidir`.** |
 
@@ -402,6 +417,11 @@ resto de la auditoría.
   IP del puente de Docker en vez de la del navegador. El límite de intentos sigue funcionando por usuario, pero ya no
   distingue entre clientes. Como el puerto solo se publica en loopback, todos
   los clientes son locales igual.
+- **Topes de memoria.** Cada contenedor declara `mem_limit` (RNF-COMP-01): 256 MB
+  los microservicios (medido: ~50-60 MB), y el stack Elastic según lo medido
+  (Elasticsearch 2,5 GB, Logstash 2 GB, Kibana 1,5 GB, Filebeat 512 MB). La
+  variable `MEM_LIMIT` (1 GB, sin uso) se quitó de `.env.example`: un tope único
+  no sirve, porque Elasticsearch ya ocupa ~1,8 GB.
 - **Sin TLS entre servicios.** El tráfico interno viaja en claro dentro de
   `ia-net`, que no se publica. El token es defensa en profundidad, no cifrado.
 - **Un solo worker en auth y pipeline.** El control de intentos y el candado

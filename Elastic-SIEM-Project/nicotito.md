@@ -16,7 +16,7 @@ hace falta profundizar.
 | Herramienta | Para qué | Cómo verificar |
 |---|---|---|
 | **Docker** + **Docker Compose v2** | Todo el stack Elastic (Elasticsearch, Kibana, Logstash, Filebeat) y los contenedores de simulación de ataque | `docker --version` / `docker compose version` |
-| **Python 3.11+** | Los scripts del pipeline (Agente 1, Agente 2), el dashboard Flask, los tests | `python3 --version` |
+| **Python 3.10+** | Las pruebas, los linters y los scripts auxiliares (el sistema en sí corre en contenedores) | `python3 --version` |
 | **Node.js 18+** (opcional) | Solo para correr ESLint sobre `services/gateway/static/app.js` (análisis estático del frontend) | `node --version` |
 | **openssl** | Generar contraseñas/claves aleatorias para `.env` | suele venir en el sistema |
 | **git** | Clonar el repo y versionar los cambios | `git --version` |
@@ -50,14 +50,18 @@ Todo lo que sigue se corre parado en `Elastic-SIEM-Project/`.
 
 ## 3. Configurar `.env` (el paso que nadie puede saltear)
 
-El repositorio **nunca** trae un `.env` real (está en `.gitignore` a
-propósito: son credenciales). Trae `.env.example`, que es la plantilla:
+> ⚠️ **Este repositorio sí trae un `.env` versionado**, por decisión explícita
+> del dueño (ver el comentario en `.gitignore`). Esos valores son compartidos
+> con cualquiera que tenga acceso al repo: en un equipo nuevo, **generá valores
+> propios** con los pasos de abajo antes de exponer nada.
+
+La plantilla es `.env.example`. Si tu clon no trae `.env`, partí de ella:
 
 ```bash
 cp .env.example .env
 ```
 
-Abrí `.env` y completá cada valor. Ninguno de estos tiene un default seguro
+Abrí `.env` y completá (o reemplazá) cada valor. Ninguno de estos tiene un default seguro
 a propósito — un default compartido en el código fuente no es un secreto.
 
 ### 3.1 Contraseñas y claves de Elastic/Kibana
@@ -125,9 +129,14 @@ determinístico — nunca se corta el pipeline por esto.
 
 ### 3.4 El resto de `.env`
 
-Los demás valores (`STACK_VERSION`, `CLUSTER_NAME`, `MEM_LIMIT`, `ES_HOST`,
-`SIEM_USERS_FILE`, `SIEM_TLS`) ya vienen con valores razonables en
+Los demás valores (`STACK_VERSION`, `CLUSTER_NAME`, `ES_HOST`,
+`SIEM_USERS_FILE`, `SIEM_TLS`, los umbrales `SIEM_UMBRAL_*`, `SIEM_VENTANA`,
+`SIEM_RETENCION_DIAS` y los `SIEM_RESPALDO_*`) ya vienen con valores razonables en
 `.env.example` — no hace falta tocarlos para un uso normal.
+
+**Una sola excepción: `SIEM_RESPALDO_CLAVE`.** `start.sh` la genera si falta, pero
+hay que copiarla a un gestor de contraseñas **fuera de este equipo**: sin ella
+ningún respaldo se puede descifrar.
 
 `SIEM_INTERNAL_TOKEN` es el token con el que se autentican entre sí los
 microservicios de la capa IA. Ninguno arranca sin él, pero no hace falta
@@ -138,7 +147,7 @@ solo si vas a servir el dashboard por HTTPS de verdad.
 
 ## 4. Instalar las dependencias de Python (solo para pruebas y linters)
 
-**Para correr el sistema no hace falta este paso.** La capa IA son siete
+**Para correr el sistema no hace falta este paso.** La capa IA son ocho
 microservicios en Docker, y cada imagen trae sus propias dependencias. Esto es
 solo para correr la suite de pruebas y el análisis estático en el host:
 
@@ -219,7 +228,7 @@ Kibana ni Logstash. Solo arrancan los microservicios de la capa IA, con datos
 sintéticos generados localmente:
 
 ```bash
-mkdir -p data/auth data/audit data/collector data/pipeline   # (start.sh lo hace solo)
+mkdir -p data/auth data/audit data/collector data/pipeline data/knowledge   # (start.sh lo hace solo)
 docker compose up -d --build gateway     # trae las dependencias del gateway
 bash simulation/run-port-scan.sh --offline
 bash simulation/run-phishing.sh  --offline
@@ -307,6 +316,12 @@ paso 6. Cada aprobación/descarte queda en `data/audit/decisions.jsonl` (append-
 encadenado por hash, firmado con el usuario de la sesión — nunca con una
 variable de entorno).
 
+Cada decisión además le enseña algo al Agente 2 (el "Gem"): se guarda como
+caso en `data/knowledge/casos.json`, y cuando un patrón se repite el agente
+propone una lección que aparece en la tarjeta **Memoria del agente** del panel
+para que la apruebes o rechaces. Cómo funciona y dónde ver todo lo que guarda:
+[`docs/05-gem-memoria-del-agente.md`](docs/05-gem-memoria-del-agente.md).
+
 Verificar en cualquier momento que el registro de auditoría no fue alterado:
 
 ```bash
@@ -342,6 +357,7 @@ export PYTHONPATH="$PWD/.devtools"
 ./scripts/pruebas_de_codigo_estatico.sh   # linters + SAST (ruff, eslint, pylint, bandit)
 ./scripts/pruebas_de_servicio.sh          # estático (AST) + unitarias + servicio + cobertura
 ./scripts/pruebas_completas.sh            # los dos anteriores, uno atrás del otro
+./scripts/pruebas_de_verificacion.sh      # 80/20: demuestra que las pruebas detectan errores
 ```
 
 Cada script imprime cada etapa con `✔ OK`/`✘ FALLA`/`BASE` agrupada por
@@ -374,6 +390,18 @@ Para mostrar el resultado de una corrida real (no la promesa de que pasaría):
 correr `./scripts/pruebas_completas.sh` y compartir esa salida, o pegar el
 resumen que imprime al final cada bloque de `pytest`.
 
+**¿Cómo sé que esas pruebas detectan algo?** `./scripts/pruebas_de_verificacion.sh`
+corre 25 casos sobre una copia temporal del proyecto: 20 con el código sano
+(80 %, tienen que pasar) y 5 con un defecto inyectado a propósito (20 %, tienen
+que fallar): una shell con `shell=True`, un XSS, un `os.system`, un permiso
+borrado y una lección sin aprobar. Tiene que terminar en `✅ Verificación
+correcta`. El repositorio real no se toca.
+
+Dónde seguir leyendo:
+- qué hace cada linter y cómo verlos en VS Code: [`pruebas_de_linters.md`](pruebas_de_linters.md);
+- qué prueba cada archivo de `tests/`: [`docs/04` §Registro de pruebas](docs/04-auditoria-pruebas-y-demostracion.md#registro-de-pruebas);
+- el pentest simulado: [`pruebas_de_penetracion.md`](pruebas_de_penetracion.md).
+
 ---
 
 ## 11. Apagar / reiniciar de cero
@@ -394,10 +422,11 @@ archiva en `data/audit/archivo/<timestamp>/` con permisos de solo lectura.
 
 ## 12. Recordatorio de seguridad para quien clone esto
 
-- **Nunca** subas tu `.env` real a git. Ya está en `.gitignore`, pero
-  revisalo antes de cualquier `git add -A` en un repo nuevo.
-- Lo mismo para `users.json` (hashes de contraseñas) y
-  `elasticsearch/certs/` (claves TLS privadas) — también gitignored.
+- **En este repositorio, `.env`, `data/auth/users.json` (hashes de
+  contraseñas) y `elasticsearch/certs/` (claves TLS privadas) están
+  versionados** por decisión del dueño — el `.gitignore` lo dice
+  explícitamente. En un repo propio o público, sacalos del control de
+  versiones y agregalos a `.gitignore` antes de cualquier `git add -A`.
 - Si en algún momento un `.env`, clave privada o `users.json` real llegó a
   quedar en un commit ya subido a un repo público: el archivo se puede borrar
   de un commit nuevo, pero **el valor sigue comprometido** — la única
@@ -420,5 +449,7 @@ archiva en `data/audit/archivo/<timestamp>/` con permisos de solo lectura.
 | Verificar la auditoría | `./scripts/siem.sh auditoria` |
 | Verificar cobertura SIEM ↔ panel | `./scripts/siem.sh cobertura` |
 | Demostrar linters + SAST + pruebas | `./scripts/pruebas_completas.sh` |
+| Demostrar que las pruebas detectan errores (80/20) | `./scripts/pruebas_de_verificacion.sh` |
+| Ver lo que aprendió el agente (Gem) | Panel → tarjeta **Memoria del agente**, o `data/knowledge/*.json` (ver `docs/05`) |
 | Reset completo | `./scripts/reset.sh --yes && ./scripts/start.sh` |
 | Apagar todo | `docker compose --profile simulation down` |

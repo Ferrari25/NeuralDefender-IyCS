@@ -1223,6 +1223,18 @@ function delegar(evt) {
 
 document.addEventListener("click", delegar);
 
+// RNF-USA-08: una fila de la tabla es un `<tr role="button" tabindex="0">`. El
+// navegador solo activa con Enter/Espacio los botones NATIVOS, así que sin esto
+// la fila recibía el foco con Tab pero no se podía abrir desde el teclado. Los
+// <button> y <a> reales ya disparan "click" solos: no se tocan.
+document.addEventListener("keydown", evt => {
+  if (evt.key !== "Enter" && evt.key !== " ") return;
+  const fila = evt.target.closest('[role="button"][data-accion]');
+  if (!fila || fila !== evt.target) return;
+  evt.preventDefault();   // Espacio no desplaza la página
+  delegar(evt);
+});
+
 // Filtros: mismo criterio, sin handlers inline.
 for (const el of document.querySelectorAll("[data-filtro]")) {
   el.addEventListener(el.tagName === "INPUT" ? "input" : "change", applyFilters);

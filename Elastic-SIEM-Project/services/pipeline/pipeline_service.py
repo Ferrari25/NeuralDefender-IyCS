@@ -10,6 +10,9 @@ API (red interna, exige `X-Internal-Token`):
 El reporte que sirve es el que dejó el pipeline: SIN el estado de las
 decisiones. Ese estado lo arma el gateway combinándolo con el registro del
 servicio audit, porque la auditoría no es de este servicio.
+
+Además corre un ciclo cada `SIEM_PIPELINE_INTERVALO` segundos si está
+configurado (ver `programador.py`).
 """
 
 from __future__ import annotations
@@ -18,11 +21,13 @@ from pathlib import Path
 
 from flask import jsonify
 
+import programador
 from orquestador import INCIDENTS_FILE, CicloEnCurso, ErrorDeEtapa, ejecutar_ciclo
 from siem_lib import load_json
 from siem_servicios import crear_servicio
 
 app = crear_servicio("pipeline")
+programador.iniciar()
 
 
 @app.post("/v1/cycles")

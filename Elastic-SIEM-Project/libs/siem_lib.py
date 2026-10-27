@@ -117,7 +117,7 @@ def write_json(path: str | Path, data: Any) -> None:
 
 
 def read_network_logs(dir_path: str | Path = "network_logs",
-                      window_hours: int | None = 24) -> list[dict]:
+                      window_hours: float | None = 24) -> list[dict]:
     """Lee los eventos NDJSON de network_logs/*.json dentro de una ventana temporal.
 
     Es el mismo directorio que Filebeat envía a Elasticsearch (input
@@ -161,3 +161,45 @@ def read_network_logs(dir_path: str | Path = "network_logs",
                         continue
                 events.append(evento)
     return events
+
+
+# ─── Configuración externa (RNF-MANT-04 / RNF-PORT-05) ──────────────────────
+# Umbrales y ventana se leen del entorno al arrancar el servicio: cambiarlos es
+# editar `.env` y recrear el contenedor (`docker compose up -d <servicio>`), sin
+# reconstruir la imagen. Un valor inválido es un error de despliegue: se dice
+# en vez de caer en silencio al valor por defecto.
+
+VENTANA_POR_DEFECTO = "24h"
+_UNIDADES_VENTANA = {"m": 1 / 60, "h": 1, "d": 24}
+
+
+def entero_de_entorno(variable: str, defecto: int, minimo: int = 1) -> int:
+    crudo = os.getenv(variable, "").strip()
+    if not crudo:
+        return defecto
+    try:
+        valor = int(crudo)
+    except ValueError:
+        raise ValueError(f"{variable} tiene que ser un número entero, no {crudo!r}") from None
+    if valor < minimo:
+        raise ValueError(f"{variable}={valor}: el mínimo es {minimo}")
+    return valor
+
+
+def ventana_de_analisis() -> str:
+    """La ventana temporal del análisis (`SIEM_VENTANA`, ej. `24h`, `90m`, `7d`).
+
+    La comparten el collector (consultas a Elasticsearch, `now-<ventana>`) y el
+    clasificador (lectura de `network_logs/`): si difirieran, un mismo ataque se
+    contaría distinto según por dónde entrara.
+    """
+    ventana = os.getenv("SIEM_VENTANA", "").strip() or VENTANA_POR_DEFECTO
+    numero, unidad = ventana[:-1], ventana[-1:]
+    if unidad not in _UNIDADES_VENTANA or not numero.isdigit() or int(numero) < 1:
+        raise ValueError(f"SIEM_VENTANA={ventana!r}: se esperaba un número seguido de m, h o d "
+                         f"(ej. 24h)")
+    return ventana
+
+
+def ventana_en_horas(ventana: str) -> float:
+    return int(ventana[:-1]) * _UNIDADES_VENTANA[ventana[-1]]

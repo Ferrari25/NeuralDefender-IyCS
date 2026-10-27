@@ -6,7 +6,7 @@
 #   1. Elasticsearch esté "healthy"
 #   2. el servicio `setup` termine OK (password de kibana_system)
 #   3. Kibana responda HTTP 200
-#   4. las reglas de detección estén desplegadas
+#   4. las reglas de detección y la retención de datos (ILM) estén desplegadas
 #   5. el gateway (panel de supervisión) responda
 # Recién ahí libera la consola, con un resumen del estado.
 #
@@ -15,6 +15,7 @@
 # Uso:  ./scripts/start.sh                 (solo el stack core)
 #       ./scripts/start.sh --simulation    (además levanta ssh-target + hydra)
 #       SIEM_SKIP_RULES=true ./scripts/start.sh   (sin desplegar reglas)
+#       SIEM_SKIP_ILM=true ./scripts/start.sh     (sin desplegar la retención)
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -34,10 +35,21 @@ if ! grep -qE '^SIEM_INTERNAL_TOKEN=.{32,}' .env; then
     "$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')" >> .env
 fi
 
+# Clave de cifrado de los respaldos (RQ-SEC-05). Igual que el token: si falta,
+# se genera. Pero esta SÍ hay que guardarla aparte: sin ella, un respaldo no se
+# puede descifrar, y si se pierde el disco se pierde con él el .env.
+if ! grep -qE '^SIEM_RESPALDO_CLAVE=.{32,}' .env; then
+  printf '\n# Clave de cifrado de los respaldos (generada por start.sh)\nSIEM_RESPALDO_CLAVE=%s\n' \
+    "$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')" >> .env
+  echo "🔑 Generé SIEM_RESPALDO_CLAVE en .env. GUARDALA FUERA DE ESTE EQUIPO (gestor de"
+  echo "   contraseñas): sin ella ningún respaldo se puede restaurar."
+fi
+
 # Cada servicio es dueño de su directorio de datos (bind mount). Se crean ACÁ,
 # como el usuario actual: si los crea Docker al montarlos, quedan de root y los
 # servicios —que corren sin privilegios, con este mismo UID— no pueden escribir.
-mkdir -p data/auth data/audit data/collector data/pipeline data/knowledge network_logs
+mkdir -p data/auth data/audit data/collector data/pipeline data/knowledge network_logs \
+         data/backup/snapshots data/backup/archivo
 export SIEM_UID SIEM_GID
 SIEM_UID=$(id -u)
 SIEM_GID=$(id -g)
@@ -73,6 +85,12 @@ wait_for "Kibana (HTTP 200)" \
 if [[ "${SIEM_SKIP_RULES:-false}" != "true" ]]; then
   echo
   ./scripts/deploy-rules.sh || echo "[AVISO] No se pudieron desplegar las reglas; el stack igual quedó arriba."
+fi
+
+# 4b. Retención de datos personales en los índices (RQ-SEC-17). Idempotente.
+if [[ "${SIEM_SKIP_ILM:-false}" != "true" ]]; then
+  echo
+  ./scripts/deploy-ilm.sh || echo "[AVISO] No se pudo desplegar la retención (ILM); el stack igual quedó arriba."
 fi
 
 # 5. Capa IA: el gateway depende (healthcheck) de auth, audit y pipeline, que a

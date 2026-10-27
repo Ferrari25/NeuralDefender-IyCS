@@ -25,13 +25,20 @@ más abajo en el mismo archivo— ya traducía.
 
 from __future__ import annotations
 
+import importlib
+import os
 import re
 from pathlib import Path
 
 import pytest
 
-import dashboard
+from tests.conftest import SECRET_KEY_DE_PRUEBA
 from tests.unit.hojas_de_estilo import color, regla, sin_comentarios
+
+# Importar `dashboard` construye la app, y la app no arranca sin SECRET_KEY.
+# Sin esto el archivo solo pasaba si otra prueba ya lo había importado antes.
+os.environ.setdefault("SECRET_KEY", SECRET_KEY_DE_PRUEBA)
+dashboard = importlib.import_module("dashboard")
 
 RAIZ = Path(__file__).resolve().parent.parent.parent
 APP_CSS = sin_comentarios((RAIZ / "services" / "gateway" / "static" / "app.css").read_text(encoding="utf-8"))

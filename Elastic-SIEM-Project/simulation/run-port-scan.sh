@@ -55,9 +55,16 @@ echo "[+] $(wc -l < "$OUT") eventos escritos en $OUT"
 if ! $OFFLINE; then
   if command -v docker >/dev/null && docker ps --format '{{.Names}}' | grep -q hydra-attacker; then
     echo "[*] Ejecutando nmap real desde hydra-attacker (best effort)..."
-    docker exec hydra-attacker bash -c "command -v nmap >/dev/null || (apt-get update && apt-get install -y nmap)" || true
-    docker exec hydra-attacker nmap -sT -p- --max-retries 1 "$TARGET_IP" || \
-      echo "[!] nmap no disponible o objetivo inalcanzable; los logs sintéticos ya sirven para la detección."
+    # El nmap real va SOLO contra la víctima del laboratorio (red sim-net), nunca
+    # contra la IP de los logs sintéticos: esa podría ser un servicio del SIEM.
+    REAL_TARGET=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ssh-target 2>/dev/null || true)
+    if [[ -z "$REAL_TARGET" ]]; then
+      echo "[i] ssh-target no está corriendo; omito el nmap real (los logs sintéticos ya sirven)."
+    else
+      docker exec hydra-attacker bash -c "command -v nmap >/dev/null || (apt-get update && apt-get install -y nmap)" || true
+      docker exec hydra-attacker nmap -sT -p- --max-retries 1 "$REAL_TARGET" || \
+        echo "[!] nmap no disponible o objetivo inalcanzable; los logs sintéticos ya sirven para la detección."
+    fi
   else
     echo "[i] Contenedor hydra-attacker no está corriendo; modo solo-logs."
   fi

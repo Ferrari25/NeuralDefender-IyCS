@@ -644,9 +644,13 @@ def test_el_andamiaje_de_pruebas_no_se_despliega():
     #   test_iconos.py — ejecuta en Node el `ico()` real de `static/app.js`, por la
     #       misma razón que test_s02: reimplementarlo en Python probaría el test y
     #       no el código que se despliega.
+    #   test_respaldo_y_retencion.py — corre `backup/respaldo.sh`, `restaurar.sh`
+    #       y `deploy-ilm.sh` contra un Elasticsearch simulado y directorios en
+    #       tmp_path. Respaldan y borran DATOS del SIEM; no tocan ningún host.
     assert con_subprocess == ["test_a01_reset_preserva_auditoria.py",
                               "test_a02_a04_integridad.py",
                               "test_despliegue_de_reglas.py",
                               "test_iconos.py",
+                              "test_respaldo_y_retencion.py",
                               "test_s02_xss_dashboard.py",
                               "test_scripts_de_demostracion.py"]

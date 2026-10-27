@@ -16,6 +16,9 @@ bootstrap.memory_lock: true
 # Path settings
 path.data: /usr/share/elasticsearch/data
 path.logs: /usr/share/elasticsearch/logs
+# RQ-SEC-05: repositorio de snapshots del respaldo diario (servicio backup,
+# backup/respaldo.sh). Montado desde data/backup/snapshots.
+path.repo: ["/usr/share/elasticsearch/snapshots"]
 
 # Monitoring settings
 xpack.monitoring.collection.enabled: true

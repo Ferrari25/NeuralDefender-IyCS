@@ -196,7 +196,51 @@ def test_el_phishing_emite_la_visita_y_el_envio_de_credenciales(laboratorio: Pat
     assert [e["credential_submission"] for e in eventos] == [False, True]
 
 
-@pytest.mark.parametrize("script", ["run-port-scan.sh", "run-phishing.sh"])
+# ─── Fuerza bruta sin conexión (RF-SIM-05 / RNF-MANT-05, punto A7) ──────────
+
+IP_FUERZA_BRUTA_POR_DEFECTO = "172.18.0.3"
+
+
+def test_la_fuerza_bruta_corre_sin_docker(laboratorio: Path):
+    """Antes era la única simulación sin `--offline`: sin contenedores, no había
+    forma de mostrar el ataque más importante del proyecto."""
+    r = _correr(laboratorio / "simulation" / "run-brute-force.sh", "--offline")
+    assert r.returncode == 0, r.stderr
+
+    eventos = _eventos(laboratorio)
+    fallos = [e for e in eventos if e["event_type"] == "auth_failure"]
+    assert len(fallos) == 24
+    assert [e["event_type"] for e in eventos][-1] == "auth_success", "el acierto va último"
+    assert {e["source_ip"] for e in eventos} == {IP_FUERZA_BRUTA_POR_DEFECTO}
+    assert all(f"from {IP_FUERZA_BRUTA_POR_DEFECTO} port" in e["message"] for e in eventos)
+
+
+def test_la_fuerza_bruta_usa_la_ip_indicada(laboratorio: Path):
+    assert _correr(laboratorio / "simulation" / "run-brute-force.sh", "--offline",
+                   "--ip", "198.51.100.77").returncode == 0
+    eventos = _eventos(laboratorio)
+    assert {e["source_ip"] for e in eventos} == {"198.51.100.77"}
+    assert all("from 198.51.100.77 port" in e["message"] for e in eventos)
+
+
+def test_la_fuerza_bruta_offline_se_detecta_como_tal(laboratorio: Path):
+    """Lo que importa no es el archivo sino que el clasificador REAL lo detecte
+    sin captura de Elasticsearch: 24 fallos superan el umbral de 20."""
+    import classifier
+
+    _correr(laboratorio / "simulation" / "run-brute-force.sh", "--offline")
+    incidentes = classifier.classify({}, _eventos(laboratorio))
+
+    assert len(incidentes) == 1
+    inc = incidentes[0]
+    assert inc["classification"]["attack_type"] == "ssh_brute_force"
+    assert inc["event_count"] == 24, "el Accepted password no es un fallo"
+    assert inc["attacker_ips"] == [IP_FUERZA_BRUTA_POR_DEFECTO]
+    assert inc["target_users"] == ["testuser"]
+    assert inc["detection_source"] == "clasificador"
+
+
+@pytest.mark.parametrize("script", ["run-port-scan.sh", "run-phishing.sh", "run-brute-force.sh"])
 def test_las_simulaciones_rechazan_opciones_desconocidas(laboratorio: Path, script: str):
     r = _correr(laboratorio / "simulation" / script, "--offline", "--borrar")
 
@@ -205,7 +249,7 @@ def test_las_simulaciones_rechazan_opciones_desconocidas(laboratorio: Path, scri
         "abortó pero igual generó eventos: el bucle de argumentos corre antes de escribir")
 
 
-@pytest.mark.parametrize("script", ["run-port-scan.sh", "run-phishing.sh"])
+@pytest.mark.parametrize("script", ["run-port-scan.sh", "run-phishing.sh", "run-brute-force.sh"])
 def test_una_corrida_nueva_no_pisa_los_eventos_de_la_anterior(laboratorio: Path, script: str):
     """Filebeat (`filestream`) identifica archivos por inode: truncar y reescribir le
     desincroniza el offset y la corrida siguiente no se ingiere.
@@ -223,7 +267,7 @@ def test_una_corrida_nueva_no_pisa_los_eventos_de_la_anterior(laboratorio: Path,
     eventos = _eventos(laboratorio)
 
     assert len(eventos) == de_la_primera * 2, "la segunda corrida truncó a la primera"
-    campo = "source_ip" if "port-scan" in script else "dest_ip"
+    campo = "dest_ip" if "phishing" in script else "source_ip"
     assert "198.51.100.77" in {e[campo] for e in eventos}, "falta la segunda corrida"
     assert len({e[campo] for e in eventos}) == 2, "falta la primera corrida"
 

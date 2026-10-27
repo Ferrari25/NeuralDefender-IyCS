@@ -40,6 +40,19 @@ el campo a secas **no corre**. Hay una prueba que lo vigila:
 Los campos que **no** necesitan sufijo son `dest_port` (`long`) y
 `credential_submission` (`boolean`).
 
+### ⚠️ Qué está en el NDJSON y qué no
+
+Las queries, umbrales, cardinalidades, severidad, riesgo, intervalo, look-back,
+técnica MITRE principal y la sub-técnica de A6 (T1110.003) y C3 (T1566.002) están
+en el NDJSON y se despliegan tal cual. Lo marcado abajo como **(no desplegado)**
+—overrides de severidad/riesgo, técnicas MITRE adicionales, conectores de
+acciones— es una sugerencia para configurar a mano en Kibana: hoy no está en
+ningún archivo de `ndjson/`. Las reglas **A6, B2, B4, C2 y C3** se despliegan con
+el campo *False positives* vacío.
+
+El *look-back* que se indica es el que resulta del NDJSON:
+`from` − `interval` (por ejemplo, `now-6m` con intervalo `5m` = 1 minuto).
+
 ## Referencia de campos de los datos del proyecto
 
 | Campo | Valores / ejemplo | Fuente |
@@ -64,7 +77,7 @@ Los campos que **no** necesitan sufijo son `dest_port` (`long`) y
 | A1 | SSH Brute Force – Basic Threshold | Threshold | Medium | 47 | ≥5 fallos por host.ip en 5 min |
 | A2 | SSH Brute Force – Aggressive per Source IP | Threshold | High | 73 | ≥10 fallos por source_ip en 1 min |
 | A3 | SSH Invalid User Enumeration | Threshold | Medium | 50 | ≥3 "Invalid user" por source_ip |
-| A4 | SSH Successful Login After Brute Force | EQL | Critical | 95 | fallo→éxito mismo host en 10 min |
+| A4 | SSH Successful Login After Brute Force | EQL | Critical | 95 | fallo→éxito misma IP de origen en 10 min |
 | A5 | SSH High-Volume Credential Attack | Threshold | Critical | 88 | ≥50 fallos por source_ip en 5 min |
 | A6 | SSH Brute Force – Multiple Users Targeted | Threshold | High | 70 | 1 IP ataca ≥5 usuarios distintos |
 | A7 | SSH Isolated Authentication Failure | Threshold | Low | 21 | ≥1 fallo por source_ip en 5 min |
@@ -73,7 +86,7 @@ Los campos que **no** necesitan sufijo son `dest_port` (`long`) y
 | B3 | Sensitive Port Probe | Custom query | Medium | 55 | sondeo a 22/3389/445/3306… |
 | B4 | Port Scan – Rapid Sequential Probe | EQL | Medium | 50 | 3 probes encadenados misma IP |
 | C1 | Credential Submission to Suspicious Login | Custom query | High | 68 | POST con credenciales a /login |
-| C2 | Repeated Credential Harvesting | Threshold | High | 72 | ≥3 envíos de credenciales por IP |
+| C2 | Repeated Credential Harvesting | Threshold | High | 72 | ≥3 envíos de credenciales desde la misma `source_ip` (ver D-14) |
 | C3 | Phishing Page Visit + Submission | EQL | Medium | 60 | GET seguido de POST con creds |
 
 Cada código corresponde a un archivo: `A1` → `ndjson/A1-ssh-brute-force-basic-threshold.ndjson`.
@@ -88,7 +101,7 @@ Cada código corresponde a un archivo: `A1` → `ndjson/A1-ssh-brute-force-basic
 - Rule type: **Threshold**
 - Source / Index patterns: `filebeat-*`
 - Custom query (KQL): `tags:authentication_failure OR message:*Failed password*`
-- Group by: `host.ip`
+- Group by: `host.ip` (en el NDJSON: `host.ip.keyword`) — la IP de la **víctima**, no la del atacante
 - Threshold: `5`
 - Cardinality: *(vacío)*
 - Alert suppression: *(no)*
@@ -129,8 +142,8 @@ Cada código corresponde a un archivo: `A1` → `ndjson/A1-ssh-brute-force-basic
 - Description: `Una misma IP de origen acumula 10+ fallos de autenticación en 1 minuto: patrón de herramienta automatizada (Hydra/Medusa).`
 - Default severity: **High**
 - Default risk score: **73**
-- Severity override (advanced): `risk_score >= 85 → Critical`
-- MITRE: Credential Access → Brute Force (T1110) → sub-técnica **Password Guessing (T1110.001)**
+- Severity override (advanced): `risk_score >= 85 → Critical` **(no desplegado)**
+- MITRE: Credential Access → Brute Force (T1110) (sugerido además, **no desplegado**: sub-técnica Password Guessing T1110.001)
 - Tags: `brute-force`, `ssh`, `automated`, `hydra`
 - False positives: `Scanners de vulnerabilidades autorizados; equipos de pentesting.`
 
@@ -158,7 +171,7 @@ Cada código corresponde a un archivo: `A1` → `ndjson/A1-ssh-brute-force-basic
 - Description: `Una IP prueba múltiples nombres de usuario inexistentes: reconocimiento/enumeración de cuentas previo a la fuerza bruta.`
 - Default severity: **Medium**
 - Default risk score: **50**
-- MITRE: Credential Access → Brute Force (T1110); también **Discovery / Account Discovery (T1087)**
+- MITRE: Credential Access → Brute Force (T1110) (sugerido además, **no desplegado**: Discovery / Account Discovery T1087)
 - Tags: `enumeration`, `ssh`, `reconnaissance`
 - References: `https://attack.mitre.org/techniques/T1087/`
 - False positives: `Errores de tipeo del nombre de usuario por usuarios legítimos.`
@@ -178,26 +191,26 @@ Cada código corresponde a un archivo: `A1` → `ndjson/A1-ssh-brute-force-basic
 - Index patterns: `filebeat-*`
 - EQL query:
   ```eql
-  sequence by host.ip with maxspan=10m
-    [ any where "authentication_failure" in tags ]
-    [ any where "authentication_success" in tags ]
+  sequence by source_ip.keyword with maxspan=10m
+    [any where tags.keyword == "authentication_failure"]
+    [any where tags.keyword == "authentication_success"]
   ```
 
 **About rule**
 - Name: `SSH Successful Login After Brute Force`
-- Description: `CRÍTICO: un login EXITOSO tras una ráfaga de fallos desde el mismo host. Indica que la fuerza bruta funcionó y hay un acceso comprometido.`
+- Description: `CRITICO: un login EXITOSO justo despues de una rafaga de fallos desde la misma IP. Indica que la fuerza bruta funciono y hay un acceso comprometido.`
 - Default severity: **Critical**
 - Default risk score: **95**
-- MITRE: Credential Access → Brute Force (T1110); **Initial Access / Valid Accounts (T1078)**
+- MITRE: Credential Access → Brute Force (T1110) (sugerido además, **no desplegado**: Initial Access / Valid Accounts T1078)
 - Tags: `brute-force`, `compromise`, `lateral-movement`, `critical`
 - Investigation guide: `Aislar el host. Verificar la sesión del user. Rotar credenciales YA. Revisar comandos ejecutados post-login.`
 - False positives: `Usuario legítimo que falló varias veces y luego acertó su contraseña.`
 
 **Schedule rule**
-- Runs every: `5m` · Look-back: `5m`
+- Runs every: `5m` · Look-back: `6m`
 
 **Rule actions**
-- Action frequency: `For each alert`  ·  Connector: *(PagerDuty/Email — escalamiento inmediato)*
+- Action frequency: `For each alert`  ·  Connector: *(PagerDuty/Email — escalamiento inmediato; no desplegado)*
 
 ---
 
@@ -290,7 +303,7 @@ Cada código corresponde a un archivo: `A1` → `ndjson/A1-ssh-brute-force-basic
 **Define rule**
 - Rule type: **Threshold**
 - Index patterns: `filebeat-*`
-- Custom query: `source_type:network_traffic AND event_type:network_flow`
+- Custom query: `event_type:network_flow`
 - Group by: `source_ip`
 - Threshold: `1`
 - Cardinality: when field **`dest_port`** cardinality is **>= 10**
@@ -306,7 +319,7 @@ Cada código corresponde a un archivo: `A1` → `ndjson/A1-ssh-brute-force-basic
 - False positives: `Herramientas de monitoreo/inventario autorizadas (ej. Nessus, escáneres internos).`
 
 **Schedule rule**
-- Runs every: `5m` · Look-back: `5m`
+- Runs every: `1m` · Look-back: `4m`
 
 **Rule actions**
 - Action frequency: `For each alert`
@@ -328,7 +341,7 @@ Cada código corresponde a un archivo: `A1` → `ndjson/A1-ssh-brute-force-basic
 - Description: `Una IP sondea el mismo puerto en 5+ hosts distintos: barrido horizontal buscando un servicio específico en la red.`
 - Default severity: **High**
 - Default risk score: **75**
-- MITRE: Discovery → **Network Service Discovery (T1046)**; **Remote System Discovery (T1018)**
+- MITRE: Discovery → **Network Service Discovery (T1046)** (sugerido además, **no desplegado**: Remote System Discovery T1018)
 - Tags: `port-scan`, `horizontal-scan`, `lateral-movement`, `network`
 
 **Schedule rule**
@@ -351,7 +364,7 @@ Cada código corresponde a un archivo: `A1` → `ndjson/A1-ssh-brute-force-basic
 - Description: `Sondeo a puertos sensibles (SSH, Telnet, SMB, bases de datos, RDP, Elasticsearch). Aún un solo intento es relevante en estos servicios.`
 - Default severity: **Medium**
 - Default risk score: **55**
-- Risk score override (advanced): `dest_port:3389 → 70` (RDP expuesto = mayor riesgo)
+- Risk score override (advanced): `dest_port:3389 → 70` (RDP expuesto = mayor riesgo) **(no desplegado)**
 - MITRE: Discovery → **Network Service Discovery (T1046)**
 - Tags: `port-probe`, `sensitive-services`, `network`
 - False positives: `Health-checks internos hacia esos puertos.`
@@ -371,10 +384,10 @@ Cada código corresponde a un archivo: `A1` → `ndjson/A1-ssh-brute-force-basic
 - Index patterns: `filebeat-*`
 - EQL query:
   ```eql
-  sequence by source_ip with maxspan=30s
-    [ any where event_type == "network_flow" ]
-    [ any where event_type == "network_flow" ]
-    [ any where event_type == "network_flow" ]
+  sequence by source_ip.keyword with maxspan=30s
+    [any where event_type.keyword == "network_flow"]
+    [any where event_type.keyword == "network_flow"]
+    [any where event_type.keyword == "network_flow"]
   ```
 
 **About rule**
@@ -407,7 +420,7 @@ Cada código corresponde a un archivo: `A1` → `ndjson/A1-ssh-brute-force-basic
 - Description: `Se enviaron credenciales (usuario+contraseña) a una página de login sospechosa. Posible captura de credenciales (phishing).`
 - Default severity: **High**
 - Default risk score: **68**
-- MITRE: Tactic **Initial Access (TA0001)** → **Phishing (T1566)**; **Credentials Input Capture (T1056)**
+- MITRE: Tactic **Initial Access (TA0001)** → **Phishing (T1566)** (sugerido además, **no desplegado**: Input Capture T1056)
 - Tags: `phishing`, `credential-harvesting`, `web`, `initial-access`
 - References: `https://attack.mitre.org/techniques/T1566/`
 - Investigation guide: `Identificar al usuario afectado, forzar reset de credenciales, dar de baja la página falsa.`
@@ -433,6 +446,11 @@ Cada código corresponde a un archivo: `A1` → `ndjson/A1-ssh-brute-force-basic
 **About rule**
 - Name: `Repeated Credential Harvesting`
 - Description: `Una misma IP recibe 3+ envíos de credenciales: campaña de phishing activa capturando a varias víctimas.`
+- ⚠️ **Limitación conocida (D-14):** la regla agrupa por `source_ip`, que en un
+  envío de credenciales es la IP de la **víctima**, no la del servidor que las
+  recibe. Por eso, varias víctimas distintas contra el mismo servidor **no** la
+  disparan (escenario PH-02 de `simulation/pentest.py`; C1 sí dispara). Para
+  que haga lo que dice su descripción habría que agrupar por `dest_ip.keyword`.
 - Default severity: **High**
 - Default risk score: **72**
 - MITRE: Initial Access → **Phishing (T1566)**
@@ -453,9 +471,9 @@ Cada código corresponde a un archivo: `A1` → `ndjson/A1-ssh-brute-force-basic
 - Index patterns: `filebeat-*`
 - EQL query:
   ```eql
-  sequence by source_ip with maxspan=5m
-    [ any where event_type == "http_request" and http_method == "GET" ]
-    [ any where event_type == "http_request" and credential_submission == true ]
+  sequence by source_ip.keyword with maxspan=5m
+    [any where event_type.keyword == "http_request" and http_method.keyword == "GET"]
+    [any where event_type.keyword == "http_request" and credential_submission == true]
   ```
 
 **About rule**
@@ -487,5 +505,8 @@ Cada código corresponde a un archivo: `A1` → `ndjson/A1-ssh-brute-force-basic
 - **Rule actions → frequency:** `Per rule run` (un resumen por corrida) vs
   `For each alert` (notifica por cada alerta) — usar `For each alert` solo en
   severidades altas/críticas para no saturar.
-- Tras crear/ajustar una regla, exportala (Rules → Export) y guardala como código
-  en `.claude/claude-context/outputs/detection-rules/` para versionarla.
+- Tras crear o ajustar una regla en Kibana, bajala al repositorio con
+  `./scripts/export-rules.sh` (escribe en `rules/ndjson/`), actualizá este
+  documento y corré `./scripts/pruebas_completas.sh`:
+  `tests/unit/test_reglas_como_codigo.py` valida el catálogo y
+  `tests/integration/test_pentest.py` exige que el simulador de Kibana la cubra.

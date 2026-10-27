@@ -1,7 +1,9 @@
-# Contexto de build de los microservicios: solo hacen falta libs/ y services/.
+# Contexto de build de los microservicios: solo hacen falta libs/ y services/
+# (y los scripts de backup/ para el servicio de respaldo).
 # Todo lo demás (datos, secretos, entornos locales) no debe viajar a la imagen.
 *
 !libs/
 !services/
+!backup/
 **/__pycache__
 **/*.pyc

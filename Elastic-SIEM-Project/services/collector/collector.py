@@ -23,10 +23,10 @@ from es_client import (
     rol_del_campo_agrupado,
     source_ip_aggregation,
 )
-from siem_lib import now_iso
+from siem_lib import now_iso, ventana_de_analisis
 
 OUTPUT_FILE = "data/siem_clean.json"
-WINDOW = "24h"   # ventana temporal de análisis
+WINDOW = ventana_de_analisis()   # ventana temporal de análisis (SIEM_VENTANA)
 
 
 def parse_alerts(hits: list[dict]) -> list[dict]:

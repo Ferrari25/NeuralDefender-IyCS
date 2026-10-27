@@ -4,6 +4,9 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
     container_name: elasticsearch
     restart: unless-stopped
+    # RNF-COMP-01: tope de memoria. Medido: ~1,8 GB en uso (heap 512 MB + memoria
+    # fuera del heap y caché). Por eso no hay un MEM_LIMIT único en .env: 1 GB lo mataría.
+    mem_limit: 2560m
     environment:
       # Most settings live in the mounted elasticsearch.yml (single source of truth).
       # Only secrets / substitution vars are passed here to avoid "duplicate settings" errors.
@@ -18,16 +21,25 @@ services:
       - elasticsearch-data:/usr/share/elasticsearch/data
       - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - ./elasticsearch/certs:/usr/share/elasticsearch/config/certs
+      # RQ-SEC-05: repositorio de snapshots (path.repo). Lo empaqueta y cifra el
+      # servicio backup; acá solo queda el snapshot del día mientras se arma.
+      - ./data/backup/snapshots:/usr/share/elasticsearch/snapshots
     ports:
       - "127.0.0.1:9200:9200"
     networks:
       - elastic-net
+    labels: &autoheal
+      autoheal: "true"
+    # RNF-CONF-05 (ERS 7.9.3): verificación cada 30 s; con 3 fallos seguidos
+    # (≤ 90 s) queda "unhealthy" y el servicio autoheal lo reinicia.
+    # start_period: el arranque en frío no cuenta como fallo.
     healthcheck:
       # Authenticated check: security is enabled, so an anonymous request returns 401.
       test: ["CMD-SHELL", "curl -s -u elastic:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
       interval: 30s
       timeout: 10s
-      retries: 5
+      retries: 3
+      start_period: 120s
 
   # One-shot setup: sets the kibana_system built-in user password so Kibana can authenticate.
   setup:
@@ -61,6 +73,7 @@ services:
     image: docker.elastic.co/kibana/kibana:8.12.2
     container_name: kibana
     restart: unless-stopped
+    mem_limit: 1536m   # RNF-COMP-01 · medido: ~630 MB
     environment:
       # Provided for ${...} substitution inside the mounted kibana.yml.
       - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
@@ -72,6 +85,14 @@ services:
       - "127.0.0.1:5601:5601"
     networks:
       - elastic-net
+    labels: *autoheal
+    healthcheck:
+      # /api/status da 200 solo con Kibana disponible (503 si está degradado).
+      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' http://localhost:5601/api/status | grep -qx 200"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 180s
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -83,6 +104,7 @@ services:
     image: docker.elastic.co/logstash/logstash:8.12.2
     container_name: logstash
     restart: unless-stopped
+    mem_limit: 2048m   # RNF-COMP-01 · medido: ~1,4 GB
     user: root
     environment:
       - xpack.monitoring.elasticsearch.hosts=http://elasticsearch:9200
@@ -97,6 +119,14 @@ services:
       - "127.0.0.1:9600:9600"
     networks:
       - elastic-net
+    labels: *autoheal
+    healthcheck:
+      # API de monitoreo de Logstash: "status" pasa a red si un pipeline se cae.
+      test: ["CMD-SHELL", "curl -s -m 8 http://127.0.0.1:9600/ | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -106,6 +136,7 @@ services:
     image: docker.elastic.co/beats/filebeat:8.12.2
     container_name: filebeat
     restart: unless-stopped
+    mem_limit: 512m   # RNF-COMP-01 · medido: ~140 MB
     user: root  # Needed to access host logs and the Docker socket
     volumes:
       - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
@@ -115,10 +146,64 @@ services:
       - ./network_logs:/usr/share/filebeat/network_logs:ro
     networks:
       - elastic-net
+    labels: *autoheal
+    healthcheck:
+      # Prueba la conexión real con Logstash (la salida de Filebeat).
+      test: ["CMD-SHELL", "filebeat test output -e -strict.perms=false >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     depends_on:
       logstash:
-        condition: service_started
+        condition: service_healthy
     command: filebeat -e -strict.perms=false
+
+  # RNF-CONF-05: Docker NO reinicia un contenedor "unhealthy" (`restart:` solo
+  # actúa cuando el proceso termina). autoheal mira los contenedores con la
+  # etiqueta `autoheal=true` y reinicia el que quede unhealthy.
+  # Necesita el socket de Docker (equivale a root en el host): imagen fija,
+  # sin red y sin puertos.
+  autoheal:
+    image: willfarrell/autoheal:1.2.0
+    container_name: siem-autoheal
+    restart: unless-stopped
+    mem_limit: 64m
+    network_mode: none
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=autoheal
+      - AUTOHEAL_INTERVAL=5
+      - AUTOHEAL_DEFAULT_STOP_TIMEOUT=20
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # RQ-SEC-05 (ERS 7.9.2 / 7.9.3): respaldo diario a las 03:00 de los índices y
+  # de la auditoría, cifrado (AES-256) y con SHA-256. Ver backup/respaldo.sh.
+  # A mano: ./scripts/siem.sh respaldo · restaurar: ./scripts/siem.sh restaurar
+  backup:
+    build: { context: ., dockerfile: backup/Dockerfile }
+    container_name: siem-backup
+    restart: unless-stopped
+    mem_limit: 128m
+    user: "${SIEM_UID:-1000}:${SIEM_GID:-1000}"
+    environment:
+      - SIEM_RESPALDO_CLAVE=${SIEM_RESPALDO_CLAVE:-}
+      - SIEM_RESPALDO_HORA=${SIEM_RESPALDO_HORA:-03:00}
+      - SIEM_RESPALDO_RETENCION=${SIEM_RESPALDO_RETENCION:-7}
+      - TZ=${TZ:-America/Argentina/Buenos_Aires}
+      - ES_HOST=http://elasticsearch:9200
+      - ES_USER=elastic
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+    volumes:
+      - ./data/backup/snapshots:/snapshots
+      - ./data/audit:/datos/audit:ro
+      # Fuera del disco del SIEM si se puede (un respaldo en el mismo disco no
+      # sobrevive a perder el disco): SIEM_RESPALDO_DIR=/mnt/externo/siem
+      - ${SIEM_RESPALDO_DIR:-./data/backup/archivo}:/respaldos
+    networks: [elastic-net]
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
 
   # SSH Target (brute-force simulation) — only starts with: --profile simulation
   ssh-target:
@@ -135,8 +220,11 @@ services:
       - LOG_STDOUT=true
     ports:
       - "127.0.0.1:2222:2222"
+    # RQ-SEC-24: red propia del laboratorio, separada de la del SIEM (elastic-net)
+    # y de la capa IA (ia-net). Filebeat igual recoge sus logs: los lee del
+    # socket de Docker (LOG_STDOUT), no por la red.
     networks:
-      - elastic-net
+      - sim-net
     labels:
       co.elastic.logs/module: "system"
       co.elastic.logs/fileset: "auth"
@@ -150,7 +238,7 @@ services:
     stdin_open: true
     command: bash -c "apt-get update && apt-get install -y hydra && sleep infinity"
     networks:
-      - elastic-net
+      - sim-net
 
   # ════════════════════════════════════════════════════════════════════════
   # Capa IA — microservicios (ver docs/00-arquitectura.md §Microservicios)
@@ -168,6 +256,7 @@ services:
     build: { context: ., dockerfile: services/auth/Dockerfile }
     container_name: siem-auth
     restart: unless-stopped
+    mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
     user: "${SIEM_UID:-1000}:${SIEM_GID:-1000}"
     environment:
       - SIEM_INTERNAL_TOKEN=${SIEM_INTERNAL_TOKEN:?falta SIEM_INTERNAL_TOKEN en .env}
@@ -175,6 +264,7 @@ services:
     volumes:
       - ./data/auth:/app/service/data
     networks: [ia-net]
+    labels: *autoheal
     healthcheck: &salud-interna
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/v1/healthz', timeout=3)"]
       interval: 10s
@@ -186,12 +276,14 @@ services:
     build: { context: ., dockerfile: services/audit/Dockerfile }
     container_name: siem-audit
     restart: unless-stopped
+    mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
     user: "${SIEM_UID:-1000}:${SIEM_GID:-1000}"
     environment:
       - SIEM_INTERNAL_TOKEN=${SIEM_INTERNAL_TOKEN:?falta SIEM_INTERNAL_TOKEN en .env}
     volumes:
       - ./data/audit:/app/service/data
     networks: [ia-net]
+    labels: *autoheal
     healthcheck: *salud-interna
 
   # Collector: el único con credenciales de Elasticsearch y el único que
@@ -200,12 +292,16 @@ services:
     build: { context: ., dockerfile: services/collector/Dockerfile }
     container_name: siem-collector
     restart: unless-stopped
+    mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
     user: "${SIEM_UID:-1000}:${SIEM_GID:-1000}"
     environment:
       - SIEM_INTERNAL_TOKEN=${SIEM_INTERNAL_TOKEN:?falta SIEM_INTERNAL_TOKEN en .env}
-      - ES_HOST=http://elasticsearch:9200
+      # RNF-PORT-05: apuntar a otro cluster sin reconstruir (SIEM_ES_HOST en
+      # .env). No es ES_HOST: esa es la de las herramientas fuera de Docker.
+      - ES_HOST=${SIEM_ES_HOST:-http://elasticsearch:9200}
       - ES_USER=elastic
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - SIEM_VENTANA=${SIEM_VENTANA:-24h}
       # B-02: HTTP hacia un host que no es loopback está bloqueado por defecto.
       # Acá el tráfico no sale de la red Docker `elastic-net` (no publicada), que
       # es exactamente el "laboratorio aislado" para el que existe esta escotilla.
@@ -213,6 +309,7 @@ services:
     volumes:
       - ./data/collector:/app/service/data
     networks: [ia-net, elastic-net]
+    labels: *autoheal
     healthcheck: *salud-interna
 
   # Agente 1: sin estado. Lee network_logs/ en solo lectura (la entrada "IDS").
@@ -220,12 +317,19 @@ services:
     build: { context: ., dockerfile: services/classifier/Dockerfile }
     container_name: siem-classifier
     restart: unless-stopped
+    mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
     user: "${SIEM_UID:-1000}:${SIEM_GID:-1000}"
     environment:
       - SIEM_INTERNAL_TOKEN=${SIEM_INTERNAL_TOKEN:?falta SIEM_INTERNAL_TOKEN en .env}
+      # RNF-MANT-04: umbrales y ventana desde .env, sin reconstruir la imagen.
+      - SIEM_UMBRAL_FUERZA_BRUTA=${SIEM_UMBRAL_FUERZA_BRUTA:-20}
+      - SIEM_UMBRAL_CRITICO=${SIEM_UMBRAL_CRITICO:-5000}
+      - SIEM_UMBRAL_PUERTOS=${SIEM_UMBRAL_PUERTOS:-10}
+      - SIEM_VENTANA=${SIEM_VENTANA:-24h}
     volumes:
       - ./network_logs:/app/service/network_logs:ro
     networks: [ia-net]
+    labels: *autoheal
     healthcheck: *salud-interna
 
   # Memoria del Agente 2: documentos, casos resueltos y lecciones (aprobadas a
@@ -234,12 +338,14 @@ services:
     build: { context: ., dockerfile: services/knowledge/Dockerfile }
     container_name: siem-knowledge
     restart: unless-stopped
+    mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
     user: "${SIEM_UID:-1000}:${SIEM_GID:-1000}"
     environment:
       - SIEM_INTERNAL_TOKEN=${SIEM_INTERNAL_TOKEN:?falta SIEM_INTERNAL_TOKEN en .env}
     volumes:
       - ./data/knowledge:/app/service/data
     networks: [ia-net]
+    labels: *autoheal
     healthcheck: *salud-interna
 
   # Agente 2: sin estado. El único con la key de Gemini (salida HTTPS a internet).
@@ -248,6 +354,7 @@ services:
     build: { context: ., dockerfile: services/analyst/Dockerfile }
     container_name: siem-analyst
     restart: unless-stopped
+    mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
     user: "${SIEM_UID:-1000}:${SIEM_GID:-1000}"
     environment:
       - SIEM_INTERNAL_TOKEN=${SIEM_INTERNAL_TOKEN:?falta SIEM_INTERNAL_TOKEN en .env}
@@ -257,6 +364,7 @@ services:
     depends_on:
       audit: { condition: service_healthy }
       knowledge: { condition: service_healthy }
+    labels: *autoheal
     healthcheck: *salud-interna
 
   # Orquestador: encadena collector → classifier → analyst → audit por HTTP y
@@ -265,9 +373,12 @@ services:
     build: { context: ., dockerfile: services/pipeline/Dockerfile }
     container_name: siem-pipeline
     restart: unless-stopped
+    mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
     user: "${SIEM_UID:-1000}:${SIEM_GID:-1000}"
     environment:
       - SIEM_INTERNAL_TOKEN=${SIEM_INTERNAL_TOKEN:?falta SIEM_INTERNAL_TOKEN en .env}
+      # Ciclo automático cada N segundos (0 = solo a mano). Ver services/pipeline/programador.py.
+      - SIEM_PIPELINE_INTERVALO=${SIEM_PIPELINE_INTERVALO:-120}
     volumes:
       - ./data/pipeline:/app/service/data
     networks: [ia-net]
@@ -276,6 +387,7 @@ services:
       classifier: { condition: service_healthy }
       analyst: { condition: service_healthy }
       audit: { condition: service_healthy }
+    labels: *autoheal
     healthcheck: *salud-interna
 
   # Gateway: el panel de supervisión. ÚNICO puerto de la capa IA publicado al
@@ -284,6 +396,7 @@ services:
     build: { context: ., dockerfile: services/gateway/Dockerfile }
     container_name: siem-gateway
     restart: unless-stopped
+    mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
     user: "${SIEM_UID:-1000}:${SIEM_GID:-1000}"
     environment:
       - SIEM_INTERNAL_TOKEN=${SIEM_INTERNAL_TOKEN:?falta SIEM_INTERNAL_TOKEN en .env}
@@ -292,6 +405,7 @@ services:
     ports:
       - "127.0.0.1:5000:5000"
     networks: [ia-net]
+    labels: *autoheal
     depends_on:
       auth: { condition: service_healthy }
       audit: { condition: service_healthy }
@@ -309,6 +423,11 @@ networks:
   # Red de la capa IA. No es `internal: true` porque el analyst necesita salir
   # a la API de Gemini; los puertos internos (8000) igual no se publican.
   ia-net:
+    driver: bridge
+  # Laboratorio de ataque (perfil `simulation`): ssh-target y hydra-attacker.
+  # No es `internal: true` porque hydra-attacker instala hydra/nmap al arrancar y
+  # porque Docker no publica puertos (2222) de una red interna.
+  sim-net:
     driver: bridge
 volumes:
   elasticsearch-data:

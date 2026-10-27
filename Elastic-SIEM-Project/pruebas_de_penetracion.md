@@ -87,6 +87,15 @@ se convierten en incidente visible en el panel.
 | **PS-04** Horizontal lento | Ni B2 (por la ventana) ni el clasificador lo ven | Contar hosts + ampliar la ventana de B2 |
 | **PS-05** Puertos sensibles | B3 alerta, pero 4 puertos < umbral 10 → sin incidente | Que una alerta B3 huérfana genere incidente, o bajar el umbral para puertos críticos |
 
+Resultado de la corrida del 26-10-2026: **14 escenarios, 11 detectados, 3
+huecos, 0 regresiones** (cobertura de detección 78,6 %).
+
+**Un detalle que muestra PH-02 (cosecha de varias víctimas):** se detecta, pero
+solo por C1. La regla C2 (*Repeated Credential Harvesting*) no dispara porque
+agrupa por `source_ip`, que en un envío de credenciales es la víctima; con 5
+víctimas distintas ninguna IP llega a 3 envíos. Está registrado como D-14 en
+`docs/04-auditoria-pruebas-y-demostracion.md` y en `rules/rules.md`.
+
 Cada propuesta dice **qué** cambiar, **dónde** (archivo real) y su **trade-off**.
 Son sugerencias para una persona, no cambios automáticos.
 
@@ -159,5 +168,7 @@ services/classifier/classifier.py   _alternativa() y el catálogo de alternativa
 tests/integration/test_pentest.py   fija el comportamiento del pentest (sin regresiones)
 ```
 
-Relacionado: `pruebas_de_linters.md` (análisis estático) y
-`docs/04-auditoria-pruebas-y-demostracion.md` (estrategia general de pruebas).
+Relacionado: `pruebas_de_linters.md` (análisis estático),
+`docs/04-auditoria-pruebas-y-demostracion.md` (estrategia general de pruebas y
+qué verifica cada archivo) y `./scripts/pruebas_de_verificacion.sh` (el caso
+sano 20 corre `test_pentest.py`).

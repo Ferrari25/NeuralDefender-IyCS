@@ -17,6 +17,9 @@
 #                                          (servicio collector)
 #   ./scripts/siem.sh logs-es              inspección ad-hoc de Elasticsearch (collector)
 #   ./scripts/siem.sh estado               estado de los contenedores de la capa IA
+#   ./scripts/siem.sh respaldo             respaldo cifrado YA (además del diario de las 03:00)
+#   ./scripts/siem.sh restaurar <archivo> [--renombrar]
+#                                          restaura un respaldo (servicio backup)
 #
 # Para automatizar el alta de un usuario sin prompt: SIEM_NEW_PASSWORD=... ./scripts/siem.sh usuarios crear ...
 # ─────────────────────────────────────────────────────────────────────────────
@@ -25,7 +28,7 @@ cd "$(dirname "$0")/.."
 
 SERVICIOS_IA=(auth audit collector classifier knowledge analyst pipeline gateway)
 
-uso() { sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; }
+uso() { sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'; }
 
 # Con una terminal interactiva se asigna TTY (lo necesita el prompt de
 # contraseña de `usuarios crear`); desde otro script, no.
@@ -65,6 +68,8 @@ case "$comando" in
   cobertura) ejecutar collector python verify-cobertura.py "$@" ;;
   logs-es)   ejecutar collector python get-logs.py "$@" ;;
   estado)    docker compose ps "${SERVICIOS_IA[@]}" ;;
+  respaldo)  ejecutar backup    /backup/respaldo.sh ;;
+  restaurar) ejecutar backup    /backup/restaurar.sh "$@" ;;
   -h|--help|"") uso ;;
   *) echo "[ERROR] Comando desconocido: $comando"; uso; exit 2 ;;
 esac

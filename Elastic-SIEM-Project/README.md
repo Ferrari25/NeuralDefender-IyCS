@@ -18,7 +18,7 @@ de forma inmutable. Principio rector: **la IA sugiere, el humano decide.**
 >
 > 📚 **Documentación técnica completa** (arquitectura, requisitos, flujo de
 > datos, reglas de detección, seguridad, pruebas) vive en
-> [`docs/00-arquitectura.md`](./docs/00-arquitectura.md), que indexa los otros 4.
+> [`docs/00-arquitectura.md`](./docs/00-arquitectura.md), que indexa los otros 5.
 
 ## Ataques contemplados
 
@@ -95,7 +95,7 @@ Elastic-SIEM-Project/
 ├── rules/ndjson/               reglas de detección de Kibana, como código
 ├── elasticsearch/ kibana/ logstash/ filebeat/    configuración del stack Elastic
 ├── tests/                      unit/ · integration/ · test_no_autonomy.py
-└── docs/                       documentación técnica (índice en 00-arquitectura.md)
+└── docs/                       documentación técnica, 6 documentos (índice en 00-arquitectura.md)
 ```
 
 **¿Dónde busco…?**
@@ -104,7 +104,12 @@ Elastic-SIEM-Project/
 |---------|---------|
 | ver qué decidió cada analista | `data/audit/decisions.jsonl`, o desde el panel: **Historial de Decisiones → Sacar un reporte** |
 | sacar un reporte (CSV/JSON) | panel, o `./scripts/siem.sh reporte --formato csv [--desde AAAA-MM-DD] [--hasta AAAA-MM-DD]` → `reportes/` |
-| ver qué aprendió el agente | panel, tarjeta **Memoria del agente**, o `data/knowledge/lecciones.json` |
+| ver qué aprendió el agente | panel, tarjeta **Memoria del agente**, o `data/knowledge/lecciones.json` — todo lo que guarda el "Gem" en [`docs/05`](./docs/05-gem-memoria-del-agente.md#dónde-ver-lo-que-el-gem-guarda) |
+| ver los casos y documentos que usa el agente | `data/knowledge/casos.json` · `data/knowledge/documentos.json` |
+| entender cómo aprende el agente | [`docs/05-gem-memoria-del-agente.md`](./docs/05-gem-memoria-del-agente.md) |
+| ver los linters y qué hace cada uno | [`pruebas_de_linters.md`](./pruebas_de_linters.md) (terminal y VS Code) |
+| saber qué verifica cada archivo de pruebas | [`docs/04` §Registro de pruebas](./docs/04-auditoria-pruebas-y-demostracion.md#registro-de-pruebas) |
+| demostrar que las pruebas detectan errores | `./scripts/pruebas_de_verificacion.sh` (80 % de casos sanos pasan, 20 % de defectos inyectados fallan) |
 | ver quién aprobó cada lección o cargó un documento | `data/audit/actividad.jsonl` (también figura en el reporte) |
 | cambiar la "personalidad" del agente | `services/analyst/perfil_agente.md` |
 | cambiar las acciones y los comandos sugeridos | `services/classifier/classifier.py` (`_playbook`) |
@@ -120,9 +125,14 @@ Elastic-SIEM-Project/
 - `pruebas_de_codigo_estatico.sh` / `pruebas_de_servicio.sh` / `pruebas_completas.sh` —
   la puerta de calidad (ver
   [`docs/04-auditoria-pruebas-y-demostracion.md`](./docs/04-auditoria-pruebas-y-demostracion.md))
+- `pruebas_de_verificacion.sh` — verificación 80/20: prueba que la puerta de
+  calidad detecta defectos inyectados a propósito
 
 **Documentación**
-- `docs/` — 5 documentos: arquitectura, instalación/uso/simulaciones, reglas y
-  dashboard, autenticación, y auditoría/pruebas/demostración. Índice en
-  [`docs/00-arquitectura.md`](./docs/00-arquitectura.md).
+- `docs/` — 6 documentos: arquitectura, instalación/uso/simulaciones, reglas y
+  dashboard, autenticación, auditoría/pruebas/demostración, y el "Gem" (memoria
+  del agente). Índice en [`docs/00-arquitectura.md`](./docs/00-arquitectura.md).
 - `nicotito.md` — puesta en marcha completa desde cero
+- `pruebas_de_linters.md` — linters y SAST, y cómo verlos en VS Code
+- `pruebas_de_penetracion.md` — pentest simulado y alternativas de remediación
+- `rules/rules.md` — catálogo explicado de las 14 reglas de detección

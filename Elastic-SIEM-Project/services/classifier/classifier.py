@@ -33,6 +33,7 @@ import shlex
 from dataclasses import asdict, dataclass, field
 
 from siem_lib import (
+    entero_de_entorno,
     now_iso,
     sanitize_for_prompt,
     ts_ordenable,
@@ -45,10 +46,15 @@ from siem_validators import (
     valid_username,
 )
 
-# Umbrales de detección (dentro de la ventana analizada).
-BRUTE_FORCE_THRESHOLD   = 20      # fallos de auth → fuerza bruta
-CRITICAL_FAILURE_COUNT  = 5000    # por encima → severidad crítica
-PORT_SCAN_DISTINCT_PORTS = 10     # puertos distintos sondeados → port scan
+# Umbrales de detección (dentro de la ventana analizada). RNF-MANT-04: se
+# ajustan desde `.env` sin reconstruir la imagen; sin variable, los de la ERS.
+BRUTE_FORCE_THRESHOLD    = entero_de_entorno("SIEM_UMBRAL_FUERZA_BRUTA", 20)    # fallos de auth → fuerza bruta
+CRITICAL_FAILURE_COUNT   = entero_de_entorno("SIEM_UMBRAL_CRITICO", 5000)       # por encima → severidad crítica
+PORT_SCAN_DISTINCT_PORTS = entero_de_entorno("SIEM_UMBRAL_PUERTOS", 10)         # puertos distintos → port scan
+
+if CRITICAL_FAILURE_COUNT <= BRUTE_FORCE_THRESHOLD:
+    raise ValueError(f"SIEM_UMBRAL_CRITICO ({CRITICAL_FAILURE_COUNT}) tiene que ser mayor que "
+                     f"SIEM_UMBRAL_FUERZA_BRUTA ({BRUTE_FORCE_THRESHOLD})")
 
 # Cómo se relacionan las acciones principales de cada playbook entre sí:
 #   "pasos"     — un procedimiento a seguir EN ORDEN (contener → investigar →
@@ -1244,9 +1250,36 @@ def _link_campaigns(incidents: list[dict]) -> None:
 
 # ─── Orquestación ────────────────────────────────────────────────────────────
 
+def auth_logs_de_red(events: list[dict]) -> list[dict]:
+    """Fallos de autenticación que llegan por `network_logs/` (RF-SIM-05).
+
+    Es lo que escribe `run-brute-force.sh --offline`: la misma línea de sshd que
+    deja `ssh-target`, en NDJSON. Se convierten al formato de la captura del
+    collector para que `detect_auth_incidents` los trate igual que a los de
+    Elasticsearch. No se cuentan dos veces con el stack arriba: Filebeat los
+    indexa con `source_type: network_traffic`, que la consulta de auth fallida
+    del collector excluye (solo toma ssh-target y system_logs).
+    """
+    return [{
+        "type":        "auth_failure_log",
+        "timestamp":   e.get("@timestamp"),
+        "message":     e["message"],
+        "host_ip":     e.get("dest_ip"),
+        "host_name":   None,
+        "log_file":    None,
+        "tags":        e.get("tags", []),
+        "source_type": e.get("source_type"),
+    } for e in events
+        if e.get("event_type") == "auth_failure" and isinstance(e.get("message"), str)]
+
+
 def classify(siem_data: dict, network_events: list[dict] | None = None) -> list[dict]:
     network_events = network_events or []
     alerts = siem_data.get("alerts", [])
+    logs_de_red = auth_logs_de_red(network_events)
+    if logs_de_red:
+        siem_data = {**siem_data,
+                     "auth_failure_logs": [*siem_data.get("auth_failure_logs", []), *logs_de_red]}
     incidents = (
         detect_auth_incidents(siem_data)
         + detect_port_scans(network_events, alerts)

@@ -122,7 +122,7 @@ def test_el_ciclo_sigue_sin_elasticsearch(sandbox, servicio_caido, network_logs_
     import classifier_service
     import siem_lib
     monkeypatch.setattr(classifier_service, "read_network_logs",
-                        lambda d: siem_lib.read_network_logs(d, window_hours=None))
+                        lambda d, *_: siem_lib.read_network_logs(d, window_hours=None))
     servicio_caido("collector")
 
     r = _ciclo()

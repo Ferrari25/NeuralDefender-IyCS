@@ -7,7 +7,19 @@ sistema: leen el código fuente y buscan problemas antes de que corra.
 > Resumen en una línea: `./scripts/pruebas_de_codigo_estatico.sh` tiene que
 > terminar en `✅ Todo en verde.` — y para demostrar que ese verde significa
 > algo, se inyectan vulnerabilidades a propósito y se comprueba que pasa a ❌
-> (ver [§5](#5-cómo-verificar-que-el-análisis-es-correcto-prueba-de-mutación)).
+> (ver [§5](#5-cómo-verificar-que-el-análisis-es-correcto-prueba-de-mutación)), o se
+> corre `./scripts/pruebas_de_verificacion.sh`, que lo hace solo (ver [§9](#9-verificación-8020-automática)).
+
+## Dónde ver los linters, de un vistazo
+
+| Quiero ver… | Dónde |
+|---|---|
+| El resultado de todos juntos | `./scripts/pruebas_de_codigo_estatico.sh` (terminal, una línea por herramienta) |
+| El detalle de una herramienta | Los comandos de la [§3](#cada-herramienta-por-separado-para-ver-el-detalle) |
+| Los hallazgos subrayados mientras escribo | VS Code → panel **Problems** (`Ctrl+Shift+M`), ver [§7](#7-linters-dentro-de-visual-studio-code) |
+| Su configuración | `ruff.toml`, `eslint.config.js`, `.pylintrc`, y los parámetros de bandit en `scripts/pruebas_de_codigo_estatico.sh` |
+| La prueba de que detectan de verdad | `./scripts/pruebas_de_verificacion.sh` (casos M1 y M2) |
+| Qué verifica cada archivo de **pruebas** (no linters) | [`docs/04` §Registro de pruebas](docs/04-auditoria-pruebas-y-demostracion.md#registro-de-pruebas) |
 
 ---
 
@@ -250,5 +262,25 @@ Si una extensión no marca nada, abrir el panel **Output** y elegir "Ruff",
 | pylint marca imports como no resueltos | Falta el `--init-hook` | Usar el comando de la [§3](#3-cómo-correrlas) o el script |
 | `MEJORA` en vez de `BASE` | Se corrigieron hallazgos | Bajar `BASE_RUFF` / `BASE_BANDIT_ALTOS` en el script |
 
+## 9. Verificación 80/20 automática
+
+La prueba de mutación de la §5 se hace a mano y toca el árbol de trabajo.
+`./scripts/pruebas_de_verificacion.sh` hace lo mismo, sin tocar el repositorio:
+copia el proyecto a un directorio temporal y corre **25 casos**:
+
+- **20 casos sanos (80 %)** que tienen que **pasar**: ruff, eslint, pylint,
+  bandit, la certificación por AST y 15 grupos que cubren los 39 archivos de
+  pruebas unitarias y de servicio.
+- **5 casos mutantes (20 %)** que tienen que **fallar**: M1 inyecta
+  `subprocess.run(..., shell=True)` (lo frena **bandit**), M2 inyecta
+  `innerHTML = dato` (lo frena **eslint**), M3 un `os.system` en un servicio
+  (lo frena la certificación por **AST**), M4 borra el permiso de la ruta de
+  decisión (lo frenan las pruebas de **autenticación**) y M5 hace que el agente
+  use lecciones sin aprobar (lo frenan las pruebas de **memoria**).
+
+Termina en `✅ Verificación correcta` solo si salen exactamente 20 ✔ y 5 ✘.
+Detalle y salida esperada en
+[`docs/04`](docs/04-auditoria-pruebas-y-demostracion.md#verificación-8020-las-pruebas-detectan-errores).
+
 Documentación relacionada: `docs/04-auditoria-pruebas-y-demostracion.md`
-(estrategia general de pruebas) y `nicotito.md` §10.
+(estrategia general de pruebas y qué verifica cada archivo) y `nicotito.md` §10.

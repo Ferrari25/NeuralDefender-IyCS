@@ -93,11 +93,11 @@ def test_renderresultadosimulado_no_pinta_nada_sin_texto():
 
 def test_el_campo_no_se_escribe_en_el_registro_de_decisiones():
     """`resultado_simulado` es contenido del playbook (Agente 1), no una
-    decisión del analista — decisions.jsonl no tiene por qué guardarlo."""
-    import inspect
+    decisión del analista — decisions.jsonl no tiene por qué guardarlo.
 
-    import dashboard
-
-    fuente = inspect.getsource(dashboard)
+    Se lee el fuente en vez de importar `dashboard`: importarlo construye la app
+    y exige SECRET_KEY, y esta prueba tiene que pasar también corrida sola."""
+    raiz = Path(__file__).resolve().parent.parent.parent
+    fuente = (raiz / "services" / "gateway" / "dashboard.py").read_text(encoding="utf-8")
     assert "resultado_simulado" not in fuente, (
         "dashboard.py no debería tocar este campo al escribir una decisión")

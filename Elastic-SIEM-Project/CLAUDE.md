@@ -16,12 +16,17 @@ de credenciales (T1566).
 
 ## Dónde está el contexto completo (leer según haga falta)
 
-- **`docs/`** — documentación del sistema, en 5 archivos (la fuente de verdad
+- **`docs/`** — documentación del sistema, en 6 archivos (la fuente de verdad
   técnica): `00-arquitectura.md` (contexto, componentes, requerimientos, flujo
   de datos), `01-instalacion-uso-y-simulaciones.md`, `02-reglas-y-dashboard.md`,
-  `03-autenticacion-y-control-de-acceso.md`, y
+  `03-autenticacion-y-control-de-acceso.md`,
   `04-auditoria-pruebas-y-demostracion.md` (hallazgos, qué se corrigió, qué
-  queda pendiente, y el guion de demo).
+  queda pendiente, qué prueba cada archivo de `tests/`, la verificación 80/20 y
+  el guion de demo), y `05-gem-memoria-del-agente.md` (cómo aprende el Agente 2
+  y dónde ver lo que guarda).
+- **`pruebas_de_linters.md`** — linters y SAST: qué hace cada herramienta, cómo
+  verlos en la terminal y en VS Code. **`pruebas_de_penetracion.md`** — pentest
+  simulado y alternativas de remediación.
 - **`nicotito.md`** — puesta en marcha completa desde cero en un equipo nuevo.
 
 ## Mapa rápido del código (capa IA = microservicios)
@@ -51,7 +56,7 @@ registro cerrado de destinos + token interno `SIEM_INTERNAL_TOKEN`).
 ```bash
 ./scripts/start.sh                                  # stack Elastic + 14 reglas + los 8 microservicios
 ./scripts/siem.sh usuarios crear ana --rol analyst  # primer usuario (una sola vez)
-bash simulation/run-brute-force.sh                  # generar ataque (o --offline para port scan/phishing)
+bash simulation/run-brute-force.sh                  # generar ataque (o --offline, sin Docker; vale para los tres)
 ./scripts/siem.sh pipeline                          # detección → análisis
 # → http://127.0.0.1:5000/login  (supervisión)
 # Solo la capa IA, sin el stack Elastic (el collector queda en 503 y el ciclo sigue):
@@ -83,6 +88,10 @@ Mapa de carpetas y "¿dónde busco…?": `README.md` §Dónde está todo. Regla:
   ellos pasan por `libs/siem_validators.py`: si no validan, la acción no se ofrece.
 - **Antes de tocar código, correr `./scripts/pruebas_completas.sh`** (linters + SAST + pruebas, ~150 s).
   La puerta falla ante cualquier hallazgo nuevo; las líneas de base están en cero.
+  `./scripts/pruebas_de_verificacion.sh` (~90 s) demuestra que la puerta detecta errores:
+  sobre una copia temporal, 20 casos sanos tienen que pasar y 5 defectos inyectados
+  tienen que fallar (80/20). Si cambiás el código que muta un caso, el script lo avisa.
+  Cada archivo de `tests/` tiene que pasar también corrido solo.
   **La suite levanta la malla de microservicios en proceso** (`malla_en_proceso` en
   `tests/conftest.py`): no hace falta Docker para probar, y `servicio_caido(...)`
   simula un contenedor caído.
@@ -94,6 +103,9 @@ Mapa de carpetas y "¿dónde busco…?": `README.md` §Dónde está todo. Regla:
   despliegan con `./scripts/deploy-rules.sh` (idempotente) y se bajan con
   `./scripts/export-rules.sh`. Los campos de agrupación usan `.keyword`: en
   `filebeat-*` son `text` y agregar sobre ellos falla. Ver `rules/rules.md`.
+- **El pipeline corre solo cada 2 min** (`services/pipeline/programador.py`,
+  `SIEM_PIPELINE_INTERVALO=120` en compose; `0` = solo a mano). Mismo candado que el
+  ciclo manual. Con `SIEM_USE_LLM=true` cada corrida gasta tokens de Gemini.
 - **`network_logs/*.json`** es la fuente de port scan/phishing (no hay Suricata);
   es a la vez input de Filebeat y fuente offline del clasificador.
 - **El panel exige login** (API-01): sin `SECRET_KEY` en `.env` no arranca, y sin
@@ -111,6 +123,8 @@ Mapa de carpetas y "¿dónde busco…?": `README.md` §Dónde está todo. Regla:
   radios y espaciado en grilla de 2px. Lo cargan las dos pantallas — `app.css` y
   `login.css` solo consumen, y ninguna define un `:root` propio. Hay pruebas que
   fallan ante un px suelto o un contraste por debajo de WCAG AA.
-- **Secretos:** todo en `.env` (gitignored). Pendiente: rotar `ELASTIC_PASSWORD`,
-  `KIBANA_SYSTEM_PASSWORD`, `GEMINI_API_KEY`.
+- **Secretos:** todo en `.env`. **En este repositorio `.env` está versionado**, igual
+  que `elasticsearch/certs/*.key` y `data/auth/users.json`, por decisión explícita del
+  dueño (ver `.gitignore`). Pendiente: rotar `ELASTIC_PASSWORD`,
+  `KIBANA_SYSTEM_PASSWORD`, `GEMINI_API_KEY`. El `.env` actual tiene `SIEM_USE_LLM=true`.
 
