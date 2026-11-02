@@ -165,3 +165,4 @@
 {"ts": "2026-11-02T20:48:49.174724+00:00", "analyst_mode": "gemma", "incident_count": 1, "incident_ids": ["INC-AUTH-desconocida-7604c360"], "prev_hash": "beedadf2be1f214c1e03653782e6d65cd8ba03ecede43617668991a8d09dec37"}
 {"ts": "2026-11-02T20:51:42.479598+00:00", "analyst_mode": "gemma", "incident_count": 1, "incident_ids": ["INC-AUTH-desconocida-7604c360"], "prev_hash": "f6dfce0416a678525e49583fdbbce1c2ba015526f8546ef1fbac3902b4a324e6"}
 {"ts": "2026-11-02T20:56:12.094494+00:00", "analyst_mode": "gemma", "incident_count": 2, "incident_ids": ["INC-AUTH-desconocida-7604c360", "INC-PHISH-172.18.0.9-69bdb294"], "prev_hash": "5c3e52781fbde305dfc634729649dabc51db386b9607ab02ff098508d1756ae7"}
+{"ts": "2026-11-02T21:00:25.261878+00:00", "analyst_mode": "gemma", "incident_count": 2, "incident_ids": ["INC-AUTH-desconocida-7604c360", "INC-PHISH-172.18.0.9-69bdb294"], "prev_hash": "166ea2f5368e540391271c97fcf13ebea6f475449718c0b7e8b80d43fbc8888d"}

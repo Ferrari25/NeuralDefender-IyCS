@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-02T20:53:35.036713+00:00",
+  "generated_at": "2026-11-02T20:57:42.519141+00:00",
   "incident_count": 2,
   "incidents": [
     {
@@ -7,7 +7,7 @@
       "analysis": {
         "_modelo": "gemma3:4b",
         "_source": "gemma",
-        "accion_recomendada": "Priorizar (1) Habilitar rate-limiting / fail2ban en el servicio SSH, dado que ya está disponible en las acciones del playbook y se ha visto en casos similares aprobados.",
+        "accion_recomendada": "Priorizar (1) Habilitar rate-limiting / fail2ban en el servicio SSH, dado que el analista ya tiene esa acción disponible en el panel.",
         "aprendizaje": {
           "casos_similares": [
             {
@@ -39,15 +39,15 @@
         },
         "contexto_campana": null,
         "contexto_historico": "Sin IP identificada para buscar antecedentes.",
-        "contexto_riesgo": "Si este ataque tiene éxito, un atacante podría obtener acceso no autorizado al host, lo que podría permitirle robar datos sensibles, instalar malware o utilizar el host como punto de partida para ataques adicionales.  Dado que no se identifica un usuario objetivo, el riesgo es mayor.",
-        "explicacion": "Tenemos 244 intentos fallidos de autenticación en el host 172.19.0.4 en un periodo de 21 minutos. El usuario objetivo no está especificado, pero la actividad se considera un intento de fuerza bruta contra el servicio SSH. La severidad está en medium porque el umbral de fuerza bruta fue superado, pero el falso positivo es bajo.",
+        "contexto_riesgo": "Si este ataque tiene éxito, un atacante podría obtener acceso no autorizado al sistema, lo que podría resultar en robo de datos, instalación de malware o la ejecución de comandos maliciosos.  Dado que no tenemos información sobre la IP de origen, es difícil determinar la intención del atacante, pero la persistencia de los intentos indica un posible interés en obtener credenciales.",
+        "explicacion": "Tenemos 244 intentos fallidos de autenticación en el host 172.19.0.4 en un periodo de 21 minutos. El usuario objetivo no está definido, pero el volumen de intentos es significativamente superior al umbral de fuerza bruta. Esto sugiere un intento de acceso no autorizado a través de fuerza bruta.",
         "falso_positivo_probabilidad": "LOW",
-        "metodologia": "La fuerza bruta contra SSH es una técnica común para intentar obtener credenciales válidas. Los atacantes suelen probar combinaciones de nombres de usuario y contraseñas hasta que encuentran una que funciona.  Esta técnica se basa en la vulnerabilidad de la seguridad de contraseñas débiles o reutilizadas.",
+        "metodologia": "La técnica de ‘Brute Force’ (T1110) en MITRE ATT&CK implica intentar múltiples combinaciones de nombres de usuario y contraseñas hasta encontrar una válida.  Es común que los atacantes utilicen scripts automatizados para realizar estos ataques, buscando credenciales válidas en sistemas vulnerables.",
         "puntos_de_investigacion": [
-          "¿Existe algún usuario en la organización que haya utilizado la misma contraseña en otros servicios?",
-          "¿El host 172.19.0.4 tiene alguna configuración inusual que pueda estar contribuyendo a la fuerza bruta?",
-          "¿Se ha detectado actividad similar desde otras IPs desconocidas?",
-          "¿El usuario objetivo está expuesto a vulnerabilidades conocidas que podrían ser explotadas?"
+          "¿Existe algún usuario en el sistema con contraseñas débiles o que hayan sido comprometidas en el pasado?",
+          "¿El host 172.19.0.4 tiene alguna configuración inusual que pueda estar facilitando este ataque?",
+          "¿Se ha detectado actividad similar en otros hosts de la red?",
+          "¿El usuario objetivo está involucrado en alguna actividad sospechosa?"
         ],
         "referencias": [
           "https://attack.mitre.org/techniques/T1110",
@@ -156,7 +156,7 @@
       "analysis": {
         "_modelo": "gemma3:4b",
         "_source": "gemma",
-        "accion_recomendada": "Priorizar (1) Dar de baja / bloquear el servidor de phishing (página falsa), dado que el analista aprobó esta acción en un caso similar (INC-PHISH-172.18.0.9-79fea94f).",
+        "accion_recomendada": "Priorizar (1) Dar de baja / bloquear el servidor de phishing (página falsa), dado que la IP ha sido aprobada previamente y la regla del SIEM lo detectó.",
         "aprendizaje": {
           "casos_similares": [
             {
@@ -177,19 +177,18 @@
         },
         "contexto_campana": null,
         "contexto_historico": "Hay 1 decisión(es) previa(s) registrada(s) sobre esta IP (1 aprobada(s), 0 descartada(s)). La más reciente: nico approved una acción del incidente INC-PHISH-172.18.0.9-79fea94f el 2026-10-27T23:57:24.368205+00:00.",
-        "contexto_riesgo": "Si este ataque tiene éxito, el atacante podría obtener acceso a cuentas de usuario dentro de la organización, lo que podría permitirle acceder a datos sensibles o realizar acciones no autorizadas.  Dado que la IP ha sido previamente aprobada, es crucial actuar con rapidez.",
-        "explicacion": "Un usuario (testuser) desde la IP 172.18.0.9 envió datos a una URL sospechosa. El clasificador lo detectó como un intento de credential harvesting. La IP 172.18.0.8 es la que originó el ataque.",
+        "contexto_riesgo": "Si este ataque es exitoso, un usuario podría perder el acceso a sus cuentas, lo que podría comprometer datos sensibles o interrumpir operaciones. La IP 172.18.0.9 ha sido aprobada previamente, lo que sugiere que podría ser un escáner interno, pero aún así, es necesario investigar la URL a la que se enviaron los datos.",
+        "explicacion": "Un usuario (testuser) desde la IP 172.18.0.9 envió datos de inicio de sesión a una URL sospechosa. La regla del SIEM lo detectó. La última vez que vimos algo parecido, el analista lo aprobó porque era el escáner interno.",
         "falso_positivo_probabilidad": "MEDIUM",
-        "metodologia": "El credential harvesting es una técnica de phishing donde un atacante intenta obtener nombres de usuario y contraseñas directamente de un usuario engañado.  Suele usar páginas de login falsas que imitan a sitios legítimos.",
+        "metodologia": "Este es un ataque de credential harvesting, donde el atacante intenta obtener nombres de usuario y contraseñas. Usan típicamente páginas de login falsas que imitan sitios web legítimos para engañar a los usuarios y robar sus credenciales. La técnica es la T1566 (Phishing) según MITRE.",
         "puntos_de_investigacion": [
-          "¿La URL sospechosa es conocida como maliciosa por algún sistema de inteligencia de amenazas?",
-          "¿El usuario 'testuser' ha interactuado con alguna URL sospechosa recientemente?",
-          "¿La IP 172.18.0.8 está asociada a alguna actividad maliciosa conocida?",
-          "¿Existe alguna regla de firewall que pueda bloquear la IP 172.18.0.9?"
+          "Verificar la reputación de la URL a la que se enviaron los datos.",
+          "Analizar el tráfico de red asociado a la IP 172.18.0.9 para identificar cualquier actividad sospechosa adicional.",
+          "Confirmar si la IP 172.18.0.9 es un escáner interno autorizado."
         ],
         "referencias": [
           "https://attack.mitre.org/techniques/T1566",
-          "https://attack.mitre.org/techniques/T1566/001"
+          "https://attack.mitre.org/techniques/T1071"
         ],
         "severidad_ajustada": "HIGH"
       },
@@ -204,7 +203,7 @@
         "factores": [
           "1 envío(s) de credenciales detectado(s) hacia una URL marcada como sospechosa",
           "1 usuario(s) distinto(s) afectado(s)",
-          "Ninguna regla de Kibana disparó todavía para esta IP → la única confirmación es la del clasificador",
+          "Confirmado por una regla activa del SIEM: 'Credential Submission to Suspicious Login'",
           "Falso positivo: MEDIA — depende de qué tan confiable sea la fuente que marcó la URL como sospechosa"
         ],
         "false_positive_likelihood": "media",
@@ -212,7 +211,7 @@
         "rationale": "1 envío(s) de credenciales hacia una página de login sospechosa (/login); posible captura de credenciales (phishing).",
         "severity": "alta"
       },
-      "detection_source": "clasificador",
+      "detection_source": "elastic",
       "event_count": 1,
       "evidence": [
         {
@@ -422,12 +421,12 @@
         }
       ],
       "related_incidents": [],
-      "risk_score": null,
-      "rule_name": null,
+      "risk_score": 68,
+      "rule_name": "Credential Submission to Suspicious Login",
       "sample_messages": [
         "POST /login usuario=testuser desde 172.18.0.9"
       ],
-      "severity_siem": null,
+      "severity_siem": "high",
       "source_ip": "172.18.0.9",
       "target_users": [
         "testuser"
@@ -436,6 +435,6 @@
     }
   ],
   "source": "collector",
-  "analyzed_at": "2026-11-02T20:56:12.089703+00:00",
+  "analyzed_at": "2026-11-02T21:00:25.255479+00:00",
   "analyst_mode": "gemma"
 }
