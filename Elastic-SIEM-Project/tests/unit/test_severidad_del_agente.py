@@ -113,12 +113,11 @@ def test_las_traducciones_del_español_tambien_son_pintables():
 def _con_llm_que_devuelve(monkeypatch, severidad: object):
     """Sustituye `_llm_analysis` por uno que devuelve la severidad indicada.
 
-    No se simula el cliente de Gemini: el paquete `google` no está instalado en el
-    entorno de pruebas y, sobre todo, lo que se verifica es qué hace
-    `analyze_incident` con la respuesta — no cómo se obtiene.
+    No se simula el cliente del LLM (Gemma o Gemini): lo que se verifica es qué
+    hace `analyze_incident` con la respuesta — no cómo se obtiene.
     """
-    def falso(client, incident, historical, campaign, memoria=None):
-        del client, incident, historical, campaign, memoria
+    def falso(client, incident, historical, campaign, memoria=None, timeout=300):
+        del client, incident, historical, campaign, memoria, timeout
         return {"explicacion": "x", "metodologia": "x", "contexto_riesgo": "x",
                 "severidad_ajustada": severidad, "accion_recomendada": "revisar",
                 "falso_positivo_probabilidad": "LOW", "referencias": [],

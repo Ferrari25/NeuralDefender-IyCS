@@ -168,7 +168,7 @@ os.system("iptables -F")'
 caso falla "M3 · os.system en un servicio → AST no-autonomía" "${PYTEST[@]}" tests/test_no_autonomy.py
 cp "$ORIGEN/services/classifier/classifier_service.py" services/classifier/classifier_service.py
 
-# M4 · Control de acceso: la ruta de decisión pierde su permiso.
+# M4 · Control de acceso: la ruta de decisión pierde su permiso.  
 mutar services/gateway/dashboard.py '@app.route("/api/v1/decision", methods=["POST"])
 @requiere_permiso("decidir")' '@app.route("/api/v1/decision", methods=["POST"])
 @login_required'

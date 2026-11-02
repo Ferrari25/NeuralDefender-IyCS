@@ -157,7 +157,7 @@ def test_el_pipeline_nunca_reescribe_analysis_history(sandbox_con_incidentes, se
     """
     import pipeline_service
 
-    monkeypatch.setenv("GEMINI_API_KEY", "")
+    monkeypatch.setenv("SIEM_USE_LLM", "false")
     servicio_caido("collector")
     ruta = sandbox_con_incidentes / "data" / "analysis_history.jsonl"
     cadena.append_jsonl(ruta, {"ts": "2026-09-16T10:00:00+00:00", "incident_count": 1})

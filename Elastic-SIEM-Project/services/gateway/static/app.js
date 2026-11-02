@@ -303,8 +303,8 @@ function render() {
   const incs = lastData.incidents || [];
   const mode = lastData.analyst_mode;
   const badge = document.getElementById("modeBadge");
-  if (mode === "gemini") {
-    pintar(badge, html`<span class="punto"></span> IA (Gemini)`);
+  if (mode === "gemma" || mode === "gemini") {
+    pintar(badge, html`<span class="punto"></span> IA (${NOMBRE_DEL_MODELO[mode]})`);
     badge.className = "mode-badge mode-gemini";
   } else if (mode === "fallback") {
     pintar(badge, html`<span class="punto"></span> Fallback determinístico`);
@@ -458,12 +458,16 @@ function renderDetail(incs) {
 // etiqueta minúscula al lado de "Qué pasó", del mismo gris que cualquier otro
 // dato secundario, fácil de no notar. La IA y el fallback comparten estructura
 // (mismos campos), así que sin esto no había forma rápida de distinguirlos.
+const NOMBRE_DEL_MODELO = { gemma: "Gemma local", gemini: "Gemini" };
+
 function renderFuenteAnalisis(an) {
-  const esIA = an._source === "gemini";
+  const esIA = an._source in NOMBRE_DEL_MODELO;
+  const modelo = an._modelo ? ` · ${an._modelo}` : "";
   return html`
     <div class="analisis-fuente ${esIA ? "es-ia" : "es-fallback"}">
       ${ico(esIA ? "i-ia" : "i-archivo")}
-      ${esIA ? "Análisis generado por IA (Gemini)" : "Análisis determinístico — reglas fijas, sin IA"}
+      ${esIA ? `Análisis generado por IA (${NOMBRE_DEL_MODELO[an._source]}${modelo})`
+             : "Análisis determinístico — reglas fijas, sin IA"}
     </div>`;
 }
 

@@ -198,3 +198,6 @@ data/dashboard.pid
 # Respaldos (RQ-SEC-05): están cifrados, pero pesan y no son código. Su lugar
 # es otro disco (SIEM_RESPALDO_DIR), no el repositorio.
 data/backup/
+
+# Secretos locales: nunca al repo (plantilla en .env.example)
+.env

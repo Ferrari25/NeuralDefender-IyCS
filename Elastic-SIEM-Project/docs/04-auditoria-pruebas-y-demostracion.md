@@ -15,7 +15,7 @@
 | Objetivo | Estado | Cómo se demuestra |
 |----------|:------:|--------------------|
 | **Pruebas de código estático** | ✅ | `./scripts/pruebas_de_codigo_estatico.sh` — ruff, eslint (linters) + pylint+secure-coding-standard, bandit (SAST). Líneas de base en cero. `./scripts/pruebas_de_verificacion.sh` demuestra que detectan: 20 casos sanos pasan y 5 defectos inyectados fallan. |
-| **Pruebas de servicio** | ✅ | `./scripts/pruebas_de_servicio.sh` — 323 pruebas de integración sobre la API HTTP real del panel y de cada microservicio (la malla corre en proceso), `deploy-rules.sh` contra un Kibana simulado, `reset.sh` contra un sandbox, autenticación completa. |
+| **Pruebas de servicio** | ✅ | `./scripts/pruebas_de_servicio.sh` — 358 pruebas de integración sobre la API HTTP real del panel y de cada microservicio (la malla corre en proceso), `deploy-rules.sh` contra un Kibana simulado, `reset.sh` contra un sandbox, respaldo/restauración y retención contra un Elasticsearch simulado, autenticación completa. |
 | **Desarrollo e implementación en entorno de simulación** | ✅ | Los tres ataques se simulan y detectan de punta a punta; el panel exige login; las 14 reglas se despliegan como código; `services/collector/verify-cobertura.py` demuestra que ninguna alerta real del SIEM se pierde en el camino al panel. Falta la suite E2E de navegador (ver Pendientes, más abajo). |
 
 Comando único para reproducir todo: `./scripts/pruebas_completas.sh`. Para
@@ -63,15 +63,15 @@ una prueba que falla si el problema vuelve a aparecer.
 | P5 | Vista de triage y pantalla de decisión como rutas separadas | Medio | Presentación del MVP |
 | P6 | CI corriendo `pruebas_completas.sh` | Bajo | Evidencia continua, no solo bajo demanda |
 | P7 | Contrato estable de `/api/v1/` (F-05) | Bajo | Consistencia de la API |
-| P8 | Umbrales de clasificación a configuración externa | Bajo | Ajustar sin tocar código |
 | P9 | Corregir la agrupación de C2 (D-14) | Bajo | Hoy una campaña de phishing con varias víctimas no escala por C2 |
 | P10 | Cerrar los 3 huecos del pentest (PS-03, PS-04, PS-05) | Medio | Escaneos horizontales y sondeos de puertos sensibles no llegan al panel — ver [`pruebas_de_penetracion.md`](../pruebas_de_penetracion.md) |
 | P11 | Rotar los secretos versionados en `.env` y sacar del repo las claves privadas | Bajo | `.env`, `elasticsearch/certs/*.key` y `users.json` están en git por decisión del dueño del repo |
 
 **Fuera de alcance, a propósito:** MFA/SSO/recuperación de contraseña,
 Suricata/IDS de red real (las simulaciones NDJSON cumplen el rol), un LLM
-local vía Ollama (el fallback determinístico ya cubre el caso sin nube),
-respaldos cifrados y retención (brecha normativa identificada, no resuelta).
+local vía Ollama (el fallback determinístico ya cubre el caso sin nube).
+Los respaldos cifrados (RQ-SEC-05) y la retención de datos personales
+(RQ-SEC-17) se resolvieron el 27-10-2026: ver `backup/` y `scripts/deploy-ilm.sh`.
 
 ### Conclusión de la auditoría
 
@@ -133,15 +133,15 @@ haya corrido antes (verificado el 26-10-2026).
 | **Pentest simulado** (`tests/integration/test_pentest.py`) | Ataques evasivos por el clasificador real; falla ante una regresión | Fuerza bruta "low-and-slow" |
 | **Verificación 80/20** (`scripts/pruebas_de_verificacion.sh`) | Que las pruebas de arriba detectan errores de verdad | Borrar un permiso y ver que las pruebas de API-01 fallan |
 
-### Inventario, última corrida (26-10-2026)
+### Inventario, última corrida (27-10-2026)
 
-**Total: 1308 pruebas** (5 omitidas a propósito), todas en verde.
+**Total: 1389 pruebas** (1384 en verde + 5 omitidas a propósito).
 
 | Grupo | Pruebas | Tiempo |
 |-------|--------:|-------:|
 | Estático por AST (`tests/test_no_autonomy.py`) | 86 | ~2 s |
-| Unitarias (`tests/unit/`, 26 archivos) | 888 + 5 omitidas | ~9 s |
-| Servicio (`tests/integration/`, 13 archivos) | 334 | ~49 s |
+| Unitarias (`tests/unit/`, 27 archivos) | 940 + 5 omitidas | ~9 s |
+| Servicio (`tests/integration/`, 14 archivos) | 358 | ~56 s |
 | — de las cuales, pentest (`test_pentest.py`) | 10 | <1 s |
 
 #### Qué prueba cada archivo
@@ -167,7 +167,8 @@ haya corrido antes (verificado el 26-10-2026).
 | `test_modo_de_solucion.py` | 7 | El playbook declara si sus acciones son pasos en orden o soluciones alternativas |
 | `test_resultado_simulado.py` | 8 | La vista "qué pasaría" es texto fijo del playbook, marcada como SIMULADO, y nunca va al registro de decisiones |
 | `test_severidad_del_agente.py` | 43 | La severidad que devuelve el Agente 2 (incluso un LLM que responde "alta") siempre se normaliza a un valor que el panel puede pintar |
-| `test_interruptor_del_llm.py` | 18 | Con la key puesta pero `SIEM_USE_LLM` apagado, no se llama a Gemini |
+| `test_interruptor_del_llm.py` | 20 | Con la key puesta pero `SIEM_USE_LLM` apagado, no se llama al LLM; Gemma local es el proveedor por defecto y no necesita key |
+| `test_gemma_local.py` | 14 | Qué se le manda a Ollama (modelo, system instruction, esquema JSON, sin herramientas ni comandos del playbook); Ollama caído / sin modelo / timeout → fallback; el presupuesto de tiempo manda el resto al fallback |
 | `test_reglas_como_codigo.py` | 155 | Las 14 reglas de `rules/ndjson/`: estructura válida, nombres únicos, MITRE, campos `.keyword`, coherencia con el catálogo |
 | `test_agregaciones_keyword.py` | 6 | D-12: el collector agrega sobre `.keyword`, nunca sobre un campo `text` |
 | `test_b0x_robustez_y_formatos.py` | 39 | B-01…B-05: timeouts de Elasticsearch, HTTP inseguro bloqueado, formatos de fecha y archivos |
@@ -181,7 +182,10 @@ haya corrido antes (verificado el 26-10-2026).
 | `test_resuelto.py` | 4 | El tag "resuelto" aparece cuando se aprobó al menos una acción |
 | `test_historial_agrupado.py` | 6 | El historial de decisiones se agrupa por incidente |
 | `test_motivo_de_descarte.py` | 11 | Descartar pide el motivo dentro del panel, no con un `prompt()` |
-| `test_despliegue_compose.py` | 25 | RQ-SEC-24: la simulación corre en su red `sim-net` y el nmap real no apunta a la red del SIEM; RNF-COMP-01: todo contenedor tiene `mem_limit` (256 MB la capa IA) |
+| `test_despliegue_compose.py` | 54 | RQ-SEC-24: la simulación corre en su red `sim-net` y el nmap real no apunta a la red del SIEM; RNF-COMP-01: todo contenedor tiene `mem_limit` (256 MB la capa IA); RNF-CONF-05: la capa SIEM tiene healthcheck cada 30 s con 3 reintentos y la vigila autoheal; RQ-SEC-05: Elasticsearch tiene repositorio de snapshots y el respaldo lee la auditoría en solo lectura; RNF-PORT-05: el collector puede apuntar a otro cluster |
+| `test_configuracion_externa.py` | 23 | RNF-MANT-04 (A5): umbrales y ventana salen del entorno sin reconstruir; un valor inválido impide arrancar (no cae al defecto); collector y clasificador usan la misma ventana; la ventana no admite nada que no sea número + m/h/d (se interpola en la consulta a ES) |
+
+**Pruebas de interfaz** (`tests/interfaz/test_panel.py`, 13 pruebas, Chromium + Playwright): login, sesión, tabla, filtros, detalle, teclado, confirmación de decisiones, roles, insignia de Gemma y XSS vistos desde un navegador real. Detalle en [`pruebas_de_interfaz.md`](../pruebas_de_interfaz.md).
 
 **Servicio (`tests/integration/`)**
 
@@ -198,7 +202,8 @@ haya corrido antes (verificado el 26-10-2026).
 | `test_memoria_del_agente.py` | 22 | El Gem: casos, lecciones propuestas que no se usan sin aprobar, ajuste solo del falso positivo — ver [05](05-gem-memoria-del-agente.md) |
 | `test_reportes.py` | 17 | Cada decisión guarda su contexto (nunca el comando), `actividad.jsonl` encadenado, reportes CSV/JSON con filtro de fechas y escape de fórmulas |
 | `test_despliegue_de_reglas.py` | 23 | `deploy-rules.sh` y `export-rules.sh` contra un Kibana simulado: desplegar dos veces no duplica |
-| `test_scripts_de_demostracion.py` | 42 | Los scripts de demo no ejecutan nada al imprimirse, nombran scripts reales y respetan `--ip` |
+| `test_scripts_de_demostracion.py` | 47 | Los scripts de demo no ejecutan nada al imprimirse, nombran scripts reales y respetan `--ip`; RF-SIM-05 (A7): la fuerza bruta corre `--offline` y el clasificador real la detecta como `ssh_brute_force` |
+| `test_respaldo_y_retencion.py` | 19 | RQ-SEC-05 (A1): `respaldo.sh`/`restaurar.sh` reales contra un Elasticsearch simulado — archivo cifrado con SHA-256, snapshot PARTIAL = fallo, retención de N respaldos, rechazo de archivo alterado o clave equivocada, nunca pisa `data/audit/`. RQ-SEC-17 (A2): `deploy-ilm.sh` — borrado por fecha de los datos, idempotente, `--dry-run` no toca nada |
 | `test_pentest.py` | 10 | El simulador de Kibana cubre las 14 reglas, los ataques de manual siempre se detectan, y no hay regresiones |
 
 ### Verificación 80/20: las pruebas detectan errores

@@ -12,5 +12,51 @@
     "attacker_ips": [],
     "target_users": [],
     "ts": "2026-10-13T02:38:53.556970+00:00"
+  },
+  {
+    "incident_id": "INC-AUTH-desconocida-0b86b9b8",
+    "action_id": "INC-AUTH-desconocida-0b86b9b8-bceba4",
+    "accion": "Habilitar rate-limiting / fail2ban en el servicio SSH",
+    "decision": "dismissed",
+    "note": "",
+    "analyst": "nico",
+    "attack_type": "ssh_brute_force",
+    "severity": "MEDIUM",
+    "source_ip": "desconocida",
+    "attacker_ips": [],
+    "target_users": [],
+    "ts": "2026-10-27T20:55:48.311785+00:00"
+  },
+  {
+    "incident_id": "INC-AUTH-desconocida-0b86b9b8",
+    "action_id": "INC-AUTH-desconocida-0b86b9b8-bceba4",
+    "accion": "Habilitar rate-limiting / fail2ban en el servicio SSH",
+    "decision": "approved",
+    "note": "",
+    "analyst": "nico",
+    "attack_type": "ssh_brute_force",
+    "severity": "MEDIUM",
+    "source_ip": "desconocida",
+    "attacker_ips": [],
+    "target_users": [],
+    "ts": "2026-10-27T20:56:00.302872+00:00"
+  },
+  {
+    "incident_id": "INC-PHISH-172.18.0.9-79fea94f",
+    "action_id": "INC-PHISH-172.18.0.9-79fea94f-3d4edc",
+    "accion": "Dar de baja / bloquear el servidor de phishing (página falsa)",
+    "decision": "approved",
+    "note": "",
+    "analyst": "nico",
+    "attack_type": "credential_harvesting",
+    "severity": "HIGH",
+    "source_ip": "172.18.0.9",
+    "attacker_ips": [
+      "172.18.0.8"
+    ],
+    "target_users": [
+      "testuser"
+    ],
+    "ts": "2026-10-27T23:57:24.377009+00:00"
   }
 ]

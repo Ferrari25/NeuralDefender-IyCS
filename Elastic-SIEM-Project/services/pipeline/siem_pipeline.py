@@ -21,7 +21,7 @@ import sys
 from siem_servicios import ServicioNoDisponible, llamar
 
 # Tope del ciclo completo. Holgado: con el LLM encendido, el análisis hace una
-# llamada a Gemini por incidente.
+# llamada al LLM (Gemma local o Gemini) por incidente.
 TIMEOUT_CICLO = 900
 
 

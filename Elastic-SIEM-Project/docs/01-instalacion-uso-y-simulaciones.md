@@ -88,15 +88,24 @@ funciona y dónde verlo: [05 · El "Gem"](05-gem-memoria-del-agente.md).
 
 ### El LLM (Agente 2)
 
-- Modelo por defecto: `gemini-flash-lite-latest` (alias — Google lo reapunta
-  al flash-lite vigente, así no queda fijo a una versión que discontinúe).
-  Salida estructurada (JSON) directa.
-- **Interruptor de costo:** además de `GEMINI_API_KEY`, hace falta
-  `SIEM_USE_LLM=true` en `.env` — apagado por defecto, para poder dejar la key
-  guardada sin gastar tokens hasta activarla a propósito.
-- Si no hay key, el interruptor está apagado, o la API falla (cuota/red), cada
-  incidente cae al análisis determinístico. El campo `analyst_mode` y el
-  banner en cada card indican qué se usó.
+- **Proveedor por defecto: Gemma 3 local** (`SIEM_LLM_PROVEEDOR=gemma`). El
+  modelo abierto de Google corre en el contenedor `ollama` de la misma
+  máquina: gratis, sin key, sin cuota, y los logs no salen del equipo. El
+  contenedor vive en `llm-net` (`internal: true`, sin internet). El modelo se
+  baja una sola vez: `./scripts/siem.sh modelo` (default `gemma3:4b`, ~3.4 GB
+  de disco y ~4 GB de RAM; con poca RAM, `./scripts/siem.sh modelo gemma3:1b`
+  y `SIEM_OLLAMA_MODELO=gemma3:1b` en `.env`). En CPU tarda ~30-90 s por
+  incidente; `SIEM_LLM_PRESUPUESTO` (default 480 s) corta el LLM por corrida y
+  el resto de los incidentes va al fallback.
+- **Alternativa: Gemini por API** (`SIEM_LLM_PROVEEDOR=gemini` + `GEMINI_API_KEY`
+  de https://aistudio.google.com). Modelo con `SIEM_GEMINI_MODELO` (default
+  `gemini-flash-lite-latest`; con la capa gratuita también sirve `gemma-3-27b-it`).
+- **Interruptor:** con cualquier proveedor hace falta `SIEM_USE_LLM=true` en
+  `.env` — apagado por defecto.
+- Si el interruptor está apagado, falta el modelo o la key, o el LLM falla,
+  cada incidente cae al análisis determinístico. El campo `analyst_mode`
+  (`gemma` / `gemini` / `fallback`) y el banner de cada card indican qué se usó
+  y con qué modelo.
 - Mitigación de inyección de prompt: los datos del log se marcan como **no
   confiables** por system instruction y se entregan delimitados; el LLM nunca
   genera comandos (esos vienen del playbook del Agente 1).

@@ -17,6 +17,10 @@ pylint-secure-coding-standard>=1.4    # reglas de seguridad como plugin de pylin
 bandit>=1.7                           # SAST de seguridad (hashes, subprocess, requests)
 ruff>=0.5                             # linter/formateador rápido
 
+# --- Pruebas de interfaz (tests/interfaz/) ---
+# Después de instalar, bajar el navegador una vez:
+#     PYTHONPATH=.devtools python3 -m playwright install chromium
+pytest-playwright>=0.7
+
 # --- Fase 3 (todavía no se usan; se listan para que el entorno sea reproducible) ---
-# pytest-playwright>=0.5
 # pytest-xdist>=3.6

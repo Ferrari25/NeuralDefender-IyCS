@@ -360,12 +360,43 @@ services:
       - SIEM_INTERNAL_TOKEN=${SIEM_INTERNAL_TOKEN:?falta SIEM_INTERNAL_TOKEN en .env}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - SIEM_USE_LLM=${SIEM_USE_LLM:-false}
-    networks: [ia-net]
+      # Qué LLM usa el Agente 2: `gemma` (Gemma 3 local vía Ollama, gratis y
+      # sin key) o `gemini` (API de Google, exige GEMINI_API_KEY).
+      - SIEM_LLM_PROVEEDOR=${SIEM_LLM_PROVEEDOR:-gemma}
+      - SIEM_OLLAMA_HOST=http://ollama:11434
+      - SIEM_OLLAMA_MODELO=${SIEM_OLLAMA_MODELO:-gemma3:4b}
+      - SIEM_GEMINI_MODELO=${SIEM_GEMINI_MODELO:-gemini-flash-lite-latest}
+      - SIEM_LLM_PRESUPUESTO=${SIEM_LLM_PRESUPUESTO:-480}
+    networks: [ia-net, llm-net]
     depends_on:
       audit: { condition: service_healthy }
       knowledge: { condition: service_healthy }
     labels: *autoheal
     healthcheck: *salud-interna
+
+  # Gemma 3 local (Ollama): el LLM gratuito del Agente 2. Vive SOLO en
+  # `llm-net`, que es `internal: true`: no tiene salida a internet ni puerto
+  # publicado, así que un prompt inyectado desde un log no tiene a dónde
+  # mandar nada. Por eso el modelo no se baja desde acá sino con
+  # `./scripts/siem.sh modelo` (un contenedor de un solo uso, con red, que
+  # escribe en el mismo volumen). Sin el modelo bajado, el Agente 2 usa el
+  # fallback determinístico, igual que sin key.
+  ollama:
+    image: ollama/ollama:0.40.3
+    container_name: siem-ollama
+    restart: unless-stopped
+    mem_limit: 6g   # gemma3:4b ocupa ~4 GB en RAM (CPU, sin GPU)
+    environment:
+      - OLLAMA_KEEP_ALIVE=30m
+    volumes:
+      - ollama-modelos:/root/.ollama
+    networks: [llm-net]
+    labels: *autoheal
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
 
   # Orquestador: encadena collector → classifier → analyst → audit por HTTP y
   # guarda el reporte de incidentes. Se dispara con ./scripts/siem.sh pipeline.
@@ -429,5 +460,10 @@ networks:
   # porque Docker no publica puertos (2222) de una red interna.
   sim-net:
     driver: bridge
+  # Agente 2 ⇄ Ollama, y nada más: sin salida a internet.
+  llm-net:
+    driver: bridge
+    internal: true
 volumes:
   elasticsearch-data:
+  ollama-modelos:

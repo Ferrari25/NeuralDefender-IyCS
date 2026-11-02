@@ -27,7 +27,7 @@
       aplica reglas fijas de umbral (ej. 20+ fallos de auth = fuerza bruta). Rápido, barato y 100%
       auditable — nunca usa IA para esta parte, así el resultado siempre es reproducible.</p>
       <p><b>Agente 2 (IA con fallback):</b> <code>src/siem_agent.py</code> traduce la clasificación a una
-      explicación en lenguaje claro (Gemini si hay API key configurada; si no, un análisis
+      explicación en lenguaje claro (Gemma 3 local vía Ollama, o Gemini por API; si el LLM está apagado o no responde, un análisis
       determinístico de respaldo — nunca deja al analista sin explicación).</p>
       <h3>Cómo el Agente 2 razona mejor sin decidir más</h3>
       <p>Tres capacidades que amplían el análisis, no la autonomía del sistema:</p>

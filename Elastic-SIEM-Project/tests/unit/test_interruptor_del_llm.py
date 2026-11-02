@@ -22,8 +22,9 @@ import siem_agent
 @pytest.fixture(autouse=True)
 def _sin_variables_de_entorno_previas(monkeypatch):
     """Ningún test de este archivo hereda el entorno real de la máquina."""
-    monkeypatch.delenv("SIEM_USE_LLM", raising=False)
-    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    for var in ("SIEM_USE_LLM", "GEMINI_API_KEY", "SIEM_LLM_PROVEEDOR",
+                "SIEM_OLLAMA_HOST", "SIEM_OLLAMA_MODELO", "SIEM_GEMINI_MODELO"):
+        monkeypatch.delenv(var, raising=False)
 
 
 # ─── `_llm_habilitado()` ──────────────────────────────────────────────────────
@@ -52,9 +53,29 @@ def test_con_key_pero_sin_el_interruptor_no_construye_cliente(monkeypatch):
     assert siem_agent._build_client() is None
 
 
-def test_con_el_interruptor_pero_sin_key_tampoco_construye_cliente(monkeypatch):
+def test_gemini_con_el_interruptor_pero_sin_key_tampoco_construye_cliente(monkeypatch):
     monkeypatch.setenv("SIEM_USE_LLM", "true")
+    monkeypatch.setenv("SIEM_LLM_PROVEEDOR", "gemini")
     assert siem_agent._build_client() is None
+
+
+def test_gemma_local_no_necesita_key(monkeypatch):
+    """Gemma corre en el contenedor `ollama`: alcanza con el interruptor."""
+    monkeypatch.setenv("SIEM_USE_LLM", "true")
+    cliente = siem_agent._build_client()
+    assert cliente.fuente == "gemma"
+    assert cliente.modelo == "gemma3:4b"
+    assert cliente.host == "http://ollama:11434"
+
+
+def test_gemma_es_el_proveedor_por_defecto_y_se_configura_por_entorno(monkeypatch):
+    monkeypatch.setenv("SIEM_USE_LLM", "true")
+    monkeypatch.setenv("SIEM_LLM_PROVEEDOR", "cualquier-cosa")
+    monkeypatch.setenv("SIEM_OLLAMA_HOST", "http://127.0.0.1:11434/")
+    monkeypatch.setenv("SIEM_OLLAMA_MODELO", "gemma3:1b")
+    cliente = siem_agent._build_client()
+    assert (cliente.fuente, cliente.modelo, cliente.host) == (
+        "gemma", "gemma3:1b", "http://127.0.0.1:11434")
 
 
 def test_ninguna_de_las_dos_es_igual_a_no_tener_ninguna(monkeypatch):

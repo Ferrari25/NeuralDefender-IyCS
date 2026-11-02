@@ -17,6 +17,8 @@
 #                                          (servicio collector)
 #   ./scripts/siem.sh logs-es              inspección ad-hoc de Elasticsearch (collector)
 #   ./scripts/siem.sh estado               estado de los contenedores de la capa IA
+#   ./scripts/siem.sh modelo [nombre]      baja Gemma para el Agente 2 (default gemma3:4b;
+#                                          con poca RAM: gemma3:1b + SIEM_OLLAMA_MODELO)
 #   ./scripts/siem.sh respaldo             respaldo cifrado YA (además del diario de las 03:00)
 #   ./scripts/siem.sh restaurar <archivo> [--renombrar]
 #                                          restaura un respaldo (servicio backup)
@@ -26,9 +28,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-SERVICIOS_IA=(auth audit collector classifier knowledge analyst pipeline gateway)
+SERVICIOS_IA=(auth audit collector classifier knowledge analyst ollama pipeline gateway)
 
-uso() { sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'; }
+uso() { sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'; }
 
 # Con una terminal interactiva se asigna TTY (lo necesita el prompt de
 # contraseña de `usuarios crear`); desde otro script, no.
@@ -68,6 +70,22 @@ case "$comando" in
   cobertura) ejecutar collector python verify-cobertura.py "$@" ;;
   logs-es)   ejecutar collector python get-logs.py "$@" ;;
   estado)    docker compose ps "${SERVICIOS_IA[@]}" ;;
+  modelo)
+    # El contenedor `ollama` no tiene salida a internet (red `llm-net`,
+    # internal), así que el modelo lo baja un contenedor de un solo uso, con
+    # red, que escribe en el mismo volumen. Se hace una vez; queda guardado.
+    modelo="${1:-${SIEM_OLLAMA_MODELO:-gemma3:4b}}"
+    [[ "$modelo" =~ ^[a-z0-9._-]+(:[a-z0-9._-]+)?$ ]] \
+      || { echo "[ERROR] Nombre de modelo inválido: $modelo"; exit 2; }
+    imagen="$(docker compose config --images ollama)"
+    docker compose create ollama >/dev/null
+    volumen="$(docker inspect siem-ollama --format '{{range .Mounts}}{{.Name}}{{end}}')"
+    docker run --rm -v "$volumen:/root/.ollama" --entrypoint sh "$imagen" \
+      -c "ollama serve >/dev/null 2>&1 & sleep 3 && ollama pull '$modelo' && ollama list"
+    docker compose up -d ollama
+    echo "✅ $modelo listo. Prender el Agente 2: SIEM_USE_LLM=true en .env y"
+    echo "   docker compose up -d analyst"
+    ;;
   respaldo)  ejecutar backup    /backup/respaldo.sh ;;
   restaurar) ejecutar backup    /backup/restaurar.sh "$@" ;;
   -h|--help|"") uso ;;

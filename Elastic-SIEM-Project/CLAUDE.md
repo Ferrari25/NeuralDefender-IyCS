@@ -43,7 +43,7 @@ más una librería compartida (`libs/`). Cada servicio es dueño de sus datos en
 | `audit` | `cadena.py`, `audit_verify.py` (CLI), `reportes.py` | **Único escritor** de los registros append-only encadenados (decisiones, corridas, actividad de memoria) → `data/audit/`. Arma los reportes. |
 | `collector` | `collector.py`, `es_client.py` | El único con credenciales de ES. Captura → `data/collector/siem_clean.json`. |
 | `classifier` | `classifier.py` | Agente 1 determinístico (reglas/umbral + playbook). Sin estado; lee `network_logs/` (ro). |
-| `analyst` | `siem_agent.py`, `perfil_agente.md` | Agente 2 (Gemini con fallback). Sin estado; el único con `GEMINI_API_KEY`. Consulta su memoria a `knowledge`. |
+| `analyst` | `siem_agent.py`, `proveedores_llm.py`, `perfil_agente.md` | Agente 2 (Gemma 3 local vía contenedor `ollama`, o Gemini; con fallback). Sin estado; el único con `GEMINI_API_KEY` y acceso a `ollama`. Consulta su memoria a `knowledge`. |
 | `knowledge` | `memoria.py` | Memoria del Agente 2: documentos, casos resueltos, lecciones (**aprobadas a mano**) → `data/knowledge/`. |
 | `pipeline` | `orquestador.py`, `siem_pipeline.py` (CLI) | Orquesta collector→classifier→analyst→audit por HTTP → `data/pipeline/siem_incidents.json`. |
 
@@ -71,10 +71,12 @@ Mapa de carpetas y "¿dónde busco…?": `README.md` §Dónde está todo. Regla:
 
 ## Notas que ahorran tiempo
 
-- **El Agente 2 (Gemini) tiene un interruptor aparte de la key**: `SIEM_USE_LLM=true`
-  en `.env` (default `false`). Con la key puesta pero el interruptor apagado, sigue
-  yendo al **fallback determinístico** — es a propósito, para no gastar tokens sin
-  querer. El sistema funciona completo offline con el fallback.
+- **El Agente 2 usa Gemma 3 local por defecto** (`SIEM_LLM_PROVEEDOR=gemma`, contenedor
+  `ollama` en la red `llm-net` sin internet; modelo `gemma3:4b`, se baja una vez con
+  `./scripts/siem.sh modelo`). `SIEM_LLM_PROVEEDOR=gemini` usa la API con `GEMINI_API_KEY`.
+  Con cualquiera hace falta `SIEM_USE_LLM=true` (default `false`); si no, o si el LLM
+  falla, va al **fallback determinístico**. Gemma en CPU tarda ~30-90 s por incidente;
+  `SIEM_LLM_PRESUPUESTO` (480 s) corta y manda el resto al fallback.
 - **El Agente 2 aprende, pero solo con aprobación humana** (`services/knowledge/`, ver
   `docs/00-arquitectura.md` §Memoria del Agente 2). Cada decisión del panel es un caso;
   un patrón repetido genera una lección *propuesta* que no se usa hasta que un analista
@@ -88,6 +90,8 @@ Mapa de carpetas y "¿dónde busco…?": `README.md` §Dónde está todo. Regla:
   ellos pasan por `libs/siem_validators.py`: si no validan, la acción no se ofrece.
 - **Antes de tocar código, correr `./scripts/pruebas_completas.sh`** (linters + SAST + pruebas, ~150 s).
   La puerta falla ante cualquier hallazgo nuevo; las líneas de base están en cero.
+  Incluye las **pruebas de interfaz** (`tests/interfaz/`, Chromium + Playwright, ver
+  `pruebas_de_interfaz.md`); sin Chromium instalado se saltean.
   `./scripts/pruebas_de_verificacion.sh` (~90 s) demuestra que la puerta detecta errores:
   sobre una copia temporal, 20 casos sanos tienen que pasar y 5 defectos inyectados
   tienen que fallar (80/20). Si cambiás el código que muta un caso, el script lo avisa.
@@ -105,7 +109,7 @@ Mapa de carpetas y "¿dónde busco…?": `README.md` §Dónde está todo. Regla:
   `filebeat-*` son `text` y agregar sobre ellos falla. Ver `rules/rules.md`.
 - **El pipeline corre solo cada 2 min** (`services/pipeline/programador.py`,
   `SIEM_PIPELINE_INTERVALO=120` en compose; `0` = solo a mano). Mismo candado que el
-  ciclo manual. Con `SIEM_USE_LLM=true` cada corrida gasta tokens de Gemini.
+  ciclo manual. Con `SIEM_USE_LLM=true` cada corrida usa el LLM (Gemma local: CPU, no tokens).
 - **`network_logs/*.json`** es la fuente de port scan/phishing (no hay Suricata);
   es a la vez input de Filebeat y fuente offline del clasificador.
 - **El panel exige login** (API-01): sin `SECRET_KEY` en `.env` no arranca, y sin

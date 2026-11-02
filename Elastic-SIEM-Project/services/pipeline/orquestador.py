@@ -30,7 +30,7 @@ from siem_servicios import ServicioNoDisponible, llamar
 INCIDENTS_FILE = "data/siem_incidents.json"
 
 # Tiempos máximos por etapa. El análisis es el más largo: con el LLM encendido
-# hace una llamada a Gemini por incidente.
+# hace una llamada al LLM (Gemma local o Gemini) por incidente.
 TIMEOUT_CAPTURA = 60
 TIMEOUT_CLASIFICACION = 60
 TIMEOUT_ANALISIS = 600

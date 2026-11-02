@@ -3,7 +3,7 @@
 # pruebas_de_servicio.sh — Todo lo que EJECUTA el sistema (a diferencia de
 # pruebas_de_codigo_estatico.sh, que solo lee el código).
 #
-# Cuatro categorías, cada una verificando algo distinto:
+# Cinco categorías, cada una verificando algo distinto:
 #   ESTÁTICO   — certificación por AST de que nada ejecuta comandos (no
 #                corre el sistema, pero vive acá por ser una prueba pytest).
 #   UNITARIAS  — una función o módulo aislado (tests/unit/).
@@ -12,8 +12,11 @@
 #                simulado, reset.sh contra un sandbox real (tests/integration/).
 #                Le da nombre al script porque es la parte que de verdad
 #                ejercita un servicio corriendo, no una función suelta.
+#   INTERFAZ   — un navegador real (Chromium + Playwright) usa el panel:
+#                login, tabla, detalle, confirmaciones, roles (tests/interfaz/).
+#                Sin Chromium instalado se saltea; ver pruebas_de_interfaz.md.
 #   COBERTURA  — ≥ 80% sobre el alcance declarado, corriendo unitarias +
-#                servicio juntas.
+#                servicio + interfaz juntas.
 #
 # Uso:  ./scripts/pruebas_de_servicio.sh
 #
@@ -73,6 +76,9 @@ paso "pytest tests/unit"              $BIN/pytest -q tests/unit
 titulo 96 "SERVICIO" "— contrato real: API, deploy-rules.sh, reset.sh (tests/integration/)"
 paso "pytest tests/integration"       $BIN/pytest -q tests/integration
 
+titulo 32 "INTERFAZ" "— un navegador real usa el panel (tests/interfaz/)"
+paso "pytest tests/interfaz"          $BIN/pytest -q tests/interfaz
+
 titulo 35 "PENTEST" "— ataques evasivos por el clasificador real (sin regresiones)"
 paso "pytest test_pentest"            $BIN/pytest -q tests/integration/test_pentest.py
 
@@ -82,7 +88,7 @@ titulo 1 "COBERTURA" "— ≥ 80% sobre el alcance declarado"
 COBERTURA=(classifier siem_lib dashboard siem_validators siem_auth manage_users
            siem_servicios sesion_web cadena orquestador audit_service auth_service
            collector_service classifier_service analyst_service pipeline_service
-           memoria knowledge_service reportes programador)
+           memoria knowledge_service reportes programador proveedores_llm)
 paso "${#COBERTURA[@]} módulos del alcance"         $BIN/pytest -q \
      "${COBERTURA[@]/#/--cov=}" --cov-fail-under=80 --cov-report=
 

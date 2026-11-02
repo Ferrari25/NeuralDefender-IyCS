@@ -14,6 +14,10 @@ aprende con el uso, y Google no permite invocarlo por API. El Agente 2
 **aprendizaje supervisado**: aprende de lo que deciden los analistas, pero solo
 usa lo aprendido después de que una persona lo aprueba.
 
+El modelo que ejecuta el Gem es **Gemma 3** (el modelo abierto de Google),
+corriendo local en el contenedor `ollama`: gratuito y sin key. Ver
+`services/analyst/proveedores_llm.py` y docs/01 §El LLM.
+
 El Gem tiene cuatro piezas:
 
 | Pieza | Qué es | Dónde vive | Quién la escribe |
@@ -97,7 +101,8 @@ con `aprendizaje.disponible = false`. El pipeline no se corta.
 
 ### 6. Qué cambia la memoria en el análisis
 
-- **Con LLM** (`SIEM_USE_LLM=true` y `GEMINI_API_KEY`): el contexto viaja en un
+- **Con LLM** (`SIEM_USE_LLM=true`; Gemma 3 local por defecto, o Gemini con
+  `GEMINI_API_KEY`): el contexto viaja en un
   bloque `<MEMORIA_DEL_AGENTE>` del prompt, como referencia, nunca como orden.
 - **Con o sin LLM**: el resultado queda en `analysis.aprendizaje` del
   incidente, calculado en Python, no parafraseado por el modelo.

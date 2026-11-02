@@ -14,29 +14,39 @@ explícita, (2) datos entregados como JSON delimitado y saneado, y (3) salida
 estructurada (response_mime_type=application/json), que elimina el parseo frágil
 de bloques markdown.
 
-Si no hay GEMINI_API_KEY o la API falla, cae a un análisis determinístico
-derivado de la clasificación, de modo que el pipeline SIEMPRE produce salida
-para el dashboard (incluso con el stack o la red caídos).
+El modelo es Gemma 3 local (vía Ollama, gratis y sin key) o Gemini por API,
+según `SIEM_LLM_PROVEEDOR` (ver `proveedores_llm.py`). Si el LLM está apagado,
+no está disponible o falla, cae a un análisis determinístico derivado de la
+clasificación, de modo que el pipeline SIEMPRE produce salida para el dashboard
+(incluso con el stack o la red caídos).
 """
 
 from __future__ import annotations
 
 import json
 import os
+import time
 from pathlib import Path
 
+import proveedores_llm
 from siem_lib import now_iso
 
-# `gemini-2.0-flash` (el valor fijo que tenía esto) dejó de existir: Google va
-# retirando versiones con el tiempo, y una key nueva contra un modelo
-# discontinuado devuelve 404 en vez de una respuesta. `-latest` es un alias que
-# Google reapunta al flash recomendado del momento, así que no vuelve a quedar
-# obsoleto solo. Se eligió la variante "lite" — más barata por token, en línea
-# con que el consumo de tokens ya tiene su propio interruptor (SIEM_USE_LLM).
-# Si Gemini está temporalmente saturado (503), el resultado es el mismo
-# fallback determinístico que si no hubiera key — no hace falta que el modelo
-# esté siempre disponible para que el pipeline funcione.
-MODEL          = "gemini-flash-lite-latest"
+# El modelo de Gemini se elige con SIEM_GEMINI_MODELO (default
+# `gemini-flash-lite-latest`, un alias que Google reapunta al flash del
+# momento) y el de Gemma con SIEM_OLLAMA_MODELO: ver `proveedores_llm.py`.
+
+# Tope de tiempo (segundos) del LLM por corrida. Gemma local corre en CPU y
+# tarda ~30-90 s por incidente; el orquestador espera el análisis 600 s como
+# mucho. Pasado el presupuesto, los incidentes que faltan van al fallback
+# determinístico: la corrida termina a tiempo, y el panel dice cuál es cuál.
+PRESUPUESTO_LLM_POR_DEFECTO = 480
+
+
+def _presupuesto_llm() -> float:
+    try:
+        return max(0.0, float(os.getenv("SIEM_LLM_PRESUPUESTO", "")))
+    except ValueError:
+        return PRESUPUESTO_LLM_POR_DEFECTO
 
 # Las reglas de seguridad viven en el código y no en el perfil editable: el
 # perfil cambia la personalidad y el conocimiento del agente, nunca lo que tiene
@@ -167,7 +177,8 @@ def campaign_context(incident: dict) -> str | None:
 # ─── LLM ─────────────────────────────────────────────────────────────────────
 
 def _build_client():
-    """Devuelve un cliente Gemini o None si no se puede (apagado / sin key / sin SDK).
+    """Devuelve un cliente LLM (Gemma local o Gemini) o None si no se puede
+    (apagado / sin key / sin SDK).
 
     El interruptor (`SIEM_USE_LLM`) es una variable aparte de la API key a
     propósito: la key puede quedar puesta en `.env` sin que eso gaste un solo
@@ -178,26 +189,35 @@ def _build_client():
     if not _llm_habilitado():
         print("[INFO] SIEM_USE_LLM no está en 'true': usando análisis determinístico (fallback).")
         return None
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        print("[INFO] Sin GEMINI_API_KEY: usando análisis determinístico (fallback).")
-        return None
-    try:
-        from google import genai
-        return genai.Client(api_key=api_key)
-    except Exception as e:  # SDK ausente o key inválida en init
-        print(f"[WARN] No se pudo inicializar el cliente Gemini ({e}). Usando fallback.")
-        return None
+    return proveedores_llm.construir()
 
 
 def _llm_habilitado() -> bool:
     return os.getenv("SIEM_USE_LLM", "").strip().lower() in ("1", "true", "yes")
 
 
-def _llm_analysis(client, incident: dict, historical: str, campaign: str | None,
-                  memoria: dict | None = None) -> dict | None:
-    from google.genai import types
+# El esquema de salida, también como JSON Schema: Ollama lo usa para
+# restringir la decodificación de Gemma. No tiene ningún campo de comando.
+ESQUEMA_ANALISIS = {
+    "type": "object",
+    "properties": {
+        "explicacion": {"type": "string"},
+        "metodologia": {"type": "string"},
+        "contexto_riesgo": {"type": "string"},
+        "severidad_ajustada": {"type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]},
+        "accion_recomendada": {"type": "string"},
+        "falso_positivo_probabilidad": {"type": "string", "enum": ["LOW", "MEDIUM", "HIGH"]},
+        "referencias": {"type": "array", "items": {"type": "string"}},
+        "puntos_de_investigacion": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": ["explicacion", "metodologia", "contexto_riesgo", "severidad_ajustada",
+                 "accion_recomendada", "falso_positivo_probabilidad", "referencias",
+                 "puntos_de_investigacion"],
+}
 
+
+def _llm_analysis(client, incident: dict, historical: str, campaign: str | None,
+                  memoria: dict | None = None, timeout: float = 300) -> dict | None:
     # Los títulos (sin comando) del playbook determinístico de `classifier.py`,
     # que YA se calculó antes de llegar acá. Antes el LLM no los veía: podía
     # redactar `accion_recomendada` como una frase suelta que no correspondía a
@@ -288,14 +308,12 @@ def _llm_analysis(client, incident: dict, historical: str, campaign: str | None,
         "}"
     )
 
-    config = types.GenerateContentConfig(
-        system_instruction=SYSTEM_INSTRUCTION,
-        response_mime_type="application/json",
-        temperature=0.2,
-    )
-    resp = client.models.generate_content(model=MODEL, contents=prompt, config=config)
-    data = json.loads(resp.text)
-    data["_source"] = "gemini"
+    texto = client.generar_json(SYSTEM_INSTRUCTION, prompt, ESQUEMA_ANALISIS, timeout)
+    data = json.loads(texto)
+    if not isinstance(data, dict):
+        raise ValueError("el modelo no devolvió un objeto JSON")
+    data["_source"] = client.fuente
+    data["_modelo"] = client.modelo
     return data
 
 
@@ -406,7 +424,7 @@ def _plantillas_fallback() -> dict[str, dict]:
 def _fallback_analysis(incident: dict) -> dict:
     """Análisis determinístico, sin LLM.
 
-    Es el camino real hoy (la key de Gemini está en cuota 0) y la red de
+    Es el camino cuando el LLM está apagado o no responde, y la red de
     seguridad siempre: el pipeline tiene que producir salida para el dashboard
     aunque no haya red ni stack.
     """
@@ -435,10 +453,10 @@ def _fallback_analysis(incident: dict) -> dict:
 
 
 def analyze_incident(client, incident: dict, historical: str, campaign: str | None,
-                     memoria: dict | None = None) -> dict:
+                     memoria: dict | None = None, timeout: float = 300) -> dict:
     if client is not None:
         try:
-            analysis = _llm_analysis(client, incident, historical, campaign, memoria)
+            analysis = _llm_analysis(client, incident, historical, campaign, memoria, timeout)
         except Exception as e:
             print(f"  [WARN] LLM falló en {incident['incident_id']} ({e}). Usando fallback.")
             analysis = _fallback_analysis(incident)
@@ -533,17 +551,24 @@ def analizar(incidents: list[dict], decisions: list[dict],
         return {"incidents": [], "analyzed_at": now_iso(), "analyst_mode": "fallback"}
 
     client = _build_client()
+    limite = time.monotonic() + _presupuesto_llm()
     for inc in incidents:
         print(f"[Analizando] {inc['incident_id']} ...")
         historical = historical_context(inc, decisions)
         campaign = campaign_context(inc)
         recuerdo = None if memoria is None else memoria.get(inc["incident_id"], {})
-        inc["analysis"] = analyze_incident(client, inc, historical, campaign, recuerdo)
+        restante = limite - time.monotonic()
+        if client is not None and restante < 5:
+            print("[INFO] Se agotó el presupuesto de tiempo del LLM: "
+                  "el resto de los incidentes va al fallback determinístico.")
+            client = None
+        inc["analysis"] = analyze_incident(client, inc, historical, campaign, recuerdo,
+                                           timeout=max(restante, 1))
 
     # Refleja lo que realmente se usó, no solo si había cliente (el LLM puede fallar
     # por cuota/red y caer al fallback en cada incidente).
-    used_llm = any((i.get("analysis") or {}).get("_source") == "gemini" for i in incidents)
-    modo = "gemini" if used_llm else "fallback"
+    fuentes = [(i.get("analysis") or {}).get("_source") for i in incidents]
+    modo = next((f for f in fuentes if f in ("gemma", "gemini")), "fallback")
     print_report(incidents)
     print(f"\n[OK] Análisis completo (modo: {modo})")
     return {"incidents": incidents, "analyzed_at": now_iso(), "analyst_mode": modo}

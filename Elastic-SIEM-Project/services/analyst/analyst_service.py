@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Servicio analyst (Agente 2): explicación en lenguaje claro, sin estado.
 
-Es el único contenedor con `GEMINI_API_KEY` y el interruptor `SIEM_USE_LLM`.
+Es el único contenedor con `GEMINI_API_KEY`, el interruptor `SIEM_USE_LLM` y acceso
+a Gemma local (contenedor `ollama`, ver `proveedores_llm.py`).
 Sin key, con el interruptor apagado o sin red, usa el análisis determinístico
 de respaldo: siempre responde.
 
