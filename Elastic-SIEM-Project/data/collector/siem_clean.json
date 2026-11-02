@@ -1,18 +1,125 @@
 {
-  "generated_at": "2026-11-02T20:53:35.030620+00:00",
+  "generated_at": "2026-11-02T20:57:42.512996+00:00",
   "context": "Elastic SIEM - Análisis de seguridad automatizado",
   "summary": {
-    "total_alerts": 5,
+    "total_alerts": 9,
     "total_auth_failures": 0,
-    "active_alerts": 5,
-    "high_severity": 0,
+    "active_alerts": 9,
+    "high_severity": 1,
     "window": "24h",
     "top_source_ips": {},
     "mitre_techniques": [
-      "T1110"
+      "T1110",
+      "T1566"
     ]
   },
   "alerts": [
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-02T20:57:05.115Z",
+      "alert_id": "a5f83bfe4fea6c7a...",
+      "rule_name": "Phishing Page Visit + Submission",
+      "severity": "medium",
+      "risk_score": 60,
+      "status": "active",
+      "reason": "event on 9eacb23f1aa3 created medium alert Phishing Page Visit + Submission.",
+      "source_ip": "172.18.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-11-02T20:57:05.115Z"
+      },
+      "mitre": {
+        "tactic": "Initial Access",
+        "technique": "Phishing",
+        "technique_id": "T1566"
+      },
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=5m\n  [any where event_type.keyword == \"http_request\" and http_method.keyword == \"GET\"]\n  [any where event_type.keyword == \"http_request\" and credential_submission == true]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-02T20:57:05.113Z",
+      "alert_id": "b7d7c14f4061ead1...",
+      "rule_name": "Phishing Page Visit + Submission",
+      "severity": "medium",
+      "risk_score": 60,
+      "status": "active",
+      "reason": "event on 9eacb23f1aa3 created medium alert Phishing Page Visit + Submission.",
+      "source_ip": "172.18.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-11-02T20:57:05.113Z"
+      },
+      "mitre": {
+        "tactic": "Initial Access",
+        "technique": "Phishing",
+        "technique_id": "T1566"
+      },
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=5m\n  [any where event_type.keyword == \"http_request\" and http_method.keyword == \"GET\"]\n  [any where event_type.keyword == \"http_request\" and credential_submission == true]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-02T20:57:05.111Z",
+      "alert_id": "67ae0203f43baa7c...",
+      "rule_name": "Phishing Page Visit + Submission",
+      "severity": "medium",
+      "risk_score": 60,
+      "status": "active",
+      "reason": "event on 9eacb23f1aa3 created medium alert Phishing Page Visit + Submission.",
+      "source_ip": "172.18.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-11-02T20:57:05.111Z"
+      },
+      "mitre": {
+        "tactic": "Initial Access",
+        "technique": "Phishing",
+        "technique_id": "T1566"
+      },
+      "false_positives": [],
+      "rule_query": "sequence by source_ip.keyword with maxspan=5m\n  [any where event_type.keyword == \"http_request\" and http_method.keyword == \"GET\"]\n  [any where event_type.keyword == \"http_request\" and credential_submission == true]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-02T20:54:26.192Z",
+      "alert_id": "601adf8fe7101900...",
+      "rule_name": "Credential Submission to Suspicious Login",
+      "severity": "high",
+      "risk_score": 68,
+      "status": "active",
+      "reason": "event on 9eacb23f1aa3 created high alert Credential Submission to Suspicious Login.",
+      "source_ip": "172.18.0.9",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-11-02T20:54:26.192Z"
+      },
+      "mitre": {
+        "tactic": "Initial Access",
+        "technique": "Phishing",
+        "technique_id": "T1566"
+      },
+      "false_positives": [
+        "Logins legitimos a aplicaciones internas que casualmente matcheen el patron."
+      ],
+      "rule_query": "event_type:http_request and credential_submission:true and url:*login*"
+    },
     {
       "type": "security_alert",
       "timestamp": "2026-11-02T20:41:56.056Z",
