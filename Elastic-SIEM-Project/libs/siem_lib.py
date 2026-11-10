@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Librería común del SIEM-IA (núcleo compartido entre microservicios).
+Librería común de NeuralDefender (núcleo compartido entre microservicios).
 
 Solo contiene lo que de verdad usan varios servicios: utilidades de tiempo,
 saneamiento de datos de log (contenido NO confiable), lectura/escritura de JSON

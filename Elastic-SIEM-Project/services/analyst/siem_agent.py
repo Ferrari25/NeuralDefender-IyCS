@@ -23,8 +23,11 @@ clasificación, de modo que el pipeline SIEMPRE produce salida para el dashboard
 
 from __future__ import annotations
 
+import hashlib
 import json
+import math
 import os
+import re
 import time
 from pathlib import Path
 
@@ -40,13 +43,39 @@ from siem_lib import now_iso
 # mucho. Pasado el presupuesto, los incidentes que faltan van al fallback
 # determinístico: la corrida termina a tiempo, y el panel dice cuál es cuál.
 PRESUPUESTO_LLM_POR_DEFECTO = 480
+# Techo del presupuesto propio. El límite que manda es el plazo que envía quien
+# pide el análisis (`plazo_s`, ver `analyst_service`); este techo solo cubre a
+# un cliente que no lo mande, para que nunca se configure un presupuesto
+# ilimitado.
+PRESUPUESTO_LLM_MAXIMO = 540
+
+# Un análisis del LLM se reutiliza en el ciclo siguiente si el incidente no
+# cambió en lo que importa (ver `_huella`), hasta esta antigüedad en segundos.
+# Pasado ese tiempo se regenera igual, para refrescar cifras (eventos, ventana)
+# que la huella ignora a propósito. 0 = no reutilizar nunca.
+REUSO_LLM_POR_DEFECTO = 3600
+
+
+def _segundos_env(nombre: str, por_defecto: float) -> float:
+    try:
+        valor = float(os.getenv(nombre, ""))
+    except ValueError:
+        return por_defecto
+    return valor if math.isfinite(valor) else por_defecto
 
 
 def _presupuesto_llm() -> float:
-    try:
-        return max(0.0, float(os.getenv("SIEM_LLM_PRESUPUESTO", "")))
-    except ValueError:
-        return PRESUPUESTO_LLM_POR_DEFECTO
+    pedido = max(0.0, _segundos_env("SIEM_LLM_PRESUPUESTO", PRESUPUESTO_LLM_POR_DEFECTO))
+    if pedido > PRESUPUESTO_LLM_MAXIMO:
+        print(f"[WARN] SIEM_LLM_PRESUPUESTO={pedido:g} supera el máximo "
+              f"({PRESUPUESTO_LLM_MAXIMO} s, por el timeout del orquestador): "
+              f"se usa {PRESUPUESTO_LLM_MAXIMO}.")
+        return float(PRESUPUESTO_LLM_MAXIMO)
+    return pedido
+
+
+def _reuso_llm() -> float:
+    return max(0.0, _segundos_env("SIEM_LLM_REUSO", REUSO_LLM_POR_DEFECTO))
 
 # Las reglas de seguridad viven en el código y no en el perfil editable: el
 # perfil cambia la personalidad y el conocimiento del agente, nunca lo que tiene
@@ -216,6 +245,51 @@ ESQUEMA_ANALISIS = {
 }
 
 
+# Las partes fijas del pedido al LLM. Viven acá, y no dentro de `_llm_analysis`,
+# para que `_version_del_prompt()` las incluya en la huella de reutilización:
+# si cambian, ningún análisis hecho con el pedido anterior se reutiliza.
+PROMPT_ENCABEZADO = (
+        "Analizá el siguiente incidente y devolvé el JSON pedido. Es para un analista de "
+        "seguridad que decide en segundos: priorizá lo concreto de ESTE incidente (volumen, "
+        "ventana de tiempo, usuario/IP objetivo, antecedentes) por sobre una descripción "
+        "general del tipo de ataque que serviría para cualquier otro caso igual.\n\n"
+)
+
+PROMPT_INSTRUCCIONES = (
+        "Si contexto_historico_ip o contexto_campana aportan algo relevante (ej. la IP ya fue "
+        "bloqueada antes, o el incidente es parte de un ataque en varios frentes), mencionalo "
+        "brevemente en 'accion_recomendada' o 'contexto_riesgo'. Si no aportan nada nuevo, ignoralos.\n\n"
+        "Si MEMORIA_DEL_AGENTE trae lecciones, casos similares o documentos que expliquen "
+        "este incidente (ej. una IP que la organización documenta como escáner autorizado, "
+        "o un caso igual que el analista ya descartó), usalos en 'explicacion' y en "
+        "'falso_positivo_probabilidad', citando de dónde sale el dato.\n\n"
+        "acciones_disponibles trae las acciones que el playbook YA va a ofrecerle al analista "
+        "en el panel, con checkbox para aprobar/descartar cada una — 'accion_recomendada' tiene "
+        "que señalar CUÁL de esas priorizar y por qué, citando su texto tal cual aparece ahí "
+        "(ej. \"Priorizar (1) Bloquear la IP atacante..., dado que ...\"), nunca una recomendación "
+        "que no esté en esa lista: el analista no tiene forma de ejecutar un consejo que no sea "
+        "una de esas acciones.\n\n"
+        "Esquema JSON exacto a devolver:\n"
+        "{\n"
+        '  "explicacion": "qué ocurrió, con el detalle concreto de este incidente — no una '
+        'definición del tipo de ataque (3-5 oraciones)",\n'
+        '  "metodologia": "cómo funciona esta técnica y qué herramientas o variantes son '
+        'típicas (2-3 oraciones)",\n'
+        '  "contexto_riesgo": "impacto concreto si este ataque prospera EN ESTE ENTORNO, '
+        'apoyado en los datos del incidente, no una advertencia genérica (2-3 oraciones)",\n'
+        '  "severidad_ajustada": "LOW|MEDIUM|HIGH|CRITICAL",\n'
+        '  "accion_recomendada": "cuál de acciones_disponibles priorizar y por qué, en una '
+        'oración (SIN comando, SIN inventar una acción fuera de la lista)",\n'
+        '  "falso_positivo_probabilidad": "LOW|MEDIUM|HIGH",\n'
+        '  "referencias": ["2-4 referencias puntuales: técnica o sub-técnica MITRE ATT&CK, '
+        'con su URL de attack.mitre.org"],\n'
+        '  "puntos_de_investigacion": ["2-4 preguntas concretas para que el analista chequee '
+        'a continuación, específicas a los datos de ESTE incidente — nunca una pregunta '
+        'genérica que serviría para cualquier caso del mismo tipo"]\n'
+        "}"
+)
+
+
 def _llm_analysis(client, incident: dict, historical: str, campaign: str | None,
                   memoria: dict | None = None, timeout: float = 300) -> dict | None:
     # Los títulos (sin comando) del playbook determinístico de `classifier.py`,
@@ -266,47 +340,12 @@ def _llm_analysis(client, incident: dict, historical: str, campaign: str | None,
     # de ataque que serviría para cualquier otro. Si el texto que vuelve
     # podría pegarse sin cambios en cualquier otro incidente del mismo tipo, no
     # cumplió el pedido.
-    prompt = (
-        "Analizá el siguiente incidente y devolvé el JSON pedido. Es para un analista de "
-        "seguridad que decide en segundos: priorizá lo concreto de ESTE incidente (volumen, "
-        "ventana de tiempo, usuario/IP objetivo, antecedentes) por sobre una descripción "
-        "general del tipo de ataque que serviría para cualquier otro caso igual.\n\n"
-        "<DATOS_INCIDENTE>\n"
-        f"{json.dumps(payload, indent=2, ensure_ascii=False)}\n"
-        "</DATOS_INCIDENTE>\n\n"
-        f"{_bloque_de_memoria(memoria)}"
-        "Si contexto_historico_ip o contexto_campana aportan algo relevante (ej. la IP ya fue "
-        "bloqueada antes, o el incidente es parte de un ataque en varios frentes), mencionalo "
-        "brevemente en 'accion_recomendada' o 'contexto_riesgo'. Si no aportan nada nuevo, ignoralos.\n\n"
-        "Si MEMORIA_DEL_AGENTE trae lecciones, casos similares o documentos que expliquen "
-        "este incidente (ej. una IP que la organización documenta como escáner autorizado, "
-        "o un caso igual que el analista ya descartó), usalos en 'explicacion' y en "
-        "'falso_positivo_probabilidad', citando de dónde sale el dato.\n\n"
-        "acciones_disponibles trae las acciones que el playbook YA va a ofrecerle al analista "
-        "en el panel, con checkbox para aprobar/descartar cada una — 'accion_recomendada' tiene "
-        "que señalar CUÁL de esas priorizar y por qué, citando su texto tal cual aparece ahí "
-        "(ej. \"Priorizar (1) Bloquear la IP atacante..., dado que ...\"), nunca una recomendación "
-        "que no esté en esa lista: el analista no tiene forma de ejecutar un consejo que no sea "
-        "una de esas acciones.\n\n"
-        "Esquema JSON exacto a devolver:\n"
-        "{\n"
-        '  "explicacion": "qué ocurrió, con el detalle concreto de este incidente — no una '
-        'definición del tipo de ataque (3-5 oraciones)",\n'
-        '  "metodologia": "cómo funciona esta técnica y qué herramientas o variantes son '
-        'típicas (2-3 oraciones)",\n'
-        '  "contexto_riesgo": "impacto concreto si este ataque prospera EN ESTE ENTORNO, '
-        'apoyado en los datos del incidente, no una advertencia genérica (2-3 oraciones)",\n'
-        '  "severidad_ajustada": "LOW|MEDIUM|HIGH|CRITICAL",\n'
-        '  "accion_recomendada": "cuál de acciones_disponibles priorizar y por qué, en una '
-        'oración (SIN comando, SIN inventar una acción fuera de la lista)",\n'
-        '  "falso_positivo_probabilidad": "LOW|MEDIUM|HIGH",\n'
-        '  "referencias": ["2-4 referencias puntuales: técnica o sub-técnica MITRE ATT&CK, '
-        'con su URL de attack.mitre.org"],\n'
-        '  "puntos_de_investigacion": ["2-4 preguntas concretas para que el analista chequee '
-        'a continuación, específicas a los datos de ESTE incidente — nunca una pregunta '
-        'genérica que serviría para cualquier caso del mismo tipo"]\n'
-        "}"
-    )
+    prompt = (PROMPT_ENCABEZADO
+              + "<DATOS_INCIDENTE>\n"
+              + json.dumps(payload, indent=2, ensure_ascii=False)
+              + "\n</DATOS_INCIDENTE>\n\n"
+              + _bloque_de_memoria(memoria)
+              + PROMPT_INSTRUCCIONES)
 
     texto = client.generar_json(SYSTEM_INSTRUCTION, prompt, ESQUEMA_ANALISIS, timeout)
     data = json.loads(texto)
@@ -532,10 +571,109 @@ def print_report(incidents: list[dict]) -> None:
             print(f"   [{a['status']}] {a['orden']}. ({a['responsable']}/{a['plazo']}) {a['accion']}{cmd}")
 
 
+# ─── Reutilización de análisis entre ciclos ──────────────────────────────────
+
+def _version_del_prompt() -> str:
+    """Todo lo fijo que recibe el LLM: perfil + reglas, plantilla del pedido y esquema."""
+    crudo = json.dumps([SYSTEM_INSTRUCTION, PROMPT_ENCABEZADO, PROMPT_INSTRUCCIONES,
+                        ESQUEMA_ANALISIS], sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(crudo.encode("utf-8")).hexdigest()
+
+
+def _escala(n: object) -> int:
+    """Orden de magnitud de un conteo (0, 1, 2-3, 4-7, …): cambia cuando se duplica."""
+    try:
+        return max(0, int(n)).bit_length()
+    except (TypeError, ValueError):
+        return -1
+
+
+def _sin_cifras(texto: object) -> str:
+    return re.sub(r"\d+(?:[.,]\d+)?", "#", str(texto))
+
+
+def _huella(incident: dict, historical: str, campaign: str | None,
+            memoria: dict | None) -> str:
+    """Resumen de lo que el LLM usa para razonar sobre el incidente.
+
+    Si no cambia, el análisis anterior sigue siendo válido. Cubre:
+
+    * la versión del pedido (perfil, reglas, plantilla y esquema): editar
+      `perfil_agente.md` o el prompt invalida todo lo anterior;
+    * los datos del incidente que el LLM ve y cita, incluidos los `factores` y
+      las acciones con su número de orden (el LLM las cita como "(1) …");
+    * el volumen, por orden de magnitud: un ataque que pasa de 25 a 4.000
+      intentos se vuelve a analizar, uno que pasa de 25 a 27 no.
+
+    Deja afuera lo que se mueve en cada ciclo sin cambiar el diagnóstico (la
+    ventana exacta, las muestras de log, el estado de las acciones): con Gemma en
+    CPU, regenerar por eso cada 2 minutos ocupaba la CPU casi todo el tiempo.
+    `SIEM_LLM_REUSO` acota cuánto puede envejecer igual.
+    """
+    clasif = incident.get("classification") or {}
+    base = {
+        "prompt": _version_del_prompt(),
+        "clasificacion": {k: clasif.get(k) for k in (
+            "attack_type", "severity", "confidence", "false_positive_likelihood",
+            "mitre_technique")},
+        "factores": [_sin_cifras(x) for x in clasif.get("factores") or []],
+        "volumen": _escala(incident.get("event_count")),
+        "severidad_siem": incident.get("severity_siem"),
+        "mitre": incident.get("mitre"),
+        "ip_origen": incident.get("source_ip"),
+        "ips_atacante": sorted(incident.get("attacker_ips") or []),
+        "usuarios": sorted(incident.get("target_users") or []),
+        "hosts": sorted(incident.get("target_hosts") or []),
+        "campana": incident.get("campaign_id"),
+        "acciones": [[a.get("orden"), a.get("accion"), a.get("impacto"), a.get("plazo")]
+                     for a in incident.get("recommended_actions") or []
+                     if not a.get("alternativa_de")],
+        "historico": historical,
+        "contexto_campana": campaign,
+        "memoria": memoria,
+    }
+    crudo = json.dumps(base, sort_keys=True, ensure_ascii=False, default=str)
+    return hashlib.sha256(crudo.encode("utf-8")).hexdigest()
+
+
+def _vida_util(incident_id: str) -> float:
+    """Vigencia de un análisis: entre el 75 % y el 100 % de `SIEM_LLM_REUSO`.
+
+    Repartida de forma estable por incidente para que los análisis hechos en el
+    mismo ciclo no venzan todos juntos en el mismo ciclo posterior (y desborden
+    el presupuesto de tiempo de golpe).
+    """
+    fraccion = int(hashlib.sha256(incident_id.encode("utf-8")).hexdigest()[:8], 16) / 0xFFFFFFFF
+    return _reuso_llm() * (0.75 + 0.25 * fraccion)
+
+
+def _analisis_compatible(previo: object, huella: str, client) -> dict | None:
+    """El análisis anterior si es del mismo modelo y con la misma huella (sin mirar la edad).
+
+    Los del fallback nunca califican: en el ciclo siguiente se le vuelve a dar la
+    oportunidad al LLM.
+    """
+    if not isinstance(previo, dict) or previo.get("_huella") != huella:
+        return None
+    if previo.get("_source") != client.fuente or previo.get("_modelo") != client.modelo:
+        return None
+    return previo
+
+
+def _vigente(previo: dict, incident_id: str) -> bool:
+    try:
+        edad = time.time() - float(previo.get("_generado_ts"))
+    except (TypeError, ValueError):
+        return False
+    return 0 <= edad <= _vida_util(incident_id)
+
+
 # ─── Punto de entrada del servicio ───────────────────────────────────────────
 
 def analizar(incidents: list[dict], decisions: list[dict],
-             memoria: dict[str, dict] | None = None) -> dict:
+             memoria: dict[str, dict] | None = None,
+             previos: dict[str, dict] | None = None,
+             fin_plazo: float | None = None) -> dict:
     """Analiza cada incidente y devuelve `{incidents, analyzed_at, analyst_mode}`.
 
     `decisions` es el registro de decisiones del servicio audit: la fuente de los
@@ -544,6 +682,14 @@ def analizar(incidents: list[dict], decisions: list[dict],
     si ese servicio no respondió — el análisis sigue, sin memoria, y lo dice. Este módulo no lee ni escribe archivos — antes también
     agregaba la corrida a `analysis_history.jsonl`; ahora eso lo hace el
     orquestador a través del servicio audit, el único escritor de la auditoría.
+
+    `previos` son los análisis del ciclo anterior por `incident_id` (los manda
+    el orquestador): si un incidente no cambió, se reutiliza el del LLM en vez
+    de volver a generarlo (ver `_huella`).
+
+    `fin_plazo` (reloj `time.monotonic()`) es hasta cuándo espera la respuesta
+    quien pidió el análisis: el LLM se corta antes, aunque el presupuesto propio
+    (`SIEM_LLM_PRESUPUESTO`) diera más tiempo.
     """
     print("🔍 Agente 2 — Analista LLM")
     if not incidents:
@@ -552,18 +698,39 @@ def analizar(incidents: list[dict], decisions: list[dict],
 
     client = _build_client()
     limite = time.monotonic() + _presupuesto_llm()
+    if fin_plazo is not None:
+        limite = min(limite, fin_plazo)
+    sin_tiempo_avisado = False
     for inc in incidents:
         print(f"[Analizando] {inc['incident_id']} ...")
         historical = historical_context(inc, decisions)
         campaign = campaign_context(inc)
         recuerdo = None if memoria is None else memoria.get(inc["incident_id"], {})
+        huella = _huella(inc, historical, campaign, recuerdo)
+        previo = (_analisis_compatible((previos or {}).get(inc["incident_id"]), huella, client)
+                  if client is not None else None)
+        if previo is not None and _vigente(previo, inc["incident_id"]):
+            print("  [INFO] Sin cambios desde el ciclo anterior: se reutiliza su análisis.")
+            inc["analysis"] = previo
+            continue
         restante = limite - time.monotonic()
-        if client is not None and restante < 5:
-            print("[INFO] Se agotó el presupuesto de tiempo del LLM: "
-                  "el resto de los incidentes va al fallback determinístico.")
-            client = None
-        inc["analysis"] = analyze_incident(client, inc, historical, campaign, recuerdo,
-                                           timeout=max(restante, 1))
+        usar = client if (client is not None and restante >= 5) else None
+        if client is not None and usar is None:
+            if previo is not None:
+                # Vencido, pero del mismo modelo y con la misma huella: mejor que
+                # el fallback mientras no haya tiempo de regenerarlo.
+                print("  [INFO] Sin tiempo de LLM: se mantiene el análisis anterior (vencido).")
+                inc["analysis"] = previo
+                continue
+            if not sin_tiempo_avisado:
+                print("[INFO] Se agotó el presupuesto de tiempo del LLM: "
+                      "el resto de los incidentes va al fallback determinístico.")
+                sin_tiempo_avisado = True
+        analisis = analyze_incident(usar, inc, historical, campaign, recuerdo,
+                                    timeout=max(restante, 1))
+        analisis["_huella"] = huella
+        analisis["_generado_ts"] = time.time()
+        inc["analysis"] = analisis
 
     # Refleja lo que realmente se usó, no solo si había cliente (el LLM puede fallar
     # por cuota/red y caer al fallback en cada incidente).

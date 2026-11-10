@@ -221,3 +221,29 @@ def test_si_docker_falla_no_se_toca_nada(proyecto_falso):
     assert resultado.returncode != 0
     assert (proyecto_falso / "data" / "audit" / "decisions.jsonl").read_text(encoding="utf-8") == DECISION
     assert (proyecto_falso / "data" / "collector" / "siem_clean.json").exists()
+
+
+def test_el_reset_no_borra_el_modelo_de_gemma(proyecto_falso):
+    """`down -v` borraría también `ollama-modelos` (varios GB, una descarga).
+
+    El reset apaga sin `-v` y borra solo el volumen de Elasticsearch.
+    """
+    resultado = _correr_reset(proyecto_falso, "--yes")
+    assert resultado.returncode == 0, resultado.stderr
+    llamadas = (proyecto_falso / "bin_falso" / "llamadas.txt").read_text(encoding="utf-8")
+    down = [linea for linea in llamadas.splitlines() if " down" in linea]
+    assert down and all(" -v" not in linea for linea in down)
+    assert "label=com.docker.compose.volume=elasticsearch-data" in llamadas
+    assert "ollama" not in llamadas
+
+
+def test_el_borrado_de_volumenes_siempre_filtra_por_proyecto(proyecto_falso):
+    """Sin el filtro de proyecto, `docker volume rm` alcanzaría los volúmenes
+    `elasticsearch-data` de otros proyectos compose del mismo equipo. El docker
+    de juguete no imprime `name:`, así que tiene que usar el del directorio."""
+    resultado = _correr_reset(proyecto_falso, "--yes")
+    assert resultado.returncode == 0, resultado.stderr
+    llamadas = (proyecto_falso / "bin_falso" / "llamadas.txt").read_text(encoding="utf-8")
+    listado = next(linea for linea in llamadas.splitlines() if linea.startswith("volume ls"))
+    esperado = "".join(c for c in proyecto_falso.name.lower() if c.isalnum() or c in "_-")
+    assert f"label=com.docker.compose.project={esperado}" in listado

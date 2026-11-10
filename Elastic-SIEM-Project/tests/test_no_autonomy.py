@@ -1,6 +1,6 @@
 """Certificación automatizada de NO-AUTONOMÍA.
 
-> **La propiedad:** ningún componente de SIEM-IA puede ejecutar acciones de
+> **La propiedad:** ningún componente de NeuralDefender puede ejecutar acciones de
 > contención sobre la infraestructura. La IA sugiere; el humano decide; y quien
 > ejecuta es una persona, a mano, fuera del sistema.
 
@@ -297,10 +297,12 @@ def test_las_apis_internas_son_exactamente_estas():
     assert encontradas == {
         "auth": [("GET", "/v1/users-summary"), ("GET", "/v1/users/<username>"),
                  ("POST", "/v1/authenticate")],
-        "audit": [("GET", "/v1/activity"), ("GET", "/v1/activity/verify"),
+        "audit": [("GET", "/v1/access"), ("GET", "/v1/access/verify"),
+                  ("GET", "/v1/activity"), ("GET", "/v1/activity/verify"),
                   ("GET", "/v1/analysis-history/verify"), ("GET", "/v1/decisions"),
                   ("GET", "/v1/decisions/verify"), ("GET", "/v1/reports"),
-                  ("POST", "/v1/activity"), ("POST", "/v1/analysis-history"),
+                  ("POST", "/v1/access"), ("POST", "/v1/activity"),
+                  ("POST", "/v1/analysis-history"),
                   ("POST", "/v1/decisions")],
         "collector": [("GET", "/v1/snapshots/latest"), ("POST", "/v1/snapshots")],
         "classifier": [("POST", "/v1/classify")],
@@ -326,8 +328,9 @@ def test_la_auditoria_no_expone_modificacion_ni_borrado():
     assert {m for m, _ in rutas} <= {"GET", "POST"}
     for metodo, r in rutas:
         if metodo == "POST":
-            # Los tres POST AGREGAN una línea a un registro encadenado; ninguno edita.
-            assert r in ("/v1/decisions", "/v1/analysis-history", "/v1/activity"), r
+            # Los cuatro POST AGREGAN una línea a un registro encadenado; ninguno edita.
+            assert r in ("/v1/decisions", "/v1/analysis-history", "/v1/activity",
+                         "/v1/access"), r
 
 
 # ─── 5. Los comandos sugeridos son datos, nunca se ejecutan ──────────────────
@@ -386,8 +389,9 @@ def test_el_agente_llm_no_puede_generar_comandos():
 
     # El esquema pedido al modelo no declara ningún campo de comando.
     # (La palabra "comando" sí aparece en el prompt: le ordena NO generarlos.)
-    import inspect
-    prompt = inspect.getsource(siem_agent._llm_analysis)
+    # Las partes fijas del pedido viven en constantes del módulo (así entran en
+    # la huella de reutilización): se verifica el texto que realmente se envía.
+    prompt = siem_agent.PROMPT_ENCABEZADO + siem_agent.PROMPT_INSTRUCCIONES
     esquema = prompt.split("Esquema JSON exacto")[1]
     assert '"comando' not in esquema, "el esquema del LLM declara un campo de comando"
     assert "SIN comando" in prompt, "el prompt dejó de prohibir comandos"
@@ -651,7 +655,12 @@ def test_el_andamiaje_de_pruebas_no_se_despliega():
     #   test_respaldo_y_retencion.py — corre `backup/respaldo.sh`, `restaurar.sh`
     #       y `deploy-ilm.sh` contra un Elasticsearch simulado y directorios en
     #       tmp_path. Respaldan y borran DATOS del SIEM; no tocan ningún host.
-    assert con_subprocess == ["test_a01_reset_preserva_auditoria.py",
+    #   medicion_iso25023.py — herramienta de medición ISO/IEC 25023 (no es una
+    #       prueba de la suite): corre solo `docker inspect`, `docker stats`,
+    #       `git describe` y `journalctl -k` (OOM del kernel), con argumentos
+    #       fijos, para OBSERVAR el stack.
+    assert con_subprocess == ["medicion_iso25023.py",
+                              "test_a01_reset_preserva_auditoria.py",
                               "test_a02_a04_integridad.py",
                               "test_despliegue_de_reglas.py",
                               "test_iconos.py",

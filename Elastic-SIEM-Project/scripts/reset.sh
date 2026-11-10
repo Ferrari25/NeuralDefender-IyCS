@@ -19,6 +19,10 @@
 # aprobadas) tampoco se toca: no es regenerable, es lo que el sistema aprendió
 # de los analistas. Para empezar de cero, borrarla a mano a conciencia.
 #
+# El MODELO DE GEMMA (volumen `ollama-modelos`, varios GB) tampoco se borra:
+# no son datos, y volver a bajarlo lleva tiempo. Solo se elimina el volumen de
+# Elasticsearch (`down -v` borraría todos los volúmenes del compose).
+#
 # Uso:  ./scripts/reset.sh            (pide confirmación)
 #       ./scripts/reset.sh --yes      (sin confirmar)
 #       ./scripts/reset.sh --wipe-audit   (además ELIMINA la auditoría archivada;
@@ -44,8 +48,32 @@ if ! $SIN_CONFIRMAR; then
   [[ "$ans" =~ ^[yY]$ ]] || { echo "Cancelado."; exit 0; }
 fi
 
-echo "🧹 Apagando contenedores y borrando volúmenes..."
-docker compose --profile simulation down -v --remove-orphans
+echo "🧹 Apagando contenedores..."
+# Nombre del proyecto compose: el que declare la configuración, si no
+# COMPOSE_PROJECT_NAME, si no el que compose deriva del directorio (minúsculas,
+# solo [a-z0-9_-]). Nunca vacío: sin él, el filtro de abajo alcanzaría los
+# volúmenes `elasticsearch-data` de OTROS proyectos del mismo equipo.
+PROYECTO="$(docker compose config 2>/dev/null | sed -n 's/^name: *//p' | head -n1 || true)"
+if [[ -z "$PROYECTO" ]]; then
+  PROYECTO="${COMPOSE_PROJECT_NAME:-$(basename "$PWD" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9_-')}"
+fi
+if [[ -z "$PROYECTO" ]]; then
+  echo "[ERROR] No se pudo determinar el nombre del proyecto compose; no se borra ningún volumen."
+  exit 1
+fi
+docker compose --profile simulation down --remove-orphans
+
+echo "🧹 Borrando el volumen de Elasticsearch (el modelo de Gemma se conserva)..."
+VOLUMENES_ES="$(docker volume ls -q \
+  --filter "label=com.docker.compose.volume=elasticsearch-data" \
+  --filter "label=com.docker.compose.project=$PROYECTO")"
+if [[ -n "$VOLUMENES_ES" ]]; then
+  # shellcheck disable=SC2086  # uno por línea, nombres sin espacios
+  docker volume rm $VOLUMENES_ES >/dev/null
+  echo "   Eliminado: $VOLUMENES_ES"
+else
+  echo "   No había volumen de Elasticsearch."
+fi
 
 # Artefactos REGENERABLES: se borran sin más, el pipeline los vuelve a crear.
 echo "🧹 Limpiando artefactos locales del pipeline..."
@@ -55,7 +83,7 @@ rm -f network_logs/*.json
 
 # Registro de AUDITORÍA: se archiva, nunca se borra (A-01).
 ALGO_QUE_ARCHIVAR=false
-for f in data/audit/decisions.jsonl data/audit/analysis_history.jsonl data/audit/actividad.jsonl; do
+for f in data/audit/decisions.jsonl data/audit/analysis_history.jsonl data/audit/actividad.jsonl data/audit/accesos.jsonl; do
   [[ -s "$f" ]] && ALGO_QUE_ARCHIVAR=true
 done
 
@@ -65,7 +93,7 @@ if $ALGO_QUE_ARCHIVAR; then
   # compartirían nombre y el segundo pisaría el archivo del primero — es decir,
   # perdería evidencia de auditoría, justo lo que este cambio busca evitar.
   ARCHIVO_AUDITORIA=$(mktemp -d "data/audit/archivo/$(date -u +%Y%m%dT%H%M%SZ)-XXXX")
-  for f in data/audit/decisions.jsonl data/audit/analysis_history.jsonl data/audit/actividad.jsonl; do
+  for f in data/audit/decisions.jsonl data/audit/analysis_history.jsonl data/audit/actividad.jsonl data/audit/accesos.jsonl; do
     [[ -s "$f" ]] && mv "$f" "$ARCHIVO_AUDITORIA/"
   done
   chmod -R a-w "$ARCHIVO_AUDITORIA"

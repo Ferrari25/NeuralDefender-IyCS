@@ -7,7 +7,8 @@ Sin key, con el interruptor apagado o sin red, usa el análisis determinístico
 de respaldo: siempre responde.
 
 API (red interna, exige `X-Internal-Token`):
-    POST /v1/analyze   {incidents: [...]} → 200 {incidents, analyzed_at, analyst_mode}
+    POST /v1/analyze   {incidents: [...], previos?: {incident_id: analysis},
+                        plazo_s?: segundos que espera quien pide} → 200 {incidents, analyzed_at, analyst_mode}
                        → 503 si el servicio audit no responde
 
 Antes de analizar le pide al servicio knowledge la memoria del agente para
@@ -28,12 +29,18 @@ antes de que existiera. Cada incidente queda marcado con
 
 from __future__ import annotations
 
+import time
+
 from flask import jsonify
 
 from siem_agent import analizar
 from siem_servicios import ServicioNoDisponible, crear_servicio, cuerpo_json, llamar
 
 app = crear_servicio("analyst")
+
+# Lo que se reserva del plazo de quien pide para armar y mandar la respuesta
+# después de la última llamada al LLM.
+MARGEN_DE_RESPUESTA = 20.0
 
 
 def _decisiones_previas() -> list[dict]:
@@ -67,12 +74,21 @@ def _memoria_del_agente(incidents: list[dict]) -> dict[str, dict] | None:
 
 @app.post("/v1/analyze")
 def analizar_incidentes():
+    inicio = time.monotonic()
     datos = cuerpo_json()
     if datos is None or not isinstance(datos.get("incidents"), list):
         return jsonify({"error": "se esperaba {incidents: [...]}"}), 400
+    plazo = datos.get("plazo_s")
+    fin_plazo = (inicio + float(plazo) - MARGEN_DE_RESPUESTA
+                 if isinstance(plazo, (int, float)) and not isinstance(plazo, bool) and plazo > 0
+                 else None)
     try:
         decisiones = _decisiones_previas()
     except ServicioNoDisponible as e:
         return jsonify({"error": f"sin acceso a los antecedentes: {e}"}), 503
     memoria = _memoria_del_agente(datos["incidents"])
-    return jsonify(analizar(datos["incidents"], decisiones, memoria))
+    # Análisis del ciclo anterior: los que no cambiaron se reutilizan.
+    previos = datos.get("previos")
+    if not isinstance(previos, dict):
+        previos = None
+    return jsonify(analizar(datos["incidents"], decisiones, memoria, previos, fin_plazo))

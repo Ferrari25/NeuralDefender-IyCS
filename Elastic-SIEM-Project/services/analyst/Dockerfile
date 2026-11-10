@@ -21,5 +21,7 @@ USER 1000:1000
 
 EXPOSE 8000
 
+# --no-control-socket: el socket de control de gunicorn 26 no se usa, y con
+# HOME=/ (usuario sin home) fallaba al crearse en /.gunicorn.
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--threads", "8", \
-     "--timeout", "900", "--access-logfile", "-", "analyst_service:app"]
+     "--timeout", "900", "--access-logfile", "-", "--no-control-socket", "analyst_service:app"]

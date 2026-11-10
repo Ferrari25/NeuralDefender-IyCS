@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Comunicación entre los microservicios de SIEM-IA.
+"""Comunicación entre los microservicios de NeuralDefender.
 
 Antes, las etapas se pasaban datos escribiendo y leyendo archivos de un mismo
 directorio `data/`, y el orquestador las lanzaba con `subprocess`. Ahora cada

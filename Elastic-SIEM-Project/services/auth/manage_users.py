@@ -45,8 +45,8 @@ from siem_auth import (
     Usuario,
     _ruta_usuarios,
     cargar_usuarios,
-    guardar_usuarios,
     hash_password,
+    modificar_usuarios,
     validar_rol,
     validar_username,
 )
@@ -65,17 +65,20 @@ def _pedir_password(confirmar: bool = True) -> str:
 
 
 def cmd_crear(args) -> int:
-    usuarios = cargar_usuarios()
     nombre = validar_username(args.username)
     rol = validar_rol(args.rol)
-
-    if nombre in usuarios:
+    if nombre in cargar_usuarios():
         raise ErrorUsuarios(f"el usuario '{nombre}' ya existe. Usá 'password' o 'rol'.")
 
-    usuarios[nombre] = Usuario(
-        username=nombre, rol=rol, password_hash=hash_password(_pedir_password()),
-        activo=True, creado=datetime.now(timezone.utc).isoformat())
-    guardar_usuarios(usuarios)
+    # La contraseña se pide y se hashea ANTES de tomar el bloqueo del almacén:
+    # mientras está tomado, nadie puede iniciar sesión.
+    password_hash = hash_password(_pedir_password())
+    with modificar_usuarios() as usuarios:
+        if nombre in usuarios:  # alguien lo creó mientras se escribía la contraseña
+            raise ErrorUsuarios(f"el usuario '{nombre}' ya existe. Usá 'password' o 'rol'.")
+        usuarios[nombre] = Usuario(
+            username=nombre, rol=rol, password_hash=password_hash,
+            activo=True, creado=datetime.now(timezone.utc).isoformat())
 
     print(f"✅ Usuario '{nombre}' creado con rol '{rol}'.")
     print(f"   Permisos: {', '.join(sorted(PERMISOS[rol]))}")
@@ -103,25 +106,25 @@ def cmd_listar(args) -> int:
 
 
 def cmd_password(args) -> int:
-    usuarios = cargar_usuarios()
     nombre = args.username
-    if nombre not in usuarios:
+    if nombre not in cargar_usuarios():
         raise ErrorUsuarios(f"el usuario '{nombre}' no existe.")
 
-    usuarios[nombre].password_hash = hash_password(_pedir_password())
-    guardar_usuarios(usuarios)
+    password_hash = hash_password(_pedir_password())
+    with modificar_usuarios() as usuarios:
+        if nombre not in usuarios:
+            raise ErrorUsuarios(f"el usuario '{nombre}' no existe.")
+        usuarios[nombre].password_hash = password_hash
     print(f"✅ Contraseña de '{nombre}' actualizada.")
     print("   Las sesiones abiertas siguen vigentes hasta que expiren.")
     return 0
 
 
 def _cambiar_estado(nombre: str, activo: bool) -> int:
-    usuarios = cargar_usuarios()
-    if nombre not in usuarios:
-        raise ErrorUsuarios(f"el usuario '{nombre}' no existe.")
-
-    usuarios[nombre].activo = activo
-    guardar_usuarios(usuarios)
+    with modificar_usuarios() as usuarios:
+        if nombre not in usuarios:
+            raise ErrorUsuarios(f"el usuario '{nombre}' no existe.")
+        usuarios[nombre].activo = activo
 
     if activo:
         print(f"✅ Usuario '{nombre}' dado de alta.")
@@ -141,14 +144,13 @@ def cmd_alta(args) -> int:
 
 
 def cmd_rol(args) -> int:
-    usuarios = cargar_usuarios()
     nombre = args.username
-    if nombre not in usuarios:
-        raise ErrorUsuarios(f"el usuario '{nombre}' no existe.")
-
-    anterior = usuarios[nombre].rol
-    usuarios[nombre].rol = validar_rol(args.rol)
-    guardar_usuarios(usuarios)
+    rol = validar_rol(args.rol)
+    with modificar_usuarios() as usuarios:
+        if nombre not in usuarios:
+            raise ErrorUsuarios(f"el usuario '{nombre}' no existe.")
+        anterior = usuarios[nombre].rol
+        usuarios[nombre].rol = rol
     print(f"✅ Rol de '{nombre}': {anterior} → {args.rol}")
     print(f"   Permisos: {', '.join(sorted(PERMISOS[args.rol]))}")
     return 0
@@ -173,7 +175,7 @@ def cmd_roles(args) -> int:
 
 def construir_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Gestión de usuarios del panel de supervisión SIEM-IA.",
+        description="Gestión de usuarios del panel de supervisión NeuralDefender.",
         epilog="La contraseña se pide de forma interactiva; para automatizar, "
                "usá la variable de entorno SIEM_NEW_PASSWORD.")
     sub = parser.add_subparsers(dest="comando", required=True)

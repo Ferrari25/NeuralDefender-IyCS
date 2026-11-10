@@ -104,15 +104,19 @@ services:
     image: docker.elastic.co/logstash/logstash:8.12.2
     container_name: logstash
     restart: unless-stopped
-    mem_limit: 2048m   # RNF-COMP-01 · medido: ~1,4 GB
+    # RNF-COMP-01 · heap fijo de 512 MB (la imagen trae 1 GB). Medido con ese heap:
+    # ~960 MB de memoria propia (JRuby, hilos y buffers viven fuera del heap), así
+    # que el tope deja margen: con 1 GB tocaba el límite y Docker lo mataría.
+    mem_limit: 1536m
     user: root
     environment:
-      - xpack.monitoring.elasticsearch.hosts=http://elasticsearch:9200
-      - xpack.monitoring.elasticsearch.username=elastic
-      - xpack.monitoring.elasticsearch.password=${ELASTIC_PASSWORD}
+      # Solo la variable: logstash.yml la referencia como ${ELASTIC_PASSWORD}. Los
+      # xpack.monitoring.* NO van acá: la imagen reescribiría logstash.yml con ellos.
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
     volumes:
       - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      # Heap de 512 MB (ver el comentario al principio del archivo).
+      - ./logstash/config/jvm.options:/usr/share/logstash/config/jvm.options:ro
       - ./logstash/pipeline:/usr/share/logstash/pipeline
     ports:
       - "127.0.0.1:5044:5044"
@@ -361,12 +365,16 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - SIEM_USE_LLM=${SIEM_USE_LLM:-false}
       # Qué LLM usa el Agente 2: `gemma` (Gemma 3 local vía Ollama, gratis y
-      # sin key) o `gemini` (API de Google, exige GEMINI_API_KEY).
+      # sin key) o `gemini` (API de Google, exige GEMINI_API_KEY). Gemini se
+      # elige siempre a propósito: los incidentes salen del equipo.
       - SIEM_LLM_PROVEEDOR=${SIEM_LLM_PROVEEDOR:-gemma}
       - SIEM_OLLAMA_HOST=http://ollama:11434
       - SIEM_OLLAMA_MODELO=${SIEM_OLLAMA_MODELO:-gemma3:4b}
       - SIEM_GEMINI_MODELO=${SIEM_GEMINI_MODELO:-gemini-flash-lite-latest}
+      # Máximo 540; además el analyst corta antes del plazo que le manda el orquestador.
       - SIEM_LLM_PRESUPUESTO=${SIEM_LLM_PRESUPUESTO:-480}
+      # Segundos que se reutiliza el análisis de un incidente sin cambios.
+      - SIEM_LLM_REUSO=${SIEM_LLM_REUSO:-3600}
     networks: [ia-net, llm-net]
     depends_on:
       audit: { condition: service_healthy }
@@ -387,7 +395,11 @@ services:
     restart: unless-stopped
     mem_limit: 6g   # gemma3:4b ocupa ~4 GB en RAM (CPU, sin GPU)
     environment:
-      - OLLAMA_KEEP_ALIVE=30m
+      # Cuánto queda cargado el modelo después de usarlo. Descargado ocupa ~40 MB
+      # en vez de ~4 GB, y recargarlo tarda ~8 s (contra ~75 s por incidente). Como
+      # los incidentes sin cambios reutilizan su análisis, Gemma se usa poco entre
+      # ciclos: 5 min cubre el ciclo siguiente y libera la RAM en los ratos quietos.
+      - OLLAMA_KEEP_ALIVE=${SIEM_OLLAMA_KEEP_ALIVE:-5m}
     volumes:
       - ollama-modelos:/root/.ollama
     networks: [llm-net]

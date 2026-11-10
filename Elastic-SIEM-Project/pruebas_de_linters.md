@@ -1,7 +1,7 @@
 # Pruebas de linters y análisis estático (SAST)
 
 Guía para correr, entender y **verificar** las pruebas de código estático de
-SIEM-IA. "Estático" significa que ninguna de estas herramientas ejecuta el
+NeuralDefender. "Estático" significa que ninguna de estas herramientas ejecuta el
 sistema: leen el código fuente y buscan problemas antes de que corra.
 
 > Resumen en una línea: `./scripts/pruebas_de_codigo_estatico.sh` tiene que

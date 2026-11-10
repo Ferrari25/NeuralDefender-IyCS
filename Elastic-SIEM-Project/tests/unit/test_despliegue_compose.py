@@ -146,3 +146,50 @@ def test_el_clasificador_recibe_umbrales_y_ventana_del_entorno(variable):
 
 def test_el_collector_usa_la_misma_ventana():
     assert "- SIEM_VENTANA=${SIEM_VENTANA:-24h}" in _servicio("collector")
+
+
+# ─── Secretos fuera de los archivos de configuración versionados ─────────────
+
+def test_logstash_yml_no_tiene_la_contrasena_escrita():
+    """La contraseña de `elastic` estuvo versionada en logstash.yml: la imagen de
+    Logstash reescribe ese archivo con los `xpack.monitoring.*` que reciba por
+    entorno. Tiene que referenciar la variable, nunca un valor."""
+    yml = (RAIZ / "logstash" / "config" / "logstash.yml").read_text(encoding="utf-8")
+    contrasenas = re.findall(r"^\s*[\w.]*password:\s*(.+)$", yml, re.MULTILINE)
+    assert contrasenas, "logstash.yml dejó de configurar la contraseña de monitoreo"
+    assert all(v.strip().strip('"') == "${ELASTIC_PASSWORD}" for v in contrasenas), contrasenas
+
+
+def test_el_compose_no_le_pasa_xpack_monitoring_por_entorno_a_logstash():
+    """Si se los pasa, la imagen los vuelca en el logstash.yml montado (y al repo)."""
+    variables = re.findall(r"^      - (\S+?)=", _servicio("logstash"), re.MULTILINE)
+    assert variables, "el servicio logstash no declara variables de entorno"
+    assert not [v for v in variables if v.lower().startswith("xpack")], variables
+
+
+@pytest.mark.parametrize("archivo", ["logstash/config/logstash.yml", "kibana/kibana.yml",
+                                     "filebeat/filebeat.yml"])
+def test_ninguna_config_versionada_tiene_la_contrasena_de_elastic(archivo):
+    env = RAIZ / ".env"
+    if not env.exists():
+        pytest.skip("sin .env no hay contraseña real con qué comparar")
+    actual = re.search(r"^ELASTIC_PASSWORD=(.*)$", env.read_text(encoding="utf-8"), re.MULTILINE)
+    if not actual or len(actual.group(1).strip()) < 8:
+        pytest.skip("ELASTIC_PASSWORD vacía o de ejemplo")
+    assert actual.group(1).strip() not in (RAIZ / archivo).read_text(encoding="utf-8")
+
+
+# ─── Memoria del host ────────────────────────────────────────────────────────
+
+def test_logstash_tiene_heap_de_512_mb_montado():
+    """`LS_JAVA_OPTS` no alcanza: el -Xmx1g de la imagen va después y gana."""
+    assert "./logstash/config/jvm.options:/usr/share/logstash/config/jvm.options:ro" \
+        in _servicio("logstash")
+    opciones = (RAIZ / "logstash" / "config" / "jvm.options").read_text(encoding="utf-8")
+    assert re.findall(r"^-Xm[sx]\S+", opciones, re.MULTILINE) == ["-Xms512m", "-Xmx512m"]
+
+
+def test_ollama_descarga_el_modelo_cuando_no_se_usa():
+    """Cargado ocupa ~4 GB; recargarlo cuesta ~8 s. Un keep-alive largo (antes 30 min)
+    lo dejaba ocupando RAM aunque los análisis se estuvieran reutilizando."""
+    assert "OLLAMA_KEEP_ALIVE=${SIEM_OLLAMA_KEEP_ALIVE:-5m}" in _servicio("ollama")

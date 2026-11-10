@@ -305,7 +305,8 @@ def api_login():
     if not isinstance(datos, dict):
         return jsonify({"error": "se esperaba un cuerpo JSON"}), 400
 
-    resultado = autenticar(datos.get("username"), datos.get("password"), ip_del_cliente())
+    ip = ip_del_cliente()
+    resultado = autenticar(datos.get("username"), datos.get("password"), ip)
     if not resultado.ok:
         respuesta = {"error": resultado.motivo}
         if resultado.no_disponible:
@@ -313,16 +314,32 @@ def api_login():
         # 429 cuando el rechazo viene del control de intentos, no de las
         # credenciales: le dice al cliente legítimo que espere, no que se
         # equivocó de contraseña.
+        evento = "login_bloqueado" if resultado.espera_segundos else "login_fallido"
+        try:
+            _registrar_acceso(evento, datos.get("username"), ip)
+        except ServicioNoDisponible as e:
+            # El rechazo no cambia (y no se le cuenta nada distinto al cliente),
+            # pero queda dicho en el log del contenedor que este intento no tiene rastro.
+            app.logger.warning("intento de login sin registrar en la auditoría: %s", e)
         if resultado.espera_segundos:
             respuesta["reintentar_en"] = resultado.espera_segundos
             return jsonify(respuesta), 429
         return jsonify(respuesta), 401
 
-    login_user(resultado.usuario)
     ahora = datetime.now(timezone.utc).isoformat()
+    sid = session_id_de(resultado.usuario.username, ahora)
+    # Primero el rastro, después la sesión: si la auditoría no registra el
+    # acceso, no hay acceso (mismo criterio que una decisión sin registro).
+    try:
+        _registrar_acceso("login_exitoso", resultado.usuario.username, ip,
+                          rol=resultado.usuario.rol, session_id=sid)
+    except ServicioNoDisponible as e:
+        return jsonify({"error": f"no se pudo registrar el acceso en la auditoría: {e}"}), 503
+
+    login_user(resultado.usuario)
     session["emitido_en"] = ahora
     session["ultimo_uso"] = ahora
-    session["session_id"] = session_id_de(resultado.usuario.username, ahora)
+    session["session_id"] = sid
 
     return jsonify({
         "ok": True,
@@ -338,9 +355,39 @@ def api_login():
 @app.route("/api/v1/logout", methods=["POST"])
 @login_required
 def api_logout():
+    try:
+        _registrar_acceso("logout", current_user.username, ip_del_cliente(),
+                          rol=current_user.rol, session_id=session.get("session_id"))
+    except ServicioNoDisponible as e:
+        # Cerrar la sesión nunca se impide: quedarse con una sesión abierta
+        # porque la auditoría no responde sería peor que el hueco en el registro.
+        app.logger.warning("cierre de sesión sin registrar en la auditoría: %s", e)
     logout_user()
     session.clear()
     return "", 204
+
+
+def _texto_de_registro(valor: object, largo: int = 64) -> str:
+    """Un dato que puso el cliente, apto para el registro: texto imprimible y acotado."""
+    texto = valor if isinstance(valor, str) else ""
+    texto = "".join(c for c in texto.strip() if c.isprintable())[:largo]
+    return texto or "(vacío)"
+
+
+def _registrar_acceso(evento: str, usuario: object, ip: str, rol: str | None = None,
+                      session_id: str | None = None) -> None:
+    """Deja constancia de un acceso al panel en `accesos.jsonl` (servicio audit).
+
+    `usuario` es el nombre que se intentó usar, aunque no exista: un intento con
+    un usuario inventado también es un acceso que el auditor tiene que ver.
+    Lanza `ServicioNoDisponible` si la auditoría no lo aceptó.
+    """
+    registro = {"evento": evento, "usuario": _texto_de_registro(usuario),
+                "ip": _texto_de_registro(ip), "rol": rol, "session_id": session_id,
+                "user_agent": _texto_de_registro(request.headers.get("User-Agent"), 200)}
+    r = llamar("audit", "POST", "/v1/access", {k: v for k, v in registro.items() if v})
+    if r.status != 201:
+        raise ServicioNoDisponible(f"el servicio audit no registró el acceso (HTTP {r.status})")
 
 
 @app.route("/api/v1/me")
@@ -683,7 +730,7 @@ def api_reportes():
     datos = _verificada(r, "el servicio audit").datos
     if formato == "csv":
         periodo = datos.get("periodo") or {}
-        nombre = "reporte-siem-ia_{}_{}.csv".format(periodo.get("desde") or "inicio",
+        nombre = "reporte-neuraldefender_{}_{}.csv".format(periodo.get("desde") or "inicio",
                                                     periodo.get("hasta") or "hoy")
         respuesta = Response(datos["csv"], mimetype="text/csv; charset=utf-8")
         respuesta.headers["Content-Disposition"] = f'attachment; filename="{nombre}"'
@@ -722,7 +769,7 @@ def _resumen_de_arranque() -> str:
 
 
 if __name__ == "__main__":
-    print("🛡️  Dashboard de supervisión SIEM-IA  →  http://127.0.0.1:5000")
+    print("🛡️  Dashboard de supervisión NeuralDefender  →  http://127.0.0.1:5000")
     print("    Decisiones → servicio audit (append-only, cadena SHA-256)")
     print(_resumen_de_arranque())
     print("    La IA sugiere, el humano decide. El sistema no ejecuta ninguna acción.")

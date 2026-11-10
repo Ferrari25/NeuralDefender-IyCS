@@ -335,4 +335,4 @@ def copiar_fixture():
 def pytest_report_header(config) -> str:
     """Deja constancia en la salida de que la suite corre aislada."""
     del config
-    return f"SIEM-IA · raíz del proyecto: {PROJECT_ROOT} · CWD real: {os.getcwd()}"
+    return f"NeuralDefender · raíz del proyecto: {PROJECT_ROOT} · CWD real: {os.getcwd()}"

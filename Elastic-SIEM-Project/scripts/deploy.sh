@@ -1,6 +1,6 @@
 #!/bin/bash
 # ─────────────────────────────────────────────────────────────────────────────
-# deploy.sh — Levanta SIEM-IA de punta a punta, TODO reseteado (ver nicotito.md).
+# deploy.sh — Levanta NeuralDefender de punta a punta, TODO reseteado (ver nicotito.md).
 #
 # Pasos:
 #   1. Verifica .env y vm.max_map_count (Elasticsearch no arranca sin él).
@@ -191,7 +191,7 @@ ok "panel respondiendo"
 ELASTIC_PASSWORD=$(grep -E '^ELASTIC_PASSWORD=' .env | head -1 | cut -d= -f2-)
 echo
 echo "════════════════════════════════════════════════"
-echo "✅ SIEM-IA listo y corriendo, todo en cero."
+echo "✅ NeuralDefender listo y corriendo, todo en cero."
 echo "   Panel   → http://127.0.0.1:5000/login   ($USUARIO / $PASSWORD)"
 echo "   Kibana  → http://127.0.0.1:5601         (elastic / $ELASTIC_PASSWORD)"
 echo "   Logs del panel:    docker compose logs -f gateway"

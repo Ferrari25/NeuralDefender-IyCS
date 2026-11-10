@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Orquestador del pipeline SIEM-IA: detección → análisis → acción.
+Orquestador del pipeline NeuralDefender: detección → análisis → acción.
 
 Encadena las etapas llamando a cada servicio por HTTP, en orden:
   1. collector   — captura de Elasticsearch               (tolerable)
@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import threading
 
-from siem_lib import now_iso, write_json
+from siem_lib import load_json, now_iso, write_json
 from siem_servicios import ServicioNoDisponible, llamar
 
 INCIDENTS_FILE = "data/siem_incidents.json"
@@ -33,6 +33,8 @@ INCIDENTS_FILE = "data/siem_incidents.json"
 # hace una llamada al LLM (Gemma local o Gemini) por incidente.
 TIMEOUT_CAPTURA = 60
 TIMEOUT_CLASIFICACION = 60
+# Se le manda al analyst como `plazo_s` en cada pedido: corta el LLM a tiempo
+# para responder antes de que se venza, cualquiera sea su presupuesto propio.
 TIMEOUT_ANALISIS = 600
 
 # Un ciclo a la vez: dos corridas simultáneas escribirían el mismo reporte.
@@ -81,6 +83,35 @@ def _etapa_critica(nombre: str, respuesta_ok: bool, status: int, datos) -> None:
         raise ErrorDeEtapa(f"la etapa '{nombre}' falló (HTTP {status}): {motivo or 'sin detalle'}")
 
 
+def _incidentes_previos() -> list[dict]:
+    """Los incidentes del último reporte (vacío si no hay reporte o está roto)."""
+    try:
+        anterior = load_json(INCIDENTS_FILE)
+    except (OSError, ValueError):
+        return []
+    incidentes = anterior.get("incidents") if isinstance(anterior, dict) else None
+    if not isinstance(incidentes, list):
+        return []
+    return [i for i in incidentes if isinstance(i, dict) and isinstance(i.get("incident_id"), str)]
+
+
+def _identidad_previa() -> list[dict]:
+    """Lo mínimo que el classifier necesita para que un ataque en curso conserve su ID."""
+    return [{k: i.get(k) for k in ("incident_id", "first_seen", "last_seen")}
+            for i in _incidentes_previos()]
+
+
+def _analisis_previos() -> dict[str, dict]:
+    """Los análisis del último reporte, por `incident_id`.
+
+    Se le pasan al analyst para que reutilice los de incidentes que no
+    cambiaron en vez de volver a generarlos con el LLM (ver
+    `siem_agent._huella`). Si no hay reporte o está roto, no hay previos.
+    """
+    return {i["incident_id"]: i["analysis"] for i in _incidentes_previos()
+            if isinstance(i.get("analysis"), dict)}
+
+
 def ejecutar_ciclo() -> dict:
     """Corre un ciclo completo y devuelve `{report, etapas}`.
 
@@ -95,14 +126,17 @@ def ejecutar_ciclo() -> dict:
 
         _titulo("Agente 1 — Clasificación determinística (classifier)")
         try:
-            r = llamar("classifier", "POST", "/v1/classify", {"siem_data": siem_data},
+            r = llamar("classifier", "POST", "/v1/classify",
+                       {"siem_data": siem_data, "anteriores": _identidad_previa()},
                        timeout=TIMEOUT_CLASIFICACION)
             _etapa_critica("classifier", r.ok, r.status, r.datos)
             report = r.datos
             etapas.append({"etapa": "classifier", "estado": "ok"})
 
             _titulo("Agente 2 — Análisis LLM (analyst)")
-            r = llamar("analyst", "POST", "/v1/analyze", {"incidents": report["incidents"]},
+            r = llamar("analyst", "POST", "/v1/analyze",
+                       {"incidents": report["incidents"], "previos": _analisis_previos(),
+                        "plazo_s": TIMEOUT_ANALISIS},
                        timeout=TIMEOUT_ANALISIS)
             _etapa_critica("analyst", r.ok, r.status, r.datos)
             etapas.append({"etapa": "analyst", "estado": "ok"})

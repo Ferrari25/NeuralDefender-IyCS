@@ -1,4 +1,4 @@
-# SIEM-IA — dependencias de desarrollo (no hacen falta para correr el sistema).
+# NeuralDefender — dependencias de desarrollo (no hacen falta para correr el sistema).
 #
 # Instalación sin tocar el Python del sistema (Debian/Ubuntu marcan el intérprete
 # como "externally managed", PEP 668):

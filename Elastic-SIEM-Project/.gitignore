@@ -128,8 +128,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-# .env — a pedido explícito del dueño del repo, bajo su propia responsabilidad
-# (ver commit que sube secretos): ya NO se ignora.
+# .env se ignora más abajo (sección "Secretos locales").
 .venv
 env/
 venv/
@@ -201,3 +200,5 @@ data/backup/
 
 # Secretos locales: nunca al repo (plantilla en .env.example)
 .env
+.env.respaldo-*
+.env.tmp

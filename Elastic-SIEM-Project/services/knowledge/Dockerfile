@@ -23,5 +23,7 @@ EXPOSE 8000
 
 # UN worker, a propósito: memoria.py serializa las escrituras con un lock de
 # hilo, que no se comparte entre procesos. Más workers podrían pisarse.
+# --no-control-socket: el socket de control de gunicorn 26 no se usa, y con
+# HOME=/ (usuario sin home) fallaba al crearse en /.gunicorn.
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--threads", "8", \
-     "--timeout", "900", "--access-logfile", "-", "knowledge_service:app"]
+     "--timeout", "900", "--access-logfile", "-", "--no-control-socket", "knowledge_service:app"]

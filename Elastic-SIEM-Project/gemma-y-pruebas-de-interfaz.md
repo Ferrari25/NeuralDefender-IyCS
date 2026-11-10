@@ -28,7 +28,9 @@ propia máquina con Ollama:
   **unos 75 s por incidente**, porque corre en CPU sin GPU.
 - Si un ciclo pasa de 480 s, los incidentes que faltan se analizan con las
   reglas fijas, así la corrida nunca se cuelga. Ese límite se cambia con
-  `SIEM_LLM_PRESUPUESTO`. Si Ollama está caído o falta el modelo, también se
+  `SIEM_LLM_PRESUPUESTO`, hasta 540 s (el orquestador espera 600 s; un valor
+  mayor se recorta). Los incidentes sin cambios reutilizan el análisis del
+  ciclo anterior (`SIEM_LLM_REUSO`). Si Ollama está caído o falta el modelo, también se
   usan las reglas fijas.
 - En el panel aparece la etiqueta **«IA (Gemma local)»**, y cada incidente
   muestra qué modelo lo analizó.
@@ -41,9 +43,10 @@ propia máquina con Ollama:
 | Variable | Default | Qué hace |
 |----------|---------|----------|
 | `SIEM_USE_LLM` | `false` | Interruptor general del LLM. Tiene que estar en `true`. |
-| `SIEM_LLM_PROVEEDOR` | `gemma` | `gemma` (local, Ollama) o `gemini` (API de Google). |
+| `SIEM_LLM_PROVEEDOR` | `gemma` | `gemma` (local, Ollama) o `gemini` (API de Google, los incidentes salen del equipo). |
 | `SIEM_OLLAMA_MODELO` | `gemma3:4b` | Modelo de Gemma. Con poca RAM: `gemma3:1b`. |
-| `SIEM_LLM_PRESUPUESTO` | `480` | Segundos máximos de LLM por ciclo; el resto va a reglas fijas. |
+| `SIEM_LLM_PRESUPUESTO` | `480` | Segundos máximos de LLM por ciclo (tope 540); el resto va a reglas fijas. |
+| `SIEM_LLM_REUSO` | `3600` | Segundos que se reutiliza el análisis de un incidente sin cambios (`0` = nunca). |
 | `SIEM_GEMINI_MODELO` | `gemini-flash-lite-latest` | Modelo cuando el proveedor es `gemini`. |
 
 ### Comandos

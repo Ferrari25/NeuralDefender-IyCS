@@ -1,4 +1,4 @@
-# nicotito.md — Levantar SIEM-IA desde cero en un equipo nuevo
+# nicotito.md — Levantar NeuralDefender desde cero en un equipo nuevo
 
 Guía completa, de punta a punta, para clonar este repositorio en una máquina
 que nunca lo vio y dejarlo corriendo igual que en el original: stack Elastic,

@@ -109,6 +109,8 @@ y el gateway la recibe con cada consulta.
 | Hash de contraseña | **Argon2id** (`argon2-cffi`, RFC 9106) | Estándar recomendado actual; los parámetros van versionados en el hash, así que se puede endurecer sin migrar nada |
 | Rehash automático | Al iniciar sesión, si los parámetros quedaron viejos | Es el único momento en que la contraseña está disponible en claro |
 | Almacén | `data/auth/users.json` (volumen del servicio auth), `0600`, gestionado por CLI | Sin base de datos: cero dependencias de infraestructura adicionales |
+| Escritura del almacén | Temporal `0600` + `os.replace` (atómico), con un bloqueo exclusivo (`users.json.lock`) que abarca leer-modificar-escribir (`modificar_usuarios()`) | Antes se truncaba el archivo antes de bloquearlo: con 10+ logins simultáneos un lector lo veía vacío (y rechazaba a un usuario válido) y dos escrituras podían dejarlo con JSON inválido para siempre. Lo encontró la medición ISO/IEC 25023 (`tests/calidad/medicion_iso25023.py`) |
+| Registro de accesos | Cada login (exitoso, fallido o bloqueado) y cada logout van a `data/audit/accesos.jsonl`, encadenado por hash como el resto de la auditoría | ISO/IEC 25023 SAc-1-G: el rastro tiene que cubrir el acceso de los usuarios, no solo lo que deciden. Si la auditoría no registra un login exitoso, **no se abre la sesión** (503); un login fallido sigue respondiendo 401 aunque no se pueda registrar |
 | Alta de usuarios | Por línea de comandos, no por la web | Crear cuentas es administración del sistema; exponerlo en la web agrega superficie de ataque para ganar comodidad en algo puntual |
 | Sesión | `Flask-Login` + cookie firmada | `SECRET_KEY` desde `.env`; el servidor **no arranca** si falta |
 | Flags de cookie | `HttpOnly`, `SameSite=Lax`, `Secure` con TLS | `HttpOnly` la hace inaccesible desde JavaScript; `Lax` impide que viaje en un POST de otro sitio |
@@ -156,6 +158,7 @@ una red **exige** poner TLS delante.
 |-------|--------------|
 | `tests/integration/test_api01_autenticacion.py` | Acceso, roles, sesión, CSRF, fuerza bruta, arranque seguro |
 | `tests/unit/test_gestion_usuarios.py` | Almacén, validación, hashing, CLI |
+| `tests/integration/test_api01_autenticacion.py` (accesos y concurrencia) | Cada login/logout queda en `accesos.jsonl`; sin auditoría no se abre la sesión; 12 hilos haciendo login a la vez no rompen `users.json`; `modificar_usuarios()` no pierde cambios concurrentes |
 
 Lo más relevante que estas pruebas certifican: todas las rutas de datos
 responden 401 sin sesión (solo `healthz` y `login` son públicas); un

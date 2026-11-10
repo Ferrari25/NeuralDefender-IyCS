@@ -213,7 +213,7 @@ fi
 
 # ─── Preparación ─────────────────────────────────────────────────────────────
 
-azul "SIEM-IA · preparando la demostración"
+azul "NeuralDefender · preparando la demostración"
 echo
 paso "1/5 · Diagnóstico"
 if ! diagnostico; then

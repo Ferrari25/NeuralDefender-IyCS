@@ -1,4 +1,4 @@
-// Panel de supervisión SIEM-IA — lógica del cliente.
+// Panel de supervisión NeuralDefender — lógica del cliente.
 //
 // Extraído de `templates/index.html` en el refactor R-05. Vivía embebido en un
 // <script> de 498 líneas, que ESLint no analiza: de los dos linters de código

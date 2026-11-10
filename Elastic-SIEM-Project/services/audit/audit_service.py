@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Servicio de auditoría: único dueño de los registros append-only.
 
-Expone los dos registros encadenados por hash del sistema:
+Expone los registros encadenados por hash del sistema:
 
   - `decisions.jsonl`        — cada aprobación/descarte de un analista.
   - `analysis_history.jsonl` — cada corrida del pipeline de análisis.
   - `actividad.jsonl`        — lo que los analistas hacen con la memoria del
                                Agente 2 (documentos, lecciones).
+  - `accesos.jsonl`          — cada inicio de sesión (exitoso, fallido o
+                               bloqueado) y cada cierre de sesión en el panel.
 
 Además arma los reportes (`reportes.py`): una vista de solo lectura de esos
 registros, con la verificación de su cadena incluida.
@@ -29,6 +31,9 @@ API (red interna, exige `X-Internal-Token`):
     POST /v1/activity                     agrega un evento de la memoria del agente → 201
     GET  /v1/activity                     todos los eventos de memoria
     GET  /v1/activity/verify              estado de la cadena de actividad
+    POST /v1/access                       agrega un acceso al panel (login/logout) → 201
+    GET  /v1/access                       todos los accesos
+    GET  /v1/access/verify                estado de la cadena de accesos
     GET  /v1/reports?desde=&hasta=&formato=json|csv
                                           reporte del período (CSV viaja como {"csv": "..."})
 """
@@ -45,6 +50,7 @@ from siem_servicios import crear_servicio, cuerpo_json
 DECISIONS_FILE = "data/decisions.jsonl"
 HISTORY_FILE = "data/analysis_history.jsonl"
 ACTIVIDAD_FILE = reportes.ACTIVIDAD_FILE
+ACCESOS_FILE = reportes.ACCESOS_FILE
 
 DECISIONES_VALIDAS = ("approved", "dismissed")
 MAX_NOTE_LEN = 500
@@ -71,6 +77,13 @@ EVENTOS_DE_ACTIVIDAD = ("documento_cargado", "leccion_propuesta",
 CAMPOS_ACTIVIDAD = frozenset({"evento", "actor", "actor_rol", "leccion_id", "doc_id",
                               "detalle", "attack_type", "ip"})
 MAX_DETALLE_LEN = 500
+
+# Accesos al panel (ISO/IEC 25023 SAc-1-G: el rastro de auditoría tiene que
+# cubrir el acceso de los usuarios, no solo lo que hacen después). `usuario` es
+# el nombre que se INTENTÓ usar: en un intento fallido puede no existir.
+EVENTOS_DE_ACCESO = ("login_exitoso", "login_fallido", "login_bloqueado", "logout")
+CAMPOS_ACCESO = frozenset({"evento", "usuario", "rol", "ip", "session_id", "user_agent"})
+MAX_CAMPO_ACCESO = 200
 
 app = crear_servicio("audit")
 
@@ -184,6 +197,45 @@ def listar_actividad():
 @app.get("/v1/activity/verify")
 def verificar_actividad():
     return jsonify(verificar_cadena(ACTIVIDAD_FILE))
+
+
+def _validar_acceso(datos: dict) -> str | None:
+    sobrantes = set(datos) - CAMPOS_ACCESO
+    if sobrantes:
+        return f"campos no permitidos: {', '.join(sorted(sobrantes))}"
+    if datos.get("evento") not in EVENTOS_DE_ACCESO:
+        return f"evento inválido ({'|'.join(EVENTOS_DE_ACCESO)})"
+    usuario = datos.get("usuario")
+    if not isinstance(usuario, str) or not usuario.strip():
+        return "falta o es inválido 'usuario'"
+    for campo in CAMPOS_ACCESO - {"evento"}:
+        valor = datos.get(campo)
+        if valor is not None and (not isinstance(valor, str) or len(valor) > MAX_CAMPO_ACCESO
+                                  or not valor.isprintable()):
+            return f"'{campo}' debe ser texto imprimible de hasta {MAX_CAMPO_ACCESO} caracteres"
+    return None
+
+
+@app.post("/v1/access")
+def agregar_acceso():
+    datos = cuerpo_json()
+    if datos is None:
+        return _error("se esperaba un cuerpo JSON")
+    motivo = _validar_acceso(datos)
+    if motivo:
+        return _error(motivo)
+    escrito = append_jsonl(ACCESOS_FILE, {"ts": now_iso(), **datos})
+    return jsonify({"ok": True, "record": escrito}), 201
+
+
+@app.get("/v1/access")
+def listar_accesos():
+    return jsonify(read_jsonl(ACCESOS_FILE, tolerante=True))
+
+
+@app.get("/v1/access/verify")
+def verificar_accesos():
+    return jsonify(verificar_cadena(ACCESOS_FILE))
 
 
 @app.get("/v1/reports")

@@ -184,7 +184,7 @@ paso "1/7 · Todo a cero"
 HAY_AUDITORIA=false
 # Rutas del volumen del servicio audit (antes de la migración vivían en la raíz,
 # y este paso archivaba archivos que ya no existían).
-REGISTROS_AUDITORIA=(data/audit/decisions.jsonl data/audit/analysis_history.jsonl data/audit/actividad.jsonl)
+REGISTROS_AUDITORIA=(data/audit/decisions.jsonl data/audit/analysis_history.jsonl data/audit/actividad.jsonl data/audit/accesos.jsonl)
 for f in "${REGISTROS_AUDITORIA[@]}"; do [[ -s "$f" ]] && HAY_AUDITORIA=true; done
 if $HAY_AUDITORIA; then
   mkdir -p data/audit/archivo

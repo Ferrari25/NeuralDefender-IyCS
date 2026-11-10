@@ -1,4 +1,4 @@
-# Configuración de pylint para SIEM-IA.
+# Configuración de pylint para NeuralDefender.
 #
 # El plugin `pylint-secure-coding-standard` aporta las reglas de seguridad: es la
 # capa que hace cumplir, de forma automatizada, la garantía de no-autonomía

@@ -36,6 +36,7 @@ from siem_lib import now_iso
 
 DECISIONS_FILE = "data/decisions.jsonl"
 ACTIVIDAD_FILE = "data/actividad.jsonl"
+ACCESOS_FILE = "data/accesos.jsonl"
 
 FORMATOS = ("json", "csv")
 
@@ -80,6 +81,8 @@ def armar_reporte(desde: str | None = None, hasta: str | None = None) -> dict:
                   if _en_periodo(d.get("ts"), desde, hasta)]
     actividad = [a for a in read_jsonl(ACTIVIDAD_FILE, tolerante=True)
                  if _en_periodo(a.get("ts"), desde, hasta)]
+    accesos = [a for a in read_jsonl(ACCESOS_FILE, tolerante=True)
+               if _en_periodo(a.get("ts"), desde, hasta)]
 
     # Una misma acción puede decidirse más de una vez (el registro es
     # append-only): el estado vigente es la última, y las anteriores cuentan
@@ -93,6 +96,7 @@ def armar_reporte(desde: str | None = None, hasta: str | None = None) -> dict:
         "integridad": {
             "decisiones": verificar_cadena(DECISIONS_FILE),
             "actividad": verificar_cadena(ACTIVIDAD_FILE),
+            "accesos": verificar_cadena(ACCESOS_FILE),
         },
         "resumen": {
             "decisiones_registradas": len(decisiones),
@@ -104,9 +108,11 @@ def armar_reporte(desde: str | None = None, hasta: str | None = None) -> dict:
             "por_severidad": _contar(decisiones, "severidad"),
             "incidentes_con_decisiones": len({d.get("incident_id") for d in decisiones}),
             "actividad_de_memoria": _contar(actividad, "evento"),
+            "accesos_al_panel": _contar(accesos, "evento"),
         },
         "decisiones": decisiones,
         "actividad": actividad,
+        "accesos": accesos,
     }
 
 
@@ -132,7 +138,12 @@ def a_csv(reporte: dict) -> str:
         "incident_id": None, "action_id": a.get("leccion_id") or a.get("doc_id"),
         "accion": None, "attack_type": a.get("attack_type"), "severidad": None,
         "falso_positivo": None, "ip": a.get("ip"), "detalle": a.get("detalle"),
-    } for a in reporte["actividad"]]
+    } for a in reporte["actividad"]] + [{
+        "ts": a.get("ts"), "registro": "acceso", "analista": a.get("usuario"),
+        "rol": a.get("rol"), "evento": a.get("evento"), "incident_id": None,
+        "action_id": None, "accion": None, "attack_type": None, "severidad": None,
+        "falso_positivo": None, "ip": a.get("ip"), "detalle": a.get("session_id"),
+    } for a in reporte.get("accesos", [])]
     filas.sort(key=lambda f: f["ts"] or "")
 
     salida = io.StringIO()

@@ -5,7 +5,7 @@
 
 ## Qué es
 
-**SIEM-IA:** un Elastic Stack SIEM + una capa de IA con dashboard de supervisión
+**NeuralDefender:** un Elastic Stack SIEM + una capa de IA con dashboard de supervisión
 humana. Un ataque genera logs → Elastic detecta → un Agente 1 determinístico
 clasifica → un Agente 2 (LLM con fallback) explica en lenguaje claro → un analista
 **aprueba/descarta** cada acción sugerida desde un dashboard, y cada decisión queda
@@ -40,7 +40,7 @@ más una librería compartida (`libs/`). Cada servicio es dueño de sus datos en
 |----------|----------------|-----|
 | `gateway` | `dashboard.py`, `sesion_web.py`, `templates/`, `static/` | Panel de supervisión (Flask). **Único publicado** (127.0.0.1:5000). Sesión, CSRF, RBAC. |
 | `auth` | `siem_auth.py`, `manage_users.py` (CLI) | Usuarios, Argon2id, roles, anti-fuerza bruta → `data/auth/users.json`. |
-| `audit` | `cadena.py`, `audit_verify.py` (CLI), `reportes.py` | **Único escritor** de los registros append-only encadenados (decisiones, corridas, actividad de memoria) → `data/audit/`. Arma los reportes. |
+| `audit` | `cadena.py`, `audit_verify.py` (CLI), `reportes.py` | **Único escritor** de los registros append-only encadenados (decisiones, corridas, actividad de memoria, accesos al panel) → `data/audit/`. Arma los reportes. |
 | `collector` | `collector.py`, `es_client.py` | El único con credenciales de ES. Captura → `data/collector/siem_clean.json`. |
 | `classifier` | `classifier.py` | Agente 1 determinístico (reglas/umbral + playbook). Sin estado; lee `network_logs/` (ro). |
 | `analyst` | `siem_agent.py`, `proveedores_llm.py`, `perfil_agente.md` | Agente 2 (Gemma 3 local vía contenedor `ollama`, o Gemini; con fallback). Sin estado; el único con `GEMINI_API_KEY` y acceso a `ollama`. Consulta su memoria a `knowledge`. |
@@ -76,7 +76,11 @@ Mapa de carpetas y "¿dónde busco…?": `README.md` §Dónde está todo. Regla:
   `./scripts/siem.sh modelo`). `SIEM_LLM_PROVEEDOR=gemini` usa la API con `GEMINI_API_KEY`.
   Con cualquiera hace falta `SIEM_USE_LLM=true` (default `false`); si no, o si el LLM
   falla, va al **fallback determinístico**. Gemma en CPU tarda ~30-90 s por incidente;
-  `SIEM_LLM_PRESUPUESTO` (480 s) corta y manda el resto al fallback.
+  `SIEM_LLM_PRESUPUESTO` (480 s, tope 540 por el timeout de 600 s del orquestador) corta
+  y manda el resto al fallback. Los incidentes sin cambios reutilizan el análisis del
+  ciclo anterior (`SIEM_LLM_REUSO`, 3600 s). Sin `SIEM_LLM_PROVEEDOR` se usa Gemma
+  (Gemini solo a propósito: los incidentes salen del equipo). `reset.sh` no borra el volumen
+  del modelo.
 - **El Agente 2 aprende, pero solo con aprobación humana** (`services/knowledge/`, ver
   `docs/00-arquitectura.md` §Memoria del Agente 2). Cada decisión del panel es un caso;
   un patrón repetido genera una lección *propuesta* que no se usa hasta que un analista
@@ -127,8 +131,17 @@ Mapa de carpetas y "¿dónde busco…?": `README.md` §Dónde está todo. Regla:
   radios y espaciado en grilla de 2px. Lo cargan las dos pantallas — `app.css` y
   `login.css` solo consumen, y ninguna define un `:root` propio. Hay pruebas que
   fallan ante un px suelto o un contraste por debajo de WCAG AA.
-- **Secretos:** todo en `.env`. **En este repositorio `.env` está versionado**, igual
-  que `elasticsearch/certs/*.key` y `data/auth/users.json`, por decisión explícita del
-  dueño (ver `.gitignore`). Pendiente: rotar `ELASTIC_PASSWORD`,
-  `KIBANA_SYSTEM_PASSWORD`, `GEMINI_API_KEY`. El `.env` actual tiene `SIEM_USE_LLM=true`.
+- **Secretos:** todo en `.env`, que ya **no** está versionado (plantilla: `.env.example`).
+  El historial de git (commit `0ee27c6` y anteriores) todavía lo contiene: hay que
+  rotar todo lo que tenía (`ELASTIC_PASSWORD`, `KIBANA_SYSTEM_PASSWORD`, claves de
+  Kibana, `GEMINI_API_KEY`, `SECRET_KEY`, `SIEM_INTERNAL_TOKEN`): `./scripts/rotar-secretos.sh`
+  lo hace (con copia de respaldo del `.env`) salvo la key de Gemini y `KIBANA_SAVEDOBJECTS_KEY`.
+  Ojo: la contraseña de `elastic` también quedó versionada en `logstash/config/logstash.yml`
+  (la imagen de Logstash reescribía el archivo con los `xpack.monitoring.*` del entorno);
+  ahora usa `${ELASTIC_PASSWORD}`, pero sigue en el historial: rotarla.
+  **Siguen versionados** (decisión del dueño, ver `.gitignore`): `elasticsearch/certs/ca.key`,
+  `elasticsearch/certs/node.key`, `data/auth/users.json` (+ `.bak`) y `users.json.bak` en la
+  raíz. Cada commit que los toca sube hashes de contraseña y claves privadas: si el repo se
+  comparte, regenerar los certificados (CA y nodo) y cambiar las contraseñas de los usuarios
+  del panel también.
 

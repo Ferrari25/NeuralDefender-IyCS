@@ -2,7 +2,7 @@
 # los otros servicios, gunicorn para servir en el contenedor).
 Flask>=3.0
 requests>=2.31
-gunicorn>=22.0
+gunicorn>=26.0  # --no-control-socket existe desde la 26
 
 # Hash de contraseñas con Argon2id (RFC 9106)
 argon2-cffi>=23.1

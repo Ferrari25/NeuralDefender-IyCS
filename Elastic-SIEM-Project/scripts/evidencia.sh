@@ -236,7 +236,7 @@ ok "05-no-autonomia.txt — $N_AUTO verificaciones"
 # ─── Resumen ─────────────────────────────────────────────────────────────────
 
 cat > "$DIR/00-resumen.md" <<RESUMEN
-# Evidencia de pruebas — SIEM-IA
+# Evidencia de pruebas — NeuralDefender
 
 Generado: $(date -u +%Y-%m-%dT%H:%M:%SZ) · Rama de trabajo: local
 

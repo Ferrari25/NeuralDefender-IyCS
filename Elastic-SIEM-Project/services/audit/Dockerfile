@@ -23,5 +23,7 @@ EXPOSE 8000
 
 # Con un worker basta; igual, append_jsonl toma un flock por escritura, así que
 # la cadena de hashes no se rompe aunque se agreguen workers.
+# --no-control-socket: el socket de control de gunicorn 26 no se usa, y con
+# HOME=/ (usuario sin home) fallaba al crearse en /.gunicorn.
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--threads", "8", \
-     "--timeout", "900", "--access-logfile", "-", "audit_service:app"]
+     "--timeout", "900", "--access-logfile", "-", "--no-control-socket", "audit_service:app"]

@@ -1,4 +1,4 @@
-// Análisis estático del JavaScript del dashboard (SIEM-IA).
+// Análisis estático del JavaScript del dashboard (NeuralDefender).
 //
 // `eslint-plugin-security` cubre el catálogo general (eval, RegExp dinámicas,
 // acceso a objetos por índice variable). `eslint-plugin-no-unsanitized` es el

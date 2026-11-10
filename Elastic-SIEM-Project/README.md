@@ -1,4 +1,4 @@
-# SIEM-IA — Elastic SIEM + capa de IA + dashboard de supervisión
+# NeuralDefender — Elastic SIEM + capa de IA + dashboard de supervisión
 
 - **Ameed Othman 12220692 (CS)**
 - **Ahmed Muwafi 12010640 (NIS)**
@@ -119,6 +119,8 @@ Elastic-SIEM-Project/
 **Scripts operativos** (`scripts/`)
 - `start.sh` / `reset.sh` — levantar el stack / reiniciar de cero (la auditoría
   y la memoria del agente se conservan)
+- `rotar-secretos.sh` — cambia las credenciales de Elastic/Kibana, la `SECRET_KEY`
+  del panel y el token interno, con copia de respaldo del `.env`
 - `siem.sh` — atajos para operar la capa IA (`pipeline`, `usuarios`, `auditoria`,
   `reporte`, `cobertura`, `estado`)
 - `deploy-rules.sh` / `export-rules.sh` — reglas de detección como código

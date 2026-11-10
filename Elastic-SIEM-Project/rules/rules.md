@@ -116,7 +116,7 @@ Cada código corresponde a un archivo: `A1` → `ndjson/A1-ssh-brute-force-basic
 - MITRE ATT&CK: Tactic **Credential Access (TA0006)** → Technique **Brute Force (T1110)**
 - Tags: `brute-force`, `authentication`, `ssh`, `credential-access`
 - Investigation guide (advanced): `Revisar source_ip y user. ¿La IP es interna/conocida? ¿Hubo un authentication_success posterior?`
-- Author: `SIEM-IA`  ·  License: `DRL`
+- Author: `NeuralDefender`  ·  License: `DRL`
 
 **Schedule rule**
 - Runs every: `5m`
@@ -286,7 +286,7 @@ Cada código corresponde a un archivo: `A1` → `ndjson/A1-ssh-brute-force-basic
 - References: `https://attack.mitre.org/techniques/T1110/`
 - False positives: `Usuario legítimo que escribió mal su contraseña una sola vez.`
 - Investigation guide (advanced): `Prioridad baja: no accionar solo. Si la misma IP vuelve a aparecer (más fallos, otro tipo de incidente), correlacionar con el Agente 2 (contexto histórico) antes de escalar.`
-- Author: `SIEM-IA`  ·  License: `DRL`
+- Author: `NeuralDefender`  ·  License: `DRL`
 
 **Schedule rule**
 - Runs every: `5m` · Look-back: `1m`

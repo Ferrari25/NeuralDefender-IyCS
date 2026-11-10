@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CLI del pipeline SIEM-IA: dispara un ciclo detección → análisis y muestra el resultado.
+CLI del pipeline NeuralDefender: dispara un ciclo detección → análisis y muestra el resultado.
 
 Le pide el ciclo al servicio pipeline por HTTP en vez de correrlo en este
 proceso: así el servicio sigue siendo el único que escribe el reporte, y dos

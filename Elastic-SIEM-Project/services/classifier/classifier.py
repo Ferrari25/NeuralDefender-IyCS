@@ -31,6 +31,7 @@ import hashlib
 import re
 import shlex
 from dataclasses import asdict, dataclass, field
+from datetime import timedelta
 
 from siem_lib import (
     entero_de_entorno,
@@ -1273,7 +1274,67 @@ def auth_logs_de_red(events: list[dict]) -> list[dict]:
         if e.get("event_type") == "auth_failure" and isinstance(e.get("message"), str)]
 
 
-def classify(siem_data: dict, network_events: list[dict] | None = None) -> list[dict]:
+# Un ataque que sigue activo es el MISMO incidente aunque la muestra que trae el
+# collector (las alertas más recientes por regla, los últimos logs) ya no incluya
+# su primer evento. Si la actividad se corta por más de esto, lo que venga
+# después es un incidente nuevo.
+CONTINUIDAD_DE_INCIDENTE = timedelta(hours=1)
+
+
+def _raiz_del_id(incident_id: object) -> str | None:
+    """`INC-AUTH-10.0.0.5-1a2b3c4d` → `INC-AUTH-10.0.0.5` (tipo + IP, sin el hash)."""
+    if not isinstance(incident_id, str) or incident_id.count("-") < 3:
+        return None
+    return incident_id.rsplit("-", 1)[0]
+
+
+def conservar_identidad(incidents: list[dict], anteriores: list[dict] | None) -> None:
+    """Le devuelve a cada incidente en curso el ID que tenía en el reporte anterior.
+
+    El ID sale de `hash(tipo, IP, first_seen)`, y `first_seen` es el evento más
+    viejo de la MUESTRA de la captura. Con un ataque en curso entran eventos
+    nuevos, el más viejo de la muestra avanza y el incidente cambiaba de ID cada
+    pocos ciclos: las decisiones del analista (atadas al `action_id`, que empieza
+    con el `incident_id`) dejaban de verse y las acciones volvían a "pendiente", y
+    el Agente 2 volvía a analizar con el LLM un ataque que ya había analizado.
+
+    Ahora, si en el reporte anterior hay un incidente del mismo tipo e IP cuya
+    actividad se solapa con la de este (o la continúa con un corte menor a
+    `CONTINUIDAD_DE_INCIDENTE`), este conserva aquel ID y el `first_seen` más
+    temprano de los dos. Los `action_id` se renombran con el mismo prefijo.
+    """
+    previos: dict[str, list[dict]] = {}
+    for a in anteriores or []:
+        raiz = _raiz_del_id(a.get("incident_id")) if isinstance(a, dict) else None
+        if raiz and a.get("first_seen") and a.get("last_seen"):
+            previos.setdefault(raiz, []).append(a)
+    for inc in incidents:
+        candidatos = previos.get(_raiz_del_id(inc.get("incident_id")) or "", [])
+        ini, fin = ts_ordenable(inc.get("first_seen")), ts_ordenable(inc.get("last_seen"))
+        continuos = [a for a in candidatos
+                     if ini <= ts_ordenable(a["last_seen"]) + CONTINUIDAD_DE_INCIDENTE
+                     and ts_ordenable(a["first_seen"]) <= fin + CONTINUIDAD_DE_INCIDENTE]
+        if not continuos:
+            continue
+        previo = min(continuos, key=lambda a: ts_ordenable(a["first_seen"]))
+        viejo, nuevo = inc["incident_id"], previo["incident_id"]
+        if ts_ordenable(previo["first_seen"]) < ini:
+            inc["first_seen"] = previo["first_seen"]
+        if viejo == nuevo:
+            continue
+        inc["incident_id"] = nuevo
+        for accion in inc.get("recommended_actions") or []:
+            for campo in ("action_id", "alternativa_de"):
+                valor = accion.get(campo)
+                if isinstance(valor, str) and valor.startswith(viejo + "-"):
+                    accion[campo] = nuevo + valor[len(viejo):]
+
+
+def classify(siem_data: dict, network_events: list[dict] | None = None,
+             anteriores: list[dict] | None = None) -> list[dict]:
+    """`anteriores`: los incidentes del reporte anterior (al menos `incident_id`,
+    `first_seen` y `last_seen`), para conservar la identidad de los que siguen
+    en curso (ver `conservar_identidad`)."""
     network_events = network_events or []
     alerts = siem_data.get("alerts", [])
     logs_de_red = auth_logs_de_red(network_events)
@@ -1285,12 +1346,14 @@ def classify(siem_data: dict, network_events: list[dict] | None = None) -> list[
         + detect_port_scans(network_events, alerts)
         + detect_phishing(network_events, alerts)
     )
+    conservar_identidad(incidents, anteriores)
     incidents.sort(key=lambda x: x["event_count"], reverse=True)
     _link_campaigns(incidents)
     return incidents
 
 
-def reporte(siem_data: dict, network_events: list[dict]) -> dict:
+def reporte(siem_data: dict, network_events: list[dict],
+            anteriores: list[dict] | None = None) -> dict:
     """Clasifica y arma el reporte que consume el Agente 2.
 
     `siem_data` vacío es un caso legítimo: sin captura previa de Elasticsearch
@@ -1302,7 +1365,7 @@ def reporte(siem_data: dict, network_events: list[dict]) -> dict:
     es la única fuente real de eventos de red/web (no hay Suricata; ver docs/01).
     """
     print("[Agente 1 - Clasificador] Aplicando reglas determinísticas...")
-    incidents = classify(siem_data, network_events)
+    incidents = classify(siem_data, network_events, anteriores)
     print(f"  Incidentes detectados: {len(incidents)}")
     for inc in incidents:
         c = inc["classification"]

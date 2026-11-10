@@ -23,5 +23,7 @@ EXPOSE 8000
 
 # UN solo worker a propósito: el candado que impide dos ciclos simultáneos
 # (orquestador._en_curso) vive en memoria del proceso.
+# --no-control-socket: el socket de control de gunicorn 26 no se usa, y con
+# HOME=/ (usuario sin home) fallaba al crearse en /.gunicorn.
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--threads", "8", \
-     "--timeout", "900", "--access-logfile", "-", "pipeline_service:app"]
+     "--timeout", "900", "--access-logfile", "-", "--no-control-socket", "pipeline_service:app"]

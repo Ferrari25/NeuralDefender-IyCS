@@ -24,5 +24,7 @@ EXPOSE 8000
 # UN solo worker a propósito: el control de intentos de login vive en memoria
 # (siem_auth.ControlDeIntentos). Con varios workers, cada uno llevaría su propia
 # cuenta y el límite de 5 intentos se multiplicaría por la cantidad de workers.
+# --no-control-socket: el socket de control de gunicorn 26 no se usa, y con
+# HOME=/ (usuario sin home) fallaba al crearse en /.gunicorn.
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--threads", "8", \
-     "--timeout", "900", "--access-logfile", "-", "auth_service:app"]
+     "--timeout", "900", "--access-logfile", "-", "--no-control-socket", "auth_service:app"]

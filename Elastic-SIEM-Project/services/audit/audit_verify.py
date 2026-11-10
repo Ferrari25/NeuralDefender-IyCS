@@ -32,7 +32,7 @@ from pathlib import Path
 from cadena import read_jsonl, verificar_cadena
 
 REGISTROS_POR_DEFECTO = ["data/decisions.jsonl", "data/analysis_history.jsonl",
-                         "data/actividad.jsonl"]
+                         "data/actividad.jsonl", "data/accesos.jsonl"]
 
 
 def _resumen(path: Path) -> dict:
@@ -98,7 +98,7 @@ def _imprimir(resultado: dict) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Verifica la integridad de los registros append-only de SIEM-IA.")
+        description="Verifica la integridad de los registros append-only de NeuralDefender.")
     parser.add_argument("archivos", nargs="*", default=None,
                         help=f"registros a verificar (por defecto: {', '.join(REGISTROS_POR_DEFECTO)})")
     parser.add_argument("--json", action="store_true",

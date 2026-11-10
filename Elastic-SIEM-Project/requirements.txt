@@ -1,4 +1,4 @@
-# SIEM-IA — dependencias de TODOS los microservicios juntos.
+# NeuralDefender — dependencias de TODOS los microservicios juntos.
 #
 # Cada servicio declara las suyas en `services/<servicio>/requirements.txt`, y
 # su imagen de Docker instala solo esas. Este archivo las reúne para el entorno

@@ -41,8 +41,12 @@ import fcntl
 import json
 import os
 import re
+import tempfile
+import threading
 import time
 from collections import defaultdict
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -167,12 +171,35 @@ def cargar_usuarios() -> dict[str, Usuario]:
     return usuarios
 
 
-def guardar_usuarios(usuarios: dict[str, Usuario]) -> None:
-    """Escribe el archivo con bloqueo y permisos 0600.
+@contextmanager
+def _bloqueo_exclusivo() -> Iterator[None]:
+    """Bloqueo de escritura del almacén, sobre un archivo `.lock` al lado.
 
-    Mismo criterio que `siem_lib.append_jsonl`: `os.open` con modo explícito, en
-    vez de dejar los permisos a merced del umask. Un archivo de hashes de
-    contraseña legible por todo el sistema no protege gran cosa.
+    Se bloquea un archivo aparte, y no `users.json`, porque `users.json` se
+    reemplaza entero en cada escritura (ver `_escribir`): un bloqueo sobre el
+    archivo viejo no protegería al nuevo. `flock` sobre descriptores distintos
+    excluye también entre hilos del mismo proceso.
+    """
+    ruta = _ruta_usuarios()
+    fd = os.open(f"{ruta}.lock", os.O_RDWR | os.O_CREAT, USERS_FILE_MODE)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        yield
+    finally:
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        os.close(fd)
+
+
+def _escribir(usuarios: dict[str, Usuario]) -> None:
+    """Reemplaza el archivo de forma atómica: nadie puede leerlo a medio escribir.
+
+    Antes se abría `users.json` con truncado y recién después se tomaba el
+    bloqueo, y las lecturas no esperaban ese bloqueo: un login concurrente podía
+    leer el archivo vacío (y rechazar a un usuario válido), y dos escrituras
+    simultáneas podían dejarlo con JSON inválido para siempre (hallazgo de la
+    medición ISO/IEC 25023, SAu-2-S). Ahora se escribe un temporal 0600 en el
+    mismo directorio y se lo renombra encima: un lector ve el archivo viejo o el
+    nuevo, completos.
     """
     ruta = _ruta_usuarios()
     contenido = {
@@ -180,17 +207,53 @@ def guardar_usuarios(usuarios: dict[str, Usuario]) -> None:
         "actualizado": datetime.now(timezone.utc).isoformat(),
         "usuarios": [u.to_dict() for u in usuarios.values()],
     }
-    fd = os.open(ruta, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, USERS_FILE_MODE)
-    with os.fdopen(fd, "w", encoding="utf-8") as f:
-        fcntl.flock(f.fileno(), fcntl.LOCK_EX)
-        try:
+    directorio = ruta.parent if str(ruta.parent) else Path(".")
+    # mkstemp crea el archivo con 0600; igual se fuerza el modo, como antes.
+    fd, temporal = tempfile.mkstemp(prefix=f".{ruta.name}.", suffix=".tmp", dir=directorio)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(contenido, f, indent=2, ensure_ascii=False)
             f.flush()
             os.fsync(f.fileno())
-        finally:
-            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
-    # Si el archivo ya existía, `os.open` no cambia su modo: lo forzamos.
-    os.chmod(ruta, USERS_FILE_MODE)
+        os.chmod(temporal, USERS_FILE_MODE)
+        os.replace(temporal, ruta)
+    except BaseException:
+        Path(temporal).unlink(missing_ok=True)
+        raise
+    dir_fd = os.open(directorio, os.O_RDONLY)
+    try:
+        os.fsync(dir_fd)  # que el renombre sobreviva a un corte de energía
+    finally:
+        os.close(dir_fd)
+
+
+@contextmanager
+def modificar_usuarios() -> Iterator[dict[str, Usuario]]:
+    """Leer-modificar-escribir el almacén sin perder cambios concurrentes.
+
+        with modificar_usuarios() as usuarios:
+            usuarios["ana"].rol = "auditor"
+
+    El bloqueo abarca la lectura y la escritura: dos logins simultáneos (o un
+    login y la CLI) ya no pueden pisarse los cambios. Si el bloque lanza una
+    excepción, no se escribe nada. Nunca pedir datos interactivos adentro: el
+    bloqueo detiene todos los logins mientras está tomado.
+    """
+    with _bloqueo_exclusivo():
+        usuarios = cargar_usuarios()
+        yield usuarios
+        _escribir(usuarios)
+
+
+def guardar_usuarios(usuarios: dict[str, Usuario]) -> None:
+    """Escribe el almacén completo (atómico y con bloqueo; permisos 0600).
+
+    Para cambiar algo de lo que ya hay, usar `modificar_usuarios()`: esta función
+    reemplaza el almacén con lo que recibe, aunque otro lo haya cambiado entre
+    medio.
+    """
+    with _bloqueo_exclusivo():
+        _escribir(usuarios)
 
 
 # ─── Validación y hashing ────────────────────────────────────────────────────
@@ -272,6 +335,9 @@ class ControlDeIntentos:
         self._intentos: dict[tuple[str, str], _Intentos] = defaultdict(_Intentos)
         self._maximo = maximo
         self._ventana = ventana.total_seconds()
+        # gunicorn atiende con varios hilos: sin esto, dos fallos simultáneos
+        # podían contarse como uno.
+        self._lock = threading.Lock()
 
     def _vigentes(self, clave: tuple[str, str]) -> list[float]:
         ahora = time.monotonic()
@@ -281,6 +347,10 @@ class ControlDeIntentos:
 
     def bloqueado(self, username: str, ip: str) -> tuple[bool, int]:
         """¿Está bloqueado? Devuelve `(bloqueado, segundos_restantes)`."""
+        with self._lock:
+            return self._bloqueado(username, ip)
+
+    def _bloqueado(self, username: str, ip: str) -> tuple[bool, int]:
         fallos = self._vigentes((username, ip))
         if len(fallos) < self._maximo:
             return False, 0
@@ -294,14 +364,17 @@ class ControlDeIntentos:
         return True, int(restante) + 1
 
     def registrar_fallo(self, username: str, ip: str) -> None:
-        self._vigentes((username, ip)).append(time.monotonic())
+        with self._lock:
+            self._vigentes((username, ip)).append(time.monotonic())
 
     def limpiar(self, username: str, ip: str) -> None:
         """Un login exitoso borra el historial de fallos de esa combinación."""
-        self._intentos.pop((username, ip), None)
+        with self._lock:
+            self._intentos.pop((username, ip), None)
 
     def reset(self) -> None:
-        self._intentos.clear()
+        with self._lock:
+            self._intentos.clear()
 
 
 control_intentos = ControlDeIntentos()
@@ -345,14 +418,18 @@ def autenticar(username: object, password: object, ip: str) -> ResultadoLogin:
     control_intentos.limpiar(nombre, ip)
 
     # Si los parámetros de Argon2 quedaron viejos, se rehashea con la contraseña
-    # ya verificada: es el único momento en que está disponible en claro.
-    if necesita_rehash(usuario):
-        usuario.password_hash = hash_password(password)
-
-    usuario.ultimo_acceso = datetime.now(timezone.utc).isoformat()
-    usuarios[nombre] = usuario
-    guardar_usuarios(usuarios)
-    return ResultadoLogin(True, usuario=usuario)
+    # ya verificada: es el único momento en que está disponible en claro. El
+    # hash se calcula ANTES de tomar el bloqueo (Argon2id tarda a propósito).
+    nuevo_hash = hash_password(password) if necesita_rehash(usuario) else None
+    with modificar_usuarios() as actuales:
+        vigente = actuales.get(nombre)
+        if vigente is None or not vigente.activo:
+            # Lo dieron de baja (o lo borraron) entre la verificación y ahora.
+            return ResultadoLogin(False, motivo="usuario o contraseña incorrectos")
+        if nuevo_hash is not None:
+            vigente.password_hash = nuevo_hash
+        vigente.ultimo_acceso = datetime.now(timezone.utc).isoformat()
+    return ResultadoLogin(True, usuario=vigente)
 
 
 def vista_publica(usuario: Usuario) -> dict:

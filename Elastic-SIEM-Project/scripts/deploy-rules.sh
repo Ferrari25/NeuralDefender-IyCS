@@ -127,7 +127,7 @@ done
 # temporal en vez de hacer 13 peticiones: el import es atómico y el informe de
 # resultado viene completo.
 
-TEMPORAL=$(mktemp "${TMPDIR:-/tmp}/siem-ia-reglas-XXXXXX.ndjson")
+TEMPORAL=$(mktemp "${TMPDIR:-/tmp}/neuraldefender-reglas-XXXXXX.ndjson")
 trap 'rm -f "$TEMPORAL"' EXIT
 cat "${ARCHIVOS[@]}" > "$TEMPORAL"
 

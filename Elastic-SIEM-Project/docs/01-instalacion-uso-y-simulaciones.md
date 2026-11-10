@@ -88,18 +88,30 @@ funciona y dónde verlo: [05 · El "Gem"](05-gem-memoria-del-agente.md).
 
 ### El LLM (Agente 2)
 
-- **Proveedor por defecto: Gemma 3 local** (`SIEM_LLM_PROVEEDOR=gemma`). El
+- **Proveedor por defecto: Gemma 3 local** (`SIEM_LLM_PROVEEDOR=gemma`, también si
+  la variable está vacía: Gemini se elige siempre a propósito, porque con él los
+  datos de los incidentes salen del equipo; si hay una key y la variable está
+  vacía, el analyst lo avisa con un WARN). El
   modelo abierto de Google corre en el contenedor `ollama` de la misma
   máquina: gratis, sin key, sin cuota, y los logs no salen del equipo. El
   contenedor vive en `llm-net` (`internal: true`, sin internet). El modelo se
   baja una sola vez: `./scripts/siem.sh modelo` (default `gemma3:4b`, ~3.4 GB
   de disco y ~4 GB de RAM; con poca RAM, `./scripts/siem.sh modelo gemma3:1b`
   y `SIEM_OLLAMA_MODELO=gemma3:1b` en `.env`). En CPU tarda ~30-90 s por
-  incidente; `SIEM_LLM_PRESUPUESTO` (default 480 s) corta el LLM por corrida y
-  el resto de los incidentes va al fallback.
+  incidente; `SIEM_LLM_PRESUPUESTO` (default 480 s, tope 540 s) corta el LLM
+  por corrida, y además el analyst corta antes del plazo que le manda el
+  orquestador (`plazo_s`, 600 s): el resto de los incidentes va al fallback. Un
+  incidente que no cambió desde el ciclo anterior reutiliza su análisis (vigencia
+  repartida entre el 75 % y el 100 % de `SIEM_LLM_REUSO`, default 3600 s), así la
+  corrida automática cada 2 min no vuelve a pasar todo por Gemma. Cambian la
+  huella, y fuerzan un análisis nuevo: el perfil o el prompt, los factores de la
+  clasificación, las acciones y su orden, y el volumen cuando se duplica. El modelo
+  bajado vive en el volumen `ollama-modelos`, que `reset.sh` no borra.
 - **Alternativa: Gemini por API** (`SIEM_LLM_PROVEEDOR=gemini` + `GEMINI_API_KEY`
   de https://aistudio.google.com). Modelo con `SIEM_GEMINI_MODELO` (default
-  `gemini-flash-lite-latest`; con la capa gratuita también sirve `gemma-3-27b-it`).
+  `gemini-flash-lite-latest`; con la capa gratuita también sirve `gemma-3-27b-it`:
+  como esos modelos no aceptan instrucción de sistema ni modo JSON, el cliente
+  manda todo en el mensaje y pide el JSON en el texto).
 - **Interruptor:** con cualquier proveedor hace falta `SIEM_USE_LLM=true` en
   `.env` — apagado por defecto.
 - Si el interruptor está apagado, falta el modelo o la key, o el LLM falla,

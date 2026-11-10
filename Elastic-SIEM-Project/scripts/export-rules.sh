@@ -45,7 +45,7 @@ if [[ "$(curl -s -o /dev/null -w '%{http_code}' "$KIBANA/api/status")" != "200" 
   echo "[ERROR] Kibana no responde en $KIBANA."; exit 1
 fi
 
-TEMPORAL=$(mktemp "${TMPDIR:-/tmp}/siem-ia-export-XXXXXX.ndjson")
+TEMPORAL=$(mktemp "${TMPDIR:-/tmp}/neuraldefender-export-XXXXXX.ndjson")
 trap 'rm -f "$TEMPORAL"' EXIT
 
 echo "📥 Exportando reglas desde Kibana..."

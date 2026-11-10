@@ -74,14 +74,31 @@ case "$comando" in
     # El contenedor `ollama` no tiene salida a internet (red `llm-net`,
     # internal), así que el modelo lo baja un contenedor de un solo uso, con
     # red, que escribe en el mismo volumen. Se hace una vez; queda guardado.
-    modelo="${1:-${SIEM_OLLAMA_MODELO:-gemma3:4b}}"
+    # Mismo orden que docker compose: argumento > entorno > .env > default,
+    # para bajar exactamente el modelo que el analyst le va a pedir a Ollama.
+    desde_env=""
+    if [[ -f .env ]]; then
+      desde_env="$(sed -n 's/^[[:space:]]*SIEM_OLLAMA_MODELO[[:space:]]*=[[:space:]]*//p' .env \
+        | tail -n1 | sed 's/[[:space:]]*#.*$//; s/^["'"'"']//; s/["'"'"']$//')"
+    fi
+    modelo="${1:-${SIEM_OLLAMA_MODELO:-${desde_env:-gemma3:4b}}}"
     [[ "$modelo" =~ ^[a-z0-9._-]+(:[a-z0-9._-]+)?$ ]] \
       || { echo "[ERROR] Nombre de modelo inválido: $modelo"; exit 2; }
     imagen="$(docker compose config --images ollama)"
     docker compose create ollama >/dev/null
     volumen="$(docker inspect siem-ollama --format '{{range .Mounts}}{{.Name}}{{end}}')"
-    docker run --rm -v "$volumen:/root/.ollama" --entrypoint sh "$imagen" \
-      -c "ollama serve >/dev/null 2>&1 & sleep 3 && ollama pull '$modelo' && ollama list"
+    echo "⬇️  Bajando $modelo..."
+    # Espera a que `ollama serve` responda (hasta 60 s) en vez de un tiempo fijo:
+    # en un equipo lento o con el volumen recién creado tarda más.
+    docker run --rm -v "$volumen:/root/.ollama" --entrypoint sh "$imagen" -c "
+      ollama serve >/dev/null 2>&1 &
+      i=0
+      until ollama list >/dev/null 2>&1; do
+        i=\$((i + 1))
+        [ \$i -ge 60 ] && { echo '[ERROR] ollama serve no respondió en 60 s'; exit 1; }
+        sleep 1
+      done
+      ollama pull '$modelo' && ollama list"
     docker compose up -d ollama
     echo "✅ $modelo listo. Prender el Agente 2: SIEM_USE_LLM=true en .env y"
     echo "   docker compose up -d analyst"

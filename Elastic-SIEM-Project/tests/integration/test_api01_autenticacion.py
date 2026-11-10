@@ -580,3 +580,124 @@ def test_el_decorador_rechaza_un_permiso_de_ejecucion():
 def test_me_declara_explicitamente_que_no_ejecuta(client):
     """Para que ninguna interfaz asuma lo contrario."""
     assert client.get("/api/v1/me").get_json()["puede_ejecutar_acciones"] is False
+
+
+# ─── Accesos en la auditoría (ISO/IEC 25023 SAc-1-G) ──────────────────────────
+
+def _accesos():
+    import siem_servicios
+    return siem_servicios.llamar("audit", "GET", "/v1/access").datos
+
+
+def test_cada_login_queda_en_la_auditoria_de_accesos(client_anonimo, login):
+    assert login(client_anonimo, "ana").status_code == 200
+    assert login(client_anonimo, "ana", "contrasena-incorrecta-1").status_code == 401
+    assert login(client_anonimo, "noexiste").status_code == 401
+
+    eventos = [(a["evento"], a["usuario"]) for a in _accesos()]
+    assert eventos == [("login_exitoso", "ana"), ("login_fallido", "ana"),
+                       ("login_fallido", "noexiste")]
+    exitoso = _accesos()[0]
+    assert exitoso["rol"] == "analyst" and exitoso["session_id"] and exitoso["ts"]
+
+
+def test_el_bloqueo_y_el_logout_tambien_quedan(client_anonimo, login):
+    for _ in range(5):
+        login(client_anonimo, "beto", "mala-mala-mala-1")
+    assert login(client_anonimo, "beto").status_code == 429
+    assert login(client_anonimo, "ana").status_code == 200
+    assert client_anonimo.post("/api/v1/logout").status_code == 204
+
+    eventos = [a["evento"] for a in _accesos()]
+    assert eventos.count("login_fallido") == 5
+    assert "login_bloqueado" in eventos
+    assert eventos[-2:] == ["login_exitoso", "logout"]
+
+
+def test_sin_auditoria_no_se_abre_la_sesion(client_anonimo, login, servicio_caido):
+    """Primero el rastro, después la sesión: un acceso sin registro no ocurre."""
+    servicio_caido("audit")
+    r = login(client_anonimo, "ana")
+    assert r.status_code == 503
+    assert client_anonimo.get("/api/v1/me").status_code == 401
+
+
+def test_sin_auditoria_un_login_fallido_sigue_siendo_401(client_anonimo, login, servicio_caido):
+    servicio_caido("audit")
+    assert login(client_anonimo, "ana", "contrasena-incorrecta-1").status_code == 401
+
+
+def test_el_nombre_intentado_se_guarda_acotado_y_limpio(client_anonimo, login):
+    login(client_anonimo, "x" * 500 + "\x1b[31m", "lo-que-sea-123")
+    [acceso] = _accesos()
+    assert acceso["evento"] == "login_fallido"
+    assert len(acceso["usuario"]) <= 64 and acceso["usuario"].isprintable()
+
+
+# ─── Almacén de usuarios con concurrencia ─────────────────────────────────────
+
+def test_logins_simultaneos_no_rompen_el_almacen(app_dashboard, entorno_auth):
+    """Hallazgo de la medición ISO: con 10+ logins a la vez, `users.json` quedaba
+    vacío para los lectores o con JSON inválido para siempre."""
+    import json as _json
+    import threading
+
+    errores = []
+
+    def un_login(n):
+        try:
+            for _ in range(5):
+                resultado = siem_auth.autenticar("ana", PASSWORD_DE_PRUEBA, f"10.0.0.{n}")
+                if not resultado.ok:
+                    errores.append(resultado.motivo)
+                siem_auth.cargar_usuarios()
+        except Exception as e:  # noqa: BLE001 — cualquier excepción es la falla
+            errores.append(repr(e))
+
+    hilos = [threading.Thread(target=un_login, args=(n,)) for n in range(12)]
+    for h in hilos:
+        h.start()
+    for h in hilos:
+        h.join()
+    assert errores == []
+    contenido = _json.loads((entorno_auth / "users.json").read_text(encoding="utf-8"))
+    assert {u["username"] for u in contenido["usuarios"]} == {"ana", "beto", "cata"}
+
+
+def test_modificar_usuarios_no_pierde_cambios_concurrentes(entorno_auth):
+    import threading
+
+    def cambiar(nombre, rol):
+        for _ in range(10):
+            with siem_auth.modificar_usuarios() as usuarios:
+                usuarios[nombre].rol = rol
+
+    hilos = [threading.Thread(target=cambiar, args=("ana", "auditor")),
+             threading.Thread(target=cambiar, args=("beto", "analyst"))]
+    for h in hilos:
+        h.start()
+    for h in hilos:
+        h.join()
+    usuarios = siem_auth.cargar_usuarios()
+    assert usuarios["ana"].rol == "auditor" and usuarios["beto"].rol == "analyst"
+
+
+def test_el_almacen_sigue_siendo_0600(entorno_auth):
+    import stat
+    with siem_auth.modificar_usuarios() as usuarios:
+        usuarios["ana"].rol = "viewer"
+    modo = stat.S_IMODE((entorno_auth / "users.json").stat().st_mode)
+    assert modo == 0o600
+    assert not list(entorno_auth.glob(".users.json.*.tmp")), "quedó un temporal"
+
+
+@pytest.mark.parametrize("cuerpo, motivo", [
+    ({"evento": "login_exitoso"}, "usuario"),
+    ({"evento": "borrar", "usuario": "ana"}, "evento inválido"),
+    ({"evento": "login_fallido", "usuario": "ana", "ip": "1.2.3.4\n"}, "imprimible"),
+    ({"evento": "login_fallido", "usuario": "ana", "comando": "rm"}, "no permitidos"),
+])
+def test_la_auditoria_valida_cada_acceso(sandbox, cuerpo, motivo):
+    import siem_servicios
+    r = siem_servicios.llamar("audit", "POST", "/v1/access", cuerpo)
+    assert r.status == 400 and motivo in r.datos["error"]

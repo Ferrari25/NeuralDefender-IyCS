@@ -9,7 +9,8 @@ el mismo directorio que Filebeat envía a Elasticsearch, el punto donde un IDS
 real escribiría sus eventos.
 
 API (red interna, exige `X-Internal-Token`):
-    POST /v1/classify   {siem_data: {...}}  → 200 reporte {generated_at, incident_count, incidents}
+    POST /v1/classify   {siem_data: {...}, anteriores?: [{incident_id, first_seen, last_seen}]}
+                        → 200 reporte {generated_at, incident_count, incidents}
 """
 
 from __future__ import annotations
@@ -37,4 +38,10 @@ def clasificar():
     siem_data = datos.get("siem_data") or {}
     if not isinstance(siem_data, dict):
         return jsonify({"error": "siem_data debe ser un objeto"}), 400
-    return jsonify(reporte(siem_data, read_network_logs(NETWORK_LOGS_DIR, VENTANA_HORAS)))
+    # Identidad de los incidentes del ciclo anterior (la manda el orquestador):
+    # un ataque en curso conserva su ID aunque la muestra de la captura avance.
+    anteriores = datos.get("anteriores")
+    if not isinstance(anteriores, list):
+        anteriores = None
+    return jsonify(reporte(siem_data, read_network_logs(NETWORK_LOGS_DIR, VENTANA_HORAS),
+                           anteriores))

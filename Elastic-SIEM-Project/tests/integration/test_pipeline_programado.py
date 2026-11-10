@@ -111,3 +111,50 @@ def test_el_contenedor_corre_el_pipeline_cada_dos_minutos():
     compose = (PROJECT_ROOT / "docker-compose.yml").read_text(encoding="utf-8")
     pipeline = compose.split("\n  pipeline:\n")[1].split("\n  # ")[0]
     assert "SIEM_PIPELINE_INTERVALO=${SIEM_PIPELINE_INTERVALO:-120}" in pipeline
+
+
+@pytest.mark.parametrize("contenido", ['{"incidents": null}', '[]', '{"incidents": 5}', "no es json"])
+def test_un_reporte_previo_roto_no_rompe_el_ciclo(programador, ciclo_offline, contenido):
+    """Los análisis previos son una optimización: si el reporte anterior está roto,
+    el ciclo corre igual (sin previos) en vez de fallar hasta que alguien lo borre."""
+    (ciclo_offline / "data" / "siem_incidents.json").write_text(contenido, encoding="utf-8")
+    resultado = programador.correr_un_turno()
+    assert resultado.startswith("ok:"), resultado
+
+
+def test_el_orquestador_le_manda_su_plazo_al_analyst(programador, ciclo_offline, monkeypatch):
+    import orquestador
+
+    pedidos = []
+    original = orquestador.llamar
+
+    def espia(servicio, metodo, ruta, cuerpo=None, **kw):
+        if servicio == "analyst":
+            pedidos.append(cuerpo)
+        return original(servicio, metodo, ruta, cuerpo, **kw)
+
+    monkeypatch.setattr(orquestador, "llamar", espia)
+    assert programador.correr_un_turno().startswith("ok:")
+    assert pedidos and pedidos[0]["plazo_s"] == orquestador.TIMEOUT_ANALISIS
+
+
+def test_el_segundo_ciclo_le_manda_al_classifier_la_identidad_previa(programador, ciclo_offline,
+                                                                     monkeypatch):
+    """Sin esto, un ataque en curso cambiaba de ID cuando la muestra avanzaba."""
+    import orquestador
+
+    assert programador.correr_un_turno().startswith("ok:")
+    primeros = {i["incident_id"] for i in orquestador._incidentes_previos()}
+    pedidos = []
+    original = orquestador.llamar
+
+    def espia(servicio, metodo, ruta, cuerpo=None, **kw):
+        if servicio == "classifier":
+            pedidos.append(cuerpo)
+        return original(servicio, metodo, ruta, cuerpo, **kw)
+
+    monkeypatch.setattr(orquestador, "llamar", espia)
+    assert programador.correr_un_turno().startswith("ok:")
+    enviados = {a["incident_id"] for a in pedidos[0]["anteriores"]}
+    assert enviados == primeros
+    assert {i["incident_id"] for i in orquestador._incidentes_previos()} == primeros

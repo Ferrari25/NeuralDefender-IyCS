@@ -15,7 +15,7 @@
 | Objetivo | Estado | Cómo se demuestra |
 |----------|:------:|--------------------|
 | **Pruebas de código estático** | ✅ | `./scripts/pruebas_de_codigo_estatico.sh` — ruff, eslint (linters) + pylint+secure-coding-standard, bandit (SAST). Líneas de base en cero. `./scripts/pruebas_de_verificacion.sh` demuestra que detectan: 20 casos sanos pasan y 5 defectos inyectados fallan. |
-| **Pruebas de servicio** | ✅ | `./scripts/pruebas_de_servicio.sh` — 358 pruebas de integración sobre la API HTTP real del panel y de cada microservicio (la malla corre en proceso), `deploy-rules.sh` contra un Kibana simulado, `reset.sh` contra un sandbox, respaldo/restauración y retención contra un Elasticsearch simulado, autenticación completa. |
+| **Pruebas de servicio** | ✅ | `./scripts/pruebas_de_servicio.sh` — 378 pruebas de integración sobre la API HTTP real del panel y de cada microservicio (la malla corre en proceso), `deploy-rules.sh` contra un Kibana simulado, `reset.sh` contra un sandbox, respaldo/restauración y retención contra un Elasticsearch simulado, autenticación completa. |
 | **Desarrollo e implementación en entorno de simulación** | ✅ | Los tres ataques se simulan y detectan de punta a punta; el panel exige login; las 14 reglas se despliegan como código; `services/collector/verify-cobertura.py` demuestra que ninguna alerta real del SIEM se pierde en el camino al panel. Falta la suite E2E de navegador (ver Pendientes, más abajo). |
 
 Comando único para reproducir todo: `./scripts/pruebas_completas.sh`. Para
@@ -133,15 +133,15 @@ haya corrido antes (verificado el 26-10-2026).
 | **Pentest simulado** (`tests/integration/test_pentest.py`) | Ataques evasivos por el clasificador real; falla ante una regresión | Fuerza bruta "low-and-slow" |
 | **Verificación 80/20** (`scripts/pruebas_de_verificacion.sh`) | Que las pruebas de arriba detectan errores de verdad | Borrar un permiso y ver que las pruebas de API-01 fallan |
 
-### Inventario, última corrida (27-10-2026)
+### Inventario, última corrida (09-11-2026)
 
-**Total: 1389 pruebas** (1384 en verde + 5 omitidas a propósito).
+**Total: 1465 pruebas** (1460 en verde + 5 omitidas a propósito).
 
 | Grupo | Pruebas | Tiempo |
 |-------|--------:|-------:|
-| Estático por AST (`tests/test_no_autonomy.py`) | 86 | ~2 s |
-| Unitarias (`tests/unit/`, 27 archivos) | 940 + 5 omitidas | ~9 s |
-| Servicio (`tests/integration/`, 14 archivos) | 358 | ~56 s |
+| Estático por AST (`tests/test_no_autonomy.py`) | 88 | ~2 s |
+| Unitarias (`tests/unit/`, 29 archivos) | 994 + 5 omitidas | ~10 s |
+| Servicio (`tests/integration/`, 14 archivos) | 378 | ~70 s |
 | — de las cuales, pentest (`test_pentest.py`) | 10 | <1 s |
 
 #### Qué prueba cada archivo
@@ -150,7 +150,7 @@ haya corrido antes (verificado el 26-10-2026).
 
 | Archivo | Pruebas | Qué certifica |
 |---------|-------:|---------------|
-| `tests/test_no_autonomy.py` | 86 | Ningún módulo del producto ejecuta procesos, abre una shell ni se conecta a un host por su cuenta (incluye formas disfrazadas). La allowlist de `subprocess` está vacía. Toda llamada entre servicios tiene destino y ruta literales. Enumera la API completa de cada servicio. La auditoría no expone modificación ni borrado. Ningún rol tiene un permiso de ejecución. |
+| `tests/test_no_autonomy.py` | 88 | Ningún módulo del producto ejecuta procesos, abre una shell ni se conecta a un host por su cuenta (incluye formas disfrazadas). La allowlist de `subprocess` está vacía. Toda llamada entre servicios tiene destino y ruta literales. Enumera la API completa de cada servicio. La auditoría no expone modificación ni borrado. Ningún rol tiene un permiso de ejecución. |
 
 **Unitarias (`tests/unit/`)**
 
@@ -168,7 +168,7 @@ haya corrido antes (verificado el 26-10-2026).
 | `test_resultado_simulado.py` | 8 | La vista "qué pasaría" es texto fijo del playbook, marcada como SIMULADO, y nunca va al registro de decisiones |
 | `test_severidad_del_agente.py` | 43 | La severidad que devuelve el Agente 2 (incluso un LLM que responde "alta") siempre se normaliza a un valor que el panel puede pintar |
 | `test_interruptor_del_llm.py` | 20 | Con la key puesta pero `SIEM_USE_LLM` apagado, no se llama al LLM; Gemma local es el proveedor por defecto y no necesita key |
-| `test_gemma_local.py` | 14 | Qué se le manda a Ollama (modelo, system instruction, esquema JSON, sin herramientas ni comandos del playbook); Ollama caído / sin modelo / timeout → fallback; el presupuesto de tiempo manda el resto al fallback |
+| `test_gemma_local.py` | 40 | Qué se le manda a Ollama (modelo, system instruction, esquema JSON, sin herramientas ni comandos del playbook); Ollama caído / sin modelo / timeout → fallback; el presupuesto de tiempo (con techo de 540 s) y el plazo del orquestador mandan el resto al fallback; proveedor por defecto (Gemma; Gemini solo explícito); Gemini con plazo por llamada y Gemma alojado sin instrucción de sistema; reutilización de análisis: qué invalida la huella (perfil/prompt, factores, orden de acciones, volumen), vigencia escalonada y análisis vencido antes que el fallback |
 | `test_reglas_como_codigo.py` | 155 | Las 14 reglas de `rules/ndjson/`: estructura válida, nombres únicos, MITRE, campos `.keyword`, coherencia con el catálogo |
 | `test_agregaciones_keyword.py` | 6 | D-12: el collector agrega sobre `.keyword`, nunca sobre un campo `text` |
 | `test_b0x_robustez_y_formatos.py` | 39 | B-01…B-05: timeouts de Elasticsearch, HTTP inseguro bloqueado, formatos de fecha y archivos |
@@ -182,7 +182,8 @@ haya corrido antes (verificado el 26-10-2026).
 | `test_resuelto.py` | 4 | El tag "resuelto" aparece cuando se aprobó al menos una acción |
 | `test_historial_agrupado.py` | 6 | El historial de decisiones se agrupa por incidente |
 | `test_motivo_de_descarte.py` | 11 | Descartar pide el motivo dentro del panel, no con un `prompt()` |
-| `test_despliegue_compose.py` | 54 | RQ-SEC-24: la simulación corre en su red `sim-net` y el nmap real no apunta a la red del SIEM; RNF-COMP-01: todo contenedor tiene `mem_limit` (256 MB la capa IA); RNF-CONF-05: la capa SIEM tiene healthcheck cada 30 s con 3 reintentos y la vigila autoheal; RQ-SEC-05: Elasticsearch tiene repositorio de snapshots y el respaldo lee la auditoría en solo lectura; RNF-PORT-05: el collector puede apuntar a otro cluster |
+| `test_despliegue_compose.py` | 61 | RQ-SEC-24: la simulación corre en su red `sim-net` y el nmap real no apunta a la red del SIEM; RNF-COMP-01: todo contenedor tiene `mem_limit` (256 MB la capa IA); RNF-CONF-05: la capa SIEM tiene healthcheck cada 30 s con 3 reintentos y la vigila autoheal; RQ-SEC-05: Elasticsearch tiene repositorio de snapshots y el respaldo lee la auditoría en solo lectura; RNF-PORT-05: el collector puede apuntar a otro cluster. Ninguna configuración versionada tiene la contraseña de `elastic` (logstash.yml usa `${ELASTIC_PASSWORD}` y el compose no le pasa `xpack.monitoring.*` por entorno); heap de Logstash de 512 MB montado; Ollama descarga el modelo a los 5 min |
+| `test_identidad_de_incidentes.py` | 5 | Un ataque en curso conserva su `incident_id` (y el de sus acciones) aunque la muestra de la captura avance; un corte de más de 1 h, otra IP u otro tipo son incidentes nuevos |
 | `test_configuracion_externa.py` | 23 | RNF-MANT-04 (A5): umbrales y ventana salen del entorno sin reconstruir; un valor inválido impide arrancar (no cae al defecto); collector y clasificador usan la misma ventana; la ventana no admite nada que no sea número + m/h/d (se interpola en la consulta a ES) |
 
 **Pruebas de interfaz** (`tests/interfaz/test_panel.py`, 13 pruebas, Chromium + Playwright): login, sesión, tabla, filtros, detalle, teclado, confirmación de decisiones, roles, insignia de Gemma y XSS vistos desde un navegador real. Detalle en [`pruebas_de_interfaz.md`](../pruebas_de_interfaz.md).
@@ -191,14 +192,14 @@ haya corrido antes (verificado el 26-10-2026).
 
 | Archivo | Pruebas | Qué certifica |
 |---------|-------:|---------------|
-| `test_api01_autenticacion.py` | 60 | API-01: todo exige sesión, permisos por rol (un viewer que decide recibe 403 y no se escribe nada), CSRF, expiración, bloqueo por intentos, `X-Forwarded-For` no esquiva el bloqueo, el panel no arranca sin `SECRET_KEY` |
+| `test_api01_autenticacion.py` | 72 | API-01: todo exige sesión, permisos por rol (un viewer que decide recibe 403 y no se escribe nada), CSRF, expiración, bloqueo por intentos, `X-Forwarded-For` no esquiva el bloqueo, el panel no arranca sin `SECRET_KEY`. Cada login/logout queda en `accesos.jsonl` y sin auditoría no se abre la sesión; logins simultáneos no rompen `users.json` |
 | `test_api_v1.py` | 38 | API-02…API-05: validación de entrada, errores siempre en JSON, rechazo de acciones inexistentes |
 | `test_api_caracterizacion.py` | 17 | Congela el contrato de cada endpoint del panel |
-| `test_pipeline_programado.py` | 11 | El pipeline corre solo cada 2 min: un turno corre el ciclo real, se saltea si hay uno manual en curso, sobrevive a un ciclo fallido, y está apagado por defecto fuera del contenedor |
+| `test_pipeline_programado.py` | 17 | El pipeline corre solo cada 2 min: un turno corre el ciclo real, se saltea si hay uno manual en curso, sobrevive a un ciclo fallido, y está apagado por defecto fuera del contenedor. Un reporte previo roto no rompe el ciclo, y el orquestador le manda su plazo al analyst; desde el segundo ciclo le manda al classifier la identidad de los incidentes previos |
 | `test_microservicios.py` | 40 | Token interno, qué etapa del ciclo puede fallar y cuál aborta, la segunda barrera del servicio audit, el panel ante un servicio caído |
 | `test_a02_a04_integridad.py` | 35 | A-02…A-04: escritura con `flock`+`fsync`, concurrencia real, cadena de hash que detecta cualquier edición |
 | `test_auditoria_append_only.py` | 7 | El registro de decisiones solo crece; el pipeline no lo pisa |
-| `test_a01_reset_preserva_auditoria.py` | 12 | A-01: `reset.sh` real (en un sandbox) archiva la auditoría en vez de borrarla |
+| `test_a01_reset_preserva_auditoria.py` | 14 | A-01: `reset.sh` real (en un sandbox) archiva la auditoría en vez de borrarla; no borra el modelo de Gemma y solo elimina el volumen de Elasticsearch de ESTE proyecto |
 | `test_memoria_del_agente.py` | 22 | El Gem: casos, lecciones propuestas que no se usan sin aprobar, ajuste solo del falso positivo — ver [05](05-gem-memoria-del-agente.md) |
 | `test_reportes.py` | 17 | Cada decisión guarda su contexto (nunca el comando), `actividad.jsonl` encadenado, reportes CSV/JSON con filtro de fechas y escape de fórmulas |
 | `test_despliegue_de_reglas.py` | 23 | `deploy-rules.sh` y `export-rules.sh` contra un Kibana simulado: desplegar dos veces no duplica |
@@ -418,7 +419,7 @@ registro de auditoría real y no hay forma prolija de deshacer el cambio.
 | ¿Y si la IA alucina un comando? | Los comandos salen de un catálogo fijo en `services/classifier/classifier.py`; el LLM no tiene *function calling*. Hay una prueba con un LLM hostil simulado. |
 | ¿Por qué a veces el escaneo aparece sin regla del SIEM? | El clasificador lo detecta sin esperar a Kibana; si la alerta real ya disparó para esa IP, el panel la muestra. Ver "Los dos caminos de detección". |
 | ¿Puedo reproducir esto desde cero? | Es literalmente lo que se acaba de hacer: `./scripts/start.sh` levanta el stack y despliega las 14 reglas. |
-| ¿Cuánto está probado? | 1308 pruebas, 94 % de cobertura sobre el alcance declarado, SAST además de los tests, y una verificación 80/20 que demuestra que las pruebas detectan defectos inyectados. |
+| ¿Cuánto está probado? | 1465 pruebas, 94 % de cobertura sobre el alcance declarado, SAST además de los tests, y una verificación 80/20 que demuestra que las pruebas detectan defectos inyectados. |
 
 ### Comandos, en una tarjeta
 

@@ -119,7 +119,7 @@ Detalle de por qué se partió así, cómo se hablan y qué garantiza cada front
 |----------|--------|---------------|-----|
 | **gateway** | `services/gateway/` (`dashboard.py`, `sesion_web.py`, `templates/`, `static/`) | — | Panel de supervisión humana (Flask). Ver [02 · Dashboard](02-reglas-y-dashboard.md). |
 | **auth** | `services/auth/` (`siem_auth.py`, `manage_users.py`) | `data/auth/users.json` | Usuarios, Argon2id, permisos por rol, anti-fuerza bruta. |
-| **audit** | `services/audit/` (`cadena.py`, `audit_verify.py`, `reportes.py`) | `data/audit/*.jsonl` | Registros append-only encadenados por hash: decisiones (`decisions.jsonl`), corridas del pipeline (`analysis_history.jsonl`) y actividad sobre la memoria del agente (`actividad.jsonl`). Arma los reportes. |
+| **audit** | `services/audit/` (`cadena.py`, `audit_verify.py`, `reportes.py`) | `data/audit/*.jsonl` | Registros append-only encadenados por hash: decisiones (`decisions.jsonl`), corridas del pipeline (`analysis_history.jsonl`) actividad sobre la memoria del agente (`actividad.jsonl`) y accesos al panel —logins y logouts— (`accesos.jsonl`). Arma los reportes. |
 | **collector** | `services/collector/` (`collector.py`, `es_client.py`) | `data/collector/siem_clean.json` | Extrae y limpia alertas + logs desde Elasticsearch. |
 | **classifier** | `services/classifier/classifier.py` | — (lee `network_logs/`, ro) | **Agente 1 determinístico.** Detecta `ssh_brute_force`, `port_scan`, `credential_harvesting`; asigna playbook, factores de explicabilidad y correlación de campañas. |
 | **analyst** | `services/analyst/siem_agent.py`, `perfil_agente.md` | — | **Agente 2.** Análisis en lenguaje claro vía LLM (Gemini) con fallback determinístico. Enriquece con contexto histórico y con su memoria. |
@@ -419,9 +419,26 @@ resto de la auditoría.
   los clientes son locales igual.
 - **Topes de memoria.** Cada contenedor declara `mem_limit` (RNF-COMP-01): 256 MB
   los microservicios (medido: ~50-60 MB), y el stack Elastic según lo medido
-  (Elasticsearch 2,5 GB, Logstash 2 GB, Kibana 1,5 GB, Filebeat 512 MB). La
+  (Elasticsearch 2,5 GB, Logstash 1,5 GB, Kibana 1,5 GB, Filebeat 512 MB). La
   variable `MEM_LIMIT` (1 GB, sin uso) se quitó de `.env.example`: un tope único
   no sirve, porque Elasticsearch ya ocupa ~1,8 GB.
+- **Ahorro de memoria (2026-11-10).** Con todo el stack en un host de 16 GB, el
+  kernel llegó a matar el modelo de Ollama por falta de memoria. Dos ajustes:
+  Logstash corre con heap fijo de 512 MB (`logstash/config/jvm.options`, montado:
+  `LS_JAVA_OPTS` no alcanza porque el `-Xmx1g` de la imagen va después y gana;
+  usa ~960 MB en total, tope 1,5 GB),
+  y Ollama descarga el modelo a los 5 min sin uso (`SIEM_OLLAMA_KEEP_ALIVE`,
+  antes 30 min): descargado ocupa ~40 MB en vez de ~4 GB y recargarlo tarda ~8 s.
+  Como los incidentes sin cambios reutilizan su análisis, Gemma pasa la mayor
+  parte del tiempo descargado.
+- **Identidad estable de los incidentes (2026-11-10).** El `incident_id` es
+  `hash(tipo, IP, first_seen)`, y `first_seen` salía del evento más viejo de la
+  muestra de la captura (5 alertas recientes por regla, 20 logs). Con un ataque en
+  curso la muestra avanzaba y el incidente cambiaba de ID cada pocos ciclos: las
+  decisiones del analista dejaban de verse y Gemma reanalizaba lo mismo. Ahora el
+  orquestador le pasa al classifier la identidad del reporte anterior y un
+  incidente del mismo tipo e IP con actividad continua (cortes de menos de 1 h)
+  conserva su ID y su inicio real (`classifier.conservar_identidad`).
 - **Sin TLS entre servicios.** El tráfico interno viaja en claro dentro de
   `ia-net`, que no se publica. El token es defensa en profundidad, no cifrado.
 - **Un solo worker en auth y pipeline.** El control de intentos y el candado

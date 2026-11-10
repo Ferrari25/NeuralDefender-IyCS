@@ -56,18 +56,21 @@ def test_el_csv_se_descarga_como_archivo(client):
     r = client.get("/api/v1/reportes?formato=csv&desde=2000-01-01")
     assert r.status_code == 200
     assert r.mimetype == "text/csv"
-    assert re.search(r'attachment; filename="reporte-siem-ia_2000-01-01_hoy\.csv"',
+    assert re.search(r'attachment; filename="reporte-neuraldefender_2000-01-01_hoy\.csv"',
                      r.headers["Content-Disposition"])
     filas = list(csv.DictReader(io.StringIO(r.get_data(as_text=True))))
-    assert [f["registro"] for f in filas] == ["decision"]
-    assert filas[0]["evento"] == "dismissed" and filas[0]["detalle"] == "falso positivo"
-    assert filas[0]["analista"] == "ana"
+    # El login del cliente queda primero (registro "acceso"), después la decisión.
+    assert [f["registro"] for f in filas] == ["acceso", "decision"]
+    acceso, decision = filas
+    assert acceso["evento"] == "login_exitoso" and acceso["analista"] == "ana"
+    assert decision["evento"] == "dismissed" and decision["detalle"] == "falso positivo"
+    assert decision["analista"] == "ana"
 
 
 def test_el_csv_neutraliza_formulas(client):
     _decidir(client, "dismissed", '=HYPERLINK("http://atacante","clic")')
     texto = client.get("/api/v1/reportes?formato=csv").get_data(as_text=True)
-    [fila] = list(csv.DictReader(io.StringIO(texto)))
+    [fila] = [f for f in csv.DictReader(io.StringIO(texto)) if f["registro"] == "decision"]
     assert fila["detalle"].startswith("'=")
 
 

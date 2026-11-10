@@ -58,5 +58,37 @@
       "testuser"
     ],
     "ts": "2026-10-27T23:57:24.377009+00:00"
+  },
+  {
+    "incident_id": "INC-AUTH-desconocida-7604c360",
+    "action_id": "INC-AUTH-desconocida-7604c360-bceba4",
+    "accion": "Habilitar rate-limiting / fail2ban en el servicio SSH",
+    "decision": "approved",
+    "note": "",
+    "analyst": "nico",
+    "attack_type": "ssh_brute_force",
+    "severity": "MEDIUM",
+    "source_ip": "desconocida",
+    "attacker_ips": [],
+    "target_users": [],
+    "ts": "2026-11-02T23:09:26.426863+00:00"
+  },
+  {
+    "incident_id": "INC-PHISH-172.18.0.9-69bdb294",
+    "action_id": "INC-PHISH-172.18.0.9-69bdb294-a4b178",
+    "accion": "Forzar reset de credenciales del usuario que envió datos (testuser)",
+    "decision": "dismissed",
+    "note": "",
+    "analyst": "nico",
+    "attack_type": "credential_harvesting",
+    "severity": "HIGH",
+    "source_ip": "172.18.0.9",
+    "attacker_ips": [
+      "172.18.0.8"
+    ],
+    "target_users": [
+      "testuser"
+    ],
+    "ts": "2026-11-02T23:09:37.382994+00:00"
   }
 ]
