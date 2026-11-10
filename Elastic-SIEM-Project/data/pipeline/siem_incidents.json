@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-11-10T01:37:35.893645+00:00",
+  "generated_at": "2026-11-10T02:24:07.267507+00:00",
   "incident_count": 1,
   "incidents": [
     {
-      "alert_event_count": 116,
+      "alert_event_count": 70,
       "analysis": {
-        "_generado_ts": 1794273563.8643847,
+        "_generado_ts": 1794277207.1969366,
         "_huella": "266e5718993e89e53f73afe3718c9c1965f7da536a8e8437bb8e8772de8e15de",
         "_modelo": "gemma3:4b",
         "_source": "gemma",
-        "accion_recomendada": "Priorizar (1) Habilitar rate-limiting / fail2ban en el servicio SSH, dado que el volumen de intentos supera el umbral de fuerza bruta y se ha visto en casos similares.",
+        "accion_recomendada": "Priorizar (1) Habilitar rate-limiting / fail2ban en el servicio SSH, dado que el clasificador lo considera un volumen muy por encima del umbral y ya se ha visto en casos similares.",
         "aprendizaje": {
           "casos_similares": [
             {
@@ -52,19 +52,20 @@
         },
         "contexto_campana": null,
         "contexto_historico": "Sin IP identificada para buscar antecedentes.",
-        "contexto_riesgo": "Si este ataque tiene éxito, un atacante podría obtener acceso no autorizado a sistemas críticos dentro de la red.  Dado que no tenemos información sobre la IP de origen, es difícil determinar si se trata de un ataque aislado o parte de una campaña más amplia. La falta de información sobre el usuario objetivo también aumenta el riesgo.",
-        "explicacion": "El host 172.19.0.6 ha recibido 116 intentos fallidos de autenticación en el servicio SSH en un periodo de 30 minutos. Esto indica un posible ataque de fuerza bruta contra cuentas de usuario. El volumen de intentos es significativamente superior al umbral de fuerza bruta, lo que sugiere un intento de acceso no autorizado. No tenemos información sobre la IP de origen del atacante.",
-        "falso_positivo_probabilidad": "LOW",
-        "metodologia": "El ataque de fuerza bruta contra SSH es una técnica común en la táctica de \"Acceso a Credenciales\" de MITRE ATT&CK (T1110). Los atacantes intentan adivinar contraseñas probando combinaciones de caracteres hasta que encuentran una válida.  Fail2ban y rate limiting son medidas comunes para mitigar este tipo de ataque.",
+        "contexto_riesgo": "Si este ataque tiene éxito, un atacante podría obtener acceso no autorizado al host, lo que podría permitirle ejecutar comandos, robar datos sensibles o utilizar el host como punto de partida para ataques posteriores.  Dado que el volumen de intentos fallidos es alto, es crucial mitigar este riesgo de forma inmediata.",
+        "explicacion": "Tenemos 79 intentos fallidos de autenticación contra el host 172.19.0.6 en un periodo de 1 hora y 46 minutos. El atacante está intentando acceder a través de SSH, y el sistema ha marcado esto como un ataque de fuerza bruta. El clasificador considera que es un volumen alto, pero el falso positivo es bajo, lo que sugiere que es un intento aislado y no un ataque masivo.",
+        "falso_positivo_probabilidad": "MEDIUM",
+        "metodologia": "Los ataques de fuerza bruta en SSH son comunes donde los atacantes prueban combinaciones de nombres de usuario y contraseñas hasta encontrar una correcta.  Utilizan herramientas como Hydra o Medusa para automatizar este proceso. La técnica T1110 de MITRE ATT&CK describe precisamente este comportamiento.",
         "puntos_de_investigacion": [
-          "¿Existe algún usuario en el host 172.19.0.6 que haya sido recientemente modificado o que tenga contraseñas débiles?",
-          "¿Se ha detectado actividad similar en otros hosts de la red?",
-          "¿El host 172.19.0.6 es un servidor de acceso público?"
+          "¿El usuario objetivo (desconocido) tiene contraseñas débiles o reutilizadas?",
+          "¿El host 172.19.0.6 tiene alguna configuración vulnerable que permita este tipo de ataque?",
+          "¿Existe algún otro host en la red con el mismo usuario objetivo que esté siendo atacado?"
         ],
         "referencias": [
           "https://attack.mitre.org/techniques/T1110"
         ],
-        "severidad_ajustada": "MEDIUM"
+        "severidad_ajustada": "MEDIUM",
+        "severidad_ajustada_sin_normalizar": "HIGH"
       },
       "attacker_ips": [],
       "campaign_id": null,
@@ -73,22 +74,22 @@
         "attack_type": "ssh_brute_force",
         "confidence": "alta",
         "factores": [
-          "116 fallo(s) de autenticación registrados (umbral de fuerza bruta: 20)",
+          "70 fallo(s) de autenticación registrados (umbral de fuerza bruta: 20)",
           "Host(s) atacado(s): 172.19.0.6",
           "Volumen muy por encima del umbral: descarta un error humano puntual",
           "Falso positivo: BAJA — este volumen es infrecuente en tráfico legítimo"
         ],
         "false_positive_likelihood": "baja",
         "mitre_technique": "T1110",
-        "rationale": "116 fallos de autenticación desde una misma IP superan el umbral de 20; patrón de fuerza bruta automatizada (T1110).",
+        "rationale": "70 fallos de autenticación desde una misma IP superan el umbral de 20; patrón de fuerza bruta automatizada (T1110).",
         "severity": "alta"
       },
       "detection_source": "elastic",
-      "event_count": 116,
+      "event_count": 70,
       "evidence": [],
       "first_seen": "2026-11-10T00:26:12.448Z",
       "incident_id": "INC-AUTH-desconocida-9f43021f",
-      "last_seen": "2026-11-10T01:16:42.516Z",
+      "last_seen": "2026-11-10T02:21:26.938Z",
       "log_event_count": 0,
       "mitre": {
         "tactic": "Credential Access",
@@ -164,6 +165,6 @@
     }
   ],
   "source": "collector",
-  "analyzed_at": "2026-11-10T01:37:35.903089+00:00",
+  "analyzed_at": "2026-11-10T02:24:07.275408+00:00",
   "analyst_mode": "gemma"
 }

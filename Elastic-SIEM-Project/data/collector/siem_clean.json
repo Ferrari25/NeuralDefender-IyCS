@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-10T01:37:35.887590+00:00",
+  "generated_at": "2026-11-10T02:24:07.262981+00:00",
   "context": "Elastic SIEM - Análisis de seguridad automatizado",
   "summary": {
     "total_alerts": 5,
@@ -13,6 +13,90 @@
     ]
   },
   "alerts": [
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-10T02:21:26.938Z",
+      "alert_id": "8a76e99dd82f65d4...",
+      "rule_name": "SSH Brute Force – Basic Threshold",
+      "severity": "medium",
+      "risk_score": 47,
+      "status": "active",
+      "reason": "event created medium alert SSH Brute Force – Basic Threshold.",
+      "source_ip": null,
+      "victim_host": "172.19.0.6",
+      "target_user": null,
+      "grouped_by": "host.ip.keyword",
+      "event_count": 19,
+      "time_window": {
+        "from": "2026-11-10T02:16:19.022Z",
+        "to": "2026-11-10T02:21:26.938Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuarios que olvidaron su contraseña y reintentaron varias veces."
+      ],
+      "rule_query": "tags:authentication_failure or message:*Failed password*"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-10T02:16:24.746Z",
+      "alert_id": "e8fa234f76047e8a...",
+      "rule_name": "SSH Brute Force – Basic Threshold",
+      "severity": "medium",
+      "risk_score": 47,
+      "status": "active",
+      "reason": "event created medium alert SSH Brute Force – Basic Threshold.",
+      "source_ip": null,
+      "victim_host": "172.19.0.6",
+      "target_user": null,
+      "grouped_by": "host.ip.keyword",
+      "event_count": 5,
+      "time_window": {
+        "from": "2026-11-10T02:16:19.022Z",
+        "to": "2026-11-10T02:16:24.746Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuarios que olvidaron su contraseña y reintentaron varias veces."
+      ],
+      "rule_query": "tags:authentication_failure or message:*Failed password*"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-10T01:38:18.357Z",
+      "alert_id": "d982c7e93277fe12...",
+      "rule_name": "SSH Brute Force – Basic Threshold",
+      "severity": "medium",
+      "risk_score": 47,
+      "status": "active",
+      "reason": "event created medium alert SSH Brute Force – Basic Threshold.",
+      "source_ip": null,
+      "victim_host": "172.19.0.6",
+      "target_user": null,
+      "grouped_by": "host.ip.keyword",
+      "event_count": 10,
+      "time_window": {
+        "from": "2026-11-10T01:33:12.260Z",
+        "to": "2026-11-10T01:38:18.357Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuarios que olvidaron su contraseña y reintentaron varias veces."
+      ],
+      "rule_query": "tags:authentication_failure or message:*Failed password*"
+    },
     {
       "type": "security_alert",
       "timestamp": "2026-11-10T01:16:42.516Z",
@@ -58,90 +142,6 @@
       "time_window": {
         "from": "2026-11-10T00:55:54.642Z",
         "to": "2026-11-10T01:01:33.587Z"
-      },
-      "mitre": {
-        "tactic": "Credential Access",
-        "technique": "Brute Force",
-        "technique_id": "T1110"
-      },
-      "false_positives": [
-        "Usuarios que olvidaron su contraseña y reintentaron varias veces."
-      ],
-      "rule_query": "tags:authentication_failure or message:*Failed password*"
-    },
-    {
-      "type": "security_alert",
-      "timestamp": "2026-11-10T00:56:30.451Z",
-      "alert_id": "5b74fe8cea494ea1...",
-      "rule_name": "SSH Brute Force – Basic Threshold",
-      "severity": "medium",
-      "risk_score": 47,
-      "status": "active",
-      "reason": "event created medium alert SSH Brute Force – Basic Threshold.",
-      "source_ip": null,
-      "victim_host": "172.19.0.6",
-      "target_user": null,
-      "grouped_by": "host.ip.keyword",
-      "event_count": 28,
-      "time_window": {
-        "from": "2026-11-10T00:50:33.269Z",
-        "to": "2026-11-10T00:56:30.451Z"
-      },
-      "mitre": {
-        "tactic": "Credential Access",
-        "technique": "Brute Force",
-        "technique_id": "T1110"
-      },
-      "false_positives": [
-        "Usuarios que olvidaron su contraseña y reintentaron varias veces."
-      ],
-      "rule_query": "tags:authentication_failure or message:*Failed password*"
-    },
-    {
-      "type": "security_alert",
-      "timestamp": "2026-11-10T00:51:27.563Z",
-      "alert_id": "578c9b2d68a03fb4...",
-      "rule_name": "SSH Brute Force – Basic Threshold",
-      "severity": "medium",
-      "risk_score": 47,
-      "status": "active",
-      "reason": "event created medium alert SSH Brute Force – Basic Threshold.",
-      "source_ip": null,
-      "victim_host": "172.19.0.6",
-      "target_user": null,
-      "grouped_by": "host.ip.keyword",
-      "event_count": 17,
-      "time_window": {
-        "from": "2026-11-10T00:46:33.195Z",
-        "to": "2026-11-10T00:51:27.563Z"
-      },
-      "mitre": {
-        "tactic": "Credential Access",
-        "technique": "Brute Force",
-        "technique_id": "T1110"
-      },
-      "false_positives": [
-        "Usuarios que olvidaron su contraseña y reintentaron varias veces."
-      ],
-      "rule_query": "tags:authentication_failure or message:*Failed password*"
-    },
-    {
-      "type": "security_alert",
-      "timestamp": "2026-11-10T00:31:15.624Z",
-      "alert_id": "316cd8b3924e7b7c...",
-      "rule_name": "SSH Brute Force – Basic Threshold",
-      "severity": "medium",
-      "risk_score": 47,
-      "status": "active",
-      "reason": "event created medium alert SSH Brute Force – Basic Threshold.",
-      "source_ip": null,
-      "victim_host": "172.19.0.6",
-      "target_user": null,
-      "grouped_by": "host.ip.keyword",
-      "event_count": 35,
-      "time_window": {
-        "from": "2026-11-10T00:27:48.798Z",
-        "to": "2026-11-10T00:31:15.624Z"
       },
       "mitre": {
         "tactic": "Credential Access",
