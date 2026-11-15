@@ -735,7 +735,7 @@ def analizar(incidents: list[dict], decisions: list[dict],
     # Refleja lo que realmente se usó, no solo si había cliente (el LLM puede fallar
     # por cuota/red y caer al fallback en cada incidente).
     fuentes = [(i.get("analysis") or {}).get("_source") for i in incidents]
-    modo = next((f for f in fuentes if f in ("gemma", "gemini")), "fallback")
+    modo = next((f for f in fuentes if f in proveedores_llm.PROVEEDORES), "fallback")
     print_report(incidents)
     print(f"\n[OK] Análisis completo (modo: {modo})")
     return {"incidents": incidents, "analyzed_at": now_iso(), "analyst_mode": modo}

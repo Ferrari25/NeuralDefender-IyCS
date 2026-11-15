@@ -21,6 +21,15 @@ export default [
   },
   js.configs.recommended,
   security.configs.recommended,
+  // Script de k6 (tests/performance/): módulo ES con los globales de k6.
+  {
+    files: ["tests/performance/**/*.js"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: { __ENV: "readonly", __VU: "readonly", __ITER: "readonly" },
+    },
+  },
   {
     files: ["services/gateway/static/**/*.js"],
     languageOptions: {

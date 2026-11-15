@@ -41,6 +41,9 @@ const ESTADO_TEXTO = new Map([
   ["pending", "pendiente"],
   ["approved", "✔ aprobada"],
   ["dismissed", "✘ descartada"],
+  // Bloqueo vigente: la IP ya la bloqueó un analista en otro incidente
+  // (`_aplicar_bloqueo_vigente` en dashboard.py). No pide una nueva aprobación.
+  ["auto_applied", "✔ aplicada por regla"],
 ]);
 const estadoTexto = s => ESTADO_TEXTO.get(s) || s;
 
@@ -253,9 +256,37 @@ async function load() {
   if (incR.status === 401 || decR.status === 401) {
     window.location.href = "/login"; return;
   }
-  lastData = await incR.json();
-  lastData._decisions = await decR.json();
-  lastData._memoria = await cargarMemoria();
+  const nuevo = await incR.json();
+  nuevo._decisions = await decR.json();
+  nuevo._memoria = await cargarMemoria();
+  // El refresco cada 15 s reescribía TODO el panel aunque nada hubiera cambiado:
+  // parpadeo, se cerraban la evidencia y los desplegables, y se perdía el
+  // motivo de descarte a medio escribir. Ahora solo se repinta si los datos
+  // cambiaron (sin contar las marcas de tiempo del ciclo del pipeline), y nunca
+  // mientras el analista está escribiendo.
+  const firma = firmaDeDatos(nuevo);
+  const escribiendo = pidiendoMotivo !== null
+    || document.activeElement?.matches?.("input, textarea");
+  if (firma === ultimaFirma || (escribiendo && ultimaFirma !== null)) {
+    document.getElementById("meta").textContent = `actualizado ${new Date().toLocaleTimeString()}`;
+    return;
+  }
+  aplicarDatos(nuevo, firma);
+}
+
+let ultimaFirma = null;
+
+function firmaDeDatos(datos) {
+  // Estas marcas cambian en cada ciclo del pipeline aunque los incidentes sean los mismos.
+  const resto = { ...datos };
+  delete resto.generated_at;
+  delete resto.analyzed_at;
+  return JSON.stringify(resto);
+}
+
+function aplicarDatos(datos, firma = firmaDeDatos(datos)) {
+  ultimaFirma = firma;
+  lastData = datos;
   populateTypeFilter(lastData.incidents || []);
   render();
 }
@@ -303,7 +334,7 @@ function render() {
   const incs = lastData.incidents || [];
   const mode = lastData.analyst_mode;
   const badge = document.getElementById("modeBadge");
-  if (mode === "gemma" || mode === "gemini") {
+  if (Object.hasOwn(NOMBRE_DEL_MODELO, mode ?? "")) {
     pintar(badge, html`<span class="punto"></span> IA (${NOMBRE_DEL_MODELO[mode]})`);
     badge.className = "mode-badge mode-gemini";
   } else if (mode === "fallback") {
@@ -423,7 +454,9 @@ function rowHtml(inc) {
   const sel = inc.incident_id === selectedId ? "selected" : "";
   const campaign = (inc.related_incidents || []).length
     ? html`<span class="campaign-icon" title="Parte de una campaña de ${inc.related_incidents.length + 1} incidentes">${ico("i-enlace")}</span>` : "";
-  const resuelto = tieneAccionAprobada(inc)
+  const resuelto = inc.bloqueo_vigente
+    ? html`<span class="state s-auto_applied resuelto-tag" title="La IP ya estaba bloqueada por una decisión anterior">✔ IP bloqueada</span>`
+    : tieneAccionAprobada(inc)
     ? html`<span class="state s-approved resuelto-tag" title="Ya se aprobó al menos una acción sugerida">✔ resuelto</span>` : "";
   // RNF-USA-08: la fila es interactiva, así que se anuncia como tal y se puede
   // alcanzar con el tabulador. Antes era un <tr> con un manejador y nada más:
@@ -458,10 +491,12 @@ function renderDetail(incs) {
 // etiqueta minúscula al lado de "Qué pasó", del mismo gris que cualquier otro
 // dato secundario, fácil de no notar. La IA y el fallback comparten estructura
 // (mismos campos), así que sin esto no había forma rápida de distinguirlos.
-const NOMBRE_DEL_MODELO = { gemma: "Gemma local", gemini: "Gemini" };
+const NOMBRE_DEL_MODELO = {
+  gemma: "Gemma local", "gemma-nube": "Gemma en la nube", gemini: "Gemini",
+};
 
 function renderFuenteAnalisis(an) {
-  const esIA = an._source in NOMBRE_DEL_MODELO;
+  const esIA = Object.hasOwn(NOMBRE_DEL_MODELO, an._source ?? "");
   const modelo = an._modelo ? ` · ${an._modelo}` : "";
   return html`
     <div class="analisis-fuente ${esIA ? "es-ia" : "es-fallback"}">
@@ -530,7 +565,7 @@ function renderCard(inc) {
                 data-incidente="${inc.incident_id}">cerrar ✕</button>
       </div>
       <div class="card-body">
-        ${renderCampaignBanner(inc)}
+        ${renderBloqueoVigente(inc)}${renderCampaignBanner(inc)}
         <div class="grid">
           <span class="k">Detección</span><span>${procedenciaDe(inc)}</span>
           <span class="k">Eventos</span><span>${(inc.event_count||0).toLocaleString()}</span>
@@ -585,6 +620,23 @@ function renderModoSolucion(inc) {
       No es un orden obligatorio ni hace falta hacerlas todas.</div>`;
   }
   return "";
+}
+
+// La misma IP ya fue bloqueada por un analista en otro incidente: la regla
+// sigue vigente y se aplicó sola a este. Para revocarla, descartar la acción de
+// bloqueo en el incidente de origen.
+function renderBloqueoVigente(inc) {
+  const b = inc.bloqueo_vigente;
+  if (!b) return "";
+  return html`
+    <div class="bloqueo-banner">
+      ${ico("i-escudo")} <b>Reincidencia: la IP <span class="ip-mono">${b.ip}</span> ya está bloqueada.</b>
+      La regla «${b.accion}» la aprobó <b>${b.aprobado_por}</b> el ${b.aprobado_en} en
+      <a href="#" data-accion="seleccionar" data-incidente="${b.incidente_origen}">${b.incidente_origen}</a>.
+      ${b.acciones_aplicadas
+        ? `Se aplicó automáticamente a este incidente (${b.acciones_aplicadas} acción/es de bloqueo), sin pedir una nueva aprobación.`
+        : "Este incidente no tenía una acción de bloqueo pendiente."}
+    </div>`;
 }
 
 function renderCampaignBanner(inc) {

@@ -62,6 +62,7 @@ from sesion_web import (
     session_id_de,
 )
 from siem_servicios import Respuesta, ServicioNoDisponible, llamar
+from siem_validators import valid_ip
 
 # API-02: tope al texto libre que entra al registro inmutable. Una nota no se
 # puede corregir después, así que conviene que entre acotada.
@@ -245,6 +246,64 @@ def _decision_state() -> dict[str, dict]:
     return state
 
 
+# ─── Bloqueo vigente: una IP ya bloqueada que vuelve a aparecer ──────────────
+#
+# Si un analista APROBÓ bloquear una IP (en cualquier incidente), esa regla
+# queda vigente: cuando la misma IP aparece en OTRO incidente, la acción de
+# bloqueo de ese incidente se marca `auto_applied` sin pedir una nueva
+# aprobación — la regla ya la aprobó un humano. No ejecuta nada: es estado
+# derivado del registro de decisiones, igual que `approved`.
+#
+# Se revoca descartando la acción de bloqueo original (última decisión gana).
+# Sobre la acción del incidente nuevo, una decisión explícita del analista
+# siempre gana sobre la aplicación automática.
+
+# Acciones de bloqueo ENTRANTE de una IP (los textos son fijos del playbook de
+# classifier.py). Las de phishing ("Bloquear el tráfico SALIENTE…", "Dar de
+# baja…") y "Bloquear la cuenta…" no empiezan así y quedan afuera a propósito.
+PREFIJOS_DE_BLOQUEO = ("Bloquear la IP", "Banear la IP")
+
+
+def _es_bloqueo_de_ip(accion: object) -> bool:
+    return isinstance(accion, str) and accion.startswith(PREFIJOS_DE_BLOQUEO)
+
+
+def _bloqueos_vigentes(state: dict[str, dict]) -> dict[str, dict]:
+    """IP → la decisión aprobada (la más antigua) que la bloqueó."""
+    bloqueos: dict[str, dict] = {}
+    for rec in sorted(state.values(), key=lambda r: str(r.get("ts") or "")):
+        if rec.get("decision") != "approved" or not _es_bloqueo_de_ip(rec.get("accion")):
+            continue
+        ip = valid_ip(rec.get("source_ip"))
+        if ip and ip not in bloqueos:
+            bloqueos[ip] = rec
+    return bloqueos
+
+
+def _aplicar_bloqueo_vigente(inc: dict, bloqueos: dict[str, dict]) -> None:
+    ip = valid_ip(inc.get("source_ip"))
+    rec = bloqueos.get(ip) if ip else None
+    if rec is None or rec.get("incident_id") == inc.get("incident_id"):
+        return
+    aplicadas = 0
+    for act in inc.get("recommended_actions", []):
+        if act["status"] == "pending" and _es_bloqueo_de_ip(act.get("accion")):
+            act["status"] = "auto_applied"
+            act["decided_by"] = f"regla de {rec.get('analyst')}"
+            act["decided_at"] = rec.get("ts")
+            act["note"] = (f"aplicada automáticamente: la IP {ip} ya estaba bloqueada "
+                           f"por decisión en {rec.get('incident_id')}")
+            aplicadas += 1
+    inc["bloqueo_vigente"] = {
+        "ip": ip,
+        "aprobado_por": rec.get("analyst"),
+        "aprobado_en": rec.get("ts"),
+        "incidente_origen": rec.get("incident_id"),
+        "accion": rec.get("accion"),
+        "acciones_aplicadas": aplicadas,
+    }
+
+
 def _load_incidents() -> dict:
     """R-03: única función que trae los incidentes y les aplica el estado.
 
@@ -265,6 +324,9 @@ def _load_incidents() -> dict:
             act["decided_by"] = rec.get("analyst") if rec else None
             act["decided_at"] = rec.get("ts") if rec else None
             act["note"] = rec.get("note") if rec else None
+    bloqueos = _bloqueos_vigentes(state)
+    for inc in report.get("incidents", []):
+        _aplicar_bloqueo_vigente(inc, bloqueos)
     return report
 
 

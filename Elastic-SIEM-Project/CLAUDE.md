@@ -43,7 +43,7 @@ más una librería compartida (`libs/`). Cada servicio es dueño de sus datos en
 | `audit` | `cadena.py`, `audit_verify.py` (CLI), `reportes.py` | **Único escritor** de los registros append-only encadenados (decisiones, corridas, actividad de memoria, accesos al panel) → `data/audit/`. Arma los reportes. |
 | `collector` | `collector.py`, `es_client.py` | El único con credenciales de ES. Captura → `data/collector/siem_clean.json`. |
 | `classifier` | `classifier.py` | Agente 1 determinístico (reglas/umbral + playbook). Sin estado; lee `network_logs/` (ro). |
-| `analyst` | `siem_agent.py`, `proveedores_llm.py`, `perfil_agente.md` | Agente 2 (Gemma 3 local vía contenedor `ollama`, o Gemini; con fallback). Sin estado; el único con `GEMINI_API_KEY` y acceso a `ollama`. Consulta su memoria a `knowledge`. |
+| `analyst` | `siem_agent.py`, `proveedores_llm.py`, `perfil_agente.md` | Agente 2 (Gemma 3 local vía contenedor `ollama`, Gemma 4 en la nube o Gemini; con fallback). Sin estado; el único con `GEMINI_API_KEY` y acceso a `ollama`. Consulta su memoria a `knowledge`. |
 | `knowledge` | `memoria.py` | Memoria del Agente 2: documentos, casos resueltos, lecciones (**aprobadas a mano**) → `data/knowledge/`. |
 | `pipeline` | `orquestador.py`, `siem_pipeline.py` (CLI) | Orquesta collector→classifier→analyst→audit por HTTP → `data/pipeline/siem_incidents.json`. |
 
@@ -73,7 +73,9 @@ Mapa de carpetas y "¿dónde busco…?": `README.md` §Dónde está todo. Regla:
 
 - **El Agente 2 usa Gemma 3 local por defecto** (`SIEM_LLM_PROVEEDOR=gemma`, contenedor
   `ollama` en la red `llm-net` sin internet; modelo `gemma3:4b`, se baja una vez con
-  `./scripts/siem.sh modelo`). `SIEM_LLM_PROVEEDOR=gemini` usa la API con `GEMINI_API_KEY`.
+  `./scripts/siem.sh modelo`). `SIEM_LLM_PROVEEDOR=gemma-nube` usa Gemma 4 alojado por
+  Google (`SIEM_GEMMA_NUBE_MODELO`, default `gemma-4-26b-a4b-it`, ~11 s por incidente;
+  razonamiento `minimal` obligatorio, si no ~60 s) y `gemini` usa Gemini; los dos con `GEMINI_API_KEY`.
   Con cualquiera hace falta `SIEM_USE_LLM=true` (default `false`); si no, o si el LLM
   falla, va al **fallback determinístico**. Gemma en CPU tarda ~30-90 s por incidente;
   `SIEM_LLM_PRESUPUESTO` (480 s, tope 540 por el timeout de 600 s del orquestador) corta
@@ -92,6 +94,9 @@ Mapa de carpetas y "¿dónde busco…?": `README.md` §Dónde está todo. Regla:
 - **Los comandos de respuesta salen del playbook de `services/classifier/classifier.py`, no del LLM**
   (mitigación de inyección de prompt vía logs), y los datos que se interpolan en
   ellos pasan por `libs/siem_validators.py`: si no validan, la acción no se ofrece.
+- **Pruebas de performance con k6:** `./scripts/pruebas_de_performance.sh [humo|carga|estres|pico|login]`
+  (k6 en contenedor, contra el panel en :5000; usuario de solo lectura `k6-carga`, credenciales
+  en `.k6-credenciales`). Solo endpoints GET: nunca registra decisiones. Ver `pruebas_de_performance.md`.
 - **Antes de tocar código, correr `./scripts/pruebas_completas.sh`** (linters + SAST + pruebas, ~150 s).
   La puerta falla ante cualquier hallazgo nuevo; las líneas de base están en cero.
   Incluye las **pruebas de interfaz** (`tests/interfaz/`, Chromium + Playwright, ver

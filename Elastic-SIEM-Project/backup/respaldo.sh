@@ -48,6 +48,10 @@ INDICES="filebeat-*,.internal.alerts-security.alerts-*"
 
 marca=$(date -u +%Y%m%dT%H%M%SZ)
 nombre="siem-respaldo-$marca"
+# Elasticsearch exige nombres de snapshot en minúsculas
+# (invalid_snapshot_name_exception): con la marca tal cual ("…T232323Z") el
+# PUT daba 400 y ningún respaldo con ES llegaba a crearse.
+snapshot=$(tr '[:upper:]' '[:lower:]' <<<"$marca")
 trabajo=$(mktemp -d)
 # chmod: la auditoría archivada es de solo lectura, y cp -a conserva los permisos.
 trap 'chmod -R u+w "$trabajo" 2>/dev/null; rm -rf "$trabajo"' EXIT
@@ -65,18 +69,18 @@ if [[ "$CON_ES" == "true" ]]; then
   es PUT "/_snapshot/$REPO" "{\"type\":\"fs\",\"settings\":{\"location\":\"$REPO_EN_ES\"}}" >/dev/null
 
   echo "[respaldo] snapshot de $INDICES ..."
-  respuesta=$(es PUT "/_snapshot/$REPO/$marca?wait_for_completion=true" \
+  respuesta=$(es PUT "/_snapshot/$REPO/$snapshot?wait_for_completion=true" \
     "{\"indices\":\"$INDICES\",\"ignore_unavailable\":true,\"include_global_state\":false}")
   # PARTIAL también es un fallo: un respaldo al que le faltan shards no sirve
   # como evidencia, y se tiene que notar hoy, no el día que se necesite.
   if ! grep -Eq '"state" *: *"SUCCESS"' <<<"$respuesta"; then
     echo "[ERROR] el snapshot no terminó en SUCCESS: $respuesta" >&2
-    es DELETE "/_snapshot/$REPO/$marca" >/dev/null 2>&1 || true
+    es DELETE "/_snapshot/$REPO/$snapshot" >/dev/null 2>&1 || true
     exit 1
   fi
   cp -a "$SNAPSHOT_DIR/." "$trabajo/$nombre/elasticsearch/"
   # El repositorio queda vacío: el próximo snapshot vuelve a ser completo.
-  es DELETE "/_snapshot/$REPO/$marca" >/dev/null
+  es DELETE "/_snapshot/$REPO/$snapshot" >/dev/null
 else
   echo "[AVISO] SIEM_RESPALDO_ES=false: este respaldo NO incluye los índices de Elasticsearch."
 fi
@@ -91,7 +95,7 @@ fi
 {
   echo "respaldo=$nombre"
   echo "creado_utc=$marca"
-  echo "snapshot=$([[ "$CON_ES" == "true" ]] && echo "$marca" || echo "ninguno")"
+  echo "snapshot=$([[ "$CON_ES" == "true" ]] && echo "$snapshot" || echo "ninguno")"
   echo "indices=$INDICES"
   echo "# SHA-256 de cada archivo de auditoría al momento del respaldo"
   (cd "$trabajo/$nombre" && find audit -type f -print0 | sort -z | xargs -0 -r sha256sum)

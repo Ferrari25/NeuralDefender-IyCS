@@ -195,6 +195,10 @@ table.events tbody tr:last-child td { border-bottom:none; }
                     border-radius: var(--r-sm); padding: var(--sp-10) var(--sp-14); margin-bottom: var(--sp-14); font-size: var(--fs-body);
                     line-height: 1.5; color: var(--text); }
 .campaign-banner b { color: var(--camp-enlace); }
+.bloqueo-banner { background: var(--tenue-ok); border: 1px solid var(--ok); border-left: 3px solid var(--ok);
+                  border-radius: var(--r-sm); padding: var(--sp-10) var(--sp-14); margin-bottom: var(--sp-14);
+                  font-size: var(--fs-body); line-height: 1.5; color: var(--text); }
+.bloqueo-banner b, .bloqueo-banner a { color: var(--tenue-ok-texto); }
 .campaign-banner a { color: var(--camp-enlace); }
 
 .factors { margin-top: var(--sp-14); border: 1px solid var(--border); border-radius: var(--r-md);
@@ -316,6 +320,10 @@ button.ghost:hover { border-color: var(--muted); color: var(--text); }
                border-color: var(--ok); }                                        /* 10.40:1 */
 .s-dismissed { background: var(--tenue-no); color: var(--tenue-no-texto);
                border-color: var(--no); }                                        /*  8.99:1 */
+/* Bloqueo vigente aplicado por regla: mismo tinte que "aprobada" (mismo
+   significado: un humano lo aprobó), con borde punteado para distinguirlo. */
+.s-auto_applied { background: var(--tenue-ok); color: var(--tenue-ok-texto);
+                  border-color: var(--ok); border-style: dashed; }               /* 10.40:1 */
 /* "Resuelto" en la tabla de eventos activos: mismo `.state.s-approved` que ya
    usa el chip de una acción aprobada — reutiliza el tinte en vez de inventar un
    color nuevo para el mismo significado. Va debajo de la insignia de

@@ -93,6 +93,13 @@ class ElasticsearchSimulado:
                     if self.command == "PUT" and len(partes) == 2:
                         return self._responder(200, {"acknowledged": True})
                     if self.command == "PUT" and len(partes) == 3:
+                        # Como ES real: un nombre con mayúsculas es un 400. Sin
+                        # esto el simulador aceptaba lo que ES rechazaba, y los
+                        # respaldos reales fallaban con las pruebas en verde.
+                        if partes[2] != partes[2].lower():
+                            return self._responder(400, {"error": {
+                                "type": "invalid_snapshot_name_exception",
+                                "reason": f"Invalid snapshot name [{partes[2]}], must be lowercase"}})
                         # Lo que haría ES: escribir el snapshot en el repositorio.
                         es.repo_dir.mkdir(parents=True, exist_ok=True)
                         (es.repo_dir / f"snap-{partes[2]}.dat").write_text("datos de índices")
@@ -178,7 +185,7 @@ def test_el_respaldo_queda_cifrado_y_con_su_sha256(entorno):
     assert subprocess.run(["sha256sum", "-c", "-"], input=suma, cwd=archivo.parent,
                           text=True, capture_output=True, check=False).returncode == 0
     # El snapshot del día no queda en el repositorio: el próximo vuelve a ser completo.
-    assert ("DELETE", f"/_snapshot/siem-respaldo/{archivo.name[14:30]}", None) in es.peticiones
+    assert ("DELETE", f"/_snapshot/siem-respaldo/{archivo.name[14:30].lower()}", None) in es.peticiones
 
 
 def test_el_snapshot_pide_los_indices_del_siem_sin_estado_global(entorno):

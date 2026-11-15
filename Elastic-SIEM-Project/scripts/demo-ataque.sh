@@ -22,6 +22,7 @@
 #   ./scripts/demo-ataque.sh phishing         captura de credenciales
 #   ./scripts/demo-ataque.sh fuerza-bruta     SSH real con Hydra (necesita Docker)
 #   ./scripts/demo-ataque.sh campana          escaneo + fuerza bruta desde la MISMA IP
+#/scripts/demo-ataque.sh campana          escaneo + fuerza bruta desde la MISMA IP
 #
 #   --rapido    sin pausas narrativas (para probarlo, no para presentar)
 #   --ip X      IP del atacante (por defecto se genera una nueva cada vez)

@@ -107,16 +107,26 @@ funciona y dónde verlo: [05 · El "Gem"](05-gem-memoria-del-agente.md).
   huella, y fuerzan un análisis nuevo: el perfil o el prompt, los factores de la
   clasificación, las acciones y su orden, y el volumen cuando se duplica. El modelo
   bajado vive en el volumen `ollama-modelos`, que `reset.sh` no borra.
-- **Alternativa: Gemini por API** (`SIEM_LLM_PROVEEDOR=gemini` + `GEMINI_API_KEY`
-  de https://aistudio.google.com). Modelo con `SIEM_GEMINI_MODELO` (default
-  `gemini-flash-lite-latest`; con la capa gratuita también sirve `gemma-3-27b-it`:
-  como esos modelos no aceptan instrucción de sistema ni modo JSON, el cliente
-  manda todo en el mensaje y pide el JSON en el texto).
+- **Gemma en la nube** (`SIEM_LLM_PROVEEDOR=gemma-nube` + `GEMINI_API_KEY` de
+  https://aistudio.google.com, gratis). El mismo Gemma, pero alojado por Google:
+  modelo con `SIEM_GEMMA_NUBE_MODELO` (default `gemma-4-26b-a4b-it`). La API ya no
+  sirve Gemma 3; ofrece `gemma-4-26b-a4b-it` y `gemma-4-31b-it`. Medido con
+  incidentes reales (2026-11-12): **~11 s por incidente** con el 26b, contra
+  ~75 s de Gemma 3 4b en CPU. El 31b tarda ~45 s. El cliente le pide a Gemma 4
+  razonamiento `minimal`. Sin eso, el modelo genera ~2.400 tokens de razonamiento
+  oculto y tarda ~60 s. Además, ante un `500 INTERNAL` de Google (~1 de cada 6
+  llamadas) reintenta una vez, si queda plazo. Como con Gemini, los datos de los
+  incidentes salen del equipo. Con este proveedor, el contenedor `ollama` no se
+  usa: se puede apagar con `docker compose stop ollama` para liberar ~4 GB de RAM.
+- **Alternativa: Gemini por API** (`SIEM_LLM_PROVEEDOR=gemini` + `GEMINI_API_KEY`).
+  Modelo con `SIEM_GEMINI_MODELO` (default `gemini-flash-lite-latest`). Los Gemma 3
+  alojados (`gemma-3-*`) no aceptaban instrucción de sistema ni modo JSON. Para
+  esos modelos, el cliente manda todo en el mensaje y pide el JSON en el texto.
 - **Interruptor:** con cualquier proveedor hace falta `SIEM_USE_LLM=true` en
   `.env` — apagado por defecto.
 - Si el interruptor está apagado, falta el modelo o la key, o el LLM falla,
   cada incidente cae al análisis determinístico. El campo `analyst_mode`
-  (`gemma` / `gemini` / `fallback`) y el banner de cada card indican qué se usó
+  (`gemma` / `gemma-nube` / `gemini` / `fallback`) y el banner de cada card indican qué se usó
   y con qué modelo.
 - Mitigación de inyección de prompt: los datos del log se marcan como **no
   confiables** por system instruction y se entregan delimitados; el LLM nunca

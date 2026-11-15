@@ -90,5 +90,175 @@
       "testuser"
     ],
     "ts": "2026-11-02T23:09:37.382994+00:00"
+  },
+  {
+    "incident_id": "INC-SCAN-198.51.100.77-2d91364b",
+    "action_id": "INC-SCAN-198.51.100.77-2d91364b-72cb34",
+    "accion": "Bloquear la IP que realiza el escaneo en el firewall",
+    "decision": "approved",
+    "note": "",
+    "analyst": "nico",
+    "attack_type": "port_scan",
+    "severity": "MEDIUM",
+    "source_ip": "198.51.100.77",
+    "attacker_ips": [
+      "198.51.100.77"
+    ],
+    "target_users": [],
+    "ts": "2026-11-10T22:44:39.050156+00:00"
+  },
+  {
+    "incident_id": "INC-SCAN-198.51.100.77-2d91364b",
+    "action_id": "INC-SCAN-198.51.100.77-2d91364b-c0fb68",
+    "accion": "Revisar qué servicios/puertos quedaron expuestos en el host objetivo",
+    "decision": "approved",
+    "note": "",
+    "analyst": "nico",
+    "attack_type": "port_scan",
+    "severity": "MEDIUM",
+    "source_ip": "198.51.100.77",
+    "attacker_ips": [
+      "198.51.100.77"
+    ],
+    "target_users": [],
+    "ts": "2026-11-10T22:44:43.780915+00:00"
+  },
+  {
+    "incident_id": "INC-SCAN-198.51.100.77-2d91364b",
+    "action_id": "INC-SCAN-198.51.100.77-2d91364b-456bc0",
+    "accion": "Cerrar puertos innecesarios y segmentar el host afectado",
+    "decision": "approved",
+    "note": "",
+    "analyst": "nico",
+    "attack_type": "port_scan",
+    "severity": "MEDIUM",
+    "source_ip": "198.51.100.77",
+    "attacker_ips": [
+      "198.51.100.77"
+    ],
+    "target_users": [],
+    "ts": "2026-11-10T22:44:49.147434+00:00"
+  },
+  {
+    "incident_id": "INC-SCAN-198.51.100.77-2d91364b",
+    "action_id": "INC-SCAN-198.51.100.77-2d91364b-eb2160",
+    "accion": "Desplegar IDS de red (Suricata) para visibilidad de futuros escaneos",
+    "decision": "approved",
+    "note": "",
+    "analyst": "nico",
+    "attack_type": "port_scan",
+    "severity": "MEDIUM",
+    "source_ip": "198.51.100.77",
+    "attacker_ips": [
+      "198.51.100.77"
+    ],
+    "target_users": [],
+    "ts": "2026-11-10T22:44:51.649454+00:00"
+  },
+  {
+    "incident_id": "INC-SCAN-desconocida-45990498",
+    "action_id": "INC-SCAN-desconocida-45990498-c0fb68",
+    "accion": "Revisar qué servicios/puertos quedaron expuestos en el host objetivo",
+    "decision": "approved",
+    "note": "",
+    "analyst": "nico",
+    "attack_type": "port_scan",
+    "severity": "MEDIUM",
+    "source_ip": "desconocida",
+    "attacker_ips": [],
+    "target_users": [],
+    "ts": "2026-11-10T23:04:44.396985+00:00"
+  },
+  {
+    "incident_id": "INC-SCAN-desconocida-45990498",
+    "action_id": "INC-SCAN-desconocida-45990498-456bc0",
+    "accion": "Cerrar puertos innecesarios y segmentar el host afectado",
+    "decision": "approved",
+    "note": "",
+    "analyst": "nico",
+    "attack_type": "port_scan",
+    "severity": "MEDIUM",
+    "source_ip": "desconocida",
+    "attacker_ips": [],
+    "target_users": [],
+    "ts": "2026-11-10T23:04:46.724174+00:00"
+  },
+  {
+    "incident_id": "INC-SCAN-desconocida-45990498",
+    "action_id": "INC-SCAN-desconocida-45990498-eb2160",
+    "accion": "Desplegar IDS de red (Suricata) para visibilidad de futuros escaneos",
+    "decision": "approved",
+    "note": "",
+    "analyst": "nico",
+    "attack_type": "port_scan",
+    "severity": "MEDIUM",
+    "source_ip": "desconocida",
+    "attacker_ips": [],
+    "target_users": [],
+    "ts": "2026-11-10T23:04:49.774128+00:00"
+  },
+  {
+    "incident_id": "INC-SCAN-198.51.100.76-9aec59de",
+    "action_id": "INC-SCAN-198.51.100.76-9aec59de-c8f6f4",
+    "accion": "Bloquear la IP que realiza el escaneo en el firewall",
+    "decision": "approved",
+    "note": "",
+    "analyst": "nico",
+    "attack_type": "port_scan",
+    "severity": "HIGH",
+    "source_ip": "198.51.100.76",
+    "attacker_ips": [
+      "198.51.100.76"
+    ],
+    "target_users": [],
+    "ts": "2026-11-11T01:22:45.034975+00:00"
+  },
+  {
+    "incident_id": "INC-SCAN-198.51.100.76-9aec59de",
+    "action_id": "INC-SCAN-198.51.100.76-9aec59de-c0fb68",
+    "accion": "Revisar qué servicios/puertos quedaron expuestos en el host objetivo",
+    "decision": "approved",
+    "note": "",
+    "analyst": "nico",
+    "attack_type": "port_scan",
+    "severity": "HIGH",
+    "source_ip": "198.51.100.76",
+    "attacker_ips": [
+      "198.51.100.76"
+    ],
+    "target_users": [],
+    "ts": "2026-11-11T01:22:55.338811+00:00"
+  },
+  {
+    "incident_id": "INC-SCAN-198.51.100.76-9aec59de",
+    "action_id": "INC-SCAN-198.51.100.76-9aec59de-456bc0",
+    "accion": "Cerrar puertos innecesarios y segmentar el host afectado",
+    "decision": "approved",
+    "note": "",
+    "analyst": "nico",
+    "attack_type": "port_scan",
+    "severity": "HIGH",
+    "source_ip": "198.51.100.76",
+    "attacker_ips": [
+      "198.51.100.76"
+    ],
+    "target_users": [],
+    "ts": "2026-11-11T01:22:59.740184+00:00"
+  },
+  {
+    "incident_id": "INC-SCAN-198.51.100.76-9aec59de",
+    "action_id": "INC-SCAN-198.51.100.76-9aec59de-eb2160",
+    "accion": "Desplegar IDS de red (Suricata) para visibilidad de futuros escaneos",
+    "decision": "approved",
+    "note": "",
+    "analyst": "nico",
+    "attack_type": "port_scan",
+    "severity": "HIGH",
+    "source_ip": "198.51.100.76",
+    "attacker_ips": [
+      "198.51.100.76"
+    ],
+    "target_users": [],
+    "ts": "2026-11-11T01:23:01.646169+00:00"
   }
 ]

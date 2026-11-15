@@ -170,6 +170,8 @@ def test_el_techo_del_presupuesto_cabe_en_el_timeout_del_orquestador():
     ("", "AIza-real", "gemma"),                  # Gemini nunca por omisión: los datos saldrían
     ("gemma", "AIza-real", "gemma"),
     ("gemini", "", "gemini"),
+    ("gemma-nube", "AIza-real", "gemma-nube"),
+    ("GEMMA-NUBE", "", "gemma-nube"),
     ("cualquiera", "", "gemma"),
 ])
 def test_proveedor_por_defecto(monkeypatch, variable, key, esperado):
@@ -209,7 +211,7 @@ def test_gemini_respeta_el_timeout_de_la_llamada():
 
 
 def test_gemma_alojado_no_usa_instruccion_de_sistema_ni_modo_json():
-    """La API rechaza ambas cosas para `gemma-*` (400 INVALID_ARGUMENT)."""
+    """La API rechaza ambas cosas para `gemma-3-*` (400 INVALID_ARGUMENT)."""
     pytest.importorskip("google.genai")
     cliente, modelos = _cliente_gemini("gemma-3-27b-it", '```json\n{"a": 1}\n```')
     texto = cliente.generar_json("SIS", "PROMPT", {}, timeout=30)
@@ -219,6 +221,98 @@ def test_gemma_alojado_no_usa_instruccion_de_sistema_ni_modo_json():
     assert config.http_options.timeout == 30000
     assert modelos.pedido["contents"].startswith("SIS\n\nPROMPT")
     assert json.loads(texto) == {"a": 1}
+
+
+def test_gemma_4_en_la_nube_usa_instruccion_de_sistema_y_modo_json():
+    """Gemma 4 alojado acepta las dos cosas (probado contra la API real)."""
+    pytest.importorskip("google.genai")
+    cliente, modelos = _cliente_gemini("gemma-4-26b-a4b-it", '{"a": 1}')
+    texto = cliente.generar_json("SIS", "PROMPT", {}, timeout=30)
+    config = modelos.pedido["config"]
+    assert config.system_instruction == "SIS"
+    assert config.response_mime_type == "application/json"
+    assert modelos.pedido["contents"] == "PROMPT"
+    assert json.loads(texto) == {"a": 1}
+    # Sin esto Gemma 4 razona ~2.400 tokens ocultos (~60 s por incidente).
+    assert str(config.thinking_config.thinking_level.value).lower() == "minimal"
+
+
+def test_gemini_no_toca_el_razonamiento():
+    pytest.importorskip("google.genai")
+    cliente, modelos = _cliente_gemini("gemini-flash-lite-latest", "{}")
+    cliente.generar_json("SIS", "PROMPT", {}, timeout=30)
+    assert modelos.pedido["config"].thinking_config is None
+
+
+class _ModelosQueFallan(_ModelosFalsos):
+    def __init__(self, texto: str, fallos: int):
+        super().__init__(texto)
+        self.fallos, self.llamadas = fallos, 0
+
+    def generate_content(self, **kwargs):
+        from google.genai import errors
+        self.llamadas += 1
+        if self.llamadas <= self.fallos:
+            raise errors.ServerError(500, {"error": {"code": 500, "message": "Internal error",
+                                                      "status": "INTERNAL"}})
+        return super().generate_content(**kwargs)
+
+
+@pytest.mark.parametrize("fallos, timeout, llamadas, sale_bien", [
+    (1, 30, 2, True),     # un 500 suelto: se reintenta y sale bien
+    (2, 30, 2, False),    # dos seguidos: un solo reintento, después al fallback
+    (1, 3, 1, False),     # sin plazo para reintentar: no se reintenta
+])
+def test_gemma_nube_reintenta_una_vez_ante_un_500(fallos, timeout, llamadas, sale_bien):
+    pytest.importorskip("google.genai")
+    from google.genai import errors
+    cliente, _ = _cliente_gemini("gemma-4-26b-a4b-it", "")
+    modelos = _ModelosQueFallan('{"a": 1}', fallos)
+    cliente._cliente = type("C", (), {"models": modelos})()
+    if sale_bien:
+        assert json.loads(cliente.generar_json("SIS", "PROMPT", {}, timeout=timeout)) == {"a": 1}
+    else:
+        with pytest.raises(errors.ServerError):
+            cliente.generar_json("SIS", "PROMPT", {}, timeout=timeout)
+    assert modelos.llamadas == llamadas
+
+
+@pytest.mark.parametrize("variable, modelo_env, modelo, fuente", [
+    ("gemma-nube", "", "gemma-4-26b-a4b-it", "gemma-nube"),
+    ("gemma-nube", "gemma-4-31b-it", "gemma-4-31b-it", "gemma-nube"),
+    ("gemini", "", "gemini-flash-lite-latest", "gemini"),
+])
+def test_construir_cliente_en_la_nube(monkeypatch, variable, modelo_env, modelo, fuente):
+    construidos = []
+
+    def falso_init(self, api_key, modelo, fuente="gemini"):
+        construidos.append(api_key)
+        self.modelo, self.fuente = modelo, fuente
+
+    monkeypatch.setattr(proveedores_llm.ClienteGemini, "__init__", falso_init)
+    monkeypatch.setenv("SIEM_LLM_PROVEEDOR", variable)
+    monkeypatch.setenv("GEMINI_API_KEY", "AIza-real")
+    monkeypatch.setenv("SIEM_GEMMA_NUBE_MODELO", modelo_env)
+    monkeypatch.delenv("SIEM_GEMINI_MODELO", raising=False)
+    cliente = proveedores_llm.construir()
+    assert (cliente.modelo, cliente.fuente) == (modelo, fuente)
+    assert construidos == ["AIza-real"]
+
+
+def test_gemma_nube_sin_key_va_al_fallback(monkeypatch):
+    monkeypatch.setenv("SIEM_LLM_PROVEEDOR", "gemma-nube")
+    monkeypatch.setenv("GEMINI_API_KEY", "")
+    assert proveedores_llm.construir() is None
+
+
+def test_el_modo_de_la_corrida_es_gemma_nube(monkeypatch):
+    """El panel distingue Gemma en la nube de la local por `analyst_mode`."""
+    cliente, _ = _cliente_gemini("gemma-4-26b-a4b-it", json.dumps(RESPUESTA))
+    cliente.fuente = "gemma-nube"
+    monkeypatch.setattr(siem_agent, "_build_client", lambda: cliente)
+    resultado = siem_agent.analizar([dict(INCIDENTE)], [], {})
+    assert resultado["analyst_mode"] == "gemma-nube"
+    assert resultado["incidents"][0]["analysis"]["_source"] == "gemma-nube"
 
 
 # ─── Reutilización entre ciclos ──────────────────────────────────────────────
