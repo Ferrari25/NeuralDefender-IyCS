@@ -18,6 +18,7 @@ from __future__ import annotations
 import ipaddress
 import json
 import os
+import threading
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -109,11 +110,28 @@ def write_json(path: str | Path, data: Any) -> None:
     `os.open` con modo explícito en vez del `open()` de siempre, que deja los
     permisos a merced del umask — es lo que señala la regla R8005 de
     pylint-secure-coding-standard.
+
+    La escritura es atómica: se escribe en un temporal del mismo directorio y
+    se reemplaza el archivo con `os.replace`. Antes se truncaba y se reescribía
+    en el lugar, y un lector concurrente podía ver el archivo a medio escribir:
+    durante la prueba de pico con k6, un `GET /v1/incidents` coincidió con el
+    ciclo automático del pipeline y devolvió 503 (JSONDecodeError). Con el
+    reemplazo atómico, quien lee ve el archivo viejo entero o el nuevo entero.
     """
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, DATA_FILE_MODE)
-    with os.fdopen(fd, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+    destino = Path(path)
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    # Nombre único por proceso e hilo: dos escritores no comparten temporal.
+    temporal = destino.with_name(f".{destino.name}.{os.getpid()}.{threading.get_ident()}.tmp")
+    fd = os.open(temporal, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, DATA_FILE_MODE)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(temporal, destino)
+    except BaseException:
+        temporal.unlink(missing_ok=True)
+        raise
 
 
 def read_network_logs(dir_path: str | Path = "network_logs",

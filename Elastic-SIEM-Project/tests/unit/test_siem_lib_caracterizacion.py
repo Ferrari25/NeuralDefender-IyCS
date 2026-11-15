@@ -84,6 +84,39 @@ def test_write_y_load_json_ida_y_vuelta(sandbox):
     assert "clasificación" in (sandbox / "x.json").read_text(encoding="utf-8")
 
 
+def test_write_json_es_atomico_para_un_lector_concurrente(sandbox):
+    """Quien lee mientras otro escribe ve el JSON viejo entero o el nuevo entero.
+
+    Reproduce el 503 de la prueba de pico con k6: el ciclo automático del
+    pipeline reescribía `siem_incidents.json` mientras el gateway lo leía.
+    """
+    import threading
+
+    destino = sandbox / "incidentes.json"
+    grande = {"incidents": [{"id": i, "texto": "x" * 500} for i in range(200)]}
+    siem_lib.write_json(destino, grande)
+    errores: list[Exception] = []
+    fin = threading.Event()
+
+    def escritor():
+        for n in range(150):
+            siem_lib.write_json(destino, dict(grande, ciclo=n))
+        fin.set()
+
+    hilo = threading.Thread(target=escritor)
+    hilo.start()
+    while not fin.is_set():
+        try:
+            assert len(siem_lib.load_json(destino)["incidents"]) == 200
+        except (ValueError, AssertionError) as e:   # JSONDecodeError es ValueError
+            errores.append(e)
+    hilo.join()
+    assert errores == []
+    # Ni temporales colgados ni permisos más abiertos que antes.
+    assert [p.name for p in sandbox.iterdir() if p.name.endswith(".tmp")] == []
+    assert destino.stat().st_mode & 0o777 == siem_lib.DATA_FILE_MODE
+
+
 def test_read_jsonl_inexistente_devuelve_vacio(sandbox):
     """Que el dashboard arranque sin decisiones previas no es un error."""
     assert cadena.read_jsonl(sandbox / "decisions.jsonl") == []
