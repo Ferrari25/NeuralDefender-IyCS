@@ -260,5 +260,37 @@
     ],
     "target_users": [],
     "ts": "2026-11-11T01:23:01.646169+00:00"
+  },
+  {
+    "incident_id": "INC-SCAN-198.51.100.150-f727cbe4",
+    "action_id": "INC-SCAN-198.51.100.150-f727cbe4-eecbf9",
+    "accion": "Bloquear la IP que realiza el escaneo en el firewall",
+    "decision": "approved",
+    "note": "",
+    "analyst": "analista",
+    "attack_type": "port_scan",
+    "severity": "HIGH",
+    "source_ip": "198.51.100.150",
+    "attacker_ips": [
+      "198.51.100.150"
+    ],
+    "target_users": [],
+    "ts": "2026-11-15T17:07:55.473575+00:00"
+  },
+  {
+    "incident_id": "INC-SCAN-198.51.100.151-1311607b",
+    "action_id": "INC-SCAN-198.51.100.151-1311607b-dd7b64",
+    "accion": "Bloquear la IP que realiza el escaneo en el firewall",
+    "decision": "approved",
+    "note": "",
+    "analyst": "analista",
+    "attack_type": "port_scan",
+    "severity": "HIGH",
+    "source_ip": "198.51.100.151",
+    "attacker_ips": [
+      "198.51.100.151"
+    ],
+    "target_users": [],
+    "ts": "2026-11-15T17:15:01.456692+00:00"
   }
 ]

@@ -64,7 +64,7 @@ contar_incidentes() {
   python3 - <<'PY' 2>/dev/null || echo 0
 import json
 import pathlib
-p = pathlib.Path("siem_incidents.json")
+p = pathlib.Path("data/pipeline/siem_incidents.json")
 print(json.loads(p.read_text(encoding="utf-8"))["incident_count"] if p.exists() else 0)
 PY
 }
@@ -74,7 +74,7 @@ listar_incidentes() {
 import json
 import pathlib
 
-p = pathlib.Path("siem_incidents.json")
+p = pathlib.Path("data/pipeline/siem_incidents.json")
 if not p.exists():
     raise SystemExit
 
@@ -97,7 +97,7 @@ import json
 import os
 import pathlib
 
-p = pathlib.Path("siem_incidents.json")
+p = pathlib.Path("data/pipeline/siem_incidents.json")
 if not p.exists():
     print(0)
     raise SystemExit

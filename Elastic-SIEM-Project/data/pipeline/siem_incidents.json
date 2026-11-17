@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-11-15T16:02:04.569510+00:00",
-  "incident_count": 4,
+  "generated_at": "2026-11-15T22:03:34.331804+00:00",
+  "incident_count": 7,
   "incidents": [
     {
-      "alert_event_count": 287,
+      "alert_event_count": 135,
       "analysis": {
-        "_generado_ts": 1794758536.0428383,
-        "_huella": "b1d98789649615d28ed9a095e62728fdfea095281d1132dfaab7d3876d382333",
+        "_generado_ts": 1794780045.876033,
+        "_huella": "b56f18c6b2f374ed63703529dc17341fc2a73fc07c9136419a5235b2eef565f3",
         "_modelo": "gemma-4-26b-a4b-it",
         "_source": "gemma-nube",
-        "accion_recomendada": "Priorizar (1) Habilitar rate-limiting / fail2ban en el servicio SSH, dado que ya se han resuelto tres casos similares (INC-AUTH-desconocida-7604c360, 0b86b9b8 y 32736251) aplicando esta misma medida.",
+        "accion_recomendada": "Priorizar (1) Habilitar rate-limiting / fail2ban en el servicio SSH, dado que ya se han resuelto tres casos similares (INC-AUTH-desconocida-7604c360, INC-AUTH-desconocida-0b86b9b8, INC-AUTH-desconocida-32736251) aplicando esta misma medida.",
         "aprendizaje": {
           "casos_similares": [
             {
@@ -52,20 +52,20 @@
         },
         "contexto_campana": null,
         "contexto_historico": "Sin IP identificada para buscar antecedentes.",
-        "contexto_riesgo": "Si el atacante logra vulnerar una cuenta en el host 172.19.0.6, obtendría acceso directo por consola al servidor. Dado el volumen de intentos, el riesgo de compromiso de credenciales es inminente si no se limita la capacidad de prueba.",
-        "explicacion": "Se detectó un ataque de fuerza bruta contra el host 172.19.0.6 con 287 intentos de autenticación fallidos en apenas 5 minutos. El volumen es masivo y supera ampliamente el umbral de seguridad de 20 eventos. No hay una IP de origen clara en los logs proporcionados, pero la intensidad del tráfico descarta un error de usuario.",
+        "contexto_riesgo": "Si el atacante logra vulnerar una cuenta en el host 172.19.0.6, obtendría acceso directo al sistema, permitiendo movimiento lateral o exfiltración de datos. El volumen de intentos sugiere un escaneo persistente que busca explotar debilidades en la política de contraseñas actual.",
+        "explicacion": "Se detectó un intento de fuerza bruta contra el host 172.19.0.6 con 135 fallos de autenticación en una ventana de aproximadamente 6 horas y media. El volumen de intentos supera ampliamente el umbral de seguridad de 20 eventos, lo que indica un ataque automatizado y no un error humano. No se identificó una IP de origen específica en los logs proporcionados, lo que dificulta el bloqueo inmediato por IP.",
         "falso_positivo_probabilidad": "LOW",
-        "metodologia": "El atacante intenta adivinar credenciales mediante pruebas sistemáticas de usuarios y contraseñas en el protocolo SSH. Suele utilizar herramientas automatizadas para lanzar ráfagas de intentos en ventanas de tiempo muy cortas.",
+        "metodologia": "El atacante intenta adivinar credenciales mediante pruebas sucesivas de usuarios y contraseñas en el protocolo SSH. Suele utilizar herramientas de automatización para lanzar diccionarios de palabras contra el servicio.",
         "puntos_de_investigacion": [
-          "¿Cuál es la IP de origen real que está generando los 287 eventos hacia el host 172.19.0.6?",
-          "¿Qué usuarios específicos están siendo el objetivo de estos intentos de autenticación?",
-          "¿El host 172.19.0.6 tiene servicios críticos o datos sensibles que justifiquen la urgencia del bloqueo?"
+          "¿Cuál es la IP de origen real que generó los 135 fallos, ya que no figura en el resumen?",
+          "¿Qué usuarios específicos están siendo el objetivo de los intentos de login en el host 172.19.0.6?",
+          "¿Hay algún usuario que haya tenido un login exitoso inmediatamente después de la ráfaga de fallos?"
         ],
         "referencias": [
           "https://attack.mitre.org/techniques/T1110/",
-          "https://attack.mitre.org/techniques/T1110/001/"
+          "https://attack.mitre.org/tactics/TA0006/"
         ],
-        "severidad_ajustada": "MEDIUM",
+        "severidad_ajustada": "CRITICAL",
         "severidad_ajustada_sin_normalizar": "HIGH"
       },
       "attacker_ips": [],
@@ -75,22 +75,22 @@
         "attack_type": "ssh_brute_force",
         "confidence": "alta",
         "factores": [
-          "287 fallo(s) de autenticación registrados (umbral de fuerza bruta: 20)",
+          "135 fallo(s) de autenticación registrados (umbral de fuerza bruta: 20)",
           "Host(s) atacado(s): 172.19.0.6",
           "Volumen muy por encima del umbral: descarta un error humano puntual",
           "Falso positivo: BAJA — este volumen es infrecuente en tráfico legítimo"
         ],
         "false_positive_likelihood": "baja",
         "mitre_technique": "T1110",
-        "rationale": "287 fallos de autenticación desde una misma IP superan el umbral de 20; patrón de fuerza bruta automatizada (T1110).",
+        "rationale": "135 fallos de autenticación desde una misma IP superan el umbral de 20; patrón de fuerza bruta automatizada (T1110).",
         "severity": "alta"
       },
       "detection_source": "elastic",
-      "event_count": 287,
+      "event_count": 135,
       "evidence": [],
       "first_seen": "2026-11-15T15:56:22.225Z",
       "incident_id": "INC-AUTH-desconocida-dd20897c",
-      "last_seen": "2026-11-15T16:01:25.155Z",
+      "last_seen": "2026-11-15T22:00:15.354Z",
       "log_event_count": 0,
       "mitre": {
         "tactic": "Credential Access",
@@ -154,10 +154,10 @@
         }
       ],
       "related_incidents": [],
-      "risk_score": 47,
-      "rule_name": "SSH Brute Force – Basic Threshold",
+      "risk_score": 95,
+      "rule_name": "SSH Successful Login After Brute Force",
       "sample_messages": [],
-      "severity_siem": "medium",
+      "severity_siem": "critical",
       "source_ip": "desconocida",
       "target_users": [],
       "victim_hosts": [
@@ -165,13 +165,492 @@
       ]
     },
     {
-      "alert_event_count": 73,
+      "alert_event_count": 121,
       "analysis": {
-        "_generado_ts": 1794758261.918865,
-        "_huella": "55fb7c4bf236b87f573f23a4c09fc129e7cf4eccdb470a2e37092581f149d8be",
+        "_generado_ts": 1794780059.1887298,
+        "_huella": "1635829af18552d34f4268c142ba4dc798df32c8cc312c755984d7c92254649d",
         "_modelo": "gemma-4-26b-a4b-it",
         "_source": "gemma-nube",
-        "accion_recomendada": "Priorizar (2) Verificar si hubo algún login EXITOSO desde la IP atacante, para confirmar si el ataque ya tuvo éxito antes de proceder con el bloqueo.",
+        "accion_recomendada": "Priorizar (1) Bloquear la IP atacante en el firewall perimetral, dado que la IP 198.51.100.151 ya fue objeto de una acción aprobada recientemente por el mismo tipo de actividad.",
+        "aprendizaje": {
+          "casos_similares": [
+            {
+              "accion": "Bloquear la IP que realiza el escaneo en el firewall",
+              "analyst": "analista",
+              "attack_type": "port_scan",
+              "decision": "approved",
+              "incident_id": "INC-SCAN-198.51.100.151-1311607b",
+              "motivo": "misma IP (198.51.100.151)",
+              "note": "",
+              "similitud": 4,
+              "ts": "2026-11-15T17:15:01.456692+00:00"
+            },
+            {
+              "accion": "Habilitar rate-limiting / fail2ban en el servicio SSH",
+              "analyst": "nico",
+              "attack_type": "ssh_brute_force",
+              "decision": "approved",
+              "incident_id": "INC-AUTH-desconocida-7604c360",
+              "motivo": "mismo tipo de ataque",
+              "note": "",
+              "similitud": 3,
+              "ts": "2026-11-02T23:09:26.426863+00:00"
+            },
+            {
+              "accion": "Habilitar rate-limiting / fail2ban en el servicio SSH",
+              "analyst": "nico",
+              "attack_type": "ssh_brute_force",
+              "decision": "approved",
+              "incident_id": "INC-AUTH-desconocida-0b86b9b8",
+              "motivo": "mismo tipo de ataque",
+              "note": "",
+              "similitud": 3,
+              "ts": "2026-10-27T20:56:00.302872+00:00"
+            }
+          ],
+          "disponible": true,
+          "documentos": [],
+          "lecciones": []
+        },
+        "contexto_campana": "Este incidente está vinculado a otro(s) 1 incidente(s) activo(s) (INC-SCAN-198.51.100.151-1311607b) por compartir la IP 198.51.100.151. Tratarlos como una sola campaña, no como eventos aislados: la severidad real del conjunto puede ser mayor que la de cada incidente por separado.",
+        "contexto_historico": "Hay 1 decisión(es) previa(s) registrada(s) sobre esta IP (1 aprobada(s), 0 descartada(s)). La más reciente: analista approved una acción del incidente INC-SCAN-198.51.100.151-1311607b el 2026-11-15T17:15:01.447815+00:00.",
+        "contexto_riesgo": "Si el atacante logra vulnerar la cuenta 'testuser', tendría acceso directo al host 172.18.0.7. Dado que la IP ya está realizando escaneos previos, el riesgo de compromiso es inminente si no se corta el acceso.",
+        "explicacion": "Se detectó un ataque de fuerza bruta contra el usuario 'testuser' en el host 172.18.0.7, con 121 intentos fallidos en menos de dos minutos. La IP atacante 198.51.100.151 ya tiene un antecedente de actividad sospechosa registrado hace apenas segundos en el incidente INC-SCAN-198.51.100.151-1311607b. Esto confirma que no es un error de un usuario, sino una campaña activa de la misma fuente.",
+        "falso_positivo_probabilidad": "LOW",
+        "metodologia": "El atacante intenta adivinar credenciales mediante la repetición masiva de intentos de login por SSH. Suele utilizar herramientas automatizadas que prueban diccionarios de contraseñas contra servicios expuestos.",
+        "puntos_de_investigacion": [
+          "¿Hubo algún login exitoso para el usuario 'testuser' desde la IP 198.51.100.151 antes o durante la ráfaga de fallos?",
+          "¿Qué otros usuarios o servicios en la red 172.18.0.0/24 están siendo apuntados por la IP 198.51.100.151?",
+          "¿El usuario 'testuser' tiene permisos administrativos o acceso a datos sensibles en el host 172.18.0.7?"
+        ],
+        "referencias": [
+          "https://attack.mitre.org/techniques/T1110/",
+          "https://attack.mitre.org/tactics/TA0006/"
+        ],
+        "severidad_ajustada": "CRITICAL"
+      },
+      "attacker_ips": [
+        "198.51.100.151"
+      ],
+      "campaign_id": "CAMP-dc323010",
+      "campaign_shared_ips": [
+        "198.51.100.151"
+      ],
+      "classification": {
+        "attack_type": "ssh_brute_force",
+        "confidence": "alta",
+        "factores": [
+          "121 fallo(s) de autenticación registrados (umbral de fuerza bruta: 20)",
+          "Host(s) atacado(s): 172.18.0.7",
+          "Volumen muy por encima del umbral: descarta un error humano puntual",
+          "Falso positivo: BAJA — este volumen es infrecuente en tráfico legítimo"
+        ],
+        "false_positive_likelihood": "baja",
+        "mitre_technique": "T1110",
+        "rationale": "121 fallos de autenticación desde una misma IP superan el umbral de 20; patrón de fuerza bruta automatizada (T1110).",
+        "severity": "alta"
+      },
+      "detection_source": "elastic",
+      "event_count": 121,
+      "evidence": [
+        {
+          "detail": "Failed password for testuser from 198.51.100.151 port 40000 ssh2",
+          "ts": "2026-11-15T17:15:34.000Z"
+        },
+        {
+          "detail": "Failed password for testuser from 198.51.100.151 port 40001 ssh2",
+          "ts": "2026-11-15T17:15:35.000Z"
+        },
+        {
+          "detail": "Failed password for testuser from 198.51.100.151 port 40002 ssh2",
+          "ts": "2026-11-15T17:15:36.000Z"
+        },
+        {
+          "detail": "Failed password for testuser from 198.51.100.151 port 40003 ssh2",
+          "ts": "2026-11-15T17:15:37.000Z"
+        },
+        {
+          "detail": "Failed password for testuser from 198.51.100.151 port 40004 ssh2",
+          "ts": "2026-11-15T17:15:38.000Z"
+        },
+        {
+          "detail": "Failed password for testuser from 198.51.100.151 port 40005 ssh2",
+          "ts": "2026-11-15T17:15:39.000Z"
+        },
+        {
+          "detail": "Failed password for testuser from 198.51.100.151 port 40006 ssh2",
+          "ts": "2026-11-15T17:15:40.000Z"
+        },
+        {
+          "detail": "Failed password for testuser from 198.51.100.151 port 40007 ssh2",
+          "ts": "2026-11-15T17:15:41.000Z"
+        },
+        {
+          "detail": "Failed password for testuser from 198.51.100.151 port 40008 ssh2",
+          "ts": "2026-11-15T17:15:42.000Z"
+        },
+        {
+          "detail": "Failed password for testuser from 198.51.100.151 port 40009 ssh2",
+          "ts": "2026-11-15T17:15:43.000Z"
+        },
+        {
+          "detail": "Failed password for testuser from 198.51.100.151 port 40010 ssh2",
+          "ts": "2026-11-15T17:15:44.000Z"
+        },
+        {
+          "detail": "Failed password for testuser from 198.51.100.151 port 40011 ssh2",
+          "ts": "2026-11-15T17:15:45.000Z"
+        }
+      ],
+      "first_seen": "2026-11-15T17:15:34.000Z",
+      "incident_id": "INC-AUTH-198.51.100.151-54a0543d",
+      "last_seen": "2026-11-15T17:17:10.114Z",
+      "log_event_count": 24,
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "recommended_actions": [
+        {
+          "accion": "Bloquear la IP atacante en el firewall perimetral",
+          "action_id": "INC-AUTH-198.51.100.151-54a0543d-8d88ec",
+          "alternativa_de": null,
+          "comando_argv": [
+            "sudo",
+            "ufw",
+            "deny",
+            "from",
+            "198.51.100.151"
+          ],
+          "comando_explicacion": "Agrega una regla al firewall (UFW, sobre iptables) que descarta todo el tráfico entrante desde esa IP puntual. No afecta a ningún otro origen ni servicio; es reversible con 'ufw delete deny from <ip>'.",
+          "comando_sugerido": "sudo ufw deny from 198.51.100.151",
+          "impacto": "alto",
+          "modo": "pasos",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "Regla añadida a UFW:\n  [ 3] Anywhere                   DENY IN    198.51.100.151\nDesde ahora, todo paquete entrante con origen 198.51.100.151 se descarta silenciosamente — el atacante ve la conexión como caída, no rechazada.",
+          "status": "pending"
+        },
+        {
+          "accion": "Bloquear la IP con iptables (sin UFW)",
+          "action_id": "INC-AUTH-198.51.100.151-54a0543d-d492b2",
+          "alternativa_de": "INC-AUTH-198.51.100.151-54a0543d-8d88ec",
+          "comando_argv": [
+            "sudo",
+            "iptables",
+            "-I",
+            "INPUT",
+            "-s",
+            "198.51.100.151",
+            "-j",
+            "DROP"
+          ],
+          "comando_explicacion": "Inserta al principio de la cadena INPUT una regla que descarta todo paquete con origen en esa IP. Es la capa que UFW usa por debajo, disponible en casi cualquier Linux.",
+          "comando_sugerido": "sudo iptables -I INPUT -s 198.51.100.151 -j DROP",
+          "desventajas": "No sobrevive a un reinicio sin iptables-persistent; si el host usa UFW o firewalld, la regla queda fuera de su gestión y es fácil olvidarla.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "Chain INPUT (policy ACCEPT)\nnum  target  prot  source           destination\n1    DROP    all   198.51.100.151    0.0.0.0/0\nLa regla aplicaría de inmediato, por delante de cualquier otra.",
+          "status": "pending",
+          "ventajas": "Funciona aunque UFW no esté instalado; efecto inmediato."
+        },
+        {
+          "accion": "Bloquear la IP con nftables",
+          "action_id": "INC-AUTH-198.51.100.151-54a0543d-c1ac07",
+          "alternativa_de": "INC-AUTH-198.51.100.151-54a0543d-8d88ec",
+          "comando_argv": [
+            "sudo",
+            "nft",
+            "add",
+            "rule",
+            "inet",
+            "filter",
+            "input",
+            "ip",
+            "saddr",
+            "198.51.100.151",
+            "drop"
+          ],
+          "comando_explicacion": "Agrega la regla de descarte en nftables, el firewall por defecto en Debian 11+, Ubuntu 22.04+ y RHEL 9. Requiere que exista la tabla 'inet filter' con la cadena 'input'.",
+          "comando_sugerido": "sudo nft add rule inet filter input ip saddr 198.51.100.151 drop",
+          "desventajas": "Falla si la tabla/cadena no existe con ese nombre; tampoco persiste sin guardarla en /etc/nftables.conf.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "table inet filter {\n  chain input {\n    ip saddr 198.51.100.151 drop\n  }\n}",
+          "status": "pending",
+          "ventajas": "Es el firewall nativo de las distribuciones actuales; reglas más legibles."
+        },
+        {
+          "accion": "Bloquear la IP con firewalld (Fedora / RHEL / CentOS)",
+          "action_id": "INC-AUTH-198.51.100.151-54a0543d-31fbc9",
+          "alternativa_de": "INC-AUTH-198.51.100.151-54a0543d-8d88ec",
+          "comando_argv": null,
+          "comando_explicacion": "Agrega una 'rich rule' de firewalld que descarta el tráfico de esa IP en la zona activa. Sin --permanent es solo en tiempo de ejecución: útil para contener ya y decidir después si se vuelve definitiva.",
+          "comando_sugerido": "sudo firewall-cmd --add-rich-rule='rule family=ipv4 source address=198.51.100.151 drop'",
+          "desventajas": "Sin --permanent se pierde al recargar; con --permanent hay que acordarse de quitarla si la IP resulta legítima.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "success\nrule family=\"ipv4\" source address=\"198.51.100.151\" drop\nLa regla duraría hasta el próximo reload/reinicio de firewalld.",
+          "status": "pending",
+          "ventajas": "Es lo que traen Fedora/RHEL por defecto; la regla temporal es fácil de revertir."
+        },
+        {
+          "accion": "Banear la IP en fail2ban (bloqueo temporal que expira solo)",
+          "action_id": "INC-AUTH-198.51.100.151-54a0543d-e72d79",
+          "alternativa_de": "INC-AUTH-198.51.100.151-54a0543d-8d88ec",
+          "comando_argv": [
+            "sudo",
+            "fail2ban-client",
+            "set",
+            "sshd",
+            "banip",
+            "198.51.100.151"
+          ],
+          "comando_explicacion": "Agrega la IP a la lista de baneados de la jail 'sshd' de fail2ban. El ban dura lo que diga 'bantime' y después expira solo.",
+          "comando_sugerido": "sudo fail2ban-client set sshd banip 198.51.100.151",
+          "desventajas": "Requiere fail2ban instalado con la jail sshd activa; solo bloquea SSH, no el resto de los puertos.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "1\nLa IP 198.51.100.151 quedaría baneada en la jail sshd hasta que venza el bantime.",
+          "status": "pending",
+          "ventajas": "Expira solo: ideal si la IP podría ser compartida (NAT, VPN, oficina) y un bloqueo permanente cortaría a usuarios legítimos."
+        },
+        {
+          "accion": "Verificar si hubo algún login EXITOSO desde la IP atacante",
+          "action_id": "INC-AUTH-198.51.100.151-54a0543d-a7b94f",
+          "alternativa_de": null,
+          "comando_argv": null,
+          "comando_explicacion": "Búsqueda de solo lectura sobre el log de autenticación del host: filtra las líneas de login aceptado y las cruza con la IP atacante. Si aparece algo, la fuerza bruta encontró la contraseña y hay que tratarlo como una cuenta comprometida, no solo como un intento fallido.",
+          "comando_sugerido": "grep 'Accepted password' /var/log/auth.log | grep 198.51.100.151",
+          "impacto": "alto",
+          "modo": "pasos",
+          "orden": 2,
+          "plazo": "inmediata",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Depende del log real del host — dos resultados posibles:\n  · Sin coincidencias → ningún login exitoso desde 198.51.100.151, la fuerza bruta\n    no llegó a acertar una contraseña.\n  · Con coincidencias (ej. 'Accepted password for testuser from 198.51.100.151')\n    → tratar la cuenta como comprometida de inmediato, no como sospecha.",
+          "status": "pending"
+        },
+        {
+          "accion": "Buscar logins exitosos en el journal de systemd (sin /var/log/auth.log)",
+          "action_id": "INC-AUTH-198.51.100.151-54a0543d-7961fe",
+          "alternativa_de": "INC-AUTH-198.51.100.151-54a0543d-a7b94f",
+          "comando_argv": null,
+          "comando_explicacion": "Misma búsqueda de solo lectura, pero sobre journald. Fedora, RHEL y Arch no escriben /var/log/auth.log: ahí el grep de la acción principal no encontraría nada aunque el atacante haya entrado.",
+          "comando_sugerido": "sudo journalctl -u ssh -u sshd --since -7d | grep Accepted | grep 198.51.100.151",
+          "desventajas": "Solo ve lo que el journal retuvo; si rota rápido, se pierde historia.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 2,
+          "plazo": "inmediata",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Sin salida → ningún login aceptado desde esa IP en 7 días.\nCon salida (ej. 'Accepted password for testuser from 198.51.100.151') → cuenta comprometida.",
+          "status": "pending",
+          "ventajas": "Funciona en distribuciones que no tienen /var/log/auth.log."
+        },
+        {
+          "accion": "Revisar el historial de sesiones abiertas desde la IP (last)",
+          "action_id": "INC-AUTH-198.51.100.151-54a0543d-2cf508",
+          "alternativa_de": "INC-AUTH-198.51.100.151-54a0543d-a7b94f",
+          "comando_argv": null,
+          "comando_explicacion": "Lista las sesiones que efectivamente se abrieron (wtmp), con IP y duración. Confirma no solo que el login funcionó sino cuánto tiempo estuvo adentro.",
+          "comando_sugerido": "last -i | grep 198.51.100.151",
+          "desventajas": "No registra intentos fallidos; un atacante con root puede borrar wtmp.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 2,
+          "plazo": "inmediata",
+          "responsable": "sysadmin",
+          "resultado_simulado": "testuser pts/0  198.51.100.151  Mon Oct 13 02:38 - 02:51  (00:13)\n(ejemplo: la salida real depende del host)",
+          "status": "pending",
+          "ventajas": "Muestra la duración de cada sesión: ayuda a dimensionar el daño."
+        },
+        {
+          "accion": "Forzar rotación de credenciales del usuario objetivo (testuser)",
+          "action_id": "INC-AUTH-198.51.100.151-54a0543d-07f1d3",
+          "alternativa_de": null,
+          "comando_argv": [
+            "sudo",
+            "passwd",
+            "testuser"
+          ],
+          "comando_explicacion": "Inicia el cambio de contraseña del usuario atacado de forma interactiva. Invalida la contraseña anterior — importante sobre todo si el paso anterior mostró un login exitoso, porque esa contraseña ya quedó expuesta.",
+          "comando_sugerido": "sudo passwd testuser",
+          "impacto": "medio",
+          "modo": "pasos",
+          "orden": 3,
+          "plazo": "24h",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Changing password for user testuser.\nNew password: \nRetype new password: \npasswd: password updated successfully\nLa contraseña anterior de testuser queda inválida de inmediato — cualquier sesión que dependiera de ella hay que volver a abrirla.",
+          "status": "pending"
+        },
+        {
+          "accion": "Bloquear la cuenta (testuser) en vez de cambiarle la contraseña",
+          "action_id": "INC-AUTH-198.51.100.151-54a0543d-05995a",
+          "alternativa_de": "INC-AUTH-198.51.100.151-54a0543d-07f1d3",
+          "comando_argv": [
+            "sudo",
+            "passwd",
+            "-l",
+            "testuser"
+          ],
+          "comando_explicacion": "Bloquea el login por contraseña de la cuenta sin necesidad de inventar una nueva en el momento. Se revierte con 'passwd -u'.",
+          "comando_sugerido": "sudo passwd -l testuser",
+          "desventajas": "Deja sin acceso al usuario legítimo; no cierra sesiones ya abiertas ni invalida claves SSH autorizadas.",
+          "impacto": "medio",
+          "modo": "distintas",
+          "orden": 3,
+          "plazo": "24h",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Locking password for user testuser.\npasswd: Success\nNadie podría entrar como testuser con contraseña hasta desbloquearla.",
+          "status": "pending",
+          "ventajas": "Inmediato; corta el uso de la contraseña filtrada aunque nadie esté disponible para elegir otra."
+        },
+        {
+          "accion": "Forzar a testuser a cambiar la contraseña en el próximo login",
+          "action_id": "INC-AUTH-198.51.100.151-54a0543d-3b862b",
+          "alternativa_de": "INC-AUTH-198.51.100.151-54a0543d-07f1d3",
+          "comando_argv": [
+            "sudo",
+            "chage",
+            "-d",
+            "0",
+            "testuser"
+          ],
+          "comando_explicacion": "Marca la contraseña como vencida: el próximo inicio de sesión obliga a elegir una nueva. Es la opción menos disruptiva para el usuario.",
+          "comando_sugerido": "sudo chage -d 0 testuser",
+          "desventajas": "Si el atacante ya conoce la contraseña, puede ser él quien inicie sesión primero y la cambie: no usar si hubo un login exitoso.",
+          "impacto": "medio",
+          "modo": "distintas",
+          "orden": 3,
+          "plazo": "24h",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Last password change para testuser: password must be changed\nEl próximo login pediría una contraseña nueva antes de dar acceso.",
+          "status": "pending",
+          "ventajas": "No interrumpe al usuario ni requiere coordinar una contraseña nueva."
+        },
+        {
+          "accion": "Cerrar todas las sesiones activas de testuser",
+          "action_id": "INC-AUTH-198.51.100.151-54a0543d-075416",
+          "alternativa_de": "INC-AUTH-198.51.100.151-54a0543d-07f1d3",
+          "comando_argv": [
+            "sudo",
+            "loginctl",
+            "terminate-user",
+            "testuser"
+          ],
+          "comando_explicacion": "Termina todas las sesiones abiertas de la cuenta (SSH, consola, gráficas). Es lo que corta a un atacante que YA entró; complementa, no reemplaza, al cambio o bloqueo de la contraseña.",
+          "comando_sugerido": "sudo loginctl terminate-user testuser",
+          "desventajas": "También cierra las sesiones legítimas; si la contraseña sigue válida, el atacante puede volver a entrar.",
+          "impacto": "medio",
+          "modo": "distintas",
+          "orden": 3,
+          "plazo": "24h",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Todas las sesiones de testuser se cerrarían; cualquier shell abierta con esa cuenta se cortaría en el acto.",
+          "status": "pending",
+          "ventajas": "Expulsa a un atacante que ya tiene una sesión abierta."
+        },
+        {
+          "accion": "Habilitar rate-limiting / fail2ban en el servicio SSH",
+          "action_id": "INC-AUTH-198.51.100.151-54a0543d-bceba4",
+          "alternativa_de": null,
+          "comando_argv": null,
+          "comando_explicacion": "Instala fail2ban (monitorea los logs de auth y banea automáticamente IPs con demasiados fallos) y lo deja corriendo de forma permanente. Es la mitigación estructural: evita que haga falta bloquear IPs a mano cada vez que se repita este mismo patrón de ataque.",
+          "comando_sugerido": "sudo apt-get install -y fail2ban && sudo systemctl enable --now fail2ban",
+          "impacto": "medio",
+          "modo": "pasos",
+          "orden": 4,
+          "plazo": "48h",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Setting up fail2ban (0.11.2-6) ...\nCreated symlink /etc/systemd/system/multi-user.target.wants/fail2ban.service\n  → /lib/systemd/system/fail2ban.service.\n● fail2ban.service - Fail2Ban Service\n     Active: active (running)\nA partir de ahora, cualquier IP con demasiados fallos de SSH se banea sola, sin depender de que un analista lo haga a mano cada vez.",
+          "status": "pending"
+        },
+        {
+          "accion": "Limitar la tasa de conexiones SSH con UFW (sin instalar nada)",
+          "action_id": "INC-AUTH-198.51.100.151-54a0543d-d99515",
+          "alternativa_de": "INC-AUTH-198.51.100.151-54a0543d-bceba4",
+          "comando_argv": [
+            "sudo",
+            "ufw",
+            "limit",
+            "ssh"
+          ],
+          "comando_explicacion": "UFW rechaza a una IP que abra 6 o más conexiones SSH en 30 segundos. Frena la fuerza bruta automatizada con una sola línea.",
+          "comando_sugerido": "sudo ufw limit ssh",
+          "desventajas": "Umbral fijo (6 en 30 s) que no se configura; no frena un ataque lento ni uno distribuido entre muchas IPs.",
+          "impacto": "medio",
+          "modo": "distintas",
+          "orden": 4,
+          "plazo": "48h",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Rule updated\nRule updated (v6)\n22/tcp  LIMIT IN  Anywhere",
+          "status": "pending",
+          "ventajas": "Una línea, sin paquetes nuevos; frena herramientas tipo Hydra."
+        },
+        {
+          "accion": "Deshabilitar el login por contraseña en SSH (solo claves)",
+          "action_id": "INC-AUTH-198.51.100.151-54a0543d-9f3bc4",
+          "alternativa_de": "INC-AUTH-198.51.100.151-54a0543d-bceba4",
+          "comando_argv": null,
+          "comando_explicacion": "Cambia sshd para que solo acepte autenticación por clave pública. Elimina la fuerza bruta de contraseñas de raíz: no hay contraseña que adivinar.",
+          "comando_sugerido": "sudo sed -i 's/^#\\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config && sudo systemctl reload sshd",
+          "desventajas": "Si algún usuario (o el propio admin) no tiene su clave SSH cargada, pierde el acceso: verificar antes de aplicarlo.",
+          "impacto": "medio",
+          "modo": "distintas",
+          "orden": 4,
+          "plazo": "48h",
+          "responsable": "sysadmin",
+          "resultado_simulado": "PasswordAuthentication no\nsshd recargaría la configuración sin cortar las sesiones abiertas; los intentos con contraseña pasarían a fallar con 'Permission denied (publickey)'.",
+          "status": "pending",
+          "ventajas": "Es la mitigación de fondo: vuelve inútil cualquier diccionario."
+        }
+      ],
+      "related_incidents": [
+        "INC-SCAN-198.51.100.151-1311607b"
+      ],
+      "risk_score": 95,
+      "rule_name": "SSH Successful Login After Brute Force",
+      "sample_messages": [
+        "Failed password for testuser from 198.51.100.151 port 40000 ssh2",
+        "Failed password for testuser from 198.51.100.151 port 40001 ssh2",
+        "Failed password for testuser from 198.51.100.151 port 40002 ssh2",
+        "Failed password for testuser from 198.51.100.151 port 40003 ssh2",
+        "Failed password for testuser from 198.51.100.151 port 40004 ssh2",
+        "Failed password for testuser from 198.51.100.151 port 40005 ssh2",
+        "Failed password for testuser from 198.51.100.151 port 40006 ssh2",
+        "Failed password for testuser from 198.51.100.151 port 40007 ssh2"
+      ],
+      "severity_siem": "critical",
+      "source_ip": "198.51.100.151",
+      "target_users": [
+        "testuser"
+      ],
+      "victim_hosts": [
+        "172.18.0.7"
+      ]
+    },
+    {
+      "alert_event_count": 73,
+      "analysis": {
+        "_generado_ts": 1794780070.4528666,
+        "_huella": "a3ba2f3e8c25ea25eb64b6ba0483d26c4cdb4bb12e9d996a8553fa50a4cb4711",
+        "_modelo": "gemma-4-26b-a4b-it",
+        "_source": "gemma-nube",
+        "accion_recomendada": "Priorizar (2) Verificar si hubo algún login EXITOSO desde la IP atacante, para descartar que el ataque ya haya tenido éxito antes de proceder con el bloqueo.",
         "aprendizaje": {
           "casos_similares": [
             {
@@ -214,20 +693,20 @@
         },
         "contexto_campana": null,
         "contexto_historico": "Hay 4 decisión(es) previa(s) registrada(s) sobre esta IP (4 aprobada(s), 0 descartada(s)). La más reciente: nico approved una acción del incidente INC-SCAN-198.51.100.76-9aec59de el 2026-11-11T01:23:01.635157+00:00.",
-        "contexto_riesgo": "Si el atacante logra vulnerar una cuenta, obtendría acceso directo por terminal a la infraestructura, lo que permitiría movimiento lateral o exfiltración. Dado que la IP ya fue marcada anteriormente, la persistencia del atacante aumenta la probabilidad de éxito.",
-        "explicacion": "Se detectó un ataque de fuerza bruta contra el servicio SSH con 73 intentos fallidos en apenas 4 minutos (ventana de 15:52 a 15:56). La IP atacante es 198.51.100.76, la cual ya tiene antecedentes de actividad sospechosa registrada en el incidente INC-SCAN-198.51.100.76-9aec59de. El volumen de intentos supera ampliamente el umbral de seguridad de 20 eventos.",
+        "contexto_riesgo": "Si el atacante logra una coincidencia, obtendría acceso directo por consola a un servidor de la red, permitiendo movimiento lateral o exfiltración. Dado que la IP ya fue marcada en incidentes previos (INC-SCAN-198.51.100.76-9aec59de), el riesgo de compromiso es inminente.",
+        "explicacion": "Se detectó un intento de fuerza bruta contra el servicio SSH con 73 fallos de autenticación en apenas 4 minutos (ventana de 15:52 a 15:56). El volumen supera ampliamente el umbral de 20 eventos, lo que descarta un error de usuario. La IP 198.51.100.76 ya tiene antecedentes de actividad similar en la organización.",
         "falso_positivo_probabilidad": "LOW",
-        "metodologia": "El atacante intenta adivinar credenciales mediante la prueba sistemática de múltiples combinaciones de usuarios y contraseñas. Suele utilizar herramientas automatizadas para realizar ataques de diccionario o de fuerza bruta pura contra puertos abiertos.",
+        "metodologia": "El atacante intenta adivinar credenciales mediante la prueba sistemática de múltiples combinaciones de usuario y contraseña. Se suele automatizar con scripts o herramientas de diccionario para maximizar la velocidad de intentos por segundo.",
         "puntos_de_investigacion": [
           "¿Existe algún registro de login exitoso para cualquier usuario desde la IP 198.51.100.76 en la ventana de tiempo reportada?",
-          "¿Qué usuarios específicos intentó atacar la IP 198.51.100.76 en los 73 eventos registrados?",
-          "¿La IP 198.51.100.76 tiene acceso permitido a otros servicios además de SSH en nuestro perímetro?"
+          "¿Qué usuarios específicos fueron el objetivo de los 73 intentos de autenticación fallidos?",
+          "¿La IP 198.51.100.76 tiene alguna relación con los servicios que fueron monitoreados en el incidente INC-SCAN-198.51.100.76-9aec59de?"
         ],
         "referencias": [
           "https://attack.mitre.org/techniques/T1110/",
           "https://attack.mitre.org/tactics/TA0006/"
         ],
-        "severidad_ajustada": "CRITICAL"
+        "severidad_ajustada": "HIGH"
       },
       "attacker_ips": [
         "198.51.100.76"
@@ -252,7 +731,7 @@
       "evidence": [],
       "first_seen": "2026-11-15T15:52:20.302Z",
       "incident_id": "INC-AUTH-198.51.100.76-2496c250",
-      "last_seen": "2026-11-15T15:56:25.082Z",
+      "last_seen": "2026-11-15T15:56:22.206Z",
       "log_event_count": 0,
       "mitre": {
         "tactic": "Credential Access",
@@ -482,10 +961,10 @@
         }
       ],
       "related_incidents": [],
-      "risk_score": 95,
-      "rule_name": "SSH Successful Login After Brute Force",
+      "risk_score": 73,
+      "rule_name": "SSH Brute Force – Aggressive per Source IP",
       "sample_messages": [],
-      "severity_siem": "critical",
+      "severity_siem": "high",
       "source_ip": "198.51.100.76",
       "target_users": [],
       "victim_hosts": []
@@ -493,11 +972,11 @@
     {
       "alert_event_count": 73,
       "analysis": {
-        "_generado_ts": 1794758272.773191,
-        "_huella": "a1dfb243f4e8360f064853035adcf83426963321e25d7d97d3ec0712739b1b06",
+        "_generado_ts": 1794776832.282649,
+        "_huella": "4a6ce0c5961f180d6bbc32e349dfd53d05568a3d6952528be19bd344804651f2",
         "_modelo": "gemma-4-26b-a4b-it",
         "_source": "gemma-nube",
-        "accion_recomendada": "Priorizar (1) Bloquear la IP atacante en el firewall perimetral, dado que el volumen de intentos es muy alto y la IP es desconocida.",
+        "accion_recomendada": "Priorizar (2) Verificar si hubo algún login EXITOSO desde la IP atacante, para descartar que el ataque ya haya tenido éxito antes de proceder con el bloqueo.",
         "aprendizaje": {
           "casos_similares": [
             {
@@ -540,20 +1019,20 @@
         },
         "contexto_campana": null,
         "contexto_historico": "Sin antecedentes previos para 198.51.100.250: es la primera vez que se registra actividad de esta IP.",
-        "contexto_riesgo": "Si el atacante logra una coincidencia, obtendría acceso directo por SSH a nuestros servidores, lo que permitiría la ejecución de comandos y el movimiento lateral. Dado que es una IP externa sin historial, el riesgo de compromiso de credenciales es inminente si no se corta el acceso.",
-        "explicacion": "Se detectó un ataque de fuerza bruta contra el servicio SSH con 73 intentos fallidos en apenas 4 minutos (ventana de 15:52 a 15:56). La IP atacante 198.51.100.250 no tiene antecedentes registrados en nuestra red. El volumen de intentos supera ampliamente el umbral de seguridad de 20 eventos, lo que indica un ataque automatizado y no un error humano.",
+        "contexto_riesgo": "Si el atacante logra una coincidencia, obtendría acceso directo por SSH a nuestros sistemas, lo que permitiría ejecución de comandos o movimiento lateral. La alta frecuencia de intentos indica un ataque dirigido y automatizado que busca explotar cuentas con contraseñas débiles.",
+        "explicacion": "Se detectó un intento de fuerza bruta contra el servicio SSH con 73 fallos de autenticación en apenas 4 minutos (ventana de 15:52 a 15:56). La IP atacante 198.51.100.250 no tiene antecedentes registrados en nuestra red. El volumen de intentos supera ampliamente el umbral de seguridad de 20 eventos, lo que descarta un error de usuario.",
         "falso_positivo_probabilidad": "LOW",
-        "metodologia": "El atacante intenta adivinar credenciales mediante la prueba sistemática de múltiples combinaciones de usuarios y contraseñas. Suele utilizar scripts automatizados o herramientas de diccionario para saturar el servicio de autenticación.",
+        "metodologia": "El atacante intenta adivinar credenciales mediante la prueba sistemática de múltiples combinaciones de usuarios y contraseñas. Suele utilizar herramientas automatizadas para lanzar ráfagas de intentos en periodos de tiempo muy cortos.",
         "puntos_de_investigacion": [
-          "¿Hubo algún evento de login exitoso desde la IP 198.51.100.250 inmediatamente después de los 73 fallos?",
-          "¿Qué nombres de usuario específicos intentó usar la IP 198.51.100.250 en los logs de autenticación?",
-          "¿Se detectó actividad de esta misma IP en otros servicios además de SSH en la misma ventana de tiempo?"
+          "¿Existe algún registro de login exitoso para cualquier usuario desde la IP 198.51.100.250 en la ventana de tiempo analizada?",
+          "¿Qué nombres de usuario específicos se intentaron usar en los 73 eventos de fallo?",
+          "¿Se detectó actividad sospechosa de la IP 198.51.100.250 en otros servicios además de SSH?"
         ],
         "referencias": [
           "https://attack.mitre.org/techniques/T1110/",
           "https://attack.mitre.org/techniques/T1110/001/"
         ],
-        "severidad_ajustada": "CRITICAL"
+        "severidad_ajustada": "HIGH"
       },
       "attacker_ips": [
         "198.51.100.250"
@@ -578,7 +1057,7 @@
       "evidence": [],
       "first_seen": "2026-11-15T15:52:20.301Z",
       "incident_id": "INC-AUTH-198.51.100.250-109b2f1d",
-      "last_seen": "2026-11-15T15:56:25.078Z",
+      "last_seen": "2026-11-15T15:56:22.201Z",
       "log_event_count": 0,
       "mitre": {
         "tactic": "Credential Access",
@@ -808,10 +1287,10 @@
         }
       ],
       "related_incidents": [],
-      "risk_score": 95,
-      "rule_name": "SSH Successful Login After Brute Force",
+      "risk_score": 73,
+      "rule_name": "SSH Brute Force – Aggressive per Source IP",
       "sample_messages": [],
-      "severity_siem": "critical",
+      "severity_siem": "high",
       "source_ip": "198.51.100.250",
       "target_users": [],
       "victim_hosts": []
@@ -819,7 +1298,7 @@
     {
       "alert_event_count": 73,
       "analysis": {
-        "_generado_ts": 1794758284.4467134,
+        "_generado_ts": 1794780081.307615,
         "_huella": "29abcc9b3878ac62662cf6554c8d3885587c5b228ebfbbefdff2ee350b7adbc7",
         "_modelo": "gemma-4-26b-a4b-it",
         "_source": "gemma-nube",
@@ -866,14 +1345,14 @@
         },
         "contexto_campana": null,
         "contexto_historico": "Sin antecedentes previos para 172.18.0.3: es la primera vez que se registra actividad de esta IP.",
-        "contexto_riesgo": "Si el atacante logra una coincidencia, obtendría acceso directo por SSH a la infraestructura, lo que permitiría movimiento lateral o exfiltración de datos. Dado que es una IP nueva y el volumen es alto, el riesgo de compromiso de cuenta es inminente si no se corta el acceso.",
-        "explicacion": "Se detectó un intento de fuerza bruta contra el servicio SSH con 73 fallos de autenticación en un lapso de apenas 4 minutos (15:52 a 15:56). La IP atacante es 172.18.0.3 y no tiene antecedentes de actividad previa en nuestros registros. El volumen de intentos supera ampliamente el umbral de seguridad establecido de 20 eventos.",
+        "contexto_riesgo": "Si el atacante logra una coincidencia, obtendría acceso directo por SSH a la infraestructura, permitiendo movimiento lateral o exfiltración de datos. Dado que es una IP nueva y el volumen es alto, el riesgo de compromiso de cuenta es inminente si no se corta el acceso.",
+        "explicacion": "Se detectó un intento de fuerza bruta contra el servicio SSH con 73 fallos de autenticación en apenas 4 minutos (ventana de 15:52 a 15:56). La IP atacante 172.18.0.3 no tiene antecedentes registrados en nuestra red. El volumen de intentos supera ampliamente el umbral de seguridad de 20 eventos, lo que indica un ataque automatizado y no un error de usuario.",
         "falso_positivo_probabilidad": "LOW",
-        "metodologia": "El atacante intenta adivinar credenciales mediante la prueba sistemática de múltiples combinaciones de usuarios y contraseñas. Suele automatizarse con herramientas de diccionario o ataques de fuerza bruta pura para explotar servicios expuestos.",
+        "metodologia": "El atacante intenta adivinar credenciales mediante la prueba sistemática de múltiples combinaciones de usuarios y contraseñas. Suele utilizar herramientas de automatización para lanzar ráfagas de intentos en intervalos cortos de tiempo.",
         "puntos_de_investigacion": [
           "¿Existe algún registro de login exitoso para cualquier usuario desde la IP 172.18.0.3 en la ventana de tiempo analizada?",
-          "¿Qué usuarios específicos fueron el objetivo de los 73 intentos de autenticación fallidos?",
-          "¿La IP 172.18.0.3 pertenece a algún segmento de red interno o es una IP externa no identificada?"
+          "¿Qué nombres de usuario específicos intentó utilizar la IP 172.18.0.3 en los 73 eventos registrados?",
+          "¿La IP 172.18.0.3 pertenece a algún segmento de red interno o es un origen externo no identificado?"
         ],
         "referencias": [
           "https://attack.mitre.org/techniques/T1110/",
@@ -1141,9 +1620,809 @@
       "source_ip": "172.18.0.3",
       "target_users": [],
       "victim_hosts": []
+    },
+    {
+      "alert_event_count": 0,
+      "analysis": {
+        "_generado_ts": 1794780226.5548632,
+        "_huella": "0044c60bda44c12a46260bc2c92faa311e21e686b73611bc154319f44be95cd8",
+        "_modelo": "gemma-4-26b-a4b-it",
+        "_source": "gemma-nube",
+        "accion_recomendada": "Priorizar (1) Bloquear la IP que realiza el escaneo en el firewall, dado que es una IP externa sin antecedentes conocidos y el patrón de escaneo es claramente malicioso.",
+        "aprendizaje": {
+          "casos_similares": [
+            {
+              "accion": "Bloquear la IP que realiza el escaneo en el firewall",
+              "analyst": "analista",
+              "attack_type": "port_scan",
+              "decision": "approved",
+              "incident_id": "INC-SCAN-198.51.100.151-1311607b",
+              "motivo": "mismo tipo de ataque",
+              "note": "",
+              "similitud": 3,
+              "ts": "2026-11-15T17:15:01.456692+00:00"
+            },
+            {
+              "accion": "Desplegar IDS de red (Suricata) para visibilidad de futuros escaneos",
+              "analyst": "nico",
+              "attack_type": "port_scan",
+              "decision": "approved",
+              "incident_id": "INC-SCAN-198.51.100.76-9aec59de",
+              "motivo": "mismo tipo de ataque",
+              "note": "",
+              "similitud": 3,
+              "ts": "2026-11-11T01:23:01.646169+00:00"
+            },
+            {
+              "accion": "Desplegar IDS de red (Suricata) para visibilidad de futuros escaneos",
+              "analyst": "nico",
+              "attack_type": "port_scan",
+              "decision": "approved",
+              "incident_id": "INC-SCAN-desconocida-45990498",
+              "motivo": "mismo tipo de ataque",
+              "note": "",
+              "similitud": 3,
+              "ts": "2026-11-10T23:04:49.774128+00:00"
+            }
+          ],
+          "disponible": true,
+          "documentos": [],
+          "lecciones": []
+        },
+        "contexto_campana": null,
+        "contexto_historico": "Sin antecedentes previos para 198.51.100.150: es la primera vez que se registra actividad de esta IP.",
+        "contexto_riesgo": "Si el host 172.18.0.5 tiene servicios mal configurados o desactualizados en los puertos detectados (como el 445 o 22), el atacante podría escalar rápidamente de un simple escaneo a un acceso no autorizado o movimiento lateral.",
+        "explicacion": "Se detectó un escaneo de puertos dirigido al host 172.18.0.5 desde la IP externa 198.51.100.150. En apenas 25 segundos, el atacante sondeó 26 puertos distintos, incluyendo servicios críticos como SSH (22), HTTP (80) y SMB (445). Es la primera vez que vemos actividad de esta IP en nuestros registros.",
+        "falso_positivo_probabilidad": "LOW",
+        "metodologia": "El atacante realiza un barrido secuencial para identificar servicios activos y versiones de software. Esta técnica de descubrimiento de red suele ser la fase previa a un intento de explotación de vulnerabilidades específicas.",
+        "puntos_de_investigacion": [
+          "¿Qué servicios están efectivamente escuchando en el host 172.18.0.5 para los puertos 21, 22, 23, 25, 53, 80, 110, 135, 139, 143, 443 y 445?",
+          "¿Existe alguna comunicación exitosa o establecida entre la IP 198.51.100.150 y el host objetivo inmediatamente después del escaneo?",
+          "¿El host 172.18.0.5 tiene alguna política de segmentación que debería haber bloqueado este tráfico desde una IP externa?"
+        ],
+        "referencias": [
+          "https://attack.mitre.org/techniques/T1046/",
+          "https://attack.mitre.org/tactics/TA0007/"
+        ],
+        "severidad_ajustada": "HIGH"
+      },
+      "attacker_ips": [
+        "198.51.100.150"
+      ],
+      "campaign_id": null,
+      "campaign_shared_ips": [],
+      "classification": {
+        "attack_type": "port_scan",
+        "confidence": "alta",
+        "factores": [
+          "26 puerto(s) distinto(s) sondeado(s) (umbral: 10)",
+          "1 host(s) de destino distintos sondeados",
+          "Confirmado por una regla activa del SIEM: 'Port Scan – Many Distinct Ports'",
+          "Patrón de barrido secuencial de puertos, poco común en tráfico legítimo",
+          "Falso positivo: BAJA — salvo que la IP sea un scanner de vulnerabilidades autorizado"
+        ],
+        "false_positive_likelihood": "baja",
+        "mitre_technique": "T1046",
+        "rationale": "26 puertos distintos sondeados desde 198.51.100.150 (umbral 10); patrón de reconocimiento de red.",
+        "severity": "alta"
+      },
+      "detection_source": "elastic",
+      "event_count": 26,
+      "evidence": [
+        {
+          "detail": "probe → 172.18.0.5:21/tcp",
+          "ts": "2026-11-15T17:03:22.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:22/tcp",
+          "ts": "2026-11-15T17:03:23.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:23/tcp",
+          "ts": "2026-11-15T17:03:24.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:25/tcp",
+          "ts": "2026-11-15T17:03:25.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:53/tcp",
+          "ts": "2026-11-15T17:03:26.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:80/tcp",
+          "ts": "2026-11-15T17:03:27.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:110/tcp",
+          "ts": "2026-11-15T17:03:28.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:135/tcp",
+          "ts": "2026-11-15T17:03:29.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:139/tcp",
+          "ts": "2026-11-15T17:03:30.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:143/tcp",
+          "ts": "2026-11-15T17:03:31.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:443/tcp",
+          "ts": "2026-11-15T17:03:32.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:445/tcp",
+          "ts": "2026-11-15T17:03:33.000Z"
+        }
+      ],
+      "first_seen": "2026-11-15T17:03:22.000Z",
+      "incident_id": "INC-SCAN-198.51.100.150-f727cbe4",
+      "last_seen": "2026-11-15T17:03:47.000Z",
+      "log_event_count": 26,
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "recommended_actions": [
+        {
+          "accion": "Bloquear la IP que realiza el escaneo en el firewall",
+          "action_id": "INC-SCAN-198.51.100.150-f727cbe4-eecbf9",
+          "alternativa_de": null,
+          "comando_argv": [
+            "sudo",
+            "ufw",
+            "deny",
+            "from",
+            "198.51.100.150"
+          ],
+          "comando_explicacion": "Igual que en fuerza bruta: agrega una regla de firewall que descarta todo el tráfico de esa IP puntual, cortando el reconocimiento en curso.",
+          "comando_sugerido": "sudo ufw deny from 198.51.100.150",
+          "impacto": "alto",
+          "modo": "pasos",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "Regla añadida a UFW:\n  [ 3] Anywhere                   DENY IN    198.51.100.150\nEl escaneo en curso deja de recibir respuesta de ningún puerto — desde la perspectiva del atacante, el host entero pasa a verse caído.",
+          "status": "pending"
+        },
+        {
+          "accion": "Bloquear la IP con iptables (sin UFW)",
+          "action_id": "INC-SCAN-198.51.100.150-f727cbe4-99a642",
+          "alternativa_de": "INC-SCAN-198.51.100.150-f727cbe4-eecbf9",
+          "comando_argv": [
+            "sudo",
+            "iptables",
+            "-I",
+            "INPUT",
+            "-s",
+            "198.51.100.150",
+            "-j",
+            "DROP"
+          ],
+          "comando_explicacion": "Inserta al principio de la cadena INPUT una regla que descarta todo paquete con origen en esa IP. Es la capa que UFW usa por debajo, disponible en casi cualquier Linux.",
+          "comando_sugerido": "sudo iptables -I INPUT -s 198.51.100.150 -j DROP",
+          "desventajas": "No sobrevive a un reinicio sin iptables-persistent; si el host usa UFW o firewalld, la regla queda fuera de su gestión y es fácil olvidarla.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "Chain INPUT (policy ACCEPT)\nnum  target  prot  source           destination\n1    DROP    all   198.51.100.150    0.0.0.0/0\nLa regla aplicaría de inmediato, por delante de cualquier otra.",
+          "status": "pending",
+          "ventajas": "Funciona aunque UFW no esté instalado; efecto inmediato."
+        },
+        {
+          "accion": "Bloquear la IP con nftables",
+          "action_id": "INC-SCAN-198.51.100.150-f727cbe4-5fc0e4",
+          "alternativa_de": "INC-SCAN-198.51.100.150-f727cbe4-eecbf9",
+          "comando_argv": [
+            "sudo",
+            "nft",
+            "add",
+            "rule",
+            "inet",
+            "filter",
+            "input",
+            "ip",
+            "saddr",
+            "198.51.100.150",
+            "drop"
+          ],
+          "comando_explicacion": "Agrega la regla de descarte en nftables, el firewall por defecto en Debian 11+, Ubuntu 22.04+ y RHEL 9. Requiere que exista la tabla 'inet filter' con la cadena 'input'.",
+          "comando_sugerido": "sudo nft add rule inet filter input ip saddr 198.51.100.150 drop",
+          "desventajas": "Falla si la tabla/cadena no existe con ese nombre; tampoco persiste sin guardarla en /etc/nftables.conf.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "table inet filter {\n  chain input {\n    ip saddr 198.51.100.150 drop\n  }\n}",
+          "status": "pending",
+          "ventajas": "Es el firewall nativo de las distribuciones actuales; reglas más legibles."
+        },
+        {
+          "accion": "Bloquear la IP con firewalld (Fedora / RHEL / CentOS)",
+          "action_id": "INC-SCAN-198.51.100.150-f727cbe4-1c6df8",
+          "alternativa_de": "INC-SCAN-198.51.100.150-f727cbe4-eecbf9",
+          "comando_argv": null,
+          "comando_explicacion": "Agrega una 'rich rule' de firewalld que descarta el tráfico de esa IP en la zona activa. Sin --permanent es solo en tiempo de ejecución: útil para contener ya y decidir después si se vuelve definitiva.",
+          "comando_sugerido": "sudo firewall-cmd --add-rich-rule='rule family=ipv4 source address=198.51.100.150 drop'",
+          "desventajas": "Sin --permanent se pierde al recargar; con --permanent hay que acordarse de quitarla si la IP resulta legítima.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "success\nrule family=\"ipv4\" source address=\"198.51.100.150\" drop\nLa regla duraría hasta el próximo reload/reinicio de firewalld.",
+          "status": "pending",
+          "ventajas": "Es lo que traen Fedora/RHEL por defecto; la regla temporal es fácil de revertir."
+        },
+        {
+          "accion": "Revisar qué servicios/puertos quedaron expuestos en el host objetivo",
+          "action_id": "INC-SCAN-198.51.100.150-f727cbe4-c0fb68",
+          "alternativa_de": null,
+          "comando_argv": [
+            "sudo",
+            "ss",
+            "-tulnp"
+          ],
+          "comando_explicacion": "Lista los puertos TCP/UDP (-t/-u) en escucha (-l) en este host, con el proceso dueño de cada uno (-p) y sin resolver nombres (-n, más rápido). Es de solo lectura: sirve para ver exactamente qué encontró el atacante al escanear, antes de decidir qué cerrar.",
+          "comando_sugerido": "sudo ss -tulnp",
+          "impacto": "medio",
+          "modo": "pasos",
+          "orden": 2,
+          "plazo": "24h",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Netid  State   Local Address:Port   Process\ntcp    LISTEN  0.0.0.0:22           \"sshd\"\ntcp    LISTEN  0.0.0.0:5601         \"node\" (kibana)\ntcp    LISTEN  0.0.0.0:9200         \"java\" (elasticsearch)\n(salida real: depende de qué haya expuesto el host que se está revisando)",
+          "status": "pending"
+        },
+        {
+          "accion": "Listar los puertos en escucha con lsof",
+          "action_id": "INC-SCAN-198.51.100.150-f727cbe4-ae79db",
+          "alternativa_de": "INC-SCAN-198.51.100.150-f727cbe4-c0fb68",
+          "comando_argv": [
+            "sudo",
+            "lsof",
+            "-i",
+            "-P",
+            "-n",
+            "-sTCP:LISTEN"
+          ],
+          "comando_explicacion": "Misma consulta de solo lectura con otra herramienta: lista cada socket TCP en escucha con el proceso y el usuario dueños.",
+          "comando_sugerido": "sudo lsof -i -P -n -sTCP:LISTEN",
+          "desventajas": "Solo TCP con este filtro; más lento que ss en hosts con muchos sockets.",
+          "impacto": "medio",
+          "modo": "distintas",
+          "orden": 2,
+          "plazo": "24h",
+          "responsable": "sysadmin",
+          "resultado_simulado": "COMMAND  PID  USER  FD  TYPE  NODE  NAME\nsshd     812  root  3u  IPv4  TCP   *:22 (LISTEN)\n(salida real: depende del host)",
+          "status": "pending",
+          "ventajas": "Muestra el usuario dueño de cada proceso; está en hosts sin iproute2."
+        },
+        {
+          "accion": "Cerrar puertos innecesarios y segmentar el host afectado",
+          "action_id": "INC-SCAN-198.51.100.150-f727cbe4-456bc0",
+          "alternativa_de": null,
+          "comando_argv": null,
+          "comando_explicacion": null,
+          "comando_sugerido": null,
+          "impacto": "medio",
+          "modo": "pasos",
+          "orden": 3,
+          "plazo": "24h",
+          "responsable": "sysadmin",
+          "resultado_simulado": null,
+          "status": "pending"
+        },
+        {
+          "accion": "Pasar a política de denegar todo lo entrante salvo SSH (lista blanca)",
+          "action_id": "INC-SCAN-198.51.100.150-f727cbe4-f010d1",
+          "alternativa_de": "INC-SCAN-198.51.100.150-f727cbe4-456bc0",
+          "comando_argv": null,
+          "comando_explicacion": "En vez de cerrar puerto por puerto, invierte la lógica: todo lo entrante se deniega y solo queda abierto lo que se permite explícitamente (acá, SSH).",
+          "comando_sugerido": "sudo ufw allow 22/tcp && sudo ufw default deny incoming && sudo ufw enable",
+          "desventajas": "Corta cualquier servicio que se olvide permitir (o SSH si corre en otro puerto): aplicarlo con una consola de respaldo a mano.",
+          "impacto": "medio",
+          "modo": "distintas",
+          "orden": 3,
+          "plazo": "24h",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Rule added\nDefault incoming policy changed to 'deny'\nFirewall is active and enabled on system startup\nUn nuevo escaneo vería solo el puerto 22 abierto.",
+          "status": "pending",
+          "ventajas": "Lo que no se permitió no queda expuesto, aunque alguien levante un servicio nuevo."
+        },
+        {
+          "accion": "Desplegar IDS de red (Suricata) para visibilidad de futuros escaneos",
+          "action_id": "INC-SCAN-198.51.100.150-f727cbe4-eb2160",
+          "alternativa_de": null,
+          "comando_argv": null,
+          "comando_explicacion": null,
+          "comando_sugerido": null,
+          "impacto": "bajo",
+          "modo": "pasos",
+          "orden": 4,
+          "plazo": "48h",
+          "responsable": "SOC",
+          "resultado_simulado": null,
+          "status": "pending"
+        },
+        {
+          "accion": "Instalar psad (detección de escaneos a partir de los logs del firewall)",
+          "action_id": "INC-SCAN-198.51.100.150-f727cbe4-c48483",
+          "alternativa_de": "INC-SCAN-198.51.100.150-f727cbe4-eb2160",
+          "comando_argv": [
+            "sudo",
+            "apt-get",
+            "install",
+            "-y",
+            "psad"
+          ],
+          "comando_explicacion": "psad analiza los paquetes que el firewall registra y alerta (o bloquea) cuando detecta un patrón de escaneo. No necesita un sensor de red aparte.",
+          "comando_sugerido": "sudo apt-get install -y psad",
+          "desventajas": "Requiere logging de iptables habilitado; solo ve el tráfico que llega a ese host, no el de toda la red.",
+          "impacto": "bajo",
+          "modo": "distintas",
+          "orden": 4,
+          "plazo": "48h",
+          "responsable": "SOC",
+          "resultado_simulado": "Setting up psad (2.4.6-2) ...\npsad quedaría leyendo los logs de iptables y alertando ante nuevos escaneos.",
+          "status": "pending",
+          "ventajas": "Mucho más liviano que un IDS completo; se instala en el mismo host."
+        }
+      ],
+      "related_incidents": [],
+      "risk_score": 73,
+      "rule_name": "Port Scan – Many Distinct Ports",
+      "sample_messages": [
+        "scan 198.51.100.150 -> 172.18.0.5 puertos [21, 22, 23, 25, 53, 80, 110, 135, 139, 143, 443, 445]"
+      ],
+      "scanned_ports": [
+        21,
+        22,
+        23,
+        25,
+        53,
+        80,
+        110,
+        135,
+        139,
+        143,
+        443,
+        445,
+        993,
+        995,
+        1433,
+        1521,
+        2222,
+        3306,
+        3389,
+        5432,
+        5601,
+        6379,
+        8080,
+        8443,
+        9200,
+        9300
+      ],
+      "severity_siem": "high",
+      "source_ip": "198.51.100.150",
+      "target_hosts": [
+        "172.18.0.5"
+      ],
+      "target_users": [],
+      "victim_hosts": [
+        "172.18.0.5"
+      ]
+    },
+    {
+      "alert_event_count": 0,
+      "analysis": {
+        "_generado_ts": 1794780094.2646403,
+        "_huella": "b020b9b70b8789dafe0ea94a6df707ace50608d9aabb30d96b8df856fcf30149",
+        "_modelo": "gemma-4-26b-a4b-it",
+        "_source": "gemma-nube",
+        "accion_recomendada": "Priorizar (1) Bloquear la IP que realiza el escaneo en el firewall, dado que la IP ya tiene actividad sospechosa vinculada a otra campaña activa.",
+        "aprendizaje": {
+          "casos_similares": [
+            {
+              "accion": "Bloquear la IP que realiza el escaneo en el firewall",
+              "analyst": "analista",
+              "attack_type": "port_scan",
+              "decision": "approved",
+              "incident_id": "INC-SCAN-198.51.100.150-f727cbe4",
+              "motivo": "mismo tipo de ataque",
+              "note": "",
+              "similitud": 3,
+              "ts": "2026-11-15T17:07:55.473575+00:00"
+            },
+            {
+              "accion": "Desplegar IDS de red (Suricata) para visibilidad de futuros escaneos",
+              "analyst": "nico",
+              "attack_type": "port_scan",
+              "decision": "approved",
+              "incident_id": "INC-SCAN-198.51.100.76-9aec59de",
+              "motivo": "mismo tipo de ataque",
+              "note": "",
+              "similitud": 3,
+              "ts": "2026-11-11T01:23:01.646169+00:00"
+            },
+            {
+              "accion": "Desplegar IDS de red (Suricata) para visibilidad de futuros escaneos",
+              "analyst": "nico",
+              "attack_type": "port_scan",
+              "decision": "approved",
+              "incident_id": "INC-SCAN-desconocida-45990498",
+              "motivo": "mismo tipo de ataque",
+              "note": "",
+              "similitud": 3,
+              "ts": "2026-11-10T23:04:49.774128+00:00"
+            }
+          ],
+          "disponible": true,
+          "documentos": [],
+          "lecciones": []
+        },
+        "contexto_campana": "Este incidente está vinculado a otro(s) 1 incidente(s) activo(s) (INC-AUTH-198.51.100.151-54a0543d) por compartir la IP 198.51.100.151. Tratarlos como una sola campaña, no como eventos aislados: la severidad real del conjunto puede ser mayor que la de cada incidente por separado.",
+        "contexto_historico": "Sin antecedentes previos para 198.51.100.151: es la primera vez que se registra actividad de esta IP.",
+        "contexto_riesgo": "Si el escaneo tiene éxito, el atacante podría identificar servicios vulnerables en el host 172.18.0.5 para escalar privilegios o realizar intrusión. La conexión con un incidente previo eleva el riesgo de que este sea un reconocimiento previo a un ataque dirigido.",
+        "explicacion": "Se detectó un escaneo de puertos dirigido al host 172.18.0.5 desde la IP 198.51.100.151. En apenas 25 segundos, el atacante sondeó 26 puertos distintos, incluyendo servicios críticos como SSH (22), HTTP (80) y SMB (445). Esta actividad no es aislada, ya que la IP está vinculada a otro incidente activo (INC-AUTH-198.51.100.151-54a0543d), lo que indica una campaña en curso.",
+        "falso_positivo_probabilidad": "LOW",
+        "metodologia": "El atacante realiza un barrido secuencial de puertos para identificar servicios activos y versiones de software. Esta técnica de descubrimiento busca encontrar vectores de entrada aprovechando configuraciones débiles o vulnerabilidades conocidas en los puertos abiertos.",
+        "puntos_de_investigacion": [
+          "¿Qué servicios están efectivamente escuchando en los puertos 21, 22, 23, 25, 53, 80, 110, 135, 139, 143, 443 y 445 del host 172.18.0.5?",
+          "¿Cuál es la naturaleza del incidente INC-AUTH-198.51.100.151-54a0543d para entender la progresión de la campaña?",
+          "¿Hubo intentos de conexión exitosos o tráfico de datos posterior al escaneo desde la IP 198.51.100.151 hacia el host objetivo?"
+        ],
+        "referencias": [
+          "https://attack.mitre.org/techniques/T1046/",
+          "https://attack.mitre.org/tactics/TA0007/"
+        ],
+        "severidad_ajustada": "HIGH"
+      },
+      "attacker_ips": [
+        "198.51.100.151"
+      ],
+      "campaign_id": "CAMP-dc323010",
+      "campaign_shared_ips": [
+        "198.51.100.151"
+      ],
+      "classification": {
+        "attack_type": "port_scan",
+        "confidence": "alta",
+        "factores": [
+          "26 puerto(s) distinto(s) sondeado(s) (umbral: 10)",
+          "1 host(s) de destino distintos sondeados",
+          "Confirmado por una regla activa del SIEM: 'Port Scan – Many Distinct Ports'",
+          "Patrón de barrido secuencial de puertos, poco común en tráfico legítimo",
+          "Falso positivo: BAJA — salvo que la IP sea un scanner de vulnerabilidades autorizado"
+        ],
+        "false_positive_likelihood": "baja",
+        "mitre_technique": "T1046",
+        "rationale": "26 puertos distintos sondeados desde 198.51.100.151 (umbral 10); patrón de reconocimiento de red.",
+        "severity": "alta"
+      },
+      "detection_source": "elastic",
+      "event_count": 26,
+      "evidence": [
+        {
+          "detail": "probe → 172.18.0.5:21/tcp",
+          "ts": "2026-11-15T17:09:09.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:22/tcp",
+          "ts": "2026-11-15T17:09:10.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:23/tcp",
+          "ts": "2026-11-15T17:09:11.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:25/tcp",
+          "ts": "2026-11-15T17:09:12.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:53/tcp",
+          "ts": "2026-11-15T17:09:13.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:80/tcp",
+          "ts": "2026-11-15T17:09:14.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:110/tcp",
+          "ts": "2026-11-15T17:09:15.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:135/tcp",
+          "ts": "2026-11-15T17:09:16.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:139/tcp",
+          "ts": "2026-11-15T17:09:17.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:143/tcp",
+          "ts": "2026-11-15T17:09:18.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:443/tcp",
+          "ts": "2026-11-15T17:09:19.000Z"
+        },
+        {
+          "detail": "probe → 172.18.0.5:445/tcp",
+          "ts": "2026-11-15T17:09:20.000Z"
+        }
+      ],
+      "first_seen": "2026-11-15T17:09:09.000Z",
+      "incident_id": "INC-SCAN-198.51.100.151-1311607b",
+      "last_seen": "2026-11-15T17:09:34.000Z",
+      "log_event_count": 26,
+      "mitre": {
+        "tactic": "Discovery",
+        "technique": "Network Service Discovery",
+        "technique_id": "T1046"
+      },
+      "recommended_actions": [
+        {
+          "accion": "Bloquear la IP que realiza el escaneo en el firewall",
+          "action_id": "INC-SCAN-198.51.100.151-1311607b-dd7b64",
+          "alternativa_de": null,
+          "comando_argv": [
+            "sudo",
+            "ufw",
+            "deny",
+            "from",
+            "198.51.100.151"
+          ],
+          "comando_explicacion": "Igual que en fuerza bruta: agrega una regla de firewall que descarta todo el tráfico de esa IP puntual, cortando el reconocimiento en curso.",
+          "comando_sugerido": "sudo ufw deny from 198.51.100.151",
+          "impacto": "alto",
+          "modo": "pasos",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "Regla añadida a UFW:\n  [ 3] Anywhere                   DENY IN    198.51.100.151\nEl escaneo en curso deja de recibir respuesta de ningún puerto — desde la perspectiva del atacante, el host entero pasa a verse caído.",
+          "status": "pending"
+        },
+        {
+          "accion": "Bloquear la IP con iptables (sin UFW)",
+          "action_id": "INC-SCAN-198.51.100.151-1311607b-d492b2",
+          "alternativa_de": "INC-SCAN-198.51.100.151-1311607b-dd7b64",
+          "comando_argv": [
+            "sudo",
+            "iptables",
+            "-I",
+            "INPUT",
+            "-s",
+            "198.51.100.151",
+            "-j",
+            "DROP"
+          ],
+          "comando_explicacion": "Inserta al principio de la cadena INPUT una regla que descarta todo paquete con origen en esa IP. Es la capa que UFW usa por debajo, disponible en casi cualquier Linux.",
+          "comando_sugerido": "sudo iptables -I INPUT -s 198.51.100.151 -j DROP",
+          "desventajas": "No sobrevive a un reinicio sin iptables-persistent; si el host usa UFW o firewalld, la regla queda fuera de su gestión y es fácil olvidarla.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "Chain INPUT (policy ACCEPT)\nnum  target  prot  source           destination\n1    DROP    all   198.51.100.151    0.0.0.0/0\nLa regla aplicaría de inmediato, por delante de cualquier otra.",
+          "status": "pending",
+          "ventajas": "Funciona aunque UFW no esté instalado; efecto inmediato."
+        },
+        {
+          "accion": "Bloquear la IP con nftables",
+          "action_id": "INC-SCAN-198.51.100.151-1311607b-c1ac07",
+          "alternativa_de": "INC-SCAN-198.51.100.151-1311607b-dd7b64",
+          "comando_argv": [
+            "sudo",
+            "nft",
+            "add",
+            "rule",
+            "inet",
+            "filter",
+            "input",
+            "ip",
+            "saddr",
+            "198.51.100.151",
+            "drop"
+          ],
+          "comando_explicacion": "Agrega la regla de descarte en nftables, el firewall por defecto en Debian 11+, Ubuntu 22.04+ y RHEL 9. Requiere que exista la tabla 'inet filter' con la cadena 'input'.",
+          "comando_sugerido": "sudo nft add rule inet filter input ip saddr 198.51.100.151 drop",
+          "desventajas": "Falla si la tabla/cadena no existe con ese nombre; tampoco persiste sin guardarla en /etc/nftables.conf.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "table inet filter {\n  chain input {\n    ip saddr 198.51.100.151 drop\n  }\n}",
+          "status": "pending",
+          "ventajas": "Es el firewall nativo de las distribuciones actuales; reglas más legibles."
+        },
+        {
+          "accion": "Bloquear la IP con firewalld (Fedora / RHEL / CentOS)",
+          "action_id": "INC-SCAN-198.51.100.151-1311607b-31fbc9",
+          "alternativa_de": "INC-SCAN-198.51.100.151-1311607b-dd7b64",
+          "comando_argv": null,
+          "comando_explicacion": "Agrega una 'rich rule' de firewalld que descarta el tráfico de esa IP en la zona activa. Sin --permanent es solo en tiempo de ejecución: útil para contener ya y decidir después si se vuelve definitiva.",
+          "comando_sugerido": "sudo firewall-cmd --add-rich-rule='rule family=ipv4 source address=198.51.100.151 drop'",
+          "desventajas": "Sin --permanent se pierde al recargar; con --permanent hay que acordarse de quitarla si la IP resulta legítima.",
+          "impacto": "alto",
+          "modo": "distintas",
+          "orden": 1,
+          "plazo": "inmediata",
+          "responsable": "SOC",
+          "resultado_simulado": "success\nrule family=\"ipv4\" source address=\"198.51.100.151\" drop\nLa regla duraría hasta el próximo reload/reinicio de firewalld.",
+          "status": "pending",
+          "ventajas": "Es lo que traen Fedora/RHEL por defecto; la regla temporal es fácil de revertir."
+        },
+        {
+          "accion": "Revisar qué servicios/puertos quedaron expuestos en el host objetivo",
+          "action_id": "INC-SCAN-198.51.100.151-1311607b-c0fb68",
+          "alternativa_de": null,
+          "comando_argv": [
+            "sudo",
+            "ss",
+            "-tulnp"
+          ],
+          "comando_explicacion": "Lista los puertos TCP/UDP (-t/-u) en escucha (-l) en este host, con el proceso dueño de cada uno (-p) y sin resolver nombres (-n, más rápido). Es de solo lectura: sirve para ver exactamente qué encontró el atacante al escanear, antes de decidir qué cerrar.",
+          "comando_sugerido": "sudo ss -tulnp",
+          "impacto": "medio",
+          "modo": "pasos",
+          "orden": 2,
+          "plazo": "24h",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Netid  State   Local Address:Port   Process\ntcp    LISTEN  0.0.0.0:22           \"sshd\"\ntcp    LISTEN  0.0.0.0:5601         \"node\" (kibana)\ntcp    LISTEN  0.0.0.0:9200         \"java\" (elasticsearch)\n(salida real: depende de qué haya expuesto el host que se está revisando)",
+          "status": "pending"
+        },
+        {
+          "accion": "Listar los puertos en escucha con lsof",
+          "action_id": "INC-SCAN-198.51.100.151-1311607b-ae79db",
+          "alternativa_de": "INC-SCAN-198.51.100.151-1311607b-c0fb68",
+          "comando_argv": [
+            "sudo",
+            "lsof",
+            "-i",
+            "-P",
+            "-n",
+            "-sTCP:LISTEN"
+          ],
+          "comando_explicacion": "Misma consulta de solo lectura con otra herramienta: lista cada socket TCP en escucha con el proceso y el usuario dueños.",
+          "comando_sugerido": "sudo lsof -i -P -n -sTCP:LISTEN",
+          "desventajas": "Solo TCP con este filtro; más lento que ss en hosts con muchos sockets.",
+          "impacto": "medio",
+          "modo": "distintas",
+          "orden": 2,
+          "plazo": "24h",
+          "responsable": "sysadmin",
+          "resultado_simulado": "COMMAND  PID  USER  FD  TYPE  NODE  NAME\nsshd     812  root  3u  IPv4  TCP   *:22 (LISTEN)\n(salida real: depende del host)",
+          "status": "pending",
+          "ventajas": "Muestra el usuario dueño de cada proceso; está en hosts sin iproute2."
+        },
+        {
+          "accion": "Cerrar puertos innecesarios y segmentar el host afectado",
+          "action_id": "INC-SCAN-198.51.100.151-1311607b-456bc0",
+          "alternativa_de": null,
+          "comando_argv": null,
+          "comando_explicacion": null,
+          "comando_sugerido": null,
+          "impacto": "medio",
+          "modo": "pasos",
+          "orden": 3,
+          "plazo": "24h",
+          "responsable": "sysadmin",
+          "resultado_simulado": null,
+          "status": "pending"
+        },
+        {
+          "accion": "Pasar a política de denegar todo lo entrante salvo SSH (lista blanca)",
+          "action_id": "INC-SCAN-198.51.100.151-1311607b-f010d1",
+          "alternativa_de": "INC-SCAN-198.51.100.151-1311607b-456bc0",
+          "comando_argv": null,
+          "comando_explicacion": "En vez de cerrar puerto por puerto, invierte la lógica: todo lo entrante se deniega y solo queda abierto lo que se permite explícitamente (acá, SSH).",
+          "comando_sugerido": "sudo ufw allow 22/tcp && sudo ufw default deny incoming && sudo ufw enable",
+          "desventajas": "Corta cualquier servicio que se olvide permitir (o SSH si corre en otro puerto): aplicarlo con una consola de respaldo a mano.",
+          "impacto": "medio",
+          "modo": "distintas",
+          "orden": 3,
+          "plazo": "24h",
+          "responsable": "sysadmin",
+          "resultado_simulado": "Rule added\nDefault incoming policy changed to 'deny'\nFirewall is active and enabled on system startup\nUn nuevo escaneo vería solo el puerto 22 abierto.",
+          "status": "pending",
+          "ventajas": "Lo que no se permitió no queda expuesto, aunque alguien levante un servicio nuevo."
+        },
+        {
+          "accion": "Desplegar IDS de red (Suricata) para visibilidad de futuros escaneos",
+          "action_id": "INC-SCAN-198.51.100.151-1311607b-eb2160",
+          "alternativa_de": null,
+          "comando_argv": null,
+          "comando_explicacion": null,
+          "comando_sugerido": null,
+          "impacto": "bajo",
+          "modo": "pasos",
+          "orden": 4,
+          "plazo": "48h",
+          "responsable": "SOC",
+          "resultado_simulado": null,
+          "status": "pending"
+        },
+        {
+          "accion": "Instalar psad (detección de escaneos a partir de los logs del firewall)",
+          "action_id": "INC-SCAN-198.51.100.151-1311607b-c48483",
+          "alternativa_de": "INC-SCAN-198.51.100.151-1311607b-eb2160",
+          "comando_argv": [
+            "sudo",
+            "apt-get",
+            "install",
+            "-y",
+            "psad"
+          ],
+          "comando_explicacion": "psad analiza los paquetes que el firewall registra y alerta (o bloquea) cuando detecta un patrón de escaneo. No necesita un sensor de red aparte.",
+          "comando_sugerido": "sudo apt-get install -y psad",
+          "desventajas": "Requiere logging de iptables habilitado; solo ve el tráfico que llega a ese host, no el de toda la red.",
+          "impacto": "bajo",
+          "modo": "distintas",
+          "orden": 4,
+          "plazo": "48h",
+          "responsable": "SOC",
+          "resultado_simulado": "Setting up psad (2.4.6-2) ...\npsad quedaría leyendo los logs de iptables y alertando ante nuevos escaneos.",
+          "status": "pending",
+          "ventajas": "Mucho más liviano que un IDS completo; se instala en el mismo host."
+        }
+      ],
+      "related_incidents": [
+        "INC-AUTH-198.51.100.151-54a0543d"
+      ],
+      "risk_score": 73,
+      "rule_name": "Port Scan – Many Distinct Ports",
+      "sample_messages": [
+        "scan 198.51.100.151 -> 172.18.0.5 puertos [21, 22, 23, 25, 53, 80, 110, 135, 139, 143, 443, 445]"
+      ],
+      "scanned_ports": [
+        21,
+        22,
+        23,
+        25,
+        53,
+        80,
+        110,
+        135,
+        139,
+        143,
+        443,
+        445,
+        993,
+        995,
+        1433,
+        1521,
+        2222,
+        3306,
+        3389,
+        5432,
+        5601,
+        6379,
+        8080,
+        8443,
+        9200,
+        9300
+      ],
+      "severity_siem": "high",
+      "source_ip": "198.51.100.151",
+      "target_hosts": [
+        "172.18.0.5"
+      ],
+      "target_users": [],
+      "victim_hosts": [
+        "172.18.0.5"
+      ]
     }
   ],
   "source": "collector",
-  "analyzed_at": "2026-11-15T16:02:16.043694+00:00",
+  "analyzed_at": "2026-11-15T22:03:46.555869+00:00",
   "analyst_mode": "gemma-nube"
 }

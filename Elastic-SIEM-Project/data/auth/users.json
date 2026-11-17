@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "actualizado": "2026-11-15T16:01:31.411355+00:00",
+  "actualizado": "2026-11-15T17:25:34.885384+00:00",
   "usuarios": [
     {
       "username": "nico",
@@ -17,6 +17,22 @@
       "activo": true,
       "creado": "2026-11-12T22:37:57.236062+00:00",
       "ultimo_acceso": "2026-11-12T23:31:42.964351+00:00"
+    },
+    {
+      "username": "analista",
+      "rol": "analyst",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$viuxyiLV0eN+jEa6Pkn9TA$i5C+9OHAKPSzfk/rggA6jEpGfiHvXrTX/SLwnnjpZm8",
+      "activo": true,
+      "creado": "2026-11-15T16:55:07.432300+00:00",
+      "ultimo_acceso": "2026-11-15T17:17:11.801947+00:00"
+    },
+    {
+      "username": "observador",
+      "rol": "viewer",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$tk413AQh5nychBY3mY2x0w$vMA2DqYJlb1TlZMHRXFFHCMQiH9qlZLoSeQ65c3msKU",
+      "activo": true,
+      "creado": "2026-11-15T16:55:07.866771+00:00",
+      "ultimo_acceso": "2026-11-15T17:25:34.885364+00:00"
     }
   ]
 }

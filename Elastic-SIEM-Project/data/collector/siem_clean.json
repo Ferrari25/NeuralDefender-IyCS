@@ -1,16 +1,17 @@
 {
-  "generated_at": "2026-11-15T16:02:04.556018+00:00",
+  "generated_at": "2026-11-17T22:45:04.778620+00:00",
   "context": "Elastic SIEM - Análisis de seguridad automatizado",
   "summary": {
-    "total_alerts": 16,
+    "total_alerts": 25,
     "total_auth_failures": 0,
-    "active_alerts": 16,
-    "high_severity": 3,
+    "active_alerts": 25,
+    "high_severity": 5,
     "window": "24h",
     "top_source_ips": {
-      "172.18.0.3": 24,
-      "198.51.100.250": 24,
-      "198.51.100.76": 24
+      "172.18.0.3": 384,
+      "198.51.100.151": 384,
+      "198.51.100.250": 384,
+      "198.51.100.76": 384
     },
     "mitre_techniques": [
       "T1110"
@@ -19,8 +20,8 @@
   "alerts": [
     {
       "type": "security_alert",
-      "timestamp": "2026-11-15T16:01:25.155Z",
-      "alert_id": "d038151e0e2638d0...",
+      "timestamp": "2026-11-17T22:43:53.685Z",
+      "alert_id": "cc3a6362cc18d91e...",
       "rule_name": "SSH Brute Force – Basic Threshold",
       "severity": "medium",
       "risk_score": 47,
@@ -30,10 +31,10 @@
       "victim_host": "172.19.0.6",
       "target_user": null,
       "grouped_by": "host.ip.keyword",
-      "event_count": 39,
+      "event_count": 269,
       "time_window": {
-        "from": "2026-11-15T15:57:44.084Z",
-        "to": "2026-11-15T16:01:25.155Z"
+        "from": "2026-11-17T22:36:44.823Z",
+        "to": "2026-11-17T22:43:53.685Z"
       },
       "mitre": {
         "tactic": "Credential Access",
@@ -47,161 +48,21 @@
     },
     {
       "type": "security_alert",
-      "timestamp": "2026-11-15T15:56:25.082Z",
-      "alert_id": "dc0bf7eb69cccbca...",
-      "rule_name": "SSH Successful Login After Brute Force",
-      "severity": "critical",
-      "risk_score": 95,
-      "status": "active",
-      "reason": "event on 9eacb23f1aa3 created critical alert SSH Successful Login After Brute Force.",
-      "source_ip": "198.51.100.76",
-      "victim_host": null,
-      "target_user": null,
-      "grouped_by": null,
-      "event_count": null,
-      "time_window": {
-        "from": null,
-        "to": "2026-11-15T15:56:25.082Z"
-      },
-      "mitre": {
-        "tactic": "Credential Access",
-        "technique": "Brute Force",
-        "technique_id": "T1110"
-      },
-      "false_positives": [
-        "Usuario legitimo que fallo varias veces y luego acerto su contrasena."
-      ],
-      "rule_query": "sequence by source_ip.keyword with maxspan=10m\n  [any where tags.keyword == \"authentication_failure\"]\n  [any where tags.keyword == \"authentication_success\"]"
-    },
-    {
-      "type": "security_alert",
-      "timestamp": "2026-11-15T15:56:25.082Z",
-      "alert_id": "54ca0cbe32b7c645...",
-      "rule_name": "SSH Successful Login After Brute Force",
-      "severity": "critical",
-      "risk_score": 95,
-      "status": "active",
-      "reason": "event on 9eacb23f1aa3 created critical alert SSH Successful Login After Brute Force.",
-      "source_ip": "198.51.100.76",
-      "victim_host": null,
-      "target_user": null,
-      "grouped_by": null,
-      "event_count": null,
-      "time_window": {
-        "from": null,
-        "to": "2026-11-15T15:56:25.082Z"
-      },
-      "mitre": {
-        "tactic": "Credential Access",
-        "technique": "Brute Force",
-        "technique_id": "T1110"
-      },
-      "false_positives": [
-        "Usuario legitimo que fallo varias veces y luego acerto su contrasena."
-      ],
-      "rule_query": "sequence by source_ip.keyword with maxspan=10m\n  [any where tags.keyword == \"authentication_failure\"]\n  [any where tags.keyword == \"authentication_success\"]"
-    },
-    {
-      "type": "security_alert",
-      "timestamp": "2026-11-15T15:56:25.080Z",
-      "alert_id": "26a8fdf43e72184f...",
-      "rule_name": "SSH Successful Login After Brute Force",
-      "severity": "critical",
-      "risk_score": 95,
-      "status": "active",
-      "reason": "event on 9eacb23f1aa3 created critical alert SSH Successful Login After Brute Force.",
-      "source_ip": "198.51.100.76",
-      "victim_host": null,
-      "target_user": null,
-      "grouped_by": null,
-      "event_count": null,
-      "time_window": {
-        "from": null,
-        "to": "2026-11-15T15:56:25.080Z"
-      },
-      "mitre": {
-        "tactic": "Credential Access",
-        "technique": "Brute Force",
-        "technique_id": "T1110"
-      },
-      "false_positives": [
-        "Usuario legitimo que fallo varias veces y luego acerto su contrasena."
-      ],
-      "rule_query": "sequence by source_ip.keyword with maxspan=10m\n  [any where tags.keyword == \"authentication_failure\"]\n  [any where tags.keyword == \"authentication_success\"]"
-    },
-    {
-      "type": "security_alert",
-      "timestamp": "2026-11-15T15:56:25.078Z",
-      "alert_id": "a66c79e6873312e4...",
-      "rule_name": "SSH Successful Login After Brute Force",
-      "severity": "critical",
-      "risk_score": 95,
-      "status": "active",
-      "reason": "event on 9eacb23f1aa3 created critical alert SSH Successful Login After Brute Force.",
-      "source_ip": "198.51.100.250",
-      "victim_host": null,
-      "target_user": null,
-      "grouped_by": null,
-      "event_count": null,
-      "time_window": {
-        "from": null,
-        "to": "2026-11-15T15:56:25.078Z"
-      },
-      "mitre": {
-        "tactic": "Credential Access",
-        "technique": "Brute Force",
-        "technique_id": "T1110"
-      },
-      "false_positives": [
-        "Usuario legitimo que fallo varias veces y luego acerto su contrasena."
-      ],
-      "rule_query": "sequence by source_ip.keyword with maxspan=10m\n  [any where tags.keyword == \"authentication_failure\"]\n  [any where tags.keyword == \"authentication_success\"]"
-    },
-    {
-      "type": "security_alert",
-      "timestamp": "2026-11-15T15:56:25.078Z",
-      "alert_id": "b3cc2ad6c1020e37...",
-      "rule_name": "SSH Successful Login After Brute Force",
-      "severity": "critical",
-      "risk_score": 95,
-      "status": "active",
-      "reason": "event on 9eacb23f1aa3 created critical alert SSH Successful Login After Brute Force.",
-      "source_ip": "198.51.100.250",
-      "victim_host": null,
-      "target_user": null,
-      "grouped_by": null,
-      "event_count": null,
-      "time_window": {
-        "from": null,
-        "to": "2026-11-15T15:56:25.078Z"
-      },
-      "mitre": {
-        "tactic": "Credential Access",
-        "technique": "Brute Force",
-        "technique_id": "T1110"
-      },
-      "false_positives": [
-        "Usuario legitimo que fallo varias veces y luego acerto su contrasena."
-      ],
-      "rule_query": "sequence by source_ip.keyword with maxspan=10m\n  [any where tags.keyword == \"authentication_failure\"]\n  [any where tags.keyword == \"authentication_success\"]"
-    },
-    {
-      "type": "security_alert",
-      "timestamp": "2026-11-15T15:56:22.225Z",
-      "alert_id": "6d0529caa38e4dce...",
+      "timestamp": "2026-11-17T22:43:53.683Z",
+      "alert_id": "1726e838d4bad281...",
       "rule_name": "SSH Brute Force – Basic Threshold",
       "severity": "medium",
       "risk_score": 47,
       "status": "active",
       "reason": "event created medium alert SSH Brute Force – Basic Threshold.",
       "source_ip": null,
-      "victim_host": "172.19.0.6",
+      "victim_host": "172.19.0.5",
       "target_user": null,
       "grouped_by": "host.ip.keyword",
-      "event_count": 248,
+      "event_count": 535,
       "time_window": {
-        "from": "2026-11-15T15:50:44.674Z",
-        "to": "2026-11-15T15:56:22.225Z"
+        "from": "2026-11-17T22:32:57.067Z",
+        "to": "2026-11-17T22:43:53.683Z"
       },
       "mitre": {
         "tactic": "Credential Access",
@@ -215,8 +76,36 @@
     },
     {
       "type": "security_alert",
-      "timestamp": "2026-11-15T15:56:22.206Z",
-      "alert_id": "444d85cb8aa903a9...",
+      "timestamp": "2026-11-17T22:43:53.682Z",
+      "alert_id": "060cda95b3328ef0...",
+      "rule_name": "SSH Brute Force – Basic Threshold",
+      "severity": "medium",
+      "risk_score": 47,
+      "status": "active",
+      "reason": "event created medium alert SSH Brute Force – Basic Threshold.",
+      "source_ip": null,
+      "victim_host": "172.19.0.4",
+      "target_user": null,
+      "grouped_by": "host.ip.keyword",
+      "event_count": 323,
+      "time_window": {
+        "from": "2026-11-17T22:32:52.929Z",
+        "to": "2026-11-17T22:43:53.682Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuarios que olvidaron su contraseña y reintentaron varias veces."
+      ],
+      "rule_query": "tags:authentication_failure or message:*Failed password*"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-17T22:43:53.672Z",
+      "alert_id": "9774e77a1330d17b...",
       "rule_name": "SSH Invalid User Enumeration",
       "severity": "medium",
       "risk_score": 50,
@@ -226,10 +115,10 @@
       "victim_host": null,
       "target_user": null,
       "grouped_by": "source_ip.keyword",
-      "event_count": 25,
+      "event_count": 50,
       "time_window": {
-        "from": "2026-11-15T15:51:28.461Z",
-        "to": "2026-11-15T15:56:22.206Z"
+        "from": "2026-11-17T22:32:33.345Z",
+        "to": "2026-11-17T22:43:53.672Z"
       },
       "mitre": {
         "tactic": "Credential Access",
@@ -243,8 +132,8 @@
     },
     {
       "type": "security_alert",
-      "timestamp": "2026-11-15T15:56:22.201Z",
-      "alert_id": "3b69b145eb5facfc...",
+      "timestamp": "2026-11-17T22:43:53.671Z",
+      "alert_id": "8e8b9bd63fcdcbf7...",
       "rule_name": "SSH Invalid User Enumeration",
       "severity": "medium",
       "risk_score": 50,
@@ -254,10 +143,10 @@
       "victim_host": null,
       "target_user": null,
       "grouped_by": "source_ip.keyword",
-      "event_count": 25,
+      "event_count": 50,
       "time_window": {
-        "from": "2026-11-15T15:51:28.452Z",
-        "to": "2026-11-15T15:56:22.201Z"
+        "from": "2026-11-17T22:32:33.259Z",
+        "to": "2026-11-17T22:43:53.671Z"
       },
       "mitre": {
         "tactic": "Credential Access",
@@ -271,21 +160,21 @@
     },
     {
       "type": "security_alert",
-      "timestamp": "2026-11-15T15:56:22.200Z",
-      "alert_id": "d4631f51bcad2a1a...",
+      "timestamp": "2026-11-17T22:43:53.670Z",
+      "alert_id": "d65a1724d82a24cd...",
       "rule_name": "SSH Invalid User Enumeration",
       "severity": "medium",
       "risk_score": 50,
       "status": "active",
       "reason": "event created medium alert SSH Invalid User Enumeration.",
-      "source_ip": "172.18.0.3",
+      "source_ip": "198.51.100.151",
       "victim_host": null,
       "target_user": null,
       "grouped_by": "source_ip.keyword",
-      "event_count": 25,
+      "event_count": 50,
       "time_window": {
-        "from": "2026-11-15T15:51:28.027Z",
-        "to": "2026-11-15T15:56:22.200Z"
+        "from": "2026-11-17T22:32:34.622Z",
+        "to": "2026-11-17T22:43:53.670Z"
       },
       "mitre": {
         "tactic": "Credential Access",
@@ -299,8 +188,176 @@
     },
     {
       "type": "security_alert",
-      "timestamp": "2026-11-15T15:56:19.029Z",
-      "alert_id": "8ce5352cdcd43c46...",
+      "timestamp": "2026-11-17T22:43:53.669Z",
+      "alert_id": "91ff9add4f0f2599...",
+      "rule_name": "SSH Invalid User Enumeration",
+      "severity": "medium",
+      "risk_score": 50,
+      "status": "active",
+      "reason": "event created medium alert SSH Invalid User Enumeration.",
+      "source_ip": "172.18.0.3",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 50,
+      "time_window": {
+        "from": "2026-11-17T22:32:34.051Z",
+        "to": "2026-11-17T22:43:53.669Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Errores de tipeo del nombre de usuario por usuarios legítimos."
+      ],
+      "rule_query": "tags:invalid_user or message:*Invalid user*"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-17T22:43:53.633Z",
+      "alert_id": "5495d3e017a4bfdd...",
+      "rule_name": "SSH Successful Login After Brute Force",
+      "severity": "critical",
+      "risk_score": 95,
+      "status": "active",
+      "reason": "event on 9eacb23f1aa3 created critical alert SSH Successful Login After Brute Force.",
+      "source_ip": "198.51.100.250",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-11-17T22:43:53.633Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuario legitimo que fallo varias veces y luego acerto su contrasena."
+      ],
+      "rule_query": "sequence by source_ip.keyword with maxspan=10m\n  [any where tags.keyword == \"authentication_failure\"]\n  [any where tags.keyword == \"authentication_success\"]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-17T22:43:53.632Z",
+      "alert_id": "67fa09858bccf7cd...",
+      "rule_name": "SSH Successful Login After Brute Force",
+      "severity": "critical",
+      "risk_score": 95,
+      "status": "active",
+      "reason": "event on 9eacb23f1aa3 created critical alert SSH Successful Login After Brute Force.",
+      "source_ip": "198.51.100.250",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-11-17T22:43:53.632Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuario legitimo que fallo varias veces y luego acerto su contrasena."
+      ],
+      "rule_query": "sequence by source_ip.keyword with maxspan=10m\n  [any where tags.keyword == \"authentication_failure\"]\n  [any where tags.keyword == \"authentication_success\"]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-17T22:43:53.630Z",
+      "alert_id": "1be80018a1575d38...",
+      "rule_name": "SSH Successful Login After Brute Force",
+      "severity": "critical",
+      "risk_score": 95,
+      "status": "active",
+      "reason": "event on 9eacb23f1aa3 created critical alert SSH Successful Login After Brute Force.",
+      "source_ip": "198.51.100.250",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-11-17T22:43:53.630Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuario legitimo que fallo varias veces y luego acerto su contrasena."
+      ],
+      "rule_query": "sequence by source_ip.keyword with maxspan=10m\n  [any where tags.keyword == \"authentication_failure\"]\n  [any where tags.keyword == \"authentication_success\"]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-17T22:43:53.627Z",
+      "alert_id": "7a5870a599a8a2c9...",
+      "rule_name": "SSH Successful Login After Brute Force",
+      "severity": "critical",
+      "risk_score": 95,
+      "status": "active",
+      "reason": "event on 9eacb23f1aa3 created critical alert SSH Successful Login After Brute Force.",
+      "source_ip": "198.51.100.76",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-11-17T22:43:53.627Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuario legitimo que fallo varias veces y luego acerto su contrasena."
+      ],
+      "rule_query": "sequence by source_ip.keyword with maxspan=10m\n  [any where tags.keyword == \"authentication_failure\"]\n  [any where tags.keyword == \"authentication_success\"]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-17T22:43:53.626Z",
+      "alert_id": "0a1dec3755a11d94...",
+      "rule_name": "SSH Successful Login After Brute Force",
+      "severity": "critical",
+      "risk_score": 95,
+      "status": "active",
+      "reason": "event on 9eacb23f1aa3 created critical alert SSH Successful Login After Brute Force.",
+      "source_ip": "198.51.100.76",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": null,
+      "event_count": null,
+      "time_window": {
+        "from": null,
+        "to": "2026-11-17T22:43:53.626Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuario legitimo que fallo varias veces y luego acerto su contrasena."
+      ],
+      "rule_query": "sequence by source_ip.keyword with maxspan=10m\n  [any where tags.keyword == \"authentication_failure\"]\n  [any where tags.keyword == \"authentication_success\"]"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-17T22:43:53.474Z",
+      "alert_id": "e8d2ef1bbda26eb9...",
       "rule_name": "SSH Isolated Authentication Failure",
       "severity": "low",
       "risk_score": 21,
@@ -312,8 +369,8 @@
       "grouped_by": "source_ip.keyword",
       "event_count": 24,
       "time_window": {
-        "from": "2026-11-15T15:51:28.461Z",
-        "to": "2026-11-15T15:56:19.029Z"
+        "from": "2026-11-17T22:37:37.234Z",
+        "to": "2026-11-17T22:43:53.474Z"
       },
       "mitre": {
         "tactic": "Credential Access",
@@ -327,36 +384,8 @@
     },
     {
       "type": "security_alert",
-      "timestamp": "2026-11-15T15:56:19.028Z",
-      "alert_id": "d497f753c032b562...",
-      "rule_name": "SSH Isolated Authentication Failure",
-      "severity": "low",
-      "risk_score": 21,
-      "status": "active",
-      "reason": "event created low alert SSH Isolated Authentication Failure.",
-      "source_ip": "172.18.0.3",
-      "victim_host": null,
-      "target_user": null,
-      "grouped_by": "source_ip.keyword",
-      "event_count": 24,
-      "time_window": {
-        "from": "2026-11-15T15:51:28.027Z",
-        "to": "2026-11-15T15:56:19.028Z"
-      },
-      "mitre": {
-        "tactic": "Credential Access",
-        "technique": "Brute Force",
-        "technique_id": "T1110"
-      },
-      "false_positives": [
-        "Usuario legitimo que escribio mal su contrasena una sola vez."
-      ],
-      "rule_query": "tags:authentication_failure"
-    },
-    {
-      "type": "security_alert",
-      "timestamp": "2026-11-15T15:56:19.028Z",
-      "alert_id": "e6708bbe6b89a5d5...",
+      "timestamp": "2026-11-17T22:43:53.473Z",
+      "alert_id": "9c0f68d680acf035...",
       "rule_name": "SSH Isolated Authentication Failure",
       "severity": "low",
       "risk_score": 21,
@@ -368,8 +397,8 @@
       "grouped_by": "source_ip.keyword",
       "event_count": 24,
       "time_window": {
-        "from": "2026-11-15T15:51:28.452Z",
-        "to": "2026-11-15T15:56:19.028Z"
+        "from": "2026-11-17T22:37:38.085Z",
+        "to": "2026-11-17T22:43:53.473Z"
       },
       "mitre": {
         "tactic": "Credential Access",
@@ -383,8 +412,64 @@
     },
     {
       "type": "security_alert",
-      "timestamp": "2026-11-15T15:52:20.302Z",
-      "alert_id": "63c49263968ff0f8...",
+      "timestamp": "2026-11-17T22:43:53.472Z",
+      "alert_id": "743d4290df6f11fa...",
+      "rule_name": "SSH Isolated Authentication Failure",
+      "severity": "low",
+      "risk_score": 21,
+      "status": "active",
+      "reason": "event created low alert SSH Isolated Authentication Failure.",
+      "source_ip": "198.51.100.151",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 24,
+      "time_window": {
+        "from": "2026-11-17T22:37:37.202Z",
+        "to": "2026-11-17T22:43:53.472Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuario legitimo que escribio mal su contrasena una sola vez."
+      ],
+      "rule_query": "tags:authentication_failure"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-17T22:43:53.470Z",
+      "alert_id": "940051cde496f2fe...",
+      "rule_name": "SSH Isolated Authentication Failure",
+      "severity": "low",
+      "risk_score": 21,
+      "status": "active",
+      "reason": "event created low alert SSH Isolated Authentication Failure.",
+      "source_ip": "172.18.0.3",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 24,
+      "time_window": {
+        "from": "2026-11-17T22:37:38.085Z",
+        "to": "2026-11-17T22:43:53.470Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuario legitimo que escribio mal su contrasena una sola vez."
+      ],
+      "rule_query": "tags:authentication_failure"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-17T22:38:31.282Z",
+      "alert_id": "c973c9b5d0ae3ec6...",
       "rule_name": "SSH Brute Force – Aggressive per Source IP",
       "severity": "high",
       "risk_score": 73,
@@ -396,8 +481,8 @@
       "grouped_by": "source_ip.keyword",
       "event_count": 24,
       "time_window": {
-        "from": "2026-11-15T15:51:28.461Z",
-        "to": "2026-11-15T15:52:20.302Z"
+        "from": "2026-11-17T22:37:37.234Z",
+        "to": "2026-11-17T22:38:31.282Z"
       },
       "mitre": {
         "tactic": "Credential Access",
@@ -411,8 +496,36 @@
     },
     {
       "type": "security_alert",
-      "timestamp": "2026-11-15T15:52:20.301Z",
-      "alert_id": "c495fc75fb2a19c4...",
+      "timestamp": "2026-11-17T22:38:31.281Z",
+      "alert_id": "10e99467cac342cb...",
+      "rule_name": "SSH Brute Force – Aggressive per Source IP",
+      "severity": "high",
+      "risk_score": 73,
+      "status": "active",
+      "reason": "event created high alert SSH Brute Force – Aggressive per Source IP.",
+      "source_ip": "198.51.100.151",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 24,
+      "time_window": {
+        "from": "2026-11-17T22:37:37.202Z",
+        "to": "2026-11-17T22:38:31.281Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Scanners de vulnerabilidades autorizados; equipos de pentesting."
+      ],
+      "rule_query": "tags:authentication_failure"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-17T22:38:31.281Z",
+      "alert_id": "91ee46dbcf0afb99...",
       "rule_name": "SSH Brute Force – Aggressive per Source IP",
       "severity": "high",
       "risk_score": 73,
@@ -424,8 +537,8 @@
       "grouped_by": "source_ip.keyword",
       "event_count": 24,
       "time_window": {
-        "from": "2026-11-15T15:51:28.452Z",
-        "to": "2026-11-15T15:52:20.301Z"
+        "from": "2026-11-17T22:37:38.085Z",
+        "to": "2026-11-17T22:38:31.281Z"
       },
       "mitre": {
         "tactic": "Credential Access",
@@ -439,8 +552,8 @@
     },
     {
       "type": "security_alert",
-      "timestamp": "2026-11-15T15:52:20.299Z",
-      "alert_id": "00e2189c878f3f72...",
+      "timestamp": "2026-11-17T22:38:31.280Z",
+      "alert_id": "6c59898e04b8bdec...",
       "rule_name": "SSH Brute Force – Aggressive per Source IP",
       "severity": "high",
       "risk_score": 73,
@@ -452,8 +565,8 @@
       "grouped_by": "source_ip.keyword",
       "event_count": 24,
       "time_window": {
-        "from": "2026-11-15T15:51:28.027Z",
-        "to": "2026-11-15T15:52:20.299Z"
+        "from": "2026-11-17T22:37:38.085Z",
+        "to": "2026-11-17T22:38:31.280Z"
       },
       "mitre": {
         "tactic": "Credential Access",
@@ -464,6 +577,146 @@
         "Scanners de vulnerabilidades autorizados; equipos de pentesting."
       ],
       "rule_query": "tags:authentication_failure"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-17T22:34:51.608Z",
+      "alert_id": "71793cbda6904b96...",
+      "rule_name": "SSH Brute Force – Basic Threshold",
+      "severity": "medium",
+      "risk_score": 47,
+      "status": "active",
+      "reason": "event created medium alert SSH Brute Force – Basic Threshold.",
+      "source_ip": null,
+      "victim_host": "172.19.0.5",
+      "target_user": null,
+      "grouped_by": "host.ip.keyword",
+      "event_count": 462,
+      "time_window": {
+        "from": "2026-11-17T22:33:58.257Z",
+        "to": "2026-11-17T22:34:51.608Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuarios que olvidaron su contraseña y reintentaron varias veces."
+      ],
+      "rule_query": "tags:authentication_failure or message:*Failed password*"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-17T22:34:51.607Z",
+      "alert_id": "920ee17a284f84ac...",
+      "rule_name": "SSH Brute Force – Basic Threshold",
+      "severity": "medium",
+      "risk_score": 47,
+      "status": "active",
+      "reason": "event created medium alert SSH Brute Force – Basic Threshold.",
+      "source_ip": null,
+      "victim_host": "172.19.0.4",
+      "target_user": null,
+      "grouped_by": "host.ip.keyword",
+      "event_count": 1118,
+      "time_window": {
+        "from": "2026-11-17T22:31:51.034Z",
+        "to": "2026-11-17T22:34:51.607Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuarios que olvidaron su contraseña y reintentaron varias veces."
+      ],
+      "rule_query": "tags:authentication_failure or message:*Failed password*"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-17T22:34:49.617Z",
+      "alert_id": "170e6862a889aacc...",
+      "rule_name": "SSH Isolated Authentication Failure",
+      "severity": "low",
+      "risk_score": 21,
+      "status": "active",
+      "reason": "event created low alert SSH Isolated Authentication Failure.",
+      "source_ip": "198.51.100.76",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 24,
+      "time_window": {
+        "from": "2026-11-17T22:27:45.963Z",
+        "to": "2026-11-17T22:34:49.617Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Usuario legitimo que escribio mal su contrasena una sola vez."
+      ],
+      "rule_query": "tags:authentication_failure"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-17T22:30:11.952Z",
+      "alert_id": "d314bb772d28d0c3...",
+      "rule_name": "SSH Brute Force – Aggressive per Source IP",
+      "severity": "high",
+      "risk_score": 73,
+      "status": "active",
+      "reason": "event created high alert SSH Brute Force – Aggressive per Source IP.",
+      "source_ip": "198.51.100.76",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 24,
+      "time_window": {
+        "from": "2026-11-17T22:27:45.963Z",
+        "to": "2026-11-17T22:30:11.952Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Scanners de vulnerabilidades autorizados; equipos de pentesting."
+      ],
+      "rule_query": "tags:authentication_failure"
+    },
+    {
+      "type": "security_alert",
+      "timestamp": "2026-11-17T22:12:50.642Z",
+      "alert_id": "d6209a1ab4ea194e...",
+      "rule_name": "SSH Invalid User Enumeration",
+      "severity": "medium",
+      "risk_score": 50,
+      "status": "active",
+      "reason": "event created medium alert SSH Invalid User Enumeration.",
+      "source_ip": "198.51.100.76",
+      "victim_host": null,
+      "target_user": null,
+      "grouped_by": "source_ip.keyword",
+      "event_count": 25,
+      "time_window": {
+        "from": "2026-11-17T22:07:48.873Z",
+        "to": "2026-11-17T22:12:50.642Z"
+      },
+      "mitre": {
+        "tactic": "Credential Access",
+        "technique": "Brute Force",
+        "technique_id": "T1110"
+      },
+      "false_positives": [
+        "Errores de tipeo del nombre de usuario por usuarios legítimos."
+      ],
+      "rule_query": "tags:invalid_user or message:*Invalid user*"
     }
   ],
   "auth_failure_logs": []
