@@ -1,9 +1,5 @@
 # NeuralDefender — Elastic SIEM + capa de IA + dashboard de supervisión
 
-- **Ameed Othman 12220692 (CS)**
-- **Ahmed Muwafi 12010640 (NIS)**
-- **Motaz Saqqa 12113083 (NIS)**
-
 Un Elastic Stack SIEM (Elasticsearch + Kibana + Logstash + Filebeat) con una
 capa de IA encima y un dashboard propio de supervisión humana. Un ataque
 genera logs → Elastic detecta → un Agente 1 determinístico clasifica → un
