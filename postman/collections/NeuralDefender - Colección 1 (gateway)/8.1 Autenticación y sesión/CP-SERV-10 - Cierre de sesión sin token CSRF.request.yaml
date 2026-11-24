@@ -1,0 +1,35 @@
+$kind: http-request
+name: CP-SERV-10 | Cierre de sesión sin token CSRF
+url: "{{url_gateway}}/api/v1/logout"
+method: POST
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-10 | Cierre de sesión sin token CSRF
+      // Requisito: RQ-SEC-11 (protección contra falsificación de peticiones)
+      // Técnica: partición de equivalencia, partición inválida
+      // Precondición: sesión del analista abierta
+      // Petición: POST /api/v1/logout SIN la cabecera X-CSRFToken
+      // Esperado: 403 por falta del token CSRF. La sesión sigue abierta,
+      // y eso lo confirma CP-SERV-09a, que puede cerrarla con 204.
+      // ============================================================
+
+      // 1. Código: una petición que cambia el estado sin token CSRF da 403.
+      pm.test("CP-SERV-10 | Código 403", function () {
+          pm.response.to.have.status(403);
+      });
+
+      const datos = pm.response.json();
+
+      // 2 y 3. Contrato y tipo del error.
+      pm.test("CP-SERV-10 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      // 4. Regla: el motivo del rechazo es el token CSRF.
+      pm.test("CP-SERV-10 | El motivo es el token CSRF", function () {
+          pm.expect(datos.error).to.include("token CSRF");
+      });
+    language: text/javascript
+order: 10000

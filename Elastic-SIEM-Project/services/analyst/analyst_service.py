@@ -78,6 +78,8 @@ def analizar_incidentes():
     datos = cuerpo_json()
     if datos is None or not isinstance(datos.get("incidents"), list):
         return jsonify({"error": "se esperaba {incidents: [...]}"}), 400
+    if not all(isinstance(inc, dict) for inc in datos["incidents"]):
+        return jsonify({"error": "cada elemento de incidents debe ser un objeto"}), 400
     plazo = datos.get("plazo_s")
     fin_plazo = (inicio + float(plazo) - MARGEN_DE_RESPUESTA
                  if isinstance(plazo, (int, float)) and not isinstance(plazo, bool) and plazo > 0

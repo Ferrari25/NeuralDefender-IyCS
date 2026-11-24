@@ -1,0 +1,19 @@
+
+▶ LINTERS   — estilo y prolijidad, no buscan vulnerabilidades
+    ruff · tests/                  ✔ OK
+    ruff · proyecto                BASE   5 hallazgo(s) conocido(s), sin regresiones
+    eslint (gateway/static/*.js)    ✔ OK
+
+▶ SAST      — seguridad: vulnerabilidades conocidas, no ejecuta nada
+    pylint + secure-coding-standard ✔ OK
+    bandit · severidad alta        BASE   0 hallazgo(s) conocido(s), sin regresiones
+                                    nota: eslint-plugin-security / no-unsanitized ya corrieron arriba, dentro de eslint
+
+════════════════════════════════════════════════════════════
+  RESUMEN — CÓDIGO ESTÁTICO
+════════════════════════════════════════════════════════════
+  LINTERS — estilo y prolijidad, no buscan vulnerabilidades ✔
+  SAST — seguridad: vulnerabilidades conocidas, no ejecuta nada ✔
+
+  ✅ Todo en verde.
+codigo de salida: 0

@@ -1,0 +1,11 @@
+# Corrida normal del producto (correr_estatico.sh) repetida DESPUES de crear entregables/1.3-evidencia-reglas/.
+# Se compara con la corrida final del entregable 1.2 (reportes/estatico/final/).
+ruff            entregable 1.2 = 8           ahora = 8           IGUAL
+pylint          entregable 1.2 = 59          ahora = 59          IGUAL
+bandit          entregable 1.2 = 0           ahora = 0           IGUAL
+eslint          entregable 1.2 = 0           ahora = 0           IGUAL
+shellcheck      entregable 1.2 = 0           ahora = 0           IGUAL
+yamllint        entregable 1.2 = 0           ahora = 0           IGUAL
+hadolint        entregable 1.2 = 0           ahora = 0           IGUAL
+puntaje_pylint  entregable 1.2 = 9.79        ahora = 9.79        IGUAL
+reglas_propias  entregable 1.2 = 577 passed  ahora = 577 passed  IGUAL

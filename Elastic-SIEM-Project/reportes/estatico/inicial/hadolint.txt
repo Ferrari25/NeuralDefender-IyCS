@@ -1,0 +1,1 @@
+backup/Dockerfile:4 DL3018 [1m[93mwarning[0m: Pin versions in apk add. Instead of `apk add <package>` use `apk add <package>=<version>`

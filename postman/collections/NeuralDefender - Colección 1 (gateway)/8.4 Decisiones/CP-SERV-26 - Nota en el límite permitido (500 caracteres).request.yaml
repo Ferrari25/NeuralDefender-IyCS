@@ -1,0 +1,44 @@
+$kind: http-request
+name: CP-SERV-26 | Nota en el límite permitido (500 caracteres)
+url: "{{url_gateway}}/api/v1/decision"
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+body:
+  type: json
+  content: '{"incident_id": "{{incident_id}}", "action_id": "{{action_id}}", "decision": "approved", "note": "{{nota_500}}"}'
+scripts:
+  - type: beforeRequest
+    code: |-
+      // Genera una nota de exactamente 500 caracteres (el límite permitido).
+      pm.variables.set("nota_500", "x".repeat(500));
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-26 | Nota en el límite permitido
+      // Requisito: RF-API-02 (nota opcional de hasta 500 caracteres)
+      // Técnica: análisis de valores límite, valor exacto del límite (500)
+      // Petición: POST /api/v1/decision con una nota de 500 caracteres
+      // Esperado: 201 y la nota se guarda completa, sin recortes
+      // ============================================================
+
+      // 1. Código: el límite exacto se acepta.
+      pm.test("CP-SERV-26 | Código 201", function () {
+          pm.response.to.have.status(201);
+      });
+
+      const datos = pm.response.json();
+
+      // 2 y 3. Contrato y tipo: el registro incluye la nota como texto.
+      pm.test("CP-SERV-26 | El registro incluye la nota", function () {
+          pm.expect(datos.record).to.have.property("note");
+          pm.expect(datos.record.note).to.be.a("string");
+      });
+
+      // 4. Regla: la nota se guardó completa.
+      pm.test("CP-SERV-26 | La nota tiene los 500 caracteres", function () {
+          pm.expect(datos.record.note.length).to.eql(500);
+      });
+    language: text/javascript
+order: 4000

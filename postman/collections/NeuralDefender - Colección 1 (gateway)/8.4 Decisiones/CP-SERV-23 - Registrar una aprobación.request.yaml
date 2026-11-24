@@ -1,0 +1,57 @@
+$kind: http-request
+name: CP-SERV-23 | Registrar una aprobación
+url: "{{url_gateway}}/api/v1/decision"
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+body:
+  type: json
+  content: '{"incident_id": "{{incident_id}}", "action_id": "{{action_id}}", "decision": "approved", "note": "Prueba de servicio"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-23 | Registrar una aprobación
+      // Requisitos: RF-API-02, RF-SUP-04, RF-AUT-06, RF-AUD-01, RNF-RD-04
+      // Técnica: partición de equivalencia, partición válida
+      // Precondición: sesión de analista; acción pendiente guardada en CP-SERV-12
+      // Petición: POST /api/v1/decision con decision = "approved"
+      // Esperado: 201 en menos de 500 ms. El registro queda firmado con el
+      // usuario y el rol de la SESIÓN (no con un dato del cuerpo) y
+      // encadenado al anterior por su hash (prev_hash).
+      // ============================================================
+
+      // 1. Código y tiempo: 201 Created en menos de 500 ms (RNF-RD-04).
+      pm.test("CP-SERV-23 | Código 201 en menos de 500 ms", function () {
+          pm.response.to.have.status(201);
+          pm.expect(pm.response.responseTime).to.be.below(500);
+      });
+
+      const datos = pm.response.json();
+
+      // 2. Contrato: la respuesta trae el registro guardado.
+      pm.test("CP-SERV-23 | Contrato del registro", function () {
+          pm.expect(datos).to.include.all.keys("ok", "record");
+          pm.expect(datos.record).to.include.all.keys("incident_id", "action_id", "decision", "analyst", "analyst_rol", "prev_hash", "ts");
+      });
+
+      // 3. Tipos de datos.
+      pm.test("CP-SERV-23 | Tipos de datos", function () {
+          pm.expect(datos.ok).to.be.true;
+          pm.expect(datos.record.prev_hash).to.be.a("string").and.not.empty;
+          pm.expect(datos.record.ts).to.be.a("string").and.not.empty;
+      });
+
+      // 4a. Regla: se registró exactamente la decisión pedida.
+      pm.test("CP-SERV-23 | Se registró la decisión pedida", function () {
+          pm.expect(datos.record.action_id).to.eql(pm.environment.get("action_id"));
+          pm.expect(datos.record.decision).to.eql("approved");
+      });
+
+      // 4b. Regla: la decisión se firma con el usuario y el rol de la sesión (RF-AUT-06).
+      pm.test("CP-SERV-23 | Firmada con el usuario de la sesión", function () {
+          pm.expect(datos.record.analyst).to.eql(pm.environment.get("analista"));
+          pm.expect(datos.record.analyst_rol).to.eql("analyst");
+      });
+    language: text/javascript
+order: 1000

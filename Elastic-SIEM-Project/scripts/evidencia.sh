@@ -27,7 +27,7 @@
 #   ./scripts/evidencia.sh --sin-servicios   omite las pruebas contra el panel
 # ─────────────────────────────────────────────────────────────────────────────
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 
 export PYTHONPATH="$PWD/.devtools${PYTHONPATH:+:$PYTHONPATH}"
 
@@ -70,7 +70,8 @@ paso "1/5 · Análisis estático (SAST)"
   echo; echo "══════════ ruff ══════════"
   .devtools/bin/ruff check . 2>&1 || true
   echo; echo "══════════ pylint + secure-coding-standard ══════════"
-  .devtools/bin/pylint --rcfile=.pylintrc $(git ls-files '*.py' 2>/dev/null || ls *.py) 2>&1 | tail -30 || true
+  mapfile -t ARCHIVOS_PY < <(git ls-files '*.py' 2>/dev/null || find . -maxdepth 1 -name '*.py')
+  .devtools/bin/pylint --rcfile=.pylintrc "${ARCHIVOS_PY[@]}" 2>&1 | tail -30 || true
   echo; echo "══════════ bandit ══════════"
   .devtools/bin/bandit -r . -x ./.devtools,./tests,./node_modules -ll 2>&1 | tail -25 || true
   echo; echo "══════════ eslint ══════════"
@@ -222,8 +223,8 @@ COBERTURA=(classifier siem_lib dashboard siem_validators siem_auth manage_users
 .devtools/bin/pytest -q "${COBERTURA[@]/#/--cov=}" \
   --cov-report=term > "$DIR/04-suite-y-cobertura.txt" 2>&1
 TOTAL=$(grep -E '^[0-9]+ passed' "$DIR/04-suite-y-cobertura.txt" | tail -1)
-COBERTURA=$(grep -E '^TOTAL' "$DIR/04-suite-y-cobertura.txt" | awk '{print $NF}')
-ok "04-suite-y-cobertura.txt — $TOTAL · cobertura $COBERTURA"
+COBERTURA_PCT=$(grep -E '^TOTAL' "$DIR/04-suite-y-cobertura.txt" | awk '{print $NF}')
+ok "04-suite-y-cobertura.txt — $TOTAL · cobertura $COBERTURA_PCT"
 
 # ─── 5 · No-autonomía ────────────────────────────────────────────────────────
 
@@ -272,7 +273,7 @@ audita; el auditor audita y no decide.
 ## Números de esta corrida
 
 - Suite: $TOTAL
-- Cobertura (alcance declarado): $COBERTURA
+- Cobertura (alcance declarado): $COBERTURA_PCT
 - Verificaciones de no-autonomía: $N_AUTO
 - Hallazgos nuevos de análisis estático: **0** (líneas de base en cero)
 
@@ -293,5 +294,5 @@ rm -f "$RESPALDO"
 
 printf '\n\033[1m════════════════════════════════════════════════\033[0m\n'
 ok "Evidencia completa en $DIR"
-ls -1 "$DIR" | sed 's/^/     /'
+find "$DIR" -mindepth 1 -maxdepth 1 -printf '%f\n' | sort | sed 's/^/     /'
 printf '\n  Empezá por %s/00-resumen.md\n\n' "$DIR"

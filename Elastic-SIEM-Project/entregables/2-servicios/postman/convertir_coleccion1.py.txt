@@ -1,0 +1,103 @@
+"""Convierte la colección 1 (formato multi-archivo YAML de Postman, carpeta `postman/` del repositorio)
+a un único archivo JSON de colección v2.1.
+
+NO modifica ningún script: el código de cada script se copia carácter por carácter. Solo cambia el
+contenedor: `afterResponse` pasa a evento `test` y `beforeRequest` a evento `prerequest`; el script
+de colección `http:afterResponse` pasa a evento `test` de la colección.
+
+Se lee con `yaml.BaseLoader` para que NADA se reinterprete (por ejemplo, `2026-01-01` seguiría siendo
+texto y no una fecha). Se guarda como `.py.txt` para que ni ruff ni la prueba de no-autonomía lo recorran.
+
+Uso (desde Elastic-SIEM-Project/):
+    PYTHONPATH=.devtools python3 entregables/2-servicios/postman/convertir_coleccion1.py.txt
+"""
+from __future__ import annotations
+
+import json
+import uuid
+from pathlib import Path
+
+import yaml
+
+RAIZ = Path(__file__).resolve().parents[3]                     # Elastic-SIEM-Project
+ORIGEN = RAIZ.parent / "postman" / "collections" / "NeuralDefender - Colección 1 (gateway)"
+DESTINO = Path(__file__).resolve().parent / "NeuralDefender-Coleccion1-gateway.postman_collection.json"
+ESQUEMA = "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+EVENTO = {"afterResponse": "test", "http:afterResponse": "test",
+          "beforeRequest": "prerequest", "http:beforeRequest": "prerequest"}
+
+
+def leer(ruta: Path) -> dict:
+    return yaml.load(ruta.read_text(encoding="utf-8"), Loader=yaml.BaseLoader) or {}
+
+
+def eventos(scripts: list[dict]) -> list[dict]:
+    return [{"listen": EVENTO[s["type"]],
+             "script": {"type": s.get("language", "text/javascript"),
+                        "exec": s["code"].split("\n")}} for s in scripts]
+
+
+def url_de(d: dict) -> dict:
+    """La `url` de Postman ya trae los parámetros (`...?a=1&b=2`); `queryParams` repite los mismos."""
+    completa = d["url"]
+    base = completa.split("?", 1)[0]
+    q = d.get("queryParams") or {}
+    if isinstance(q, dict):
+        consulta = [{"key": k, "value": v} for k, v in q.items()]
+    else:  # lista de filas {key, value, disabled}: Postman ignora las vacías o desactivadas al enviar
+        consulta = [{"key": f["key"], "value": f.get("value", "")} for f in q
+                    if (f.get("key") or f.get("value")) and f.get("disabled", "false") != "true"]
+    if consulta and "?" not in completa:
+        completa = base + "?" + "&".join(f"{c['key']}={c['value']}" for c in consulta)
+    sin_esquema = base.split("://", 1)[-1] if "://" in base else base
+    partes = [p for p in sin_esquema.split("/") if p]
+    objeto = {"raw": completa, "host": [partes[0]] if base.startswith("{{") else partes[0].split("."),
+              "path": partes[1:]}
+    if base.startswith("http"):
+        objeto["protocol"] = base.split("://", 1)[0]
+    if consulta:
+        objeto["query"] = consulta
+    return objeto
+
+
+def pedido(ruta: Path) -> tuple[int, dict]:
+    d = leer(ruta)
+    req: dict = {"method": d["method"], "header": [{"key": k, "value": v}
+                                                  for k, v in (d.get("headers") or {}).items()],
+                 "url": url_de(d)}
+    if d.get("body"):
+        cuerpo = d["body"]
+        if cuerpo.get("type") != "json":
+            raise ValueError(f"{ruta.name}: tipo de cuerpo no previsto: {cuerpo.get('type')}")
+        req["body"] = {"mode": "raw", "raw": cuerpo["content"],
+                       "options": {"raw": {"language": "json"}}}
+    item = {"name": d["name"], "request": req}
+    if d.get("scripts"):
+        item["event"] = eventos(d["scripts"])
+    return int(d.get("order", 0)), item
+
+
+def carpeta(ruta: Path) -> tuple[int, dict]:
+    orden = int(leer(ruta / ".resources" / "definition.yaml").get("order", 0))
+    hijos = sorted((pedido(p) for p in ruta.glob("*.request.yaml")), key=lambda t: t[0])
+    return orden, {"name": ruta.name, "item": [h for _, h in hijos]}
+
+
+def main() -> None:
+    raiz = leer(ORIGEN / ".resources" / "definition.yaml")
+    carpetas = sorted((carpeta(p) for p in ORIGEN.iterdir() if p.is_dir() and not p.name.startswith(".")), key=lambda t: t[0])
+    coleccion = {
+        "info": {"_postman_id": str(uuid.uuid4()), "name": ORIGEN.name, "schema": ESQUEMA},
+        "item": [c for _, c in carpetas],
+    }
+    if raiz.get("scripts"):
+        coleccion["event"] = eventos(raiz["scripts"])
+    DESTINO.write_text(json.dumps(coleccion, indent="\t", ensure_ascii=False) + "\n", encoding="utf-8")
+    pedidos = sum(len(c["item"]) for c in coleccion["item"])
+    scripts = sum(len(i.get("event", [])) for c in coleccion["item"] for i in c["item"])
+    print(f"{DESTINO.name}: {len(coleccion['item'])} carpetas, {pedidos} pedidos, {scripts} scripts de pedido, "
+          f"{len(coleccion.get('event', []))} script(s) de colección")
+
+
+if __name__ == "__main__":
+    main()

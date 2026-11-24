@@ -1,0 +1,38 @@
+$kind: http-request
+name: CP-SERV-25 | Identificadores numéricos
+url: "{{url_gateway}}/api/v1/decision"
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+body:
+  type: json
+  content: '{"incident_id": 1, "action_id": 2, "decision": "approved"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-25 | Identificadores numéricos
+      // Requisito: RQ-SEC-09 (validar el tipo de cada dato)
+      // Técnica: partición de equivalencia, partición inválida (tipo incorrecto)
+      // Petición: POST /api/v1/decision con números donde se esperan textos
+      // Esperado: 400 controlado, nunca un error 500
+      // ============================================================
+
+      // 1. Código: 400.
+      pm.test("CP-SERV-25 | Código 400", function () {
+          pm.response.to.have.status(400);
+      });
+
+      const datos = pm.response.json();
+
+      // 2 y 3. Contrato y tipo del error.
+      pm.test("CP-SERV-25 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      // 4. Regla: el mensaje indica qué campos son inválidos.
+      pm.test("CP-SERV-25 | Mensaje: faltan incident_id / action_id", function () {
+          pm.expect(datos.error).to.eql("faltan incident_id / action_id");
+      });
+    language: text/javascript
+order: 3000

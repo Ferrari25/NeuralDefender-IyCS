@@ -1,0 +1,33 @@
+ M ../.vscode/pylint.sh
+ M CLAUDE.md
+ M backup/programador.sh
+ M backup/respaldo.sh
+ M backup/restaurar.sh
+ M data/audit/accesos.jsonl
+ M data/audit/analysis_history.jsonl
+ M data/auth/users.json
+ M data/collector/siem_clean.json
+ M data/pipeline/siem_incidents.json
+ M docs/04-auditoria-pruebas-y-demostracion.md
+ M pruebas_de_performance.md
+ M simulation/run-brute-force.sh
+ M simulation/run-pentest.sh
+ M simulation/run-phishing.sh
+ M simulation/run-port-scan.sh
+?? .env.bak-antes-gemma
+?? "Plan de pruebas_NeuralDefender_AnalisisEstatico_V1.md"
+?? network_logs/brute-force-1795358063.json
+?? network_logs/phishing-1795358063.json
+?? network_logs/port-scan-1795358063.json
+?? reportes/estatico/
+?? reportes/performance/20261119-182415-carga.html
+?? reportes/performance/20261119-182415-carga.json
+?? reportes/performance/20261119-213949-estres.html
+?? reportes/performance/20261119-213949-estres.json
+?? reportes/performance/20261119-214510-pico.html
+?? reportes/performance/20261119-214510-pico.json
+?? reportes/performance/20261119-214841-carga.html
+?? reportes/performance/20261119-214841-carga.json
+?? reportes/postman/
+?? scripts/pruebas_de_api_postman.sh
+?? tests/postman/

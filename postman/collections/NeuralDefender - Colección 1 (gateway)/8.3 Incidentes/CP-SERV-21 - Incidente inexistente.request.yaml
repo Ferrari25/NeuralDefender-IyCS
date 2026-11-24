@@ -1,0 +1,33 @@
+$kind: http-request
+name: CP-SERV-21 | Incidente inexistente
+url: "{{url_gateway}}/api/v1/incidents/INC-NO-EXISTE"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-21 | Incidente inexistente
+      // Requisito: RF-API-01
+      // Técnica: partición de equivalencia, partición inválida
+      // Petición: GET /api/v1/incidents/INC-NO-EXISTE
+      // Esperado: 404 con un mensaje que menciona el identificador pedido
+      // ============================================================
+
+      // 1. Código: el recurso no existe, 404 Not Found.
+      pm.test("CP-SERV-21 | Código 404", function () {
+          pm.response.to.have.status(404);
+      });
+
+      const datos = pm.response.json();
+
+      // 2 y 3. Contrato y tipo del error.
+      pm.test("CP-SERV-21 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      // 4. Regla: el mensaje identifica qué incidente no se encontró.
+      pm.test("CP-SERV-21 | El mensaje menciona el identificador", function () {
+          pm.expect(datos.error).to.include("INC-NO-EXISTE");
+      });
+    language: text/javascript
+order: 3000

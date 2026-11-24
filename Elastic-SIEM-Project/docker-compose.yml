@@ -185,7 +185,7 @@ services:
   # de la auditoría, cifrado (AES-256) y con SHA-256. Ver backup/respaldo.sh.
   # A mano: ./scripts/siem.sh respaldo · restaurar: ./scripts/siem.sh restaurar
   backup:
-    build: { context: ., dockerfile: backup/Dockerfile }
+    build: {context: ., dockerfile: backup/Dockerfile}
     container_name: siem-backup
     restart: unless-stopped
     mem_limit: 128m
@@ -257,7 +257,7 @@ services:
 
   # Autenticación: dueño del almacén de usuarios (hashes Argon2id).
   auth:
-    build: { context: ., dockerfile: services/auth/Dockerfile }
+    build: {context: ., dockerfile: services/auth/Dockerfile}
     container_name: siem-auth
     restart: unless-stopped
     mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
@@ -277,7 +277,7 @@ services:
 
   # Auditoría: ÚNICO escritor de decisions.jsonl y analysis_history.jsonl.
   audit:
-    build: { context: ., dockerfile: services/audit/Dockerfile }
+    build: {context: ., dockerfile: services/audit/Dockerfile}
     container_name: siem-audit
     restart: unless-stopped
     mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
@@ -293,7 +293,7 @@ services:
   # Collector: el único con credenciales de Elasticsearch y el único que
   # está en las DOS redes (elastic-net para consultar, ia-net para responder).
   collector:
-    build: { context: ., dockerfile: services/collector/Dockerfile }
+    build: {context: ., dockerfile: services/collector/Dockerfile}
     container_name: siem-collector
     restart: unless-stopped
     mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
@@ -318,7 +318,7 @@ services:
 
   # Agente 1: sin estado. Lee network_logs/ en solo lectura (la entrada "IDS").
   classifier:
-    build: { context: ., dockerfile: services/classifier/Dockerfile }
+    build: {context: ., dockerfile: services/classifier/Dockerfile}
     container_name: siem-classifier
     restart: unless-stopped
     mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
@@ -339,7 +339,7 @@ services:
   # Memoria del Agente 2: documentos, casos resueltos y lecciones (aprobadas a
   # mano). Dueño de data/knowledge. No tiene secretos ni salida a internet.
   knowledge:
-    build: { context: ., dockerfile: services/knowledge/Dockerfile }
+    build: {context: ., dockerfile: services/knowledge/Dockerfile}
     container_name: siem-knowledge
     restart: unless-stopped
     mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
@@ -355,7 +355,7 @@ services:
   # Agente 2: sin estado. El único con la key de Gemini (salida HTTPS a internet).
   # Consulta su memoria al servicio knowledge (si no responde, analiza sin ella).
   analyst:
-    build: { context: ., dockerfile: services/analyst/Dockerfile }
+    build: {context: ., dockerfile: services/analyst/Dockerfile}
     container_name: siem-analyst
     restart: unless-stopped
     mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
@@ -379,8 +379,8 @@ services:
       - SIEM_LLM_REUSO=${SIEM_LLM_REUSO:-3600}
     networks: [ia-net, llm-net]
     depends_on:
-      audit: { condition: service_healthy }
-      knowledge: { condition: service_healthy }
+      audit: {condition: service_healthy}
+      knowledge: {condition: service_healthy}
     labels: *autoheal
     healthcheck: *salud-interna
 
@@ -415,7 +415,7 @@ services:
   # Orquestador: encadena collector → classifier → analyst → audit por HTTP y
   # guarda el reporte de incidentes. Se dispara con ./scripts/siem.sh pipeline.
   pipeline:
-    build: { context: ., dockerfile: services/pipeline/Dockerfile }
+    build: {context: ., dockerfile: services/pipeline/Dockerfile}
     container_name: siem-pipeline
     restart: unless-stopped
     mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
@@ -428,17 +428,17 @@ services:
       - ./data/pipeline:/app/service/data
     networks: [ia-net]
     depends_on:
-      collector: { condition: service_healthy }
-      classifier: { condition: service_healthy }
-      analyst: { condition: service_healthy }
-      audit: { condition: service_healthy }
+      collector: {condition: service_healthy}
+      classifier: {condition: service_healthy}
+      analyst: {condition: service_healthy}
+      audit: {condition: service_healthy}
     labels: *autoheal
     healthcheck: *salud-interna
 
   # Gateway: el panel de supervisión. ÚNICO puerto de la capa IA publicado al
   # host, y solo en loopback.
   gateway:
-    build: { context: ., dockerfile: services/gateway/Dockerfile }
+    build: {context: ., dockerfile: services/gateway/Dockerfile}
     container_name: siem-gateway
     restart: unless-stopped
     mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
@@ -452,10 +452,10 @@ services:
     networks: [ia-net]
     labels: *autoheal
     depends_on:
-      auth: { condition: service_healthy }
-      audit: { condition: service_healthy }
-      knowledge: { condition: service_healthy }
-      pipeline: { condition: service_healthy }
+      auth: {condition: service_healthy}
+      audit: {condition: service_healthy}
+      knowledge: {condition: service_healthy}
+      pipeline: {condition: service_healthy}
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/api/v1/healthz', timeout=3)"]
       interval: 10s

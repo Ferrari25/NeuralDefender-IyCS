@@ -1,0 +1,13 @@
+# Mismo codigo (assert + password literal + funcion con 11 ramas) analizado con dos rutas distintas.
+# ruff.toml:29 exime S101, S105 y C901 solo a tests/**
+
+# Comando: ruff check --output-format=concise --stdin-filename libs/ejemplo.py - < demo (assert, PASSWORD = "x", funcion con 11 if)
+libs/ejemplo.py:1:1: S101 Use of `assert` detected
+libs/ejemplo.py:2:12: S105 Possible hardcoded password assigned to: "PASSWORD"
+libs/ejemplo.py:5:5: C901 `compleja` is too complex (12 > 10)
+Found 3 errors.
+# Codigo de salida: 1
+
+# Comando: ruff check --output-format=concise --stdin-filename tests/unit/ejemplo.py - < demo (assert, PASSWORD = "x", funcion con 11 if)
+All checks passed!
+# Codigo de salida: 0

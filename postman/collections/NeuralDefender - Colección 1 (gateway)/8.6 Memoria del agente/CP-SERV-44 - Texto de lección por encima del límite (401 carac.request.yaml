@@ -1,0 +1,41 @@
+$kind: http-request
+name: CP-SERV-44 | Texto de lección por encima del límite (401 caracteres)
+url: "{{url_gateway}}/api/v1/memoria/lecciones"
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+body:
+  type: json
+  content: '{"texto": "{{texto_401}}"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-44 | Texto de lección por encima del límite
+      // Requisito: RF-MEM-03 (lección de hasta 400 caracteres)
+      // Técnica: análisis de valores límite, primer valor inválido (401)
+      // Petición: POST /api/v1/memoria/lecciones con un texto de 401 caracteres
+      // Esperado: 400 controlado
+      // ============================================================
+
+      pm.test("CP-SERV-44 | Código 400", function () {
+          pm.response.to.have.status(400);
+      });
+
+      const datos = pm.response.json();
+
+      pm.test("CP-SERV-44 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string").and.not.empty;
+      });
+
+      // Regla: no se creó ninguna lección.
+      pm.test("CP-SERV-44 | No se creó la lección", function () {
+          pm.expect(datos).to.not.have.property("leccion");
+      });
+    language: text/javascript
+  - type: beforeRequest
+    code: |-
+      // Genera un texto de 401 caracteres: uno más que el límite de 400.
+      pm.variables.set("texto_401", "L".repeat(401));
+    language: text/javascript
+order: 6000

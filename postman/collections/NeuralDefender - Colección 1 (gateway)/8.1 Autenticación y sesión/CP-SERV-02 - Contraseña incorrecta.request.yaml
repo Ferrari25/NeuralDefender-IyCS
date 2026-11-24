@@ -1,0 +1,37 @@
+$kind: http-request
+name: CP-SERV-02 | Contraseña incorrecta
+url: "{{url_gateway}}/api/v1/login"
+method: POST
+body:
+  type: json
+  content: '{"username": "{{analista}}", "password": "contrasena-incorrecta"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-02 | Contraseña incorrecta
+      // Requisito: RF-AUT-01
+      // Técnica: partición de equivalencia, partición inválida
+      // Petición: POST /api/v1/login con un usuario real y una contraseña errónea
+      // Esperado: 401, mensaje genérico y sin abrir sesión
+      // ============================================================
+
+      // 1. Código: credenciales incorrectas, 401.
+      pm.test("CP-SERV-02 | Código 401", function () {
+          pm.response.to.have.status(401);
+      });
+
+      const datos = pm.response.json();
+
+      // 2 y 3. Contrato y tipo del error.
+      pm.test("CP-SERV-02 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      // 4. Regla: mensaje genérico y sin token de sesión en la respuesta.
+      pm.test("CP-SERV-02 | Mensaje genérico y sin sesión", function () {
+          pm.expect(datos.error).to.eql("usuario o contraseña incorrectos");
+          pm.expect(datos).to.not.have.property("csrf_token");
+      });
+    language: text/javascript
+order: 4000

@@ -1,0 +1,17 @@
+# Comando: bash -c grep -L -E '^set -[a-zA-Z]*e' scripts/*.sh simulation/*.sh backup/*.sh; echo '(arriba: scripts del producto sin set -e)'; echo; echo 'Ejemplo de prueba:'; grep -L -E '^set -[a-zA-Z]*e' entregables/1.3-evidencia-reglas/prueba-de-reglas/shell/ejemplo_violaciones_shell.sh
+scripts/demo-ataque.sh
+scripts/demo-auditoria.sh
+scripts/demo-desde-cero.sh
+scripts/demo.sh
+scripts/evidencia.sh
+scripts/generate_certs.sh
+scripts/pruebas_completas.sh
+scripts/pruebas_de_codigo_estatico.sh
+scripts/pruebas_de_servicio.sh
+scripts/pruebas_de_verificacion.sh
+backup/programador.sh
+(arriba: scripts del producto sin set -e)
+
+Ejemplo de prueba:
+entregables/1.3-evidencia-reglas/prueba-de-reglas/shell/ejemplo_violaciones_shell.sh
+# Codigo de salida: 1

@@ -1,0 +1,38 @@
+$kind: http-request
+name: CP-SERV-03 | Usuario inexistente
+url: "{{url_gateway}}/api/v1/login"
+method: POST
+body:
+  type: json
+  content: '{"username": "usuario-que-no-existe", "password": "cualquiera"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-03 | Usuario inexistente
+      // Requisito: RF-AUT-01
+      // Técnica: partición de equivalencia, partición inválida
+      // Petición: POST /api/v1/login con un usuario que no existe
+      // Esperado: 401 con el MISMO mensaje que CP-SERV-02.
+      // Por qué importa: si el mensaje fuera distinto, un atacante podría
+      // averiguar qué usuarios existen probando nombres.
+      // ============================================================
+
+      // 1. Código: 401.
+      pm.test("CP-SERV-03 | Código 401", function () {
+          pm.response.to.have.status(401);
+      });
+
+      const datos = pm.response.json();
+
+      // 2 y 3. Contrato y tipo del error.
+      pm.test("CP-SERV-03 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      // 4. Regla de seguridad: mensaje idéntico al de contraseña incorrecta.
+      pm.test("CP-SERV-03 | Mismo mensaje que con contraseña incorrecta", function () {
+          pm.expect(datos.error).to.eql("usuario o contraseña incorrectos");
+      });
+    language: text/javascript
+order: 5000

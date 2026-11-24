@@ -1,0 +1,48 @@
+$kind: http-request
+name: CP-SERV-40 | Cargar un documento
+url: "{{url_gateway}}/api/v1/memoria/documentos"
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+body:
+  type: json
+  content: '{"titulo": "Procedimiento SSH", "contenido": "Bloquear la IP de origen tras 20 fallos de autenticacion SSH."}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-40 | Cargar un documento
+      // Requisito: RF-MEM-05 (documentos de la organización para el agente)
+      // Técnica: partición de equivalencia, partición válida
+      // Precondición: sesión de analista
+      // Petición: POST /api/v1/memoria/documentos con título y contenido válidos
+      // Esperado: 201 con un doc_id con formato DOC- más 10 caracteres
+      // hexadecimales y el autor tomado de la sesión
+      // ============================================================
+
+      // 1. Código: 201 Created.
+      pm.test("CP-SERV-40 | Código 201", function () {
+          pm.response.to.have.status(201);
+      });
+
+      const datos = pm.response.json();
+
+      // 2. Contrato del documento creado.
+      pm.test("CP-SERV-40 | Contrato del documento", function () {
+          pm.expect(datos).to.include.all.keys("ok", "documento");
+          pm.expect(datos.documento).to.include.all.keys("doc_id", "titulo", "subido_por", "caracteres", "ts");
+      });
+
+      // 3. Tipos y formato del identificador.
+      pm.test("CP-SERV-40 | Tipos y formato del doc_id", function () {
+          pm.expect(datos.documento.doc_id).to.match(/^DOC-[0-9a-f]{10}$/);
+          pm.expect(datos.documento.caracteres).to.be.a("number");
+      });
+
+      // 4. Regla: el autor es el usuario de la sesión, no un dato del cuerpo.
+      pm.test("CP-SERV-40 | Autor tomado de la sesión", function () {
+          pm.expect(datos.documento.subido_por).to.eql(pm.environment.get("analista"));
+          pm.expect(datos.documento.titulo).to.eql("Procedimiento SSH");
+      });
+    language: text/javascript
+order: 2000

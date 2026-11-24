@@ -1,0 +1,54 @@
+[
+  {
+    "leccion_id": "LEC-3f2dbd345a",
+    "tipo": "manual",
+    "texto": "Los escaneos desde 10.0.0.9 son del monitoreo interno.",
+    "attack_type": "port_scan",
+    "ip": "10.0.0.9",
+    "estado": "aprobada",
+    "propuesta_por": "analista",
+    "propuesta_en": "2026-11-23T01:07:45.918461+00:00",
+    "evidencia": [],
+    "revisada_por": "analista",
+    "revisada_en": "2026-11-23T01:10:01.585958+00:00"
+  },
+  {
+    "leccion_id": "LEC-0d1a4a7e07",
+    "tipo": "manual",
+    "texto": "Los escaneos desde 10.0.0.9 son del monitoreo interno.",
+    "attack_type": "port_scan",
+    "ip": "10.0.0.9",
+    "estado": "aprobada",
+    "propuesta_por": "analista",
+    "propuesta_en": "2026-11-23T01:18:22.535830+00:00",
+    "evidencia": [],
+    "revisada_por": "analista",
+    "revisada_en": "2026-11-23T01:18:22.953016+00:00"
+  },
+  {
+    "leccion_id": "LEC-fe684e4509",
+    "tipo": "manual",
+    "texto": "Los escaneos desde 10.0.0.9 son del monitoreo interno.",
+    "attack_type": "port_scan",
+    "ip": "10.0.0.9",
+    "estado": "aprobada",
+    "propuesta_por": "analista",
+    "propuesta_en": "2026-11-23T01:18:31.791140+00:00",
+    "evidencia": [],
+    "revisada_por": "analista",
+    "revisada_en": "2026-11-23T01:18:32.205991+00:00"
+  },
+  {
+    "leccion_id": "LEC-06a8eded5e",
+    "tipo": "manual",
+    "texto": "Los escaneos desde 10.0.0.9 son del monitoreo interno.",
+    "attack_type": "port_scan",
+    "ip": "10.0.0.9",
+    "estado": "aprobada",
+    "propuesta_por": "analista",
+    "propuesta_en": "2026-11-23T01:18:39.855187+00:00",
+    "evidencia": [],
+    "revisada_por": "analista",
+    "revisada_en": "2026-11-23T01:18:40.380202+00:00"
+  }
+]

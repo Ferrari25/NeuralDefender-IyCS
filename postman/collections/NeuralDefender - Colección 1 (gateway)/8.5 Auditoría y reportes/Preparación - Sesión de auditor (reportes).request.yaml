@@ -1,0 +1,19 @@
+$kind: http-request
+name: Preparación | Sesión de auditor (reportes)
+url: "{{url_gateway}}/api/v1/login"
+method: POST
+body:
+  type: json
+  content: '{"username": "{{auditor}}", "password": "{{password}}"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // Preparación: abre la sesión del auditor para verificar la cadena y
+      // pedir los reportes. Guarda la fecha de hoy para filtrar los reportes.
+      pm.test("Preparación | Sesión de auditor abierta", function () {
+          pm.response.to.have.status(200);
+      });
+      pm.environment.set("csrf_token", pm.response.json().csrf_token);
+      pm.environment.set("hoy", new Date().toISOString().slice(0, 10));
+    language: text/javascript
+order: 2000

@@ -1,0 +1,31 @@
+# Propiedad: Limites de memoria en docker-compose.yml
+# Archivo mutado (en la copia): docker-compose.yml
+# Pruebas: tests/unit/test_despliegue_compose.py
+
+## 1. Codigo sano
+.............................................................            [100%]
+61 passed in 0.18s
+
+## 2. Defecto inyectado: p='docker-compose.yml'; L=open(p).read().split('\n'); i=next(k for k,l in enumerate(L) if 'mem_limit: 512m' in l); del L[i]; open(p,'w').write('\n'.join(L))
+tests/unit/test_despliegue_compose.py:59: in test_todo_servicio_tiene_tope_de_memoria
+    assert re.search(r"^    mem_limit: \S+", _servicio(nombre), re.MULTILINE), \
+E   AssertionError: filebeat no declara mem_limit (RNF-COMP-01)
+E   assert None
+E    +  where None = <function search at 0x7f72eb7c37e0>('^    mem_limit: \\S+', 'filebeat:\n    image: docker.elastic.co/beats/filebeat:8.12.2\n    container_name: filebeat\n    restart: unless-stop...de unhealthy.\n  # Necesita el socket de Docker (equivale a root en el host): imagen fija,\n  # sin red y sin puertos.', re.MULTILINE)
+E    +    where <function search at 0x7f72eb7c37e0> = re.search
+E    +    and   'filebeat:\n    image: docker.elastic.co/beats/filebeat:8.12.2\n    container_name: filebeat\n    restart: unless-stop...de unhealthy.\n  # Necesita el socket de Docker (equivale a root en el host): imagen fija,\n  # sin red y sin puertos.' = _servicio('filebeat')
+E    +    and   re.MULTILINE = re.MULTILINE
+=========================== short test summary info ============================
+FAILED tests/unit/test_despliegue_compose.py::test_todo_servicio_tiene_tope_de_memoria[filebeat]
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 6 passed in 0.16s
+
+## 3. Diferencia entre el archivo sano y el mutado
+@@ -140,7 +140,6 @@
+     image: docker.elastic.co/beats/filebeat:8.12.2
+     container_name: filebeat
+     restart: unless-stopped
+-    mem_limit: 512m   # RNF-COMP-01 · medido: ~140 MB
+     user: root  # Needed to access host logs and the Docker socket
+     volumes:
+       - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro

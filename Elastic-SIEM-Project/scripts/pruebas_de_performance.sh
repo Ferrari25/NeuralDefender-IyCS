@@ -45,7 +45,10 @@ if [[ -z "${K6_USUARIO:-}" || -z "${K6_CLAVE:-}" ]]; then
     printf 'K6_USUARIO=k6-carga\nK6_CLAVE=%s\n' "$clave" > "$CREDENCIALES"
   fi
   # shellcheck disable=SC1090
-  set -a; source "$CREDENCIALES"; set +a
+  set -a
+  # shellcheck source=/dev/null # ruta variable: .k6-credenciales no se versiona
+  source "$CREDENCIALES"
+  set +a
 fi
 
 mkdir -p "$SALIDA"

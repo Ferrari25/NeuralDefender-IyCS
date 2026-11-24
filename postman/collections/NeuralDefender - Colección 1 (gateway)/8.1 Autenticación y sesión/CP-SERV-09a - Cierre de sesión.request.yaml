@@ -1,0 +1,32 @@
+$kind: http-request
+name: CP-SERV-09a | Cierre de sesión
+url: "{{url_gateway}}/api/v1/logout"
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+body:
+  type: json
+  content: ""
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-09a | Cierre de sesión
+      // Requisito: RQ-SEC-13 (gestión de sesiones)
+      // Técnica: transición de estados, de sesión abierta a cerrada
+      // Petición: POST /api/v1/logout con X-CSRFToken
+      // Esperado: 204 No Content (éxito sin cuerpo).
+      // La segunda mitad del caso es CP-SERV-09b.
+      // ============================================================
+
+      // 1. Código: el cierre se acepta con 204.
+      pm.test("CP-SERV-09a | Código 204", function () {
+          pm.response.to.have.status(204);
+      });
+
+      // 2. Contrato: una respuesta 204 no tiene cuerpo.
+      pm.test("CP-SERV-09a | Sin cuerpo", function () {
+          pm.expect(pm.response.text()).to.eql("");
+      });
+    language: text/javascript
+order: 11000

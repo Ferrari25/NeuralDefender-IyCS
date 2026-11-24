@@ -25,7 +25,7 @@
 #   ./scripts/demo-auditoria.sh --json       solo el antes/después, en JSON
 # ─────────────────────────────────────────────────────────────────────────────
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 
 export PYTHONPATH="$PWD/.devtools${PYTHONPATH:+:$PYTHONPATH}"
 
@@ -89,7 +89,7 @@ detalle "Un encadenado protege un registro a través del SIGUIENTE: el último"
 detalle "eslabón de cualquier cadena queda expuesto hasta que otro lo cubre."
 detalle "Se usa el append_jsonl real del proyecto, no un JSON escrito a mano."
 
-TALLER="$TALLER" python3 - <<'PY'
+TALLER="$TALLER" python3 - <<'PY' || { mal "no se pudo sembrar la copia"; exit 1; }
 import os
 import pathlib
 import sys
@@ -111,7 +111,6 @@ for n in (1, 2):
         "attacker_ips": ["198.51.100.10"],
     })
 PY
-[[ $? -eq 0 ]] || { mal "no se pudo sembrar la copia"; exit 1; }
 ok "$(wc -l < "$COPIA") registros en la copia"
 
 # El estado al que se vuelve en el paso 4. Restaurar desde el archivo real daría

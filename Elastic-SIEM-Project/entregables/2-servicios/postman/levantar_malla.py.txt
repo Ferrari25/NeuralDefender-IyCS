@@ -1,0 +1,285 @@
+"""Levanta la malla aislada de NeuralDefender con puertos, token y contraseña FIJOS.
+
+Reutiliza, sin modificarlos, `tests/postman/malla_postman.py` y `tests/calidad/medicion_iso25023.py`:
+los 8 servicios reales corren en ESTE proceso, cada uno con su servidor HTTP en 127.0.0.1, con datos
+temporales que se descartan al detener la malla. A diferencia de `malla_postman.py`, que elige puertos,
+token y contraseña al azar en cada arranque, este lanzador los fija para que el entorno de Postman
+(`NeuralDefender-malla.postman_environment.json`) sea siempre el mismo.
+
+Los valores son DE PRUEBA y solo existen mientras la malla corre. Ninguno es el de producción.
+
+El archivo se llama `.py.txt` a propósito: así `ruff .`, `bandit -r .` y la prueba de no-autonomía (que
+recorre `*.py`) no lo toman por código del producto. Se ejecuta igual:
+
+    SIEM_PIPELINE_INTERVALO=0 PYTHONPATH=.devtools python3 entregables/2-servicios/postman/levantar_malla.py.txt
+
+Lo normal es usar `malla.sh iniciar`, que lo corre en segundo plano.
+
+Opciones (para las pruebas de rendimiento; sin ellas la malla es la de siempre):
+
+    --incidentes N      siembra N incidentes (los 3 de siempre más copias con identificadores y
+                        dirección de origen distintos). Por defecto 3.
+    --analistas N       crea N usuarios analista: analista00 a analista{N-1}. Por defecto 1.
+    --decisiones N      siembra N decisiones en el registro de auditoría (cadena de hashes válida), repartidas
+                        en el pasado a razón de 200 por día (el volumen diario de la ERS, línea 621). Por
+                        defecto 0. Sirve para que `GET /decisions` y los informes tengan un volumen realista.
+    --ciclo [SEGUNDOS]  enciende el ciclo programado del pipeline (por defecto cada 120 s). El
+                        collector NO toca el Elasticsearch real: ES_HOST apunta a un puerto
+                        cerrado del equipo (el collector responde 503 y el pipeline sigue con la
+                        última captura) y esa captura, junto con `network_logs/`, se siembra
+                        con los fixtures de `tests/fixtures/` escalados a N incidentes.
+"""
+from __future__ import annotations
+
+import argparse
+import importlib
+import json
+import logging
+import os
+import random
+import re
+import signal
+import socket
+import sys
+import threading
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+RAIZ = Path(__file__).resolve().parents[3]          # Elastic-SIEM-Project
+CARPETA = Path(__file__).resolve().parent
+ENTORNO = CARPETA / "NeuralDefender-malla.postman_environment.json"
+
+# Sin ciclo programado: el pipeline solo corre cuando alguien lo pide (plan, sección 7).
+os.environ["SIEM_PIPELINE_INTERVALO"] = "0"
+
+# ─── Valores fijos de prueba ────────────────────────────────────────────────
+PUERTOS = {"gateway": 18080, "auth": 18001, "audit": 18002, "collector": 18003,
+           "classifier": 18004, "analyst": 18005, "pipeline": 18006, "knowledge": 18007}
+TOKEN = "token-interno-de-prueba-malla-postman-2026-0001"      # 47 caracteres; el mínimo es 32
+PASSWORD = "PruebaMalla#2026"
+
+sys.path.insert(0, str(RAIZ / "tests" / "postman"))
+import malla_postman as mp  # noqa: E402  pylint: disable=wrong-import-position
+import medicion_iso25023 as med  # noqa: E402  pylint: disable=wrong-import-position
+
+
+# Con `--ciclo` el collector no puede llegar al Elasticsearch real: ES_HOST apunta a este puerto, que
+# tiene que estar cerrado (el puerto 9 es el del servicio "discard", que no se usa).
+ES_PUERTO_CERRADO = 9
+# Origen de cada tipo de incidente en los fixtures: (tipo, IP de origen).
+ORIGENES = (("scan", "172.18.0.7"), ("auth", "172.18.0.3"), ("phish", "172.18.0.9"))
+_FECHA = re.compile(r"(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})(\.\d+)?(Z|\+00:00)")
+
+
+def _ip_de_copia(i: int) -> str:
+    return f"10.99.{i // 250}.{i % 250 + 1}"
+
+
+def _corrido(texto: str, delta: timedelta) -> str:
+    """Corre todas las fechas ISO del texto `delta`, para que los fixtures queden dentro de la ventana de 24 h."""
+    def _una(m: re.Match) -> str:
+        fecha = datetime.strptime(f"{m.group(1)}T{m.group(2)}", "%Y-%m-%dT%H:%M:%S") + delta
+        return fecha.strftime("%Y-%m-%dT%H:%M:%S") + (m.group(3) or "") + m.group(4)
+    return _FECHA.sub(_una, texto)
+
+
+class MallaFija(mp.MallaPostman):
+    """La misma malla de `malla_postman.py`, con puertos, token y contraseña fijos.
+
+    `incidentes`, `analistas` y `ciclo` solo se usan en las pruebas de rendimiento; con los valores por
+    defecto (3, 1 y 0) la malla es exactamente la de antes.
+    """
+
+    PASSWORD = PASSWORD
+
+    def __init__(self, incidentes: int = 3, analistas: int = 1, ciclo: int = 0, decisiones: int = 0) -> None:
+        self.incidentes_pedidos, self.ciclo, self.decisiones = incidentes, ciclo, decisiones
+        self.analistas_pedidos = analistas
+        # `Malla.__init__` hace `self.token = secrets.token_hex(32)`. Se sustituye solo mientras se construye.
+        original = med.secrets.token_hex
+        med.secrets.token_hex = lambda nbytes=32: TOKEN
+        try:
+            super().__init__(clientes=analistas)
+        finally:
+            med.secrets.token_hex = original
+
+    def _preparar_datos(self, clientes: int) -> None:
+        super()._preparar_datos(clientes)
+        self._sembrar_incidentes(self.incidentes_pedidos)
+        if self.decisiones:
+            self._sembrar_decisiones(self.decisiones)
+        if self.ciclo:
+            self._sembrar_captura_para_el_ciclo(self.incidentes_pedidos)
+
+    def _sembrar_incidentes(self, n: int) -> None:
+        """Deja `n` incidentes en el reporte del pipeline: los de siempre y copias con otro identificador y otra IP."""
+        import siem_lib  # pylint: disable=import-outside-toplevel
+
+        ruta = self.dir / "data" / "siem_incidents.json"
+        reporte = json.loads(ruta.read_text(encoding="utf-8"))
+        base = reporte["incidents"]
+        if n == len(base):
+            return
+        incidentes = base[:n]
+        for i in range(len(base), n):
+            plantilla = base[i % len(base)]
+            origen, ip = plantilla["source_ip"], _ip_de_copia(i)
+            texto = json.dumps(plantilla).replace(origen, ip)
+            viejo = plantilla["incident_id"].replace(origen, ip)
+            incidentes.append(json.loads(texto.replace(viejo, f"{viejo}-c{i:03d}")))
+        reporte["incidents"], reporte["incident_count"] = incidentes, len(incidentes)
+        siem_lib.write_json(ruta, reporte)
+        print(f"incidentes sembrados: {len(incidentes)}", flush=True)
+
+    def _sembrar_decisiones(self, n: int) -> None:
+        """Escribe `n` decisiones en `data/decisions.jsonl` con la misma función que usa el servicio audit.
+
+        Quedan encadenadas por hash (la verificación da `chain_ok`), repartidas en los últimos n/200 días
+        (200 decisiones por día, ERS línea 621) y apuntan a acciones reales de los incidentes sembrados.
+        """
+        from cadena import append_jsonl  # pylint: disable=import-outside-toplevel
+
+        incidentes = json.loads((self.dir / "data" / "siem_incidents.json").read_text(encoding="utf-8"))["incidents"]
+        acciones = [(i, a) for i in incidentes for a in i["recommended_actions"] if not a.get("alternativa_de")]
+        azar = random.Random(2026)                       # semilla fija: la misma malla cada vez
+        analistas = [f"analista{k:02d}" for k in range(max(1, self.analistas_pedidos))]
+        dias = n / 200
+        inicio = datetime.now(timezone.utc) - timedelta(days=dias)
+        paso = timedelta(days=dias) / n
+        for k in range(n):
+            inc, acc = azar.choice(acciones)
+            append_jsonl("data/decisions.jsonl", {
+                "ts": (inicio + paso * k).isoformat(), "incident_id": inc["incident_id"], "action_id": acc["action_id"],
+                "decision": "approved" if azar.random() < 0.7 else "dismissed",
+                "analyst": azar.choice(analistas), "analyst_rol": "analyst",
+                "note": f"decisión sembrada {k}", "source_ip": inc.get("source_ip", ""),
+                "attacker_ips": inc.get("attacker_ips", [])[:5], "accion": str(acc.get("accion", ""))[:300],
+                "attack_type": (inc.get("classification") or {}).get("attack_type", "desconocido"),
+                "severidad": str(inc.get("severity_siem") or "")[:300], "detection_source": str(inc.get("detection_source") or "")[:300],
+            })
+        tam = (self.dir / "data" / "decisions.jsonl").stat().st_size / 1024
+        print(f"decisiones sembradas: {n} (≈ {dias:.1f} días a 200 por día, {tam:.0f} KB de registro)", flush=True)
+
+    def _sembrar_captura_para_el_ciclo(self, n: int) -> None:
+        """Siembra la captura del collector y `network_logs/` con los fixtures escalados a `n` incidentes.
+
+        El collector no consulta Elasticsearch (su puerto está cerrado): responde 503 y el pipeline
+        sigue con esta captura. Cada ciclo vuelve a clasificarla y reemplaza el reporte sembrado por
+        el que sale del clasificador, que tiene (aproximadamente) los mismos `n` incidentes.
+        """
+        import classifier  # pylint: disable=import-outside-toplevel
+        import siem_lib  # pylint: disable=import-outside-toplevel
+
+        fixtures = RAIZ / "tests" / "fixtures"
+        siem = json.loads((fixtures / "siem_clean.min.json").read_text(encoding="utf-8"))
+        red = {nombre: [json.loads(linea) for linea in
+                        (fixtures / "network_logs" / f"{nombre}.json").read_text(encoding="utf-8").splitlines() if linea.strip()]
+               for nombre in ("port-scan", "phishing")}
+        ahora = datetime.now(timezone.utc).replace(tzinfo=None)
+        delta = ahora - datetime(2026, 8, 17, 19, 25, 0)
+        alertas, logs, eventos = [], [], {"port-scan": [], "phishing": []}
+        for i in range(max(n, 3)):
+            tipo, origen = ORIGENES[i % 3]
+            ip = origen if i < 3 else _ip_de_copia(i)
+            for a in (x for x in siem["alerts"] if x.get("source_ip") == origen):
+                alertas.append(json.loads(json.dumps({**a, "alert_id": f"{a['alert_id']}-{i}"}).replace(origen, ip)))
+            for lg in (x for x in siem["auth_failure_logs"] if origen in x.get("message", "")):
+                logs.append(json.loads(json.dumps(lg).replace(origen, ip)))
+            for nombre in ("port-scan", "phishing"):
+                for ev in (x for x in red[nombre] if x.get("source_ip") == origen):
+                    eventos[nombre].append(json.loads(json.dumps(ev).replace(origen, ip)))
+        captura = {**siem, "generated_at": ahora.isoformat() + "+00:00", "alerts": alertas, "auth_failure_logs": logs}
+        captura = json.loads(_corrido(json.dumps(captura), delta))
+        siem_lib.write_json(self.dir / "data" / "siem_clean.json", captura)
+        for nombre, lista in eventos.items():
+            texto = "\n".join(_corrido(json.dumps(ev), delta) for ev in lista) + "\n"
+            (self.dir / "network_logs" / f"{nombre}.json").write_text(texto, encoding="utf-8")
+        clasificados = classifier.classify(captura, siem_lib.read_network_logs(self.dir / "network_logs", window_hours=None))
+        print(f"ciclo: los fixtures escalados dan {len(clasificados)} incidentes (pedidos: {n})", flush=True)
+
+    def _levantar(self) -> dict[str, str]:
+        logging.getLogger("werkzeug").setLevel(logging.ERROR)
+        from werkzeug.serving import make_server  # pylint: disable=import-outside-toplevel
+
+        urls = {}
+        for servicio in ("auth", "audit", "collector", "classifier", "analyst", "pipeline", "knowledge"):
+            app = importlib.import_module(f"{servicio}_service").app
+            urls[servicio] = self._servir_en(make_server, app, PUERTOS[servicio])
+            os.environ[f"SIEM_{servicio.upper()}_URL"] = urls[servicio]
+        urls["gateway"] = self._servir_en(make_server, importlib.import_module("dashboard").app,
+                                          PUERTOS["gateway"])
+        return urls
+
+    @staticmethod
+    def _servir_en(make_server, app, puerto: int) -> str:
+        servidor = make_server("127.0.0.1", puerto, app, threaded=True)
+        threading.Thread(target=servidor.serve_forever, daemon=True).start()
+        return f"http://127.0.0.1:{servidor.server_port}"
+
+
+def _comprobar_entorno(malla: MallaFija) -> None:
+    """Avisa si el archivo de entorno de Postman no coincide con lo que quedó levantado."""
+    if not ENTORNO.exists():
+        print(f"[AVISO] no existe {ENTORNO.name}", flush=True)
+        return
+    valores = {v["key"]: v["value"] for v in json.loads(ENTORNO.read_text(encoding="utf-8"))["values"]}
+    esperado = {f"url_{k}": v for k, v in malla.urls.items()}
+    esperado.update(token=malla.token, password=PASSWORD)
+    distintos = [k for k, v in esperado.items() if valores.get(k) != v]
+    if distintos:
+        print(f"[AVISO] el entorno de Postman difiere de la malla en: {', '.join(distintos)}", flush=True)
+    else:
+        print("entorno de Postman coincide con la malla", flush=True)
+
+
+def _aislar_el_collector() -> None:
+    """Con `--ciclo`: el collector nunca llega al Elasticsearch real."""
+    with socket.socket() as s:
+        s.settimeout(1)
+        if s.connect_ex(("127.0.0.1", ES_PUERTO_CERRADO)) == 0:
+            sys.exit(f"el puerto {ES_PUERTO_CERRADO} está abierto: no sirve como destino cerrado para el collector")
+    os.environ.update({"ES_HOST": f"http://127.0.0.1:{ES_PUERTO_CERRADO}", "ES_ALLOW_INSECURE_HTTP": "true",
+                       # es_client hace load_dotenv() sin pisar lo ya definido: así el .env no puede aportar la clave real.
+                       "ELASTIC_PASSWORD": "sin-credenciales"})
+
+
+def _argumentos() -> argparse.Namespace:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--incidentes", type=int, default=3, help="incidentes a sembrar (por defecto 3)")
+    ap.add_argument("--analistas", type=int, default=1, help="usuarios analista analista00..analista{N-1} (por defecto 1)")
+    ap.add_argument("--decisiones", type=int, default=0, help="decisiones a sembrar en el registro de auditoría (por defecto 0)")
+    ap.add_argument("--ciclo", type=int, nargs="?", const=120, default=0, metavar="SEGUNDOS",
+                    help="ciclo programado del pipeline sin tocar Elasticsearch (sin valor: 120 s; mínimo 30)")
+    args = ap.parse_args()
+    if args.incidentes < 1 or args.analistas < 1 or args.decisiones < 0 or (args.ciclo and args.ciclo < 30):
+        ap.error("incidentes y analistas deben ser >= 1 y el ciclo >= 30 s")
+    return args
+
+
+def main() -> None:
+    args = _argumentos()
+    if args.ciclo:
+        os.environ["SIEM_PIPELINE_INTERVALO"] = str(args.ciclo)
+        _aislar_el_collector()
+    else:
+        mp._entorno_es()  # pylint: disable=protected-access  # el collector lee el Elasticsearch real (solo lectura)
+    malla = MallaFija(args.incidentes, args.analistas, args.ciclo, args.decisiones)
+    print("malla lista", flush=True)
+    for nombre in ("gateway", "auth", "audit", "collector", "classifier", "analyst", "pipeline", "knowledge"):
+        print(f"  {nombre:<11} {malla.urls[nombre]}", flush=True)
+    print(f"  SIEM_PIPELINE_INTERVALO={os.environ['SIEM_PIPELINE_INTERVALO']} "
+          f"({'ciclo cada ' + str(args.ciclo) + ' s, collector sin Elasticsearch' if args.ciclo else 'sin ciclo programado'})", flush=True)
+    print(f"  incidentes: {args.incidentes} · analistas: {args.analistas} · decisiones sembradas: {args.decisiones}", flush=True)
+    _comprobar_entorno(malla)
+    alto = threading.Event()
+    signal.signal(signal.SIGTERM, lambda *_: alto.set())
+    signal.signal(signal.SIGINT, lambda *_: alto.set())
+    try:
+        alto.wait()
+    finally:
+        malla.cerrar()
+        print("malla detenida; datos temporales descartados", flush=True)
+
+
+if __name__ == "__main__":
+    main()

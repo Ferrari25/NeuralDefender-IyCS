@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=invalid-name  # el nombre del archivo es el del comando (CLI), no un módulo importable
 """
 Demuestra que todo lo que disparó en el SIEM está representado en el panel.
 

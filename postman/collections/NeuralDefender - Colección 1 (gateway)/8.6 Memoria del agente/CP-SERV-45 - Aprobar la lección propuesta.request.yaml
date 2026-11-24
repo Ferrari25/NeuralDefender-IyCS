@@ -1,0 +1,41 @@
+$kind: http-request
+name: CP-SERV-45 | Aprobar la lección propuesta
+url: "{{url_gateway}}/api/v1/memoria/lecciones/{{leccion_id}}/revision"
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+body:
+  type: json
+  content: '{"decision": "aprobar"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-45 | Aprobar la lección propuesta
+      // Requisito: RF-MEM-04 (la lección se aplica solo tras aprobarla)
+      // Técnica: transición de estados, de "propuesta" a "aprobada"
+      // Precondición: CP-SERV-42 guardó el leccion_id
+      // Petición: POST /api/v1/memoria/lecciones/{{leccion_id}}/revision
+      // Esperado: 200 con la lección en estado "aprobada"
+      // ============================================================
+
+      pm.test("CP-SERV-45 | Código 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      const datos = pm.response.json();
+
+      pm.test("CP-SERV-45 | Contrato de la lección", function () {
+          pm.expect(datos).to.include.all.keys("ok", "leccion");
+      });
+
+      pm.test("CP-SERV-45 | Es la lección de CP-SERV-42", function () {
+          pm.expect(datos.leccion.leccion_id).to.eql(pm.environment.get("leccion_id"));
+      });
+
+      // Regla: la transición válida cambia el estado a aprobada.
+      pm.test("CP-SERV-45 | La lección quedó aprobada", function () {
+          pm.expect(datos.leccion.estado).to.eql("aprobada");
+      });
+    language: text/javascript
+order: 7000

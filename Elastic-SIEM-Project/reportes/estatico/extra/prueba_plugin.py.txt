@@ -1,0 +1,17 @@
+import os
+import pickle
+import marshal
+import shelve
+import subprocess
+
+os.system("ls")
+subprocess.run(["ls"])
+os.popen("ls")
+os.spawnl(os.P_WAIT, "/bin/ls", "ls")
+os.execl("/bin/ls", "ls")
+os.makedirs("/tmp/x")
+os.mkdir("/tmp/y")
+os.open("/tmp/z", os.O_RDONLY)
+pickle.loads(b"")
+marshal.loads(b"")
+shelve.open("/tmp/s")

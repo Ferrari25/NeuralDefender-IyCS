@@ -72,3 +72,49 @@ def entrar(page, panel):
         return page
 
     return _entrar
+
+
+# ─── Suites contra la malla aislada (test_s1_*.py a test_s9_*.py) ────────────
+
+@pytest.fixture(scope="session")
+def malla() -> str:
+    """URL del panel de la malla. Si no corre, se saltean las suites que la necesitan."""
+    import urllib.error
+    import urllib.request
+
+    from tests.interfaz.ayudas_malla import URL
+
+    try:
+        urllib.request.urlopen(f"{URL}/login", timeout=5).close()  # noqa: S310  # nosec B310 - URL local de la malla
+    except (urllib.error.URLError, OSError):
+        pytest.skip(f"la malla no responde en {URL}: ./entregables/2-servicios/postman/malla.sh reiniciar")
+    return URL
+
+
+@pytest.fixture
+def consola(page):
+    """Errores que registra el navegador en esta prueba (consola, excepciones y recursos 4xx/5xx)."""
+    from tests.interfaz.ayudas_malla import Consola
+
+    return Consola(page)
+
+
+@pytest.fixture
+def analista(page, malla):
+    from tests.interfaz.ayudas_malla import entrar
+
+    return entrar(page, "analista")
+
+
+@pytest.fixture
+def observador(page, malla):
+    from tests.interfaz.ayudas_malla import entrar
+
+    return entrar(page, "observador")
+
+
+@pytest.fixture
+def auditor(page, malla):
+    from tests.interfaz.ayudas_malla import entrar
+
+    return entrar(page, "auditor")

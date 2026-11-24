@@ -292,5 +292,185 @@
     ],
     "target_users": [],
     "ts": "2026-11-15T17:15:01.456692+00:00"
+  },
+  {
+    "incident_id": "INC-AUTH-desconocida-7c808c94",
+    "action_id": "INC-AUTH-desconocida-7c808c94-bceba4",
+    "accion": "Habilitar rate-limiting / fail2ban en el servicio SSH",
+    "decision": "approved",
+    "note": "Prueba de servicio",
+    "analyst": "analista",
+    "attack_type": "ssh_brute_force",
+    "severity": "MEDIUM",
+    "source_ip": "desconocida",
+    "attacker_ips": [],
+    "target_users": [],
+    "ts": "2026-11-23T00:43:42.872008+00:00"
+  },
+  {
+    "incident_id": "INC-AUTH-desconocida-7c808c94",
+    "action_id": "INC-AUTH-desconocida-7c808c94-bceba4",
+    "accion": "Habilitar rate-limiting / fail2ban en el servicio SSH",
+    "decision": "approved",
+    "note": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "analyst": "analista",
+    "attack_type": "ssh_brute_force",
+    "severity": "MEDIUM",
+    "source_ip": "desconocida",
+    "attacker_ips": [],
+    "target_users": [],
+    "ts": "2026-11-23T00:46:07.398994+00:00"
+  },
+  {
+    "incident_id": "INC-AUTH-desconocida-7c808c94",
+    "action_id": "INC-AUTH-desconocida-7c808c94-bceba4",
+    "accion": "Habilitar rate-limiting / fail2ban en el servicio SSH",
+    "decision": "approved",
+    "note": "=HYPERLINK(\"x\")",
+    "analyst": "analista",
+    "attack_type": "ssh_brute_force",
+    "severity": "MEDIUM",
+    "source_ip": "desconocida",
+    "attacker_ips": [],
+    "target_users": [],
+    "ts": "2026-11-23T00:53:08.628214+00:00"
+  },
+  {
+    "incident_id": "INC-AUTH-desconocida-7c808c94",
+    "action_id": "INC-AUTH-desconocida-7c808c94-d99515",
+    "accion": "Limitar la tasa de conexiones SSH con UFW (sin instalar nada)",
+    "decision": "approved",
+    "note": "Prueba de servicio",
+    "analyst": "analista",
+    "attack_type": "ssh_brute_force",
+    "severity": "MEDIUM",
+    "source_ip": "desconocida",
+    "attacker_ips": [],
+    "target_users": [],
+    "ts": "2026-11-23T01:18:19.705334+00:00"
+  },
+  {
+    "incident_id": "INC-AUTH-desconocida-7c808c94",
+    "action_id": "INC-AUTH-desconocida-7c808c94-d99515",
+    "accion": "Limitar la tasa de conexiones SSH con UFW (sin instalar nada)",
+    "decision": "approved",
+    "note": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "analyst": "analista",
+    "attack_type": "ssh_brute_force",
+    "severity": "MEDIUM",
+    "source_ip": "desconocida",
+    "attacker_ips": [],
+    "target_users": [],
+    "ts": "2026-11-23T01:18:20.047393+00:00"
+  },
+  {
+    "incident_id": "INC-AUTH-desconocida-7c808c94",
+    "action_id": "INC-AUTH-desconocida-7c808c94-d99515",
+    "accion": "Limitar la tasa de conexiones SSH con UFW (sin instalar nada)",
+    "decision": "approved",
+    "note": "=HYPERLINK(\"x\")",
+    "analyst": "analista",
+    "attack_type": "ssh_brute_force",
+    "severity": "MEDIUM",
+    "source_ip": "desconocida",
+    "attacker_ips": [],
+    "target_users": [],
+    "ts": "2026-11-23T01:18:20.700467+00:00"
+  },
+  {
+    "incident_id": "INC-AUTH-desconocida-7c808c94",
+    "action_id": "INC-AUTH-desconocida-7c808c94-9f3bc4",
+    "accion": "Deshabilitar el login por contraseña en SSH (solo claves)",
+    "decision": "approved",
+    "note": "Prueba de servicio",
+    "analyst": "analista",
+    "attack_type": "ssh_brute_force",
+    "severity": "MEDIUM",
+    "source_ip": "desconocida",
+    "attacker_ips": [],
+    "target_users": [],
+    "ts": "2026-11-23T01:18:29.293052+00:00"
+  },
+  {
+    "incident_id": "INC-AUTH-desconocida-7c808c94",
+    "action_id": "INC-AUTH-desconocida-7c808c94-9f3bc4",
+    "accion": "Deshabilitar el login por contraseña en SSH (solo claves)",
+    "decision": "approved",
+    "note": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "analyst": "analista",
+    "attack_type": "ssh_brute_force",
+    "severity": "MEDIUM",
+    "source_ip": "desconocida",
+    "attacker_ips": [],
+    "target_users": [],
+    "ts": "2026-11-23T01:18:29.910494+00:00"
+  },
+  {
+    "incident_id": "INC-AUTH-desconocida-7c808c94",
+    "action_id": "INC-AUTH-desconocida-7c808c94-9f3bc4",
+    "accion": "Deshabilitar el login por contraseña en SSH (solo claves)",
+    "decision": "approved",
+    "note": "=HYPERLINK(\"x\")",
+    "analyst": "analista",
+    "attack_type": "ssh_brute_force",
+    "severity": "MEDIUM",
+    "source_ip": "desconocida",
+    "attacker_ips": [],
+    "target_users": [],
+    "ts": "2026-11-23T01:18:30.527925+00:00"
+  },
+  {
+    "incident_id": "INC-AUTH-203.0.113.30-20e28259",
+    "action_id": "INC-AUTH-203.0.113.30-20e28259-e917a0",
+    "accion": "Bloquear la IP atacante en el firewall perimetral",
+    "decision": "approved",
+    "note": "Prueba de servicio",
+    "analyst": "analista",
+    "attack_type": "ssh_brute_force",
+    "severity": "CRITICAL",
+    "source_ip": "203.0.113.30",
+    "attacker_ips": [
+      "203.0.113.30"
+    ],
+    "target_users": [
+      "testuser"
+    ],
+    "ts": "2026-11-23T01:18:37.227688+00:00"
+  },
+  {
+    "incident_id": "INC-AUTH-203.0.113.30-20e28259",
+    "action_id": "INC-AUTH-203.0.113.30-20e28259-e917a0",
+    "accion": "Bloquear la IP atacante en el firewall perimetral",
+    "decision": "approved",
+    "note": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "analyst": "analista",
+    "attack_type": "ssh_brute_force",
+    "severity": "CRITICAL",
+    "source_ip": "203.0.113.30",
+    "attacker_ips": [
+      "203.0.113.30"
+    ],
+    "target_users": [
+      "testuser"
+    ],
+    "ts": "2026-11-23T01:18:37.638109+00:00"
+  },
+  {
+    "incident_id": "INC-AUTH-203.0.113.30-20e28259",
+    "action_id": "INC-AUTH-203.0.113.30-20e28259-e917a0",
+    "accion": "Bloquear la IP atacante en el firewall perimetral",
+    "decision": "approved",
+    "note": "=HYPERLINK(\"x\")",
+    "analyst": "analista",
+    "attack_type": "ssh_brute_force",
+    "severity": "CRITICAL",
+    "source_ip": "203.0.113.30",
+    "attacker_ips": [
+      "203.0.113.30"
+    ],
+    "target_users": [
+      "testuser"
+    ],
+    "ts": "2026-11-23T01:18:38.644796+00:00"
   }
 ]

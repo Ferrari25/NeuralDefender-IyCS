@@ -1,0 +1,4 @@
+# ARCHIVO DE PRUEBA: compose invalido (el servicio no tiene image ni build).
+services:
+  web:
+    ports: ["80:80"]

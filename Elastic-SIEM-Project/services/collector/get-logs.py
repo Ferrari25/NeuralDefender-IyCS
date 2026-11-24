@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=invalid-name  # el nombre del archivo es el del comando (CLI), no un módulo importable
 """
 Utilidad de inspección ad-hoc: imprime los últimos logs de auth fallida y las
 alertas de seguridad desde Elasticsearch. Para el pipeline real usá

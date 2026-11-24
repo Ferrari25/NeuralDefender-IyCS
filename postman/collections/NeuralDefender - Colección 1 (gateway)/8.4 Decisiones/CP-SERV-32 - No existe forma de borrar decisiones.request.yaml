@@ -1,0 +1,31 @@
+$kind: http-request
+name: CP-SERV-32 | No existe forma de borrar decisiones
+url: "{{url_gateway}}/api/v1/decisions"
+method: DELETE
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-32 | No existe forma de borrar decisiones
+      // Requisito: RF-AUD-03 (el registro no se edita ni se elimina)
+      // Técnica: partición de equivalencia, partición inválida (método no permitido)
+      // Petición: DELETE /api/v1/decisions con sesión y token CSRF
+      // Esperado: 405 Method Not Allowed. Aun con todos los permisos, no
+      // existe ninguna ruta para borrar el historial.
+      // ============================================================
+
+      // 1. Código: 405.
+      pm.test("CP-SERV-32 | Código 405", function () {
+          pm.response.to.have.status(405);
+      });
+
+      // 2 y 3. Contrato: error controlado, con el código dentro del cuerpo.
+      pm.test("CP-SERV-32 | Contrato: error y status", function () {
+          const datos = pm.response.json();
+          pm.expect(datos.error).to.be.a("string");
+          pm.expect(datos.status).to.eql(405);
+      });
+    language: text/javascript
+order: 10000

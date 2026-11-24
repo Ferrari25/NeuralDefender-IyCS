@@ -1,0 +1,18 @@
+# npm pkg get scripts devDependencies
+{
+  "scripts": {
+    "lint:js": "eslint --no-error-on-unmatched-pattern 'services/gateway/static/**/*.js'",
+    "lint:js:report": "eslint --no-error-on-unmatched-pattern -f stylish 'services/gateway/static/**/*.js'"
+  },
+  "devDependencies": {
+    "eslint": "^9.11.0",
+    "eslint-plugin-security": "^3.0.1",
+    "eslint-plugin-no-unsanitized": "^4.1.2"
+  }
+}
+
+# eslint instalado
+v9.39.5
+@eslint/js 9.39.5
+eslint-plugin-security 3.0.1
+eslint-plugin-no-unsanitized 4.1.5

@@ -23,7 +23,7 @@
 # Requiere las dependencias de desarrollo (ver pruebas_de_linters.md §2).
 # ─────────────────────────────────────────────────────────────────────────────
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 ORIGEN="$PWD"
 
 if [[ ! -x .devtools/bin/pytest || ! -x .devtools/bin/ruff ]]; then
@@ -42,7 +42,7 @@ tar -C "$ORIGEN" --exclude=./.devtools --exclude=./node_modules --exclude=./.git
   | tar -C "$COPIA" -xf -
 ln -s "$ORIGEN/.devtools" "$COPIA/.devtools"
 [[ -d "$ORIGEN/node_modules" ]] && ln -s "$ORIGEN/node_modules" "$COPIA/node_modules"
-cd "$COPIA"
+cd "$COPIA" || exit 1
 
 export PYTHONPATH="$PWD/.devtools"
 BIN=".devtools/bin"
@@ -89,20 +89,23 @@ open(ruta, "w", encoding="utf-8").write(texto.replace(viejo, nuevo, 1))
 EOF
 }
 
+# shellcheck disable=SC2329 # se invoca por nombre desde la tabla de casos
 bandit_altos() { # cuenta hallazgos de severidad alta; falla si hay alguno
   local n
-  n=$($BIN/bandit -r . -x './.devtools,./.venv,./node_modules,./tests,./elasticsearch' -f json -q 2>/dev/null \
+  n=$("$BIN"/bandit -r . -x './.devtools,./.venv,./node_modules,./tests,./elasticsearch' -f json -q 2>/dev/null \
     | python3 -c 'import json,sys; print(sum(r["issue_severity"]=="HIGH" for r in json.load(sys.stdin)["results"]))')
   echo "hallazgos de severidad alta: ${n:-?}"
   [[ "${n:-1}" == "0" ]]
 }
 
+# shellcheck disable=SC2329 # se invoca por nombre desde la tabla de casos
 pylint_producto() {
   mapfile -t CODIGO < <(find libs services -name '*.py' -not -path '*/__pycache__/*' | sort)
-  $BIN/pylint --fail-under=9.0 \
+  "$BIN"/pylint --fail-under=9.0 \
     --init-hook="import sys, glob; sys.path[:0] = ['libs', *sorted(glob.glob('services/*'))]" "${CODIGO[@]}"
 }
 
+# shellcheck disable=SC2329 # se invoca por nombre desde la tabla de casos
 eslint_panel() {
   [[ -x node_modules/.bin/eslint ]] || { echo "falta npm install"; return 1; }
   node_modules/.bin/eslint --no-error-on-unmatched-pattern 'services/gateway/static/**/*.js'

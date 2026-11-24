@@ -24,7 +24,7 @@
 #   python3 -m pip install --upgrade --target=.devtools -r requirements.txt -r requirements-dev.txt
 # ─────────────────────────────────────────────────────────────────────────────
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 
 export PYTHONPATH="$PWD/.devtools${PYTHONPATH:+:$PYTHONPATH}"
 BIN=".devtools/bin"

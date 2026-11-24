@@ -1,0 +1,795 @@
+{
+  "1": {
+    "nombre": "Colección 1 (gateway)",
+    "pedidos": 60,
+    "pedidos_fallidos": 0,
+    "aserciones": 330,
+    "falladas": 0,
+    "aprobadas": 330,
+    "scripts_con_error": 0,
+    "duracion_s": 2.1,
+    "fallas": [],
+    "cobertura": {
+      "recibio": [
+        "G02",
+        "G03",
+        "G04",
+        "G06",
+        "G07",
+        "G08",
+        "G09",
+        "G10",
+        "G11",
+        "G12",
+        "G13",
+        "G14",
+        "G15",
+        "G16"
+      ],
+      "llego": [
+        "G02",
+        "G03",
+        "G04",
+        "G06",
+        "G07",
+        "G08",
+        "G09",
+        "G10",
+        "G11",
+        "G12",
+        "G13",
+        "G14",
+        "G15",
+        "G16"
+      ],
+      "codigos": {
+        "G06": [
+          200
+        ],
+        "G02": [
+          200,
+          400,
+          401,
+          429
+        ],
+        "G04": [
+          200,
+          401
+        ],
+        "G07": [
+          200,
+          401
+        ],
+        "G03": [
+          204,
+          403
+        ],
+        "G09": [
+          201,
+          400,
+          403,
+          404,
+          413
+        ],
+        "G13": [
+          201,
+          400,
+          403
+        ],
+        "G11": [
+          200,
+          403
+        ],
+        "G08": [
+          200,
+          404
+        ],
+        "G10": [
+          200
+        ],
+        "G16": [
+          200,
+          400
+        ],
+        "G14": [
+          201,
+          400
+        ],
+        "G15": [
+          200,
+          400,
+          404
+        ],
+        "G12": [
+          200
+        ]
+      },
+      "total_endpoints": 56,
+      "con_peticion": 14,
+      "llegaron_a_su_logica": 14,
+      "core_con_peticion": 13,
+      "core_total": 41,
+      "sin_peticion": [
+        "G01 GET /login",
+        "G05 GET /",
+        "G17 GET /api/incidents",
+        "G18 POST /api/decision",
+        "G19 GET /api/decisions",
+        "G20 GET /static/<x>",
+        "A01 POST /v1/authenticate",
+        "A02 GET /v1/users/<x>",
+        "A03 GET /v1/users-summary",
+        "U01 POST /v1/decisions",
+        "U02 GET /v1/decisions",
+        "U03 GET /v1/decisions/verify",
+        "U04 POST /v1/analysis-history",
+        "U05 GET /v1/analysis-history/verify",
+        "U06 POST /v1/activity",
+        "U07 GET /v1/activity",
+        "U08 GET /v1/activity/verify",
+        "U09 POST /v1/access",
+        "U10 GET /v1/access",
+        "U11 GET /v1/access/verify",
+        "U12 GET /v1/reports",
+        "C01 POST /v1/snapshots",
+        "C02 GET /v1/snapshots/latest",
+        "K01 POST /v1/classify",
+        "N01 POST /v1/analyze",
+        "P01 POST /v1/cycles",
+        "P02 GET /v1/incidents",
+        "P03 GET /v1/incidents/<x>",
+        "M01 GET /v1/documents",
+        "M02 POST /v1/documents",
+        "M03 POST /v1/cases",
+        "M04 GET /v1/lessons",
+        "M05 POST /v1/lessons",
+        "M06 POST /v1/lessons/<x>/review",
+        "M07 POST /v1/context",
+        "H01 GET /v1/healthz",
+        "H02 GET /v1/healthz",
+        "H03 GET /v1/healthz",
+        "H04 GET /v1/healthz",
+        "H05 GET /v1/healthz",
+        "H06 GET /v1/healthz",
+        "H07 GET /v1/healthz"
+      ],
+      "solo_rechazadas": []
+    },
+    "peticiones_repetidas": {
+      "CP-SERV-06 | Bloqueo tras 5 intentos fallidos": 6
+    }
+  },
+  "2": {
+    "nombre": "Colección 2 (servicios internos)",
+    "pedidos": 66,
+    "pedidos_fallidos": 0,
+    "aserciones": 453,
+    "falladas": 6,
+    "aprobadas": 447,
+    "scripts_con_error": 0,
+    "duracion_s": 2.1,
+    "fallas": [
+      {
+        "peticion": "CP-SERV-61 | Alertas con tipo inválido (defectos D1 y D2)",
+        "aserción": "CP-SERV-61 | Código 400",
+        "tipo": "AssertionError",
+        "mensaje": "expected response to have status code 400 but got 500"
+      },
+      {
+        "peticion": "CP-SERV-61 | Alertas con tipo inválido (defectos D1 y D2)",
+        "aserción": "CP-SERV-61 | rechaza la entrada con un mensaje y no con un error del servidor",
+        "tipo": "AssertionError",
+        "mensaje": "expected 'The server encountered an internal er…' to not include 'internal error'"
+      },
+      {
+        "peticion": "CP-SERV-63 | Incidentes con tipo inválido (defecto D3)",
+        "aserción": "CP-SERV-63 | Código 400",
+        "tipo": "AssertionError",
+        "mensaje": "expected response to have status code 400 but got 500"
+      },
+      {
+        "peticion": "CP-SERV-63 | Incidentes con tipo inválido (defecto D3)",
+        "aserción": "CP-SERV-63 | rechaza la entrada con un mensaje y no con un error del servidor",
+        "tipo": "AssertionError",
+        "mensaje": "expected 'The server encountered an internal er…' to not include 'internal error'"
+      },
+      {
+        "peticion": "CP-SERV-65 | Lista de IP con tipo inválido (defecto D4)",
+        "aserción": "CP-SERV-65 | Código 400",
+        "tipo": "AssertionError",
+        "mensaje": "expected response to have status code 400 but got 500"
+      },
+      {
+        "peticion": "CP-SERV-65 | Lista de IP con tipo inválido (defecto D4)",
+        "aserción": "CP-SERV-65 | rechaza la entrada con un mensaje y no con un error del servidor",
+        "tipo": "AssertionError",
+        "mensaje": "expected 'The server encountered an internal er…' to not include 'internal error'"
+      }
+    ],
+    "cobertura": {
+      "recibio": [
+        "A01",
+        "A02",
+        "A03",
+        "C01",
+        "C02",
+        "G01",
+        "G02",
+        "G05",
+        "G07",
+        "G10",
+        "G17",
+        "G19",
+        "G20",
+        "H01",
+        "H02",
+        "H03",
+        "H04",
+        "H05",
+        "H06",
+        "H07",
+        "K01",
+        "M01",
+        "M02",
+        "M03",
+        "M04",
+        "M05",
+        "M06",
+        "M07",
+        "N01",
+        "P01",
+        "P02",
+        "P03",
+        "U01",
+        "U02",
+        "U03",
+        "U04",
+        "U05",
+        "U06",
+        "U07",
+        "U08",
+        "U09",
+        "U10",
+        "U11",
+        "U12"
+      ],
+      "llego": [
+        "A01",
+        "A02",
+        "A03",
+        "C01",
+        "C02",
+        "G01",
+        "G02",
+        "G05",
+        "G07",
+        "G10",
+        "G17",
+        "G19",
+        "G20",
+        "H01",
+        "H02",
+        "H03",
+        "H04",
+        "H05",
+        "H06",
+        "H07",
+        "K01",
+        "M01",
+        "M02",
+        "M03",
+        "M04",
+        "M05",
+        "M06",
+        "M07",
+        "N01",
+        "P01",
+        "P02",
+        "P03",
+        "U01",
+        "U02",
+        "U03",
+        "U04",
+        "U05",
+        "U06",
+        "U07",
+        "U08",
+        "U09",
+        "U10",
+        "U11",
+        "U12"
+      ],
+      "codigos": {
+        "H01": [
+          200
+        ],
+        "H02": [
+          200
+        ],
+        "H03": [
+          200
+        ],
+        "H04": [
+          200
+        ],
+        "H05": [
+          200
+        ],
+        "H06": [
+          200
+        ],
+        "H07": [
+          200
+        ],
+        "A03": [
+          200,
+          401
+        ],
+        "U02": [
+          200,
+          401
+        ],
+        "C02": [
+          200,
+          401
+        ],
+        "K01": [
+          200,
+          401,
+          500
+        ],
+        "N01": [
+          200,
+          401,
+          500
+        ],
+        "P02": [
+          200,
+          401
+        ],
+        "M01": [
+          200,
+          401
+        ],
+        "A01": [
+          200
+        ],
+        "A02": [
+          200,
+          404
+        ],
+        "U01": [
+          400
+        ],
+        "U03": [
+          200
+        ],
+        "U09": [
+          400
+        ],
+        "C01": [
+          201
+        ],
+        "M07": [
+          200,
+          500
+        ],
+        "P01": [
+          200
+        ],
+        "M03": [
+          201
+        ],
+        "G01": [
+          200
+        ],
+        "G05": [
+          302
+        ],
+        "G02": [
+          200
+        ],
+        "G07": [
+          200
+        ],
+        "G10": [
+          200
+        ],
+        "G17": [
+          200
+        ],
+        "G19": [
+          200
+        ],
+        "G20": [
+          200
+        ],
+        "U04": [
+          201
+        ],
+        "U05": [
+          200
+        ],
+        "U06": [
+          201
+        ],
+        "U07": [
+          200
+        ],
+        "U08": [
+          200
+        ],
+        "U10": [
+          200
+        ],
+        "U11": [
+          200
+        ],
+        "U12": [
+          200
+        ],
+        "P03": [
+          200,
+          404
+        ],
+        "M02": [
+          201
+        ],
+        "M04": [
+          200
+        ],
+        "M05": [
+          201
+        ],
+        "M06": [
+          200,
+          400
+        ]
+      },
+      "total_endpoints": 56,
+      "con_peticion": 44,
+      "llegaron_a_su_logica": 44,
+      "core_con_peticion": 31,
+      "core_total": 41,
+      "sin_peticion": [
+        "G03 POST /api/v1/logout",
+        "G04 GET /api/v1/me",
+        "G06 GET /api/v1/healthz",
+        "G08 GET /api/v1/incidents/<x>",
+        "G09 POST /api/v1/decision",
+        "G11 GET /api/v1/audit/verify",
+        "G12 GET /api/v1/memoria",
+        "G13 POST /api/v1/memoria/documentos",
+        "G14 POST /api/v1/memoria/lecciones",
+        "G15 POST /api/v1/memoria/lecciones/<x>/revision",
+        "G16 GET /api/v1/reportes",
+        "G18 POST /api/decision"
+      ],
+      "solo_rechazadas": []
+    },
+    "peticiones_repetidas": {}
+  },
+  "combinada": {
+    "recibio": [
+      "A01",
+      "A02",
+      "A03",
+      "C01",
+      "C02",
+      "G01",
+      "G02",
+      "G03",
+      "G04",
+      "G05",
+      "G06",
+      "G07",
+      "G08",
+      "G09",
+      "G10",
+      "G11",
+      "G12",
+      "G13",
+      "G14",
+      "G15",
+      "G16",
+      "G17",
+      "G19",
+      "G20",
+      "H01",
+      "H02",
+      "H03",
+      "H04",
+      "H05",
+      "H06",
+      "H07",
+      "K01",
+      "M01",
+      "M02",
+      "M03",
+      "M04",
+      "M05",
+      "M06",
+      "M07",
+      "N01",
+      "P01",
+      "P02",
+      "P03",
+      "U01",
+      "U02",
+      "U03",
+      "U04",
+      "U05",
+      "U06",
+      "U07",
+      "U08",
+      "U09",
+      "U10",
+      "U11",
+      "U12"
+    ],
+    "llego": [
+      "A01",
+      "A02",
+      "A03",
+      "C01",
+      "C02",
+      "G01",
+      "G02",
+      "G03",
+      "G04",
+      "G05",
+      "G06",
+      "G07",
+      "G08",
+      "G09",
+      "G10",
+      "G11",
+      "G12",
+      "G13",
+      "G14",
+      "G15",
+      "G16",
+      "G17",
+      "G19",
+      "G20",
+      "H01",
+      "H02",
+      "H03",
+      "H04",
+      "H05",
+      "H06",
+      "H07",
+      "K01",
+      "M01",
+      "M02",
+      "M03",
+      "M04",
+      "M05",
+      "M06",
+      "M07",
+      "N01",
+      "P01",
+      "P02",
+      "P03",
+      "U01",
+      "U02",
+      "U03",
+      "U04",
+      "U05",
+      "U06",
+      "U07",
+      "U08",
+      "U09",
+      "U10",
+      "U11",
+      "U12"
+    ],
+    "codigos": {
+      "G06": [
+        200
+      ],
+      "G02": [
+        200,
+        400,
+        401,
+        429
+      ],
+      "G04": [
+        200,
+        401
+      ],
+      "G07": [
+        200,
+        401
+      ],
+      "G03": [
+        204,
+        403
+      ],
+      "G09": [
+        201,
+        400,
+        403,
+        404,
+        413
+      ],
+      "G13": [
+        201,
+        400,
+        403
+      ],
+      "G11": [
+        200,
+        403
+      ],
+      "G08": [
+        200,
+        404
+      ],
+      "G10": [
+        200
+      ],
+      "G16": [
+        200,
+        400
+      ],
+      "G14": [
+        201,
+        400
+      ],
+      "G15": [
+        200,
+        400,
+        404
+      ],
+      "G12": [
+        200
+      ],
+      "H01": [
+        200
+      ],
+      "H02": [
+        200
+      ],
+      "H03": [
+        200
+      ],
+      "H04": [
+        200
+      ],
+      "H05": [
+        200
+      ],
+      "H06": [
+        200
+      ],
+      "H07": [
+        200
+      ],
+      "A03": [
+        200,
+        401
+      ],
+      "U02": [
+        200,
+        401
+      ],
+      "C02": [
+        200,
+        401
+      ],
+      "K01": [
+        200,
+        401,
+        500
+      ],
+      "N01": [
+        200,
+        401,
+        500
+      ],
+      "P02": [
+        200,
+        401
+      ],
+      "M01": [
+        200,
+        401
+      ],
+      "A01": [
+        200
+      ],
+      "A02": [
+        200,
+        404
+      ],
+      "U01": [
+        400
+      ],
+      "U03": [
+        200
+      ],
+      "U09": [
+        400
+      ],
+      "C01": [
+        201
+      ],
+      "M07": [
+        200,
+        500
+      ],
+      "P01": [
+        200
+      ],
+      "M03": [
+        201
+      ],
+      "G01": [
+        200
+      ],
+      "G05": [
+        302
+      ],
+      "G17": [
+        200
+      ],
+      "G19": [
+        200
+      ],
+      "G20": [
+        200
+      ],
+      "U04": [
+        201
+      ],
+      "U05": [
+        200
+      ],
+      "U06": [
+        201
+      ],
+      "U07": [
+        200
+      ],
+      "U08": [
+        200
+      ],
+      "U10": [
+        200
+      ],
+      "U11": [
+        200
+      ],
+      "U12": [
+        200
+      ],
+      "P03": [
+        200,
+        404
+      ],
+      "M02": [
+        201
+      ],
+      "M04": [
+        200
+      ],
+      "M05": [
+        201
+      ],
+      "M06": [
+        200,
+        400
+      ]
+    },
+    "total_endpoints": 56,
+    "con_peticion": 55,
+    "llegaron_a_su_logica": 55,
+    "core_con_peticion": 41,
+    "core_total": 41,
+    "sin_peticion": [
+      "G18 POST /api/decision"
+    ],
+    "solo_rechazadas": []
+  }
+}

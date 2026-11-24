@@ -1,4 +1,4 @@
-"""El panel de supervisión, usado desde un navegador real.
+"""El panel de supervisión, usado desde un navegador real. Pruebas de regresión vinculadas a los casos CP-UI del plan.
 
 Cada prueba es un recorrido de una persona: entrar, mirar la tabla, abrir un
 incidente, aprobar o descartar una acción, salir. Se afirma sobre lo que se ve
@@ -41,13 +41,15 @@ def _abrir_primer_incidente(page):
 
 # ─── Login y sesión ──────────────────────────────────────────────────────────
 
-def test_sin_sesion_el_panel_manda_al_login(page, panel):
+# CP-UI-07: abrir / sin sesión redirige a /login. Versión de regresión sobre el panel del sandbox (no usa la malla); la versión del plan está en test_s*.py.
+def test_cp_ui_07_sin_sesion_el_panel_manda_al_login(page, panel):
     page.goto(f"{panel}/")
     expect(page).to_have_url(f"{panel}/login")
     expect(page.locator("#username")).to_be_visible()
 
 
-def test_contrasena_incorrecta_muestra_el_error_y_vacia_el_campo(page, panel):
+# CP-UI-02: contraseña incorrecta: mensaje de error y campo vacío. Versión de regresión sobre el panel del sandbox (no usa la malla); la versión del plan está en test_s*.py.
+def test_cp_ui_02_contrasena_incorrecta_muestra_el_error_y_vacia_el_campo(page, panel):
     page.goto(f"{panel}/login")
     page.fill("#username", "ana")
     page.fill("#password", "no-es-la-contrasena")
@@ -59,7 +61,8 @@ def test_contrasena_incorrecta_muestra_el_error_y_vacia_el_campo(page, panel):
     expect(page).to_have_url(f"{panel}/login")
 
 
-def test_login_correcto_muestra_usuario_rol_e_incidentes(entrar, errores_de_consola):
+# CP-UI-08: el panel carga con usuario, rol, filas y sin errores de consola. Versión de regresión sobre el panel del sandbox (no usa la malla); la versión del plan está en test_s*.py.
+def test_cp_ui_08_login_correcto_muestra_usuario_rol_e_incidentes(entrar, errores_de_consola):
     page = entrar("ana")
     expect(page.locator("#sesion")).to_contain_text("ana")
     expect(page.locator("#sesion .rol")).to_have_text("analyst")
@@ -67,7 +70,8 @@ def test_login_correcto_muestra_usuario_rol_e_incidentes(entrar, errores_de_cons
     assert errores_de_consola == []
 
 
-def test_cerrar_sesion_vuelve_al_login_y_corta_el_acceso(entrar, panel):
+# CP-UI-09: cerrar sesión vuelve a /login y corta el acceso. Versión de regresión sobre el panel del sandbox (no usa la malla); la versión del plan está en test_s*.py.
+def test_cp_ui_09_cerrar_sesion_vuelve_al_login_y_corta_el_acceso(entrar, panel):
     page = entrar("ana")
     page.click("#salir")
     expect(page).to_have_url(f"{panel}/login")
@@ -77,7 +81,8 @@ def test_cerrar_sesion_vuelve_al_login_y_corta_el_acceso(entrar, panel):
 
 # ─── Tabla, filtros y detalle ────────────────────────────────────────────────
 
-def test_el_buscador_filtra_la_tabla(entrar):
+# CP-UI-17: el buscador por IP filtra la tabla. Versión de regresión sobre el panel del sandbox (no usa la malla); la versión del plan está en test_s*.py.
+def test_cp_ui_17_el_buscador_filtra_la_tabla(entrar):
     page = entrar("ana")
     filas = page.locator("table.events tbody tr")
     total = filas.count()
@@ -89,7 +94,8 @@ def test_el_buscador_filtra_la_tabla(entrar):
     expect(filas).to_have_count(total)
 
 
-def test_clic_en_una_fila_abre_el_detalle_con_sus_acciones(entrar):
+# CP-UI-22: un clic en la fila abre la ficha con sus acciones. Versión de regresión sobre el panel del sandbox (no usa la malla); la versión del plan está en test_s*.py.
+def test_cp_ui_22_clic_en_una_fila_abre_el_detalle_con_sus_acciones(entrar):
     page = entrar("ana")
     fila = page.locator("table.events tbody tr").first
     incidente = fila.get_attribute("data-incidente")
@@ -101,7 +107,8 @@ def test_clic_en_una_fila_abre_el_detalle_con_sus_acciones(entrar):
     expect(detalle.locator(".analisis-fuente")).to_contain_text("determinístico")
 
 
-def test_una_fila_se_abre_con_el_teclado(entrar):
+# CP-UI-23: Enter sobre la fila abre la ficha. Versión de regresión sobre el panel del sandbox (no usa la malla); la versión del plan está en test_s*.py.
+def test_cp_ui_23_una_fila_se_abre_con_el_teclado(entrar):
     """RNF-USA-08: Tab hasta la fila y Enter, sin mouse."""
     page = entrar("ana")
     fila = page.locator("table.events tbody tr").first
@@ -112,7 +119,8 @@ def test_una_fila_se_abre_con_el_teclado(entrar):
 
 # ─── Decisiones: siempre pasan por el cuadro de confirmación ────────────────
 
-def test_cancelar_la_confirmacion_no_registra_nada(entrar, sandbox_con_incidentes):
+# CP-UI-29: cancelar el cuadro no registra la decisión. Versión de regresión sobre el panel del sandbox (no usa la malla); la versión del plan está en test_s*.py.
+def test_cp_ui_29_cancelar_la_confirmacion_no_registra_nada(entrar, sandbox_con_incidentes):
     page = entrar("ana")
     detalle = _abrir_primer_incidente(page)
 
@@ -127,7 +135,8 @@ def test_cancelar_la_confirmacion_no_registra_nada(entrar, sandbox_con_incidente
     assert _decisiones(sandbox_con_incidentes) == []
 
 
-def test_aprobar_con_confirmacion_queda_en_pantalla_y_en_el_registro(entrar, sandbox_con_incidentes):
+# CP-UI-28: aprobar con confirmación queda en pantalla y en el registro. Versión de regresión sobre el panel del sandbox (no usa la malla); la versión del plan está en test_s*.py.
+def test_cp_ui_28_aprobar_con_confirmacion_queda_en_pantalla_y_en_el_registro(entrar, sandbox_con_incidentes):
     page = entrar("ana")
     detalle = _abrir_primer_incidente(page)
     boton = detalle.locator("button.approve").first
@@ -144,7 +153,8 @@ def test_aprobar_con_confirmacion_queda_en_pantalla_y_en_el_registro(entrar, san
         (action_id, "approved", "ana")]
 
 
-def test_descartar_pide_motivo_y_lo_guarda(entrar, sandbox_con_incidentes):
+# CP-UI-30: descartar pide el motivo y lo guarda. Versión de regresión sobre el panel del sandbox (no usa la malla); la versión del plan está en test_s*.py.
+def test_cp_ui_30_descartar_pide_motivo_y_lo_guarda(entrar, sandbox_con_incidentes):
     page = entrar("ana")
     detalle = _abrir_primer_incidente(page)
     detalle.locator("button.dismiss").first.click()
@@ -163,7 +173,8 @@ def test_descartar_pide_motivo_y_lo_guarda(entrar, sandbox_con_incidentes):
 
 # ─── Roles ───────────────────────────────────────────────────────────────────
 
-def test_un_viewer_no_ve_los_botones_de_decision(entrar):
+# CP-UI-13: el observador no ve los botones de decisión. Versión de regresión sobre el panel del sandbox (no usa la malla); la versión del plan está en test_s*.py.
+def test_cp_ui_13_un_viewer_no_ve_los_botones_de_decision(entrar):
     page = entrar("beto")
     expect(page.locator("#sesion .rol")).to_have_text("viewer")
     expect(page.locator("body")).to_have_class(re.compile(r"\bsolo-lectura\b"))
@@ -174,7 +185,8 @@ def test_un_viewer_no_ve_los_botones_de_decision(entrar):
 
 # ─── Lo que escribió el Agente 2 ─────────────────────────────────────────────
 
-def test_un_analisis_de_gemma_se_identifica_en_pantalla(page, panel, entrar, sandbox_con_incidentes):
+# CP-UI-54: el análisis de Gemma se identifica en #modeBadge. Versión de regresión sobre el panel del sandbox (no usa la malla); la versión del plan está en test_s*.py.
+def test_cp_ui_54_un_analisis_de_gemma_se_identifica_en_pantalla(page, panel, entrar, sandbox_con_incidentes):
     def gemma(reporte):
         reporte["analyst_mode"] = "gemma"
         inc = reporte["incidents"][0]
@@ -194,7 +206,8 @@ def test_un_analisis_de_gemma_se_identifica_en_pantalla(page, panel, entrar, san
     expect(page.locator("#detailWrap")).to_contain_text("¿La IP escaneó otros hosts?")
 
 
-def test_un_texto_hostil_del_llm_se_muestra_como_texto_y_no_se_ejecuta(
+# CP-UI-48: un texto hostil se muestra como texto y no se ejecuta. Versión de regresión sobre el panel del sandbox (no usa la malla); la versión del plan está en test_s*.py.
+def test_cp_ui_48_un_texto_hostil_del_llm_se_muestra_como_texto_y_no_se_ejecuta(
         page, panel, entrar, sandbox_con_incidentes, errores_de_consola):
     """S-02 visto desde el navegador: el HTML que traiga el análisis no se interpreta."""
     payload = '<img src=x onerror="window.__xss = 1">'

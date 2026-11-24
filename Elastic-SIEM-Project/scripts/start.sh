@@ -68,14 +68,17 @@ wait_for() { # descripción  comando-que-debe-dar-exito  intentos
 }
 
 # 1. Elasticsearch healthy
+# shellcheck disable=SC2016 # comillas simples a propósito: wait_for evalúa el texto después con eval
 wait_for "Elasticsearch (healthy)" \
   '[ "$(docker inspect -f "{{.State.Health.Status}}" elasticsearch 2>/dev/null)" = "healthy" ]' 60
 
 # 2. setup completó OK
+# shellcheck disable=SC2016 # comillas simples a propósito: wait_for evalúa el texto después con eval
 wait_for "Setup kibana_system (exit 0)" \
   '[ "$(docker inspect -f "{{.State.Status}} {{.State.ExitCode}}" siem-setup 2>/dev/null)" = "exited 0" ]' 30
 
 # 3. Kibana responde
+# shellcheck disable=SC2016 # comillas simples a propósito: wait_for evalúa el texto después con eval
 wait_for "Kibana (HTTP 200)" \
   '[ "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:5601/api/status)" = "200" ]' 60
 
@@ -95,6 +98,7 @@ fi
 
 # 5. Capa IA: el gateway depende (healthcheck) de auth, audit y pipeline, que a
 #    su vez dependen del resto; si responde, la malla entera está arriba.
+# shellcheck disable=SC2016 # comillas simples a propósito: wait_for evalúa el texto después con eval
 wait_for "Panel de supervisión (gateway)" \
   '[ "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:5000/api/v1/healthz)" = "200" ]' 60
 

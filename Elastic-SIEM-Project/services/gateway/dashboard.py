@@ -792,8 +792,9 @@ def api_reportes():
     datos = _verificada(r, "el servicio audit").datos
     if formato == "csv":
         periodo = datos.get("periodo") or {}
-        nombre = "reporte-neuraldefender_{}_{}.csv".format(periodo.get("desde") or "inicio",
-                                                    periodo.get("hasta") or "hoy")
+        desde = periodo.get("desde") or "inicio"
+        hasta = periodo.get("hasta") or "hoy"
+        nombre = f"reporte-neuraldefender_{desde}_{hasta}.csv"
         respuesta = Response(datos["csv"], mimetype="text/csv; charset=utf-8")
         respuesta.headers["Content-Disposition"] = f'attachment; filename="{nombre}"'
     else:

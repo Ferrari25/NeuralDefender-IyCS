@@ -1,0 +1,31 @@
+# Propiedad: Contraste WCAG AA
+# Archivo mutado (en la copia): services/gateway/static/tokens.css
+# Pruebas: tests/unit/test_contraste_de_la_interfaz.py
+
+## 1. Codigo sano
+.....................................................                    [100%]
+53 passed in 0.17s
+
+## 2. Defecto inyectado: p='services/gateway/static/tokens.css'; s=open(p).read(); a='--text:   #c9d1d9;'; assert a in s; open(p,'w').write(s.replace(a,'--text:   #1a1f26;'))
+..........F
+=================================== FAILURES ===================================
+_____________ test_una_severidad_desconocida_sigue_siendo_legible ______________
+tests/unit/test_contraste_de_la_interfaz.py:126: in test_una_severidad_desconocida_sigue_siendo_legible
+    assert contraste(fondo, texto) >= AA_NORMAL
+E   AssertionError: assert 1.3571415549347245 >= 4.5
+E    +  where 1.3571415549347245 = contraste('#30363d', '#1a1f26')
+=========================== short test summary info ============================
+FAILED tests/unit/test_contraste_de_la_interfaz.py::test_una_severidad_desconocida_sigue_siendo_legible
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 10 passed in 0.16s
+
+## 3. Diferencia entre el archivo sano y el mutado
+@@ -20,7 +20,7 @@
+   --panel2: #0b0f14;   /* hundido: bloques de código, campos */
+   --panel3: #21262d;   /* elevado: botones en reposo, chip pendiente */
+   --border: #30363d;
+-  --text:   #c9d1d9;
++  --text:   #1a1f26;
+   --muted:  #8b949e;
+   --accent: #58a6ff;
+ 

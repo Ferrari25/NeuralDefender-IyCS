@@ -1,0 +1,24 @@
+........................................................................ [ 12%]
+..............
+  ── Certificación de no-autonomía ──────────────────────────
+  Archivos .py analizados por AST : 35
+  Con import de subprocess        : ninguno
+  Allowlist                       : []
+  Rutas HTTP que ejecutan algo    : ninguna
+  Herramientas del LLM            : ninguna
+  ───────────────────────────────────────────────────────────
+.......................................................... [ 24%]
+........................................................................ [ 37%]
+........................................................................ [ 49%]
+........................................................................ [ 61%]
+.......................................................................s [ 74%]
+.....sss.s.............................................................. [ 86%]
+........................................................................ [ 98%]
+......                                                                   [100%]
+=========================== short test summary info ============================
+SKIPPED [1] tests/unit/test_reglas_como_codigo.py:359: A4 no documenta un umbral numérico
+SKIPPED [1] tests/unit/test_reglas_como_codigo.py:359: B3 no documenta un umbral numérico
+SKIPPED [1] tests/unit/test_reglas_como_codigo.py:359: B4 no documenta un umbral numérico
+SKIPPED [1] tests/unit/test_reglas_como_codigo.py:359: C1 no documenta un umbral numérico
+SKIPPED [1] tests/unit/test_reglas_como_codigo.py:359: C3 no documenta un umbral numérico
+577 passed, 5 skipped in 2.54s

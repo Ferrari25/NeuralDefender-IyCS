@@ -1,0 +1,42 @@
+name: NeuralDefender - malla aislada
+values:
+  - key: url_gateway
+    value: 'http://127.0.0.1:18080'
+  - key: url_auth
+    value: 'http://127.0.0.1:18001'
+  - key: url_audit
+    value: 'http://127.0.0.1:18002'
+  - key: url_collector
+    value: 'http://127.0.0.1:18003'
+  - key: url_classifier
+    value: 'http://127.0.0.1:18004'
+  - key: url_analyst
+    value: 'http://127.0.0.1:18005'
+  - key: url_pipeline
+    value: 'http://127.0.0.1:18006'
+  - key: url_knowledge
+    value: 'http://127.0.0.1:18007'
+  - key: token
+    value: token-interno-de-prueba-malla-postman-2026-0001
+  - key: analista
+    value: analista00
+  - key: observador
+    value: observador00
+  - key: auditor
+    value: auditor00
+  - key: password
+    value: PruebaMalla#2026
+  - key: usuario_descartable
+    value: victima00x00
+  - key: csrf_token
+    value: ''
+  - key: incident_id
+    value: ''
+  - key: action_id
+    value: ''
+  - key: leccion_id
+    value: ''
+  - key: registros_antes
+    value: ''
+  - key: hoy
+    value: ''

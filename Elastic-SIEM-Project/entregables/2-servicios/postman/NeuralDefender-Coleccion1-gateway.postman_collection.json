@@ -1,0 +1,3626 @@
+{
+	"info": {
+		"_postman_id": "82176cd3-6ae4-4547-ba47-9cef4762b24f",
+		"name": "NeuralDefender - Colección 1 (gateway)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "8.1 Autenticación y sesión",
+			"item": [
+				{
+					"name": "CP-SERV-11 | Sonda de salud pública",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/healthz",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"healthz"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-11 | Sonda de salud pública",
+									"// Requisitos: RF-AUT-01, RNF-CONF-05",
+									"// Qué prueba: la sonda de salud responde sin pedir sesión.",
+									"// Petición: GET {{url_gateway}}/api/v1/healthz (sin body ni headers)",
+									"// Esperado: 200 con {\"status\": \"ok\", \"incidents_file\": true o false}",
+									"// ============================================================",
+									"",
+									"// 1. Código de estado: la sonda es pública y responde 200.",
+									"pm.test(\"CP-SERV-11 | Código 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2. Contrato: la respuesta trae las dos claves esperadas.",
+									"pm.test(\"CP-SERV-11 | Contrato: status e incidents_file\", function () {",
+									"    pm.expect(datos).to.include.all.keys(\"status\", \"incidents_file\");",
+									"});",
+									"",
+									"// 3. Tipos: status es texto e incidents_file es verdadero o falso.",
+									"pm.test(\"CP-SERV-11 | Tipos de datos\", function () {",
+									"    pm.expect(datos.status).to.be.a(\"string\");",
+									"    pm.expect(datos.incidents_file).to.be.a(\"boolean\");",
+									"});",
+									"",
+									"// 4. Regla de negocio: el servicio informa que está sano.",
+									"pm.test(\"CP-SERV-11 | status = ok\", function () {",
+									"    pm.expect(datos.status).to.eql(\"ok\");",
+									"});"
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Antes de la primera petición se borran las cookies del gateway,",
+									"// para que la colección siempre empiece sin ninguna sesión abierta.",
+									"const jar = pm.cookies.jar();",
+									"jar.clear(pm.environment.get(\"url_gateway\"), function (error) {",
+									"    if (error) { console.log(\"No se pudieron borrar las cookies: \" + error); }",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-04 | Login con JSON mal formado",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/login",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{bad",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-04 | Inicio de sesión con JSON mal formado",
+									"// Requisito: RQ-SEC-09 (validar toda entrada)",
+									"// Técnica: partición de equivalencia, partición inválida",
+									"// Petición: POST {{url_gateway}}/api/v1/login con body \"{bad\"",
+									"// Esperado: 400 con {\"error\": \"se esperaba un cuerpo JSON\"}",
+									"// ============================================================",
+									"",
+									"// 1. Código: un cuerpo que no es JSON se rechaza con 400 Bad Request.",
+									"pm.test(\"CP-SERV-04 | Código 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato y tipo: el error viene en el campo \"error\", como texto.",
+									"pm.test(\"CP-SERV-04 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos).to.have.property(\"error\");",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"// 4. Regla: el mensaje explica que se esperaba JSON.",
+									"pm.test(\"CP-SERV-04 | Mensaje: se esperaba un cuerpo JSON\", function () {",
+									"    pm.expect(datos.error).to.eql(\"se esperaba un cuerpo JSON\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-05 | Inicio de sesión con campos faltantes",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/login",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-05 | Inicio de sesión con campos faltantes",
+									"// Requisito: RF-AUT-01",
+									"// Técnica: partición de equivalencia, partición inválida",
+									"// Petición: POST {{url_gateway}}/api/v1/login con body {}",
+									"// Esperado: 401 con el mensaje genérico de credenciales",
+									"// Decisión de contrato: se trata como credenciales incorrectas,",
+									"// para no revelar qué dato faltó.",
+									"// ============================================================",
+									"",
+									"// 1. Código: sin usuario ni contraseña, 401 Unauthorized.",
+									"pm.test(\"CP-SERV-05 | Código 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato y tipo del error.",
+									"pm.test(\"CP-SERV-05 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"// 4. Regla: mensaje genérico.",
+									"pm.test(\"CP-SERV-05 | Mensaje genérico de credenciales\", function () {",
+									"    pm.expect(datos.error).to.eql(\"usuario o contraseña incorrectos\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-02 | Contraseña incorrecta",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/login",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"username\": \"{{analista}}\", \"password\": \"contrasena-incorrecta\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-02 | Contraseña incorrecta",
+									"// Requisito: RF-AUT-01",
+									"// Técnica: partición de equivalencia, partición inválida",
+									"// Petición: POST /api/v1/login con un usuario real y una contraseña errónea",
+									"// Esperado: 401, mensaje genérico y sin abrir sesión",
+									"// ============================================================",
+									"",
+									"// 1. Código: credenciales incorrectas, 401.",
+									"pm.test(\"CP-SERV-02 | Código 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato y tipo del error.",
+									"pm.test(\"CP-SERV-02 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"// 4. Regla: mensaje genérico y sin token de sesión en la respuesta.",
+									"pm.test(\"CP-SERV-02 | Mensaje genérico y sin sesión\", function () {",
+									"    pm.expect(datos.error).to.eql(\"usuario o contraseña incorrectos\");",
+									"    pm.expect(datos).to.not.have.property(\"csrf_token\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-03 | Usuario inexistente",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/login",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"username\": \"usuario-que-no-existe\", \"password\": \"cualquiera\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-03 | Usuario inexistente",
+									"// Requisito: RF-AUT-01",
+									"// Técnica: partición de equivalencia, partición inválida",
+									"// Petición: POST /api/v1/login con un usuario que no existe",
+									"// Esperado: 401 con el MISMO mensaje que CP-SERV-02.",
+									"// Por qué importa: si el mensaje fuera distinto, un atacante podría",
+									"// averiguar qué usuarios existen probando nombres.",
+									"// ============================================================",
+									"",
+									"// 1. Código: 401.",
+									"pm.test(\"CP-SERV-03 | Código 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato y tipo del error.",
+									"pm.test(\"CP-SERV-03 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"// 4. Regla de seguridad: mensaje idéntico al de contraseña incorrecta.",
+									"pm.test(\"CP-SERV-03 | Mismo mensaje que con contraseña incorrecta\", function () {",
+									"    pm.expect(datos.error).to.eql(\"usuario o contraseña incorrectos\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-08 | Consulta de la sesión sin haber iniciado sesión",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/me",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"me"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-08 | Consulta de la sesión sin haber iniciado sesión",
+									"// Requisito: RF-AUT-01 (toda ruta exige autenticación)",
+									"// Técnica: partición de equivalencia, partición inválida",
+									"// Petición: GET /api/v1/me sin cookie de sesión",
+									"// (las cookies se borraron en CP-SERV-11)",
+									"// Esperado: 401 con {\"error\": \"se requiere autenticación\"}",
+									"// ============================================================",
+									"",
+									"// 1. Código: sin sesión, 401.",
+									"pm.test(\"CP-SERV-08 | Código 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato y tipo del error.",
+									"pm.test(\"CP-SERV-08 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"// 4. Regla: el sistema pide autenticación.",
+									"pm.test(\"CP-SERV-08 | Mensaje: se requiere autenticación\", function () {",
+									"    pm.expect(datos.error).to.eql(\"se requiere autenticación\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-19 | Listado de incidentes sin sesión •",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/incidents",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"incidents"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-19 | Listado de incidentes sin sesión",
+									"// Requisito: RF-AUT-01",
+									"// Técnica: partición de equivalencia, partición inválida",
+									"// Petición: GET /api/v1/incidents sin cookie de sesión",
+									"// Esperado: 401. Los incidentes son datos sensibles y no se",
+									"// muestran a nadie sin autenticar.",
+									"// ============================================================",
+									"",
+									"// 1. Código: 401.",
+									"pm.test(\"CP-SERV-19 | Código 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato y tipo del error.",
+									"pm.test(\"CP-SERV-19 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"// 4. Regla: no se devuelve ningún incidente.",
+									"pm.test(\"CP-SERV-19 | No devuelve incidentes\", function () {",
+									"    pm.expect(datos).to.not.have.property(\"incidents\");",
+									"    pm.expect(datos.error).to.eql(\"se requiere autenticación\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-01 | Inicio de sesión válido (analista)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/login",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"username\": \"{{analista}}\", \"password\": \"{{password}}\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-01 | Inicio de sesión válido (analista)",
+									"// Requisitos: RF-AUT-02 (roles), RQ-SEC-12 (cookie segura)",
+									"// Técnica: partición de equivalencia, partición válida",
+									"// Petición: POST /api/v1/login con el usuario analista y su contraseña",
+									"// Esperado: 200 con usuario, rol, permisos y csrf_token, y una",
+									"// cookie siem_session con HttpOnly y SameSite=Lax.",
+									"// Efecto: guarda csrf_token en el entorno para los POST siguientes.",
+									"// ============================================================",
+									"",
+									"// 1. Código: credenciales correctas, 200 OK.",
+									"pm.test(\"CP-SERV-01 | Código 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2. Contrato: la respuesta trae los datos de la sesión.",
+									"pm.test(\"CP-SERV-01 | Contrato de la respuesta\", function () {",
+									"    pm.expect(datos).to.include.all.keys(\"ok\", \"usuario\", \"rol\", \"permisos\", \"csrf_token\");",
+									"});",
+									"",
+									"// 3. Tipos de cada campo.",
+									"pm.test(\"CP-SERV-01 | Tipos de datos\", function () {",
+									"    pm.expect(datos.usuario).to.be.a(\"string\");",
+									"    pm.expect(datos.rol).to.be.a(\"string\");",
+									"    pm.expect(datos.permisos).to.be.an(\"array\").that.is.not.empty;",
+									"    pm.expect(datos.csrf_token).to.be.a(\"string\").and.not.empty;",
+									"});",
+									"",
+									"// 4. Reglas: es el usuario pedido, con rol analyst y permiso para decidir.",
+									"pm.test(\"CP-SERV-01 | Usuario, rol analyst y permiso decidir\", function () {",
+									"    pm.expect(datos.usuario).to.eql(pm.environment.get(\"analista\"));",
+									"    pm.expect(datos.rol).to.eql(\"analyst\");",
+									"    pm.expect(datos.permisos).to.include(\"decidir\");",
+									"});",
+									"",
+									"// Seguridad de la cookie (RQ-SEC-12): JavaScript no puede leerla (HttpOnly)",
+									"// y no se envía desde otros sitios (SameSite=Lax).",
+									"pm.test(\"CP-SERV-01 | Cookie de sesión HttpOnly y SameSite=Lax\", function () {",
+									"    const cookie = pm.response.headers.get(\"Set-Cookie\");",
+									"    pm.expect(cookie).to.include(\"siem_session\");",
+									"    pm.expect(cookie).to.include(\"HttpOnly\");",
+									"    pm.expect(cookie).to.include(\"SameSite=Lax\");",
+									"});",
+									"",
+									"// Se guarda el token CSRF para los POST de los casos siguientes.",
+									"pm.environment.set(\"csrf_token\", datos.csrf_token);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-07 | Datos de la sesión activa",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/me",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"me"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-07 | Datos de la sesión activa",
+									"// Requisito: RF-SUP-05 (el sistema nunca ejecuta acciones)",
+									"// Técnica: partición de equivalencia, partición válida",
+									"// Precondición: sesión del analista abierta en CP-SERV-01",
+									"// Petición: GET /api/v1/me",
+									"// Esperado: 200 con los datos del usuario y",
+									"// puede_ejecutar_acciones = false",
+									"// ============================================================",
+									"",
+									"// 1. Código: con sesión, 200.",
+									"pm.test(\"CP-SERV-07 | Código 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2. Contrato de la respuesta.",
+									"pm.test(\"CP-SERV-07 | Contrato de la respuesta\", function () {",
+									"    pm.expect(datos).to.include.all.keys(\"usuario\", \"rol\", \"permisos\", \"puede_ejecutar_acciones\", \"csrf_token\");",
+									"});",
+									"",
+									"// 3. Tipos de datos.",
+									"pm.test(\"CP-SERV-07 | Tipos de datos\", function () {",
+									"    pm.expect(datos.permisos).to.be.an(\"array\");",
+									"    pm.expect(datos.puede_ejecutar_acciones).to.be.a(\"boolean\");",
+									"});",
+									"",
+									"// 4. Regla central del sistema: nadie puede ejecutar acciones de contención.",
+									"pm.test(\"CP-SERV-07 | Ningún usuario puede ejecutar acciones\", function () {",
+									"    pm.expect(datos.puede_ejecutar_acciones).to.be.false;",
+									"    pm.expect(datos.usuario).to.eql(pm.environment.get(\"analista\"));",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-10 | Cierre de sesión sin token CSRF",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/logout",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"logout"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-10 | Cierre de sesión sin token CSRF",
+									"// Requisito: RQ-SEC-11 (protección contra falsificación de peticiones)",
+									"// Técnica: partición de equivalencia, partición inválida",
+									"// Precondición: sesión del analista abierta",
+									"// Petición: POST /api/v1/logout SIN la cabecera X-CSRFToken",
+									"// Esperado: 403 por falta del token CSRF. La sesión sigue abierta,",
+									"// y eso lo confirma CP-SERV-09a, que puede cerrarla con 204.",
+									"// ============================================================",
+									"",
+									"// 1. Código: una petición que cambia el estado sin token CSRF da 403.",
+									"pm.test(\"CP-SERV-10 | Código 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato y tipo del error.",
+									"pm.test(\"CP-SERV-10 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"// 4. Regla: el motivo del rechazo es el token CSRF.",
+									"pm.test(\"CP-SERV-10 | El motivo es el token CSRF\", function () {",
+									"    pm.expect(datos.error).to.include(\"token CSRF\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-09a | Cierre de sesión",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/logout",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"logout"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-09a | Cierre de sesión",
+									"// Requisito: RQ-SEC-13 (gestión de sesiones)",
+									"// Técnica: transición de estados, de sesión abierta a cerrada",
+									"// Petición: POST /api/v1/logout con X-CSRFToken",
+									"// Esperado: 204 No Content (éxito sin cuerpo).",
+									"// La segunda mitad del caso es CP-SERV-09b.",
+									"// ============================================================",
+									"",
+									"// 1. Código: el cierre se acepta con 204.",
+									"pm.test(\"CP-SERV-09a | Código 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});",
+									"",
+									"// 2. Contrato: una respuesta 204 no tiene cuerpo.",
+									"pm.test(\"CP-SERV-09a | Sin cuerpo\", function () {",
+									"    pm.expect(pm.response.text()).to.eql(\"\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-09b | Consulta después del cierre",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/me",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"me"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-09b | Consulta después del cierre",
+									"// Requisito: RQ-SEC-13",
+									"// Técnica: transición de estados (verifica el estado final)",
+									"// Precondición: CP-SERV-09a ejecutado",
+									"// Petición: GET /api/v1/me con la misma cookie de antes",
+									"// Esperado: 401. La sesión quedó invalidada en el servidor.",
+									"// ============================================================",
+									"",
+									"// 1. Código: la sesión ya no sirve, 401.",
+									"pm.test(\"CP-SERV-09b | La sesión quedó cerrada: 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"// 2 a 4. Contrato, tipo y mensaje del error.",
+									"pm.test(\"CP-SERV-09b | Mensaje: se requiere autenticación\", function () {",
+									"    const datos = pm.response.json();",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"    pm.expect(datos.error).to.eql(\"se requiere autenticación\");",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "8.2 Control de acceso por rol",
+			"item": [
+				{
+					"name": "Preparación | Sesión de observador",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/login",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"username\": \"{{observador}}\", \"password\": \"{{password}}\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Preparación: abre la sesión del rol observador (viewer) y guarda",
+									"// su token CSRF. No es un caso del plan: deja listo el sistema",
+									"// para CP-SERV-12, 13 y 17.",
+									"pm.test(\"Preparación | Sesión de observador abierta\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.json().rol).to.eql(\"viewer\");",
+									"});",
+									"pm.environment.set(\"csrf_token\", pm.response.json().csrf_token);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-12 | El observador consulta incidentes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/incidents",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"incidents"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-12 | El observador consulta incidentes",
+									"// Requisito: RF-AUT-02 (el observador consulta incidentes y auditoría)",
+									"// Técnica: tabla de decisión (rol viewer, operación consultar)",
+									"// Precondición: sesión de observador",
+									"// Petición: GET /api/v1/incidents",
+									"// Esperado: 200 con la lista de incidentes.",
+									"// Efecto: guarda un incidente con una acción pendiente en",
+									"// incident_id y action_id, para los casos de decisión.",
+									"// ============================================================",
+									"",
+									"// 1. Código: el observador SÍ puede consultar.",
+									"pm.test(\"CP-SERV-12 | Código 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato y tipo: hay una lista de incidentes no vacía.",
+									"pm.test(\"CP-SERV-12 | Contrato: lista de incidentes\", function () {",
+									"    pm.expect(datos).to.have.property(\"incidents\");",
+									"    pm.expect(datos.incidents).to.be.an(\"array\").that.is.not.empty;",
+									"});",
+									"",
+									"// Se busca el primer incidente con una acción pendiente y se guardan sus",
+									"// identificadores en el entorno.",
+									"const incidente = datos.incidents.find(i => i.recommended_actions.some(a => a.status === \"pending\"));",
+									"const accion = incidente.recommended_actions.find(a => a.status === \"pending\");",
+									"pm.environment.set(\"incident_id\", incidente.incident_id);",
+									"pm.environment.set(\"action_id\", accion.action_id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-13 | El observador intenta decidir",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/decision",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"decision"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"incident_id\": \"{{incident_id}}\", \"action_id\": \"{{action_id}}\", \"decision\": \"approved\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-13 | El observador intenta decidir",
+									"// Requisito: RF-AUT-02 (solo el analista decide)",
+									"// Técnica: tabla de decisión (rol viewer, operación decidir)",
+									"// Precondición: sesión de observador",
+									"// Petición: POST /api/v1/decision con una decisión VÁLIDA,",
+									"// para que el único motivo de rechazo sea el permiso.",
+									"// Esperado: 403 con permiso_requerido = \"decidir\"",
+									"// ============================================================",
+									"",
+									"// 1. Código: autenticado pero sin permiso, 403 Forbidden.",
+									"pm.test(\"CP-SERV-13 | Código 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato y tipos: el error indica qué permiso falta.",
+									"pm.test(\"CP-SERV-13 | Contrato: error y permiso_requerido\", function () {",
+									"    pm.expect(datos).to.include.all.keys(\"error\", \"permiso_requerido\");",
+									"    pm.expect(datos.permiso_requerido).to.be.a(\"string\");",
+									"});",
+									"",
+									"// 4. Regla: falta el permiso decidir y el mensaje nombra el rol viewer.",
+									"pm.test(\"CP-SERV-13 | Falta el permiso decidir\", function () {",
+									"    pm.expect(datos.permiso_requerido).to.eql(\"decidir\");",
+									"    pm.expect(datos.error).to.include(\"viewer\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-17 | El observador intenta cargar un documento",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/memoria/documentos",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"memoria",
+								"documentos"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"titulo\": \"Documento de prueba\", \"contenido\": \"Contenido de prueba\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-17 | El observador intenta cargar un documento",
+									"// Requisito: RF-AUT-02, RF-MEM-05 (solo quien decide carga documentos)",
+									"// Técnica: tabla de decisión (rol viewer, operación escribir en memoria)",
+									"// Precondición: sesión de observador",
+									"// Petición: POST /api/v1/memoria/documentos con un documento válido",
+									"// Esperado: 403 con permiso_requerido = \"decidir\"",
+									"// ============================================================",
+									"",
+									"// 1. Código: 403.",
+									"pm.test(\"CP-SERV-17 | Código 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato del error.",
+									"pm.test(\"CP-SERV-17 | Contrato: error y permiso_requerido\", function () {",
+									"    pm.expect(datos).to.include.all.keys(\"error\", \"permiso_requerido\");",
+									"});",
+									"",
+									"// 4. Regla: escribir en la memoria exige el mismo permiso que decidir.",
+									"pm.test(\"CP-SERV-17 | Falta el permiso decidir\", function () {",
+									"    pm.expect(datos.permiso_requerido).to.eql(\"decidir\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Preparación | Sesión de auditor",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/login",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"username\": \"{{auditor}}\", \"password\": \"{{password}}\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Preparación: abre la sesión del rol auditor y guarda su token CSRF.",
+									"// Deja listo el sistema para CP-SERV-14 y 16.",
+									"pm.test(\"Preparación | Sesión de auditor abierta\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.json().rol).to.eql(\"auditor\");",
+									"});",
+									"pm.environment.set(\"csrf_token\", pm.response.json().csrf_token);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-14 | El auditor verifica la integridad",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/audit/verify",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"audit",
+								"verify"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-14 | El auditor verifica la integridad",
+									"// Requisito: RF-AUT-02 (el auditor verifica la integridad)",
+									"// Técnica: tabla de decisión (rol auditor, operación verificar)",
+									"// Precondición: sesión de auditor",
+									"// Petición: GET /api/v1/audit/verify",
+									"// Esperado: 200 con chain_ok = true y first_broken = null",
+									"// Efecto: guarda la cantidad de registros en registros_antes,",
+									"// para compararla en CP-SERV-33 después de registrar decisiones.",
+									"// ============================================================",
+									"",
+									"// 1. Código: el auditor SÍ puede verificar.",
+									"pm.test(\"CP-SERV-14 | Código 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2. Contrato del resultado de la verificación.",
+									"pm.test(\"CP-SERV-14 | Contrato del resultado\", function () {",
+									"    pm.expect(datos).to.include.all.keys(\"chain_ok\", \"estado\", \"first_broken\", \"records\");",
+									"});",
+									"",
+									"// 3. Tipos de datos.",
+									"pm.test(\"CP-SERV-14 | Tipos de datos\", function () {",
+									"    pm.expect(datos.chain_ok).to.be.a(\"boolean\");",
+									"    pm.expect(datos.records).to.be.a(\"number\");",
+									"});",
+									"",
+									"// 4. Regla: la cadena de auditoría está íntegra, no hay ningún registro roto.",
+									"pm.test(\"CP-SERV-14 | La cadena está íntegra\", function () {",
+									"    pm.expect(datos.chain_ok).to.be.true;",
+									"    pm.expect(datos.first_broken).to.be.null;",
+									"});",
+									"",
+									"pm.environment.set(\"registros_antes\", datos.records);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-16 | El auditor intenta decidir",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/decision",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"decision"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"incident_id\": \"{{incident_id}}\", \"action_id\": \"{{action_id}}\", \"decision\": \"approved\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-16 | El auditor intenta decidir",
+									"// Requisito: RF-AUT-02 (el auditor verifica, pero no decide)",
+									"// Técnica: tabla de decisión (rol auditor, operación decidir)",
+									"// Precondición: sesión de auditor",
+									"// Petición: POST /api/v1/decision con una decisión válida",
+									"// Esperado: 403 con permiso_requerido = \"decidir\"",
+									"// ============================================================",
+									"",
+									"// 1. Código: 403.",
+									"pm.test(\"CP-SERV-16 | Código 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato del error.",
+									"pm.test(\"CP-SERV-16 | Contrato: error y permiso_requerido\", function () {",
+									"    pm.expect(datos).to.include.all.keys(\"error\", \"permiso_requerido\");",
+									"});",
+									"",
+									"// 4. Regla: falta el permiso decidir y el mensaje nombra el rol auditor.",
+									"pm.test(\"CP-SERV-16 | Falta el permiso decidir\", function () {",
+									"    pm.expect(datos.permiso_requerido).to.eql(\"decidir\");",
+									"    pm.expect(datos.error).to.include(\"auditor\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Preparación | Sesión de analista",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/login",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"username\": \"{{analista}}\", \"password\": \"{{password}}\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Preparación: abre la sesión del rol analista y guarda su token CSRF.",
+									"// La carpeta termina con esta sesión, que es la que necesitan 8.3 y 8.4.",
+									"pm.test(\"Preparación | Sesión de analista abierta\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.json().rol).to.eql(\"analyst\");",
+									"});",
+									"pm.environment.set(\"csrf_token\", pm.response.json().csrf_token);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-15 | El analista intenta verificar la integridad",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/audit/verify",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"audit",
+								"verify"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-15 | El analista intenta verificar la integridad",
+									"// Requisito: RF-AUT-02 (verificar la integridad es del auditor)",
+									"// Técnica: tabla de decisión (rol analyst, operación verificar)",
+									"// Precondición: sesión de analista",
+									"// Petición: GET /api/v1/audit/verify",
+									"// Esperado: 403 con permiso_requerido = \"verificar_cadena\"",
+									"// ============================================================",
+									"",
+									"// 1. Código: 403.",
+									"pm.test(\"CP-SERV-15 | Código 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato del error.",
+									"pm.test(\"CP-SERV-15 | Contrato: error y permiso_requerido\", function () {",
+									"    pm.expect(datos).to.include.all.keys(\"error\", \"permiso_requerido\");",
+									"});",
+									"",
+									"// 4. Regla: al analista le falta el permiso verificar_cadena.",
+									"pm.test(\"CP-SERV-15 | Falta el permiso verificar_cadena\", function () {",
+									"    pm.expect(datos.permiso_requerido).to.eql(\"verificar_cadena\");",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "8.3 Incidentes",
+			"item": [
+				{
+					"name": "CP-SERV-18 | Contrato y reglas del listado de incidentes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/incidents",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"incidents"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-18 | Contrato y reglas del listado de incidentes",
+									"// Requisitos: RF-API-01, RF-CLA-05, RF-CLA-08, RF-ANA-04, RNF-RD-01",
+									"// Técnica: partición de equivalencia, partición válida",
+									"// Precondición: sesión de analista; la malla tiene 3 incidentes",
+									"// Petición: GET /api/v1/incidents",
+									"// Esperado: 200 en menos de 2 s, sin caché, con un contrato completo",
+									"// y coherente. El texto del análisis varía en cada corrida (puede venir",
+									"// del modelo de lenguaje), por eso se verifica su estructura y no su texto.",
+									"// ============================================================",
+									"",
+									"// 1. Código y tiempo: 200 en menos de 2 segundos (RNF-RD-01).",
+									"pm.test(\"CP-SERV-18 | Código 200 en menos de 2 s\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// Cabecera: el listado no se guarda en caché, porque cambia con cada decisión.",
+									"pm.test(\"CP-SERV-18 | Cabecera Cache-Control: no-store\", function () {",
+									"    pm.expect(pm.response.headers.get(\"Cache-Control\")).to.include(\"no-store\");",
+									"});",
+									"",
+									"// 2. Contrato del primer nivel de la respuesta.",
+									"// analyst_mode no se exige acá: en la malla los incidentes vienen de datos de",
+									"// prueba que no pasaron por el analista. Se valida en la prueba 4b si está.",
+									"pm.test(\"CP-SERV-18 | Contrato del reporte\", function () {",
+									"    pm.expect(datos).to.include.all.keys(\"generated_at\", \"incident_count\", \"incidents\");",
+									"});",
+									"",
+									"// 3. Tipos de datos del reporte.",
+									"pm.test(\"CP-SERV-18 | Tipos de datos del reporte\", function () {",
+									"    pm.expect(datos.incident_count).to.be.a(\"number\");",
+									"    pm.expect(datos.incidents).to.be.an(\"array\").that.is.not.empty;",
+									"});",
+									"",
+									"// 4a. Regla: incident_count coincide con la cantidad real de incidentes.",
+									"pm.test(\"CP-SERV-18 | incident_count coincide con la lista\", function () {",
+									"    pm.expect(datos.incident_count).to.eql(datos.incidents.length);",
+									"});",
+									"",
+									"// 4b. Regla: si el reporte declara el origen del análisis, es un valor admitido (RF-ANA-04).",
+									"pm.test(\"CP-SERV-18 | analyst_mode, si está, tiene un valor admitido\", function () {",
+									"    if (datos.analyst_mode !== undefined && datos.analyst_mode !== null) {",
+									"        pm.expect([\"fallback\", \"gemma\", \"gemma-nube\", \"gemini\"]).to.include(datos.analyst_mode);",
+									"    }",
+									"});",
+									"",
+									"// 4c. Regla: cada incidente tiene su identificador, clasificación, severidad,",
+									"// riesgo y acciones recomendadas (RF-CLA-05, RF-CLA-08).",
+									"pm.test(\"CP-SERV-18 | Contrato y tipos de cada incidente\", function () {",
+									"    datos.incidents.forEach(function (inc, i) {",
+									"        pm.expect(inc, \"incidente \" + i).to.include.all.keys(\"incident_id\", \"classification\", \"severity_siem\", \"risk_score\", \"recommended_actions\");",
+									"        pm.expect(inc.incident_id).to.match(/^INC-(AUTH|SCAN|PHISH)-/);",
+									"        pm.expect(inc.risk_score).to.be.a(\"number\");",
+									"        pm.expect(inc.recommended_actions).to.be.an(\"array\").that.is.not.empty;",
+									"    });",
+									"});",
+									"",
+									"// 4d. Regla: cada acción tiene un estado admitido (pendiente, aprobada o descartada).",
+									"pm.test(\"CP-SERV-18 | Cada acción tiene un estado admitido\", function () {",
+									"    datos.incidents.forEach(function (inc) {",
+									"        inc.recommended_actions.forEach(function (accion) {",
+									"            pm.expect(accion.action_id).to.be.a(\"string\").and.not.empty;",
+									"            pm.expect([\"pending\", \"approved\", \"dismissed\"]).to.include(accion.status);",
+									"        });",
+									"    });",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-20 | Detalle de un incidente existente",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/incidents/{{incident_id}}",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"incidents",
+								"{{incident_id}}"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-20 | Detalle de un incidente existente",
+									"// Requisito: RF-API-01",
+									"// Técnica: partición de equivalencia, partición válida",
+									"// Precondición: incident_id guardado por CP-SERV-12",
+									"// Petición: GET /api/v1/incidents/{{incident_id}}",
+									"// Esperado: 200 con el incidente solicitado y sus acciones",
+									"// ============================================================",
+									"",
+									"// 1. Código: 200.",
+									"pm.test(\"CP-SERV-20 | Código 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const inc = pm.response.json();",
+									"",
+									"// 2. Contrato del incidente.",
+									"pm.test(\"CP-SERV-20 | Contrato del incidente\", function () {",
+									"    pm.expect(inc).to.include.all.keys(\"incident_id\", \"classification\", \"recommended_actions\");",
+									"});",
+									"",
+									"// 3. Tipos de datos.",
+									"pm.test(\"CP-SERV-20 | Tipos de datos\", function () {",
+									"    pm.expect(inc.incident_id).to.be.a(\"string\");",
+									"    pm.expect(inc.recommended_actions).to.be.an(\"array\");",
+									"});",
+									"",
+									"// 4. Regla: devuelve exactamente el incidente pedido.",
+									"pm.test(\"CP-SERV-20 | Es el incidente solicitado\", function () {",
+									"    pm.expect(inc.incident_id).to.eql(pm.environment.get(\"incident_id\"));",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-21 | Incidente inexistente",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/incidents/INC-NO-EXISTE",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"incidents",
+								"INC-NO-EXISTE"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-21 | Incidente inexistente",
+									"// Requisito: RF-API-01",
+									"// Técnica: partición de equivalencia, partición inválida",
+									"// Petición: GET /api/v1/incidents/INC-NO-EXISTE",
+									"// Esperado: 404 con un mensaje que menciona el identificador pedido",
+									"// ============================================================",
+									"",
+									"// 1. Código: el recurso no existe, 404 Not Found.",
+									"pm.test(\"CP-SERV-21 | Código 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato y tipo del error.",
+									"pm.test(\"CP-SERV-21 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"// 4. Regla: el mensaje identifica qué incidente no se encontró.",
+									"pm.test(\"CP-SERV-21 | El mensaje menciona el identificador\", function () {",
+									"    pm.expect(datos.error).to.include(\"INC-NO-EXISTE\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-22 | Intento de recorrer directorios",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/incidents/..%2f..%2fetc%2fpasswd",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"incidents",
+								"..%2f..%2fetc%2fpasswd"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-22 | Intento de recorrer directorios (path traversal)",
+									"// Requisito: RQ-SEC-18 (los errores no exponen información interna)",
+									"// Técnica: partición de equivalencia, partición inválida",
+									"// Petición: GET con \"..%2f\" en la ruta, que intenta salir de la",
+									"// carpeta de la aplicación y leer /etc/passwd",
+									"// Esperado: 404 controlado, sin el contenido de ningún archivo",
+									"// del sistema ni rutas internas",
+									"// ============================================================",
+									"",
+									"// 1. Código: la ruta no existe, 404.",
+									"pm.test(\"CP-SERV-22 | Código 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"// 2 y 3. Contrato: la respuesta es un error en JSON.",
+									"pm.test(\"CP-SERV-22 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(pm.response.json().error).to.be.a(\"string\");",
+									"});",
+									"",
+									"// 4. Regla de seguridad: no se filtra el contenido de /etc/passwd.",
+									"pm.test(\"CP-SERV-22 | No expone archivos del sistema\", function () {",
+									"    pm.expect(pm.response.text()).to.not.include(\"root:\");",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "8.4 Decisiones",
+			"item": [
+				{
+					"name": "CP-SERV-23 | Registrar una aprobación",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/decision",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"decision"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"incident_id\": \"{{incident_id}}\", \"action_id\": \"{{action_id}}\", \"decision\": \"approved\", \"note\": \"Prueba de servicio\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-23 | Registrar una aprobación",
+									"// Requisitos: RF-API-02, RF-SUP-04, RF-AUT-06, RF-AUD-01, RNF-RD-04",
+									"// Técnica: partición de equivalencia, partición válida",
+									"// Precondición: sesión de analista; acción pendiente guardada en CP-SERV-12",
+									"// Petición: POST /api/v1/decision con decision = \"approved\"",
+									"// Esperado: 201 en menos de 500 ms. El registro queda firmado con el",
+									"// usuario y el rol de la SESIÓN (no con un dato del cuerpo) y",
+									"// encadenado al anterior por su hash (prev_hash).",
+									"// ============================================================",
+									"",
+									"// 1. Código y tiempo: 201 Created en menos de 500 ms (RNF-RD-04).",
+									"pm.test(\"CP-SERV-23 | Código 201 en menos de 500 ms\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.expect(pm.response.responseTime).to.be.below(500);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2. Contrato: la respuesta trae el registro guardado.",
+									"pm.test(\"CP-SERV-23 | Contrato del registro\", function () {",
+									"    pm.expect(datos).to.include.all.keys(\"ok\", \"record\");",
+									"    pm.expect(datos.record).to.include.all.keys(\"incident_id\", \"action_id\", \"decision\", \"analyst\", \"analyst_rol\", \"prev_hash\", \"ts\");",
+									"});",
+									"",
+									"// 3. Tipos de datos.",
+									"pm.test(\"CP-SERV-23 | Tipos de datos\", function () {",
+									"    pm.expect(datos.ok).to.be.true;",
+									"    pm.expect(datos.record.prev_hash).to.be.a(\"string\").and.not.empty;",
+									"    pm.expect(datos.record.ts).to.be.a(\"string\").and.not.empty;",
+									"});",
+									"",
+									"// 4a. Regla: se registró exactamente la decisión pedida.",
+									"pm.test(\"CP-SERV-23 | Se registró la decisión pedida\", function () {",
+									"    pm.expect(datos.record.action_id).to.eql(pm.environment.get(\"action_id\"));",
+									"    pm.expect(datos.record.decision).to.eql(\"approved\");",
+									"});",
+									"",
+									"// 4b. Regla: la decisión se firma con el usuario y el rol de la sesión (RF-AUT-06).",
+									"pm.test(\"CP-SERV-23 | Firmada con el usuario de la sesión\", function () {",
+									"    pm.expect(datos.record.analyst).to.eql(pm.environment.get(\"analista\"));",
+									"    pm.expect(datos.record.analyst_rol).to.eql(\"analyst\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-24 | Valor de decisión no admitido",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/decision",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"decision"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"incident_id\": \"{{incident_id}}\", \"action_id\": \"{{action_id}}\", \"decision\": \"ejecutar\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-24 | Valor de decisión no admitido",
+									"// Requisitos: RF-SUP-04, RQ-SEC-09",
+									"// Técnica: partición de equivalencia, partición inválida",
+									"// Petición: POST /api/v1/decision con decision = \"ejecutar\"",
+									"// Esperado: 400. Solo existen \"approved\" y \"dismissed\": el sistema",
+									"// nunca acepta una orden de ejecutar (RF-SUP-05).",
+									"// ============================================================",
+									"",
+									"// 1. Código: 400 Bad Request.",
+									"pm.test(\"CP-SERV-24 | Código 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato y tipo del error.",
+									"pm.test(\"CP-SERV-24 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"// 4. Regla: el mensaje indica los únicos valores admitidos.",
+									"pm.test(\"CP-SERV-24 | Indica los valores admitidos\", function () {",
+									"    pm.expect(datos.error).to.eql(\"decision inválida (approved|dismissed)\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-25 | Identificadores numéricos",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/decision",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"decision"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"incident_id\": 1, \"action_id\": 2, \"decision\": \"approved\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-25 | Identificadores numéricos",
+									"// Requisito: RQ-SEC-09 (validar el tipo de cada dato)",
+									"// Técnica: partición de equivalencia, partición inválida (tipo incorrecto)",
+									"// Petición: POST /api/v1/decision con números donde se esperan textos",
+									"// Esperado: 400 controlado, nunca un error 500",
+									"// ============================================================",
+									"",
+									"// 1. Código: 400.",
+									"pm.test(\"CP-SERV-25 | Código 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato y tipo del error.",
+									"pm.test(\"CP-SERV-25 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"// 4. Regla: el mensaje indica qué campos son inválidos.",
+									"pm.test(\"CP-SERV-25 | Mensaje: faltan incident_id / action_id\", function () {",
+									"    pm.expect(datos.error).to.eql(\"faltan incident_id / action_id\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-26 | Nota en el límite permitido (500 caracteres)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/decision",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"decision"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"incident_id\": \"{{incident_id}}\", \"action_id\": \"{{action_id}}\", \"decision\": \"approved\", \"note\": \"{{nota_500}}\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Genera una nota de exactamente 500 caracteres (el límite permitido).",
+									"pm.variables.set(\"nota_500\", \"x\".repeat(500));"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-26 | Nota en el límite permitido",
+									"// Requisito: RF-API-02 (nota opcional de hasta 500 caracteres)",
+									"// Técnica: análisis de valores límite, valor exacto del límite (500)",
+									"// Petición: POST /api/v1/decision con una nota de 500 caracteres",
+									"// Esperado: 201 y la nota se guarda completa, sin recortes",
+									"// ============================================================",
+									"",
+									"// 1. Código: el límite exacto se acepta.",
+									"pm.test(\"CP-SERV-26 | Código 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato y tipo: el registro incluye la nota como texto.",
+									"pm.test(\"CP-SERV-26 | El registro incluye la nota\", function () {",
+									"    pm.expect(datos.record).to.have.property(\"note\");",
+									"    pm.expect(datos.record.note).to.be.a(\"string\");",
+									"});",
+									"",
+									"// 4. Regla: la nota se guardó completa.",
+									"pm.test(\"CP-SERV-26 | La nota tiene los 500 caracteres\", function () {",
+									"    pm.expect(datos.record.note.length).to.eql(500);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-27 | Nota por encima del límite (501 caracteres)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/decision",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"decision"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"incident_id\": \"{{incident_id}}\", \"action_id\": \"{{action_id}}\", \"decision\": \"approved\", \"note\": \"{{nota_501}}\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Genera una nota de 501 caracteres: uno más que el límite.",
+									"pm.variables.set(\"nota_501\", \"x\".repeat(501));"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-27 | Nota por encima del límite",
+									"// Requisito: RF-API-02",
+									"// Técnica: análisis de valores límite, primer valor inválido (501)",
+									"// Petición: POST /api/v1/decision con una nota de 501 caracteres",
+									"// Esperado: 400 con el mensaje que indica el límite y el largo recibido",
+									"// ============================================================",
+									"",
+									"// 1. Código: 400.",
+									"pm.test(\"CP-SERV-27 | Código 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato y tipo del error.",
+									"pm.test(\"CP-SERV-27 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"// 4. Regla: el mensaje informa el límite y el largo recibido.",
+									"pm.test(\"CP-SERV-27 | Mensaje: note supera 500 caracteres (501)\", function () {",
+									"    pm.expect(datos.error).to.eql(\"note supera 500 caracteres (501)\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-28 | Acción inexistente en el incidente",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/decision",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"decision"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"incident_id\": \"{{incident_id}}\", \"action_id\": \"ACCION-INVENTADA\", \"decision\": \"approved\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-28 | Acción inexistente en el incidente",
+									"// Requisito: RF-API-02",
+									"// Técnica: partición de equivalencia, partición inválida",
+									"// Petición: POST /api/v1/decision con un incidente real y una acción inventada",
+									"// Esperado: 404. El sistema no registra decisiones sobre acciones que no",
+									"// existen, para no contaminar la auditoría, que es permanente.",
+									"// ============================================================",
+									"",
+									"// 1. Código: 404.",
+									"pm.test(\"CP-SERV-28 | Código 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato: es un error y no se devuelve ningún registro.",
+									"pm.test(\"CP-SERV-28 | Contrato: error y sin registro\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"    pm.expect(datos).to.not.have.property(\"record\");",
+									"});",
+									"",
+									"// 4. Regla: el mensaje identifica la acción inexistente.",
+									"pm.test(\"CP-SERV-28 | El mensaje menciona la acción\", function () {",
+									"    pm.expect(datos.error).to.include(\"ACCION-INVENTADA\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-29 | Decisión sin token CSRF",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/decision",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"decision"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"incident_id\": \"{{incident_id}}\", \"action_id\": \"{{action_id}}\", \"decision\": \"approved\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-29 | Decisión sin token CSRF",
+									"// Requisito: RQ-SEC-11",
+									"// Técnica: partición de equivalencia, partición inválida",
+									"// Precondición: sesión de analista abierta (tiene permiso para decidir)",
+									"// Petición: POST /api/v1/decision válida pero SIN X-CSRFToken",
+									"// Esperado: 403. Aunque el usuario tenga permiso, sin el token CSRF",
+									"// la decisión no se registra. Así otra página web no puede decidir",
+									"// en nombre del analista.",
+									"// ============================================================",
+									"",
+									"// 1. Código: 403.",
+									"pm.test(\"CP-SERV-29 | Código 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato y tipo del error.",
+									"pm.test(\"CP-SERV-29 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"// 4. Regla: el motivo es el token CSRF.",
+									"pm.test(\"CP-SERV-29 | El motivo es el token CSRF\", function () {",
+									"    pm.expect(datos.error).to.include(\"token CSRF\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-30 | Cuerpo de más de 64 KB",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/decision",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"decision"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{{cuerpo_grande}}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Genera un cuerpo de 70.000 caracteres (unos 70 KB), por encima del",
+									"// tope de 64 KB que acepta el gateway.",
+									"pm.variables.set(\"cuerpo_grande\", \"a\".repeat(70000));"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-30 | Cuerpo de más de 64 KB",
+									"// Requisito: RQ-SEC-09 (protección ante entradas desmedidas)",
+									"// Técnica: análisis de valores límite (tamaño máximo del cuerpo)",
+									"// Petición: POST /api/v1/decision con un cuerpo de 70 KB",
+									"// Esperado: 413 Payload Too Large. El servidor rechaza el cuerpo",
+									"// antes de procesarlo, lo que evita que lo saturen con datos enormes.",
+									"// ============================================================",
+									"",
+									"// 1. Código: 413.",
+									"pm.test(\"CP-SERV-30 | Código 413\", function () {",
+									"    pm.response.to.have.status(413);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato: error controlado, con el código dentro del cuerpo.",
+									"pm.test(\"CP-SERV-30 | Contrato: error y status\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"    pm.expect(datos.status).to.eql(413);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-31 | El historial incluye la decisión registrada",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/decisions",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"decisions"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-31 | El historial incluye la decisión registrada",
+									"// Requisitos: RF-API-03, RF-AUD-01",
+									"// Técnica: transición de estados, caja gris (verifica el efecto de CP-SERV-23)",
+									"// Precondición: CP-SERV-23 ejecutado",
+									"// Petición: GET /api/v1/decisions",
+									"// Esperado: 200 con una lista que contiene la aprobación de CP-SERV-23",
+									"// ============================================================",
+									"",
+									"// 1. Código: 200.",
+									"pm.test(\"CP-SERV-31 | Código 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const lista = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato y tipo: es una lista no vacía.",
+									"pm.test(\"CP-SERV-31 | Es una lista de decisiones\", function () {",
+									"    pm.expect(lista).to.be.an(\"array\").that.is.not.empty;",
+									"});",
+									"",
+									"// 4. Regla: la decisión de CP-SERV-23 quedó registrada en el historial.",
+									"pm.test(\"CP-SERV-31 | Contiene la aprobación registrada\", function () {",
+									"    const encontrada = lista.find(d => d.action_id === pm.environment.get(\"action_id\") && d.decision === \"approved\");",
+									"    pm.expect(encontrada, \"decisión de CP-SERV-23\").to.not.be.undefined;",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-32 | No existe forma de borrar decisiones",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/decisions",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"decisions"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-32 | No existe forma de borrar decisiones",
+									"// Requisito: RF-AUD-03 (el registro no se edita ni se elimina)",
+									"// Técnica: partición de equivalencia, partición inválida (método no permitido)",
+									"// Petición: DELETE /api/v1/decisions con sesión y token CSRF",
+									"// Esperado: 405 Method Not Allowed. Aun con todos los permisos, no",
+									"// existe ninguna ruta para borrar el historial.",
+									"// ============================================================",
+									"",
+									"// 1. Código: 405.",
+									"pm.test(\"CP-SERV-32 | Código 405\", function () {",
+									"    pm.response.to.have.status(405);",
+									"});",
+									"",
+									"// 2 y 3. Contrato: error controlado, con el código dentro del cuerpo.",
+									"pm.test(\"CP-SERV-32 | Contrato: error y status\", function () {",
+									"    const datos = pm.response.json();",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"    pm.expect(datos.status).to.eql(405);",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "8.5 Auditoría y reportes",
+			"item": [
+				{
+					"name": "CP-SERV-39a | Decisión con una nota que parece una fórmula",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/decision",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"decision"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"incident_id\": \"{{incident_id}}\", \"action_id\": \"{{action_id}}\", \"decision\": \"approved\", \"note\": \"=HYPERLINK(\\\"x\\\")\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-39a | Decisión con una nota que parece una fórmula",
+									"// Requisito: RF-REP-03 (primera mitad del caso)",
+									"// Técnica: caja gris",
+									"// Precondición: sesión de analista (la que dejó la carpeta 8.2)",
+									"// Petición: POST /api/v1/decision con note = =HYPERLINK(\"x\")",
+									"// Esperado: 201. La nota se guarda tal cual; el riesgo aparece recién",
+									"// al abrir el CSV en Excel, y eso lo verifica CP-SERV-39b.",
+									"// ============================================================",
+									"",
+									"pm.test(\"CP-SERV-39a | Código 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"CP-SERV-39a | La nota se registró sin modificar\", function () {",
+									"    pm.expect(pm.response.json().record.note).to.eql(\"=HYPERLINK(\\\"x\\\")\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Preparación | Sesión de auditor (reportes)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/login",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"username\": \"{{auditor}}\", \"password\": \"{{password}}\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Preparación: abre la sesión del auditor para verificar la cadena y",
+									"// pedir los reportes. Guarda la fecha de hoy para filtrar los reportes.",
+									"pm.test(\"Preparación | Sesión de auditor abierta\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.environment.set(\"csrf_token\", pm.response.json().csrf_token);",
+									"pm.environment.set(\"hoy\", new Date().toISOString().slice(0, 10));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-33 | La cadena sigue íntegra tras registrar decisiones",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/audit/verify",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"audit",
+								"verify"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-33 | La cadena sigue íntegra tras registrar decisiones",
+									"// Requisito: RQ-SEC-14 (registros encadenados por hash)",
+									"// Técnica: caja gris (compara con el valor guardado en CP-SERV-14)",
+									"// Precondición: CP-SERV-14 guardó registros_antes; desde entonces se",
+									"// registraron decisiones en CP-SERV-23, 26 y 39a",
+									"// Petición: GET /api/v1/audit/verify con sesión de auditor",
+									"// Esperado: 200 con la cadena íntegra y MÁS registros que antes",
+									"// ============================================================",
+									"",
+									"// 1. Código: 200.",
+									"pm.test(\"CP-SERV-33 | Código 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2 y 3. Contrato y tipos.",
+									"pm.test(\"CP-SERV-33 | Contrato y tipos\", function () {",
+									"    pm.expect(datos).to.include.all.keys(\"chain_ok\", \"first_broken\", \"records\");",
+									"    pm.expect(datos.records).to.be.a(\"number\");",
+									"});",
+									"",
+									"// 4a. Regla: agregar registros no rompió la cadena.",
+									"pm.test(\"CP-SERV-33 | La cadena sigue íntegra\", function () {",
+									"    pm.expect(datos.chain_ok).to.be.true;",
+									"    pm.expect(datos.first_broken).to.be.null;",
+									"});",
+									"",
+									"// 4b. Regla: las decisiones nuevas se agregaron al registro.",
+									"pm.test(\"CP-SERV-33 | Hay más registros que en CP-SERV-14\", function () {",
+									"    pm.expect(datos.records).to.be.above(Number(pm.environment.get(\"registros_antes\")));",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-34 | Reporte en JSON",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/reportes?formato=json&desde=2026-01-01&hasta={{hoy}}",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes"
+							],
+							"query": [
+								{
+									"key": "formato",
+									"value": "json"
+								},
+								{
+									"key": "desde",
+									"value": "2026-01-01"
+								},
+								{
+									"key": "hasta",
+									"value": "{{hoy}}"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-34 | Reporte en JSON",
+									"// Requisitos: RF-REP-01 (reporte filtrable), RF-REP-02 (resúmenes e integridad)",
+									"// Técnica: partición de equivalencia, partición válida",
+									"// Petición: GET /api/v1/reportes desde el 1 de enero hasta hoy, en JSON",
+									"// Esperado: 200 con decisiones, accesos, actividad, integridad,",
+									"// período y resumen",
+									"// ============================================================",
+									"",
+									"// 1. Código: 200.",
+									"pm.test(\"CP-SERV-34 | Código 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2. Contrato completo del reporte.",
+									"pm.test(\"CP-SERV-34 | Contrato del reporte\", function () {",
+									"    pm.expect(datos).to.include.all.keys(\"accesos\", \"actividad\", \"decisiones\", \"generado_en\", \"integridad\", \"periodo\", \"resumen\");",
+									"});",
+									"",
+									"// 3. Tipos de datos.",
+									"pm.test(\"CP-SERV-34 | Tipos de datos\", function () {",
+									"    pm.expect(datos.decisiones).to.be.an(\"array\");",
+									"    pm.expect(datos.accesos).to.be.an(\"array\");",
+									"    pm.expect(datos.integridad).to.be.an(\"object\");",
+									"    pm.expect(datos.resumen).to.be.an(\"object\");",
+									"});",
+									"",
+									"// 4. Regla: el reporte incluye las decisiones registradas hoy.",
+									"pm.test(\"CP-SERV-34 | Incluye las decisiones de hoy\", function () {",
+									"    pm.expect(datos.decisiones.length).to.be.above(0);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-35 | Reporte en CSV",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/reportes?formato=csv&desde=2026-01-01&hasta={{hoy}}",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes"
+							],
+							"query": [
+								{
+									"key": "formato",
+									"value": "csv"
+								},
+								{
+									"key": "desde",
+									"value": "2026-01-01"
+								},
+								{
+									"key": "hasta",
+									"value": "{{hoy}}"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-35 | Reporte en CSV",
+									"// Requisito: RF-REP-01",
+									"// Técnica: partición de equivalencia, partición válida",
+									"// Petición: GET /api/v1/reportes con formato=csv",
+									"// Esperado: 200 con un archivo CSV para descargar.",
+									"// Nota: el servidor envía \"text/csv; charset=utf-8\" repetido, por eso",
+									"// se verifica que el tipo INCLUYA text/csv y no que sea idéntico.",
+									"// ============================================================",
+									"",
+									"// 1. Código: 200.",
+									"pm.test(\"CP-SERV-35 | Código 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// 2. Contrato: el tipo de contenido es CSV.",
+									"pm.test(\"CP-SERV-35 | El contenido es CSV\", function () {",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/csv\");",
+									"});",
+									"",
+									"// 3. Contrato: se descarga como archivo .csv.",
+									"pm.test(\"CP-SERV-35 | Se descarga como archivo .csv\", function () {",
+									"    const disposicion = pm.response.headers.get(\"Content-Disposition\");",
+									"    pm.expect(disposicion).to.include(\"attachment\");",
+									"    pm.expect(disposicion).to.include(\".csv\");",
+									"});",
+									"",
+									"// 4. Regla: la primera línea es la cabecera de columnas y hay datos.",
+									"pm.test(\"CP-SERV-35 | Tiene cabecera y filas de datos\", function () {",
+									"    const lineas = pm.response.text().trim().split(\"\\n\");",
+									"    pm.expect(lineas[0]).to.include(\"registro\");",
+									"    pm.expect(lineas.length).to.be.above(1);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-36 | Formato no admitido",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/reportes?formato=xml",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes"
+							],
+							"query": [
+								{
+									"key": "formato",
+									"value": "xml"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-36 | Formato no admitido",
+									"// Requisito: RF-REP-01 (solo CSV o JSON)",
+									"// Técnica: partición de equivalencia, partición inválida",
+									"// Petición: GET /api/v1/reportes?formato=xml",
+									"// Esperado: 400 con los formatos admitidos",
+									"// ============================================================",
+									"",
+									"pm.test(\"CP-SERV-36 | Código 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"pm.test(\"CP-SERV-36 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"pm.test(\"CP-SERV-36 | Indica los formatos admitidos\", function () {",
+									"    pm.expect(datos.error).to.eql(\"formato inválido (json|csv)\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-38 | Rango de fechas invertido",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/reportes?desde=2026-02-01&hasta=2026-01-01",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes"
+							],
+							"query": [
+								{
+									"key": "desde",
+									"value": "2026-02-01"
+								},
+								{
+									"key": "hasta",
+									"value": "2026-01-01"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-38 | Rango de fechas invertido",
+									"// Requisito: RF-REP-01",
+									"// Técnica: partición de equivalencia, partición inválida",
+									"// Petición: GET /api/v1/reportes con \"desde\" posterior a \"hasta\"",
+									"// Esperado: 400 con el motivo",
+									"// ============================================================",
+									"",
+									"pm.test(\"CP-SERV-38 | Código 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"pm.test(\"CP-SERV-38 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"pm.test(\"CP-SERV-38 | Indica que el rango está invertido\", function () {",
+									"    pm.expect(datos.error).to.eql(\"'desde' es posterior a 'hasta'\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-39b | El CSV neutraliza la fórmula",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/reportes?formato=csv&desde=2026-01-01&hasta={{hoy}}",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes"
+							],
+							"query": [
+								{
+									"key": "formato",
+									"value": "csv"
+								},
+								{
+									"key": "desde",
+									"value": "2026-01-01"
+								},
+								{
+									"key": "hasta",
+									"value": "{{hoy}}"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-39b | El CSV neutraliza la fórmula",
+									"// Requisito: RF-REP-03 (segunda mitad del caso)",
+									"// Técnica: caja gris (busca en el CSV la nota registrada en CP-SERV-39a)",
+									"// Por qué importa: si una celda empieza con \"=\", Excel la ejecuta como",
+									"// fórmula al abrir el archivo. Un atacante podría escribir una fórmula",
+									"// en un log y hacer que se ejecute en la computadora del auditor.",
+									"// Esperado: la celda aparece con un apóstrofo delante ('=HYPERLINK),",
+									"// que hace que Excel la trate como texto.",
+									"// ============================================================",
+									"",
+									"const csv = pm.response.text();",
+									"",
+									"// 1. Código: 200.",
+									"pm.test(\"CP-SERV-39b | Código 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// 2. La nota de CP-SERV-39a está en el CSV.",
+									"pm.test(\"CP-SERV-39b | El CSV contiene la nota de 39a\", function () {",
+									"    pm.expect(csv).to.include(\"HYPERLINK\");",
+									"});",
+									"",
+									"// 3. Regla de seguridad: la fórmula aparece neutralizada con un apóstrofo.",
+									"pm.test(\"CP-SERV-39b | La celda empieza con apóstrofo\", function () {",
+									"    pm.expect(csv).to.include(\"'=HYPERLINK\");",
+									"});",
+									"",
+									"// 4. Regla de seguridad: ninguna celda empieza directamente con \"=HYPERLINK\".",
+									"pm.test(\"CP-SERV-39b | Ninguna celda empieza con =\", function () {",
+									"    pm.expect(csv).to.not.match(/(^|,)\"?=HYPERLINK/m);",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "8.6 Memoria del agente",
+			"item": [
+				{
+					"name": "Preparación | Sesión de analista (memoria)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/login",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"username\": \"{{analista}}\", \"password\": \"{{password}}\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Preparación: vuelve a la sesión del analista, que tiene el permiso",
+									"// decidir necesario para escribir en la memoria del agente.",
+									"pm.test(\"Preparación | Sesión de analista abierta\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.environment.set(\"csrf_token\", pm.response.json().csrf_token);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-40 | Cargar un documento",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/memoria/documentos",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"memoria",
+								"documentos"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"titulo\": \"Procedimiento SSH\", \"contenido\": \"Bloquear la IP de origen tras 20 fallos de autenticacion SSH.\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-40 | Cargar un documento",
+									"// Requisito: RF-MEM-05 (documentos de la organización para el agente)",
+									"// Técnica: partición de equivalencia, partición válida",
+									"// Precondición: sesión de analista",
+									"// Petición: POST /api/v1/memoria/documentos con título y contenido válidos",
+									"// Esperado: 201 con un doc_id con formato DOC- más 10 caracteres",
+									"// hexadecimales y el autor tomado de la sesión",
+									"// ============================================================",
+									"",
+									"// 1. Código: 201 Created.",
+									"pm.test(\"CP-SERV-40 | Código 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2. Contrato del documento creado.",
+									"pm.test(\"CP-SERV-40 | Contrato del documento\", function () {",
+									"    pm.expect(datos).to.include.all.keys(\"ok\", \"documento\");",
+									"    pm.expect(datos.documento).to.include.all.keys(\"doc_id\", \"titulo\", \"subido_por\", \"caracteres\", \"ts\");",
+									"});",
+									"",
+									"// 3. Tipos y formato del identificador.",
+									"pm.test(\"CP-SERV-40 | Tipos y formato del doc_id\", function () {",
+									"    pm.expect(datos.documento.doc_id).to.match(/^DOC-[0-9a-f]{10}$/);",
+									"    pm.expect(datos.documento.caracteres).to.be.a(\"number\");",
+									"});",
+									"",
+									"// 4. Regla: el autor es el usuario de la sesión, no un dato del cuerpo.",
+									"pm.test(\"CP-SERV-40 | Autor tomado de la sesión\", function () {",
+									"    pm.expect(datos.documento.subido_por).to.eql(pm.environment.get(\"analista\"));",
+									"    pm.expect(datos.documento.titulo).to.eql(\"Procedimiento SSH\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-41 | Título por encima del límite (121 caracteres)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/memoria/documentos",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"memoria",
+								"documentos"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"titulo\": \"{{titulo_121}}\", \"contenido\": \"Contenido de prueba\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Genera un título de 121 caracteres: uno más que el límite de 120.",
+									"pm.variables.set(\"titulo_121\", \"T\".repeat(121));"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-41 | Título por encima del límite",
+									"// Requisito: RF-MEM-05",
+									"// Técnica: análisis de valores límite, primer valor inválido (121)",
+									"// Petición: POST /api/v1/memoria/documentos con un título de 121 caracteres",
+									"// Esperado: 400 con el límite y el largo recibido",
+									"// ============================================================",
+									"",
+									"pm.test(\"CP-SERV-41 | Código 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"pm.test(\"CP-SERV-41 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"pm.test(\"CP-SERV-41 | Mensaje con el límite y el largo\", function () {",
+									"    pm.expect(datos.error).to.eql(\"'titulo' supera 120 caracteres (121)\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-42 | Proponer una lección",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/memoria/lecciones",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"memoria",
+								"lecciones"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"texto\": \"Los escaneos desde 10.0.0.9 son del monitoreo interno.\", \"attack_type\": \"port_scan\", \"ip\": \"10.0.0.9\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-42 | Proponer una lección",
+									"// Requisitos: RF-MEM-03 (lección escrita a mano), RF-MEM-04 (nace propuesta)",
+									"// Técnica: partición de equivalencia, partición válida",
+									"// Petición: POST /api/v1/memoria/lecciones con texto, tipo de ataque e IP",
+									"// Esperado: 201 con la lección en estado \"propuesta\". Todavía no afecta",
+									"// a ningún análisis: necesita aprobación (CP-SERV-45).",
+									"// Efecto: guarda el leccion_id para CP-SERV-45 y 46.",
+									"// ============================================================",
+									"",
+									"// 1. Código: 201.",
+									"pm.test(\"CP-SERV-42 | Código 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 2. Contrato de la lección creada.",
+									"pm.test(\"CP-SERV-42 | Contrato de la lección\", function () {",
+									"    pm.expect(datos).to.include.all.keys(\"ok\", \"leccion\");",
+									"    pm.expect(datos.leccion).to.include.all.keys(\"leccion_id\", \"estado\");",
+									"});",
+									"",
+									"// 3. Formato del identificador: LEC- más 10 caracteres hexadecimales.",
+									"pm.test(\"CP-SERV-42 | Formato del leccion_id\", function () {",
+									"    pm.expect(datos.leccion.leccion_id).to.match(/^LEC-[0-9a-f]{10}$/);",
+									"});",
+									"",
+									"// 4. Regla: toda lección nace en estado propuesta (RF-MEM-04).",
+									"pm.test(\"CP-SERV-42 | La lección nace propuesta\", function () {",
+									"    pm.expect(datos.leccion.estado).to.eql(\"propuesta\");",
+									"});",
+									"",
+									"pm.environment.set(\"leccion_id\", datos.leccion.leccion_id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-43 | Tipo de ataque desconocido",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/memoria/lecciones",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"memoria",
+								"lecciones"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"texto\": \"Leccion de prueba\", \"attack_type\": \"no-existe\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-43 | Tipo de ataque desconocido",
+									"// Requisito: RF-MEM-03",
+									"// Técnica: partición de equivalencia, partición inválida",
+									"// Petición: POST /api/v1/memoria/lecciones con attack_type = \"no-existe\"",
+									"// Esperado: 400. Solo se admiten ssh_brute_force, port_scan,",
+									"// credential_harvesting y suspicious_auth.",
+									"// ============================================================",
+									"",
+									"pm.test(\"CP-SERV-43 | Código 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"pm.test(\"CP-SERV-43 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"pm.test(\"CP-SERV-43 | Mensaje: tipo de ataque desconocido\", function () {",
+									"    pm.expect(datos.error).to.eql(\"attack_type desconocido: 'no-existe'\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-44 | Texto de lección por encima del límite (401 caracteres)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/memoria/lecciones",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"memoria",
+								"lecciones"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"texto\": \"{{texto_401}}\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-44 | Texto de lección por encima del límite",
+									"// Requisito: RF-MEM-03 (lección de hasta 400 caracteres)",
+									"// Técnica: análisis de valores límite, primer valor inválido (401)",
+									"// Petición: POST /api/v1/memoria/lecciones con un texto de 401 caracteres",
+									"// Esperado: 400 controlado",
+									"// ============================================================",
+									"",
+									"pm.test(\"CP-SERV-44 | Código 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"pm.test(\"CP-SERV-44 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\").and.not.empty;",
+									"});",
+									"",
+									"// Regla: no se creó ninguna lección.",
+									"pm.test(\"CP-SERV-44 | No se creó la lección\", function () {",
+									"    pm.expect(datos).to.not.have.property(\"leccion\");",
+									"});"
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Genera un texto de 401 caracteres: uno más que el límite de 400.",
+									"pm.variables.set(\"texto_401\", \"L\".repeat(401));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-45 | Aprobar la lección propuesta",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/memoria/lecciones/{{leccion_id}}/revision",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"memoria",
+								"lecciones",
+								"{{leccion_id}}",
+								"revision"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"decision\": \"aprobar\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-45 | Aprobar la lección propuesta",
+									"// Requisito: RF-MEM-04 (la lección se aplica solo tras aprobarla)",
+									"// Técnica: transición de estados, de \"propuesta\" a \"aprobada\"",
+									"// Precondición: CP-SERV-42 guardó el leccion_id",
+									"// Petición: POST /api/v1/memoria/lecciones/{{leccion_id}}/revision",
+									"// Esperado: 200 con la lección en estado \"aprobada\"",
+									"// ============================================================",
+									"",
+									"pm.test(\"CP-SERV-45 | Código 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"pm.test(\"CP-SERV-45 | Contrato de la lección\", function () {",
+									"    pm.expect(datos).to.include.all.keys(\"ok\", \"leccion\");",
+									"});",
+									"",
+									"pm.test(\"CP-SERV-45 | Es la lección de CP-SERV-42\", function () {",
+									"    pm.expect(datos.leccion.leccion_id).to.eql(pm.environment.get(\"leccion_id\"));",
+									"});",
+									"",
+									"// Regla: la transición válida cambia el estado a aprobada.",
+									"pm.test(\"CP-SERV-45 | La lección quedó aprobada\", function () {",
+									"    pm.expect(datos.leccion.estado).to.eql(\"aprobada\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-46 | Reabrir una lección ya revisada",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/memoria/lecciones/{{leccion_id}}/revision",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"memoria",
+								"lecciones",
+								"{{leccion_id}}",
+								"revision"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"decision\": \"rechazar\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-46 | Reabrir una lección ya revisada",
+									"// Requisito: RF-MEM-04 (una lección aprobada no se reabre)",
+									"// Técnica: transición de estados, transición ilegal",
+									"// Precondición: CP-SERV-45 aprobó la lección",
+									"// Petición: intentar rechazar la misma lección",
+									"// Esperado: 400 controlado; la lección sigue aprobada",
+									"// ============================================================",
+									"",
+									"pm.test(\"CP-SERV-46 | Código 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"pm.test(\"CP-SERV-46 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"// Regla: el mensaje indica que la lección ya fue revisada.",
+									"pm.test(\"CP-SERV-46 | Indica que ya fue revisada\", function () {",
+									"    pm.expect(datos.error).to.include(\"ya fue\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-47 | Identificador de lección con formato inválido",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/memoria/lecciones/XYZ/revision",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"memoria",
+								"lecciones",
+								"XYZ",
+								"revision"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"decision\": \"aprobar\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-47 | Identificador de lección con formato inválido",
+									"// Requisito: RQ-SEC-09 (validar la entrada antes de usarla)",
+									"// Técnica: partición de equivalencia, partición inválida",
+									"// Petición: revisar la lección \"XYZ\", que no cumple LEC- más 10 hexadecimales",
+									"// Esperado: 400. El formato se valida antes de buscar la lección.",
+									"// ============================================================",
+									"",
+									"pm.test(\"CP-SERV-47 | Código 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"pm.test(\"CP-SERV-47 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"pm.test(\"CP-SERV-47 | Mensaje: identificador inválido\", function () {",
+									"    pm.expect(datos.error).to.eql(\"identificador de lección inválido\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-48 | Lección inexistente",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRFToken",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/memoria/lecciones/LEC-0000000000/revision?=",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"memoria",
+								"lecciones",
+								"LEC-0000000000",
+								"revision"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"decision\": \"aprobar\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-48 | Lección inexistente",
+									"// Requisito: RF-MEM-04",
+									"// Técnica: partición de equivalencia, partición inválida",
+									"// Petición: revisar LEC-0000000000, que tiene formato válido pero no existe",
+									"// Esperado: 404",
+									"// ============================================================",
+									"",
+									"pm.test(\"CP-SERV-48 | Código 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"pm.test(\"CP-SERV-48 | Contrato: campo error de tipo texto\", function () {",
+									"    pm.expect(datos.error).to.be.a(\"string\");",
+									"});",
+									"",
+									"pm.test(\"CP-SERV-48 | El mensaje identifica la lección\", function () {",
+									"    pm.expect(datos.error).to.eql(\"no existe la lección 'LEC-0000000000'\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "CP-SERV-49 | La memoria refleja lo cargado",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/memoria",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"memoria"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-49 | La memoria refleja lo cargado",
+									"// Requisito: RF-MEM-05",
+									"// Técnica: caja gris (verifica el efecto de CP-SERV-40 y 42)",
+									"// Petición: GET /api/v1/memoria",
+									"// Esperado: 200 con el documento de CP-SERV-40 y la lección de CP-SERV-42",
+									"// ============================================================",
+									"",
+									"pm.test(\"CP-SERV-49 | Código 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"pm.test(\"CP-SERV-49 | Contrato: documentos y lecciones\", function () {",
+									"    pm.expect(datos).to.include.all.keys(\"documentos\", \"lecciones\");",
+									"    pm.expect(datos.documentos).to.be.an(\"array\");",
+									"    pm.expect(datos.lecciones).to.be.an(\"array\");",
+									"});",
+									"",
+									"pm.test(\"CP-SERV-49 | Incluye el documento de CP-SERV-40\", function () {",
+									"    pm.expect(datos.documentos.some(d => d.titulo === \"Procedimiento SSH\")).to.be.true;",
+									"});",
+									"",
+									"pm.test(\"CP-SERV-49 | Incluye la lección aprobada de CP-SERV-42\", function () {",
+									"    const leccion = datos.lecciones.find(l => l.leccion_id === pm.environment.get(\"leccion_id\"));",
+									"    pm.expect(leccion).to.not.be.undefined;",
+									"    pm.expect(leccion.estado).to.eql(\"aprobada\");",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "9. Bloqueo por intentos (al final)",
+			"item": [
+				{
+					"name": "CP-SERV-06 | Bloqueo tras 5 intentos fallidos",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url_gateway}}/api/v1/login",
+							"host": [
+								"{{url_gateway}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"username\": \"{{usuario_descartable}}\", \"password\": \"contrasena-incorrecta\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Antes de la petición principal se hacen 5 intentos fallidos con el",
+									"// usuario descartable, uno detrás de otro. Se guarda el código de",
+									"// cada intento para verificarlo después.",
+									"const url = pm.environment.get(\"url_gateway\") + \"/api/v1/login\";",
+									"const cuerpo = JSON.stringify({",
+									"    username: pm.environment.get(\"usuario_descartable\"),",
+									"    password: \"contrasena-incorrecta\"",
+									"});",
+									"const codigos = [];",
+									"",
+									"function intento(numero) {",
+									"    if (numero > 5) {",
+									"        pm.variables.set(\"codigos_previos\", JSON.stringify(codigos));",
+									"        return;",
+									"    }",
+									"    pm.sendRequest({",
+									"        url: url,",
+									"        method: \"POST\",",
+									"        header: { \"Content-Type\": \"application/json\" },",
+									"        body: { mode: \"raw\", raw: cuerpo }",
+									"    }, function (error, respuesta) {",
+									"        codigos.push(respuesta.code);",
+									"        console.log(\"Intento \" + numero + \": HTTP \" + respuesta.code);",
+									"        intento(numero + 1);",
+									"    });",
+									"}",
+									"",
+									"intento(1);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// ============================================================",
+									"// CP-SERV-06 | Bloqueo tras 5 intentos fallidos",
+									"// Requisito: RF-AUT-04 (bloqueo tras 5 intentos en 15 minutos,",
+									"// con espera creciente)",
+									"// Técnica: análisis de valores límite (5 intentos permitidos, el 6.º no)",
+									"// Precondición: el usuario descartable no tiene intentos previos",
+									"// Petición: el script \"Before request\" hace 5 intentos fallidos;",
+									"// esta petición es el 6.º intento",
+									"// Esperado: los intentos 1 a 5 responden 401; el 6.º responde 429",
+									"// Too Many Requests con reintentar_en = 60 segundos",
+									"// ============================================================",
+									"",
+									"// 1. Límite: los 5 primeros intentos se rechazan como credenciales",
+									"// incorrectas, sin bloquear todavía.",
+									"pm.test(\"CP-SERV-06 | Los intentos 1 a 5 responden 401\", function () {",
+									"    const codigos = JSON.parse(pm.variables.get(\"codigos_previos\"));",
+									"    pm.expect(codigos).to.eql([401, 401, 401, 401, 401]);",
+									"});",
+									"",
+									"// 2. Código: el 6.º intento queda bloqueado con 429.",
+									"pm.test(\"CP-SERV-06 | El 6.º intento responde 429\", function () {",
+									"    pm.response.to.have.status(429);",
+									"});",
+									"",
+									"const datos = pm.response.json();",
+									"",
+									"// 3. Contrato y tipos de la respuesta de bloqueo.",
+									"pm.test(\"CP-SERV-06 | Contrato: error y reintentar_en\", function () {",
+									"    pm.expect(datos).to.include.all.keys(\"error\", \"reintentar_en\");",
+									"    pm.expect(datos.reintentar_en).to.be.a(\"number\");",
+									"});",
+									"",
+									"// 4. Regla: la primera espera es de 60 segundos (luego crece).",
+									"pm.test(\"CP-SERV-06 | La espera inicial es de 60 s\", function () {",
+									"    pm.expect(datos.reintentar_en).to.eql(60);",
+									"    pm.expect(datos.error).to.include(\"demasiados intentos\");",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Aserciones globales: se ejecutan después de CADA petición de la colección.",
+					"",
+					"// RNF-RD-01: ninguna respuesta puede tardar 2 segundos o más.",
+					"pm.test(\"[Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)\", function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+					"});",
+					"",
+					"// RQ-SEC-18: los errores no pueden exponer trazas ni rutas internas del servidor.",
+					"pm.test(\"[Global] Sin trazas ni rutas internas (RQ-SEC-18)\", function () {",
+					"    const texto = pm.response.text();",
+					"    pm.expect(texto).to.not.match(/Traceback|File \\\".*\\.py\\\"|\\/home\\/|site-packages/);",
+					"});",
+					"",
+					"// Contrato: toda respuesta con cuerpo de la API /api/ tiene que ser JSON.",
+					"if (pm.request.url.getPath().startsWith(\"/api/\") && pm.response.code !== 204 && !pm.request.url.getPath().includes(\"reportes\")) {",
+					"    pm.test(\"[Global] La API responde JSON\", function () {",
+					"        pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+					"    });",
+					"}"
+				]
+			}
+		}
+	]
+}

@@ -1,0 +1,60 @@
+$kind: http-request
+name: CP-SERV-01 | Inicio de sesión válido (analista)
+url: "{{url_gateway}}/api/v1/login"
+method: POST
+body:
+  type: json
+  content: '{"username": "{{analista}}", "password": "{{password}}"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-01 | Inicio de sesión válido (analista)
+      // Requisitos: RF-AUT-02 (roles), RQ-SEC-12 (cookie segura)
+      // Técnica: partición de equivalencia, partición válida
+      // Petición: POST /api/v1/login con el usuario analista y su contraseña
+      // Esperado: 200 con usuario, rol, permisos y csrf_token, y una
+      // cookie siem_session con HttpOnly y SameSite=Lax.
+      // Efecto: guarda csrf_token en el entorno para los POST siguientes.
+      // ============================================================
+
+      // 1. Código: credenciales correctas, 200 OK.
+      pm.test("CP-SERV-01 | Código 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      const datos = pm.response.json();
+
+      // 2. Contrato: la respuesta trae los datos de la sesión.
+      pm.test("CP-SERV-01 | Contrato de la respuesta", function () {
+          pm.expect(datos).to.include.all.keys("ok", "usuario", "rol", "permisos", "csrf_token");
+      });
+
+      // 3. Tipos de cada campo.
+      pm.test("CP-SERV-01 | Tipos de datos", function () {
+          pm.expect(datos.usuario).to.be.a("string");
+          pm.expect(datos.rol).to.be.a("string");
+          pm.expect(datos.permisos).to.be.an("array").that.is.not.empty;
+          pm.expect(datos.csrf_token).to.be.a("string").and.not.empty;
+      });
+
+      // 4. Reglas: es el usuario pedido, con rol analyst y permiso para decidir.
+      pm.test("CP-SERV-01 | Usuario, rol analyst y permiso decidir", function () {
+          pm.expect(datos.usuario).to.eql(pm.environment.get("analista"));
+          pm.expect(datos.rol).to.eql("analyst");
+          pm.expect(datos.permisos).to.include("decidir");
+      });
+
+      // Seguridad de la cookie (RQ-SEC-12): JavaScript no puede leerla (HttpOnly)
+      // y no se envía desde otros sitios (SameSite=Lax).
+      pm.test("CP-SERV-01 | Cookie de sesión HttpOnly y SameSite=Lax", function () {
+          const cookie = pm.response.headers.get("Set-Cookie");
+          pm.expect(cookie).to.include("siem_session");
+          pm.expect(cookie).to.include("HttpOnly");
+          pm.expect(cookie).to.include("SameSite=Lax");
+      });
+
+      // Se guarda el token CSRF para los POST de los casos siguientes.
+      pm.environment.set("csrf_token", datos.csrf_token);
+    language: text/javascript
+order: 8000

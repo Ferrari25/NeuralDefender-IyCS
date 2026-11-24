@@ -1,0 +1,3 @@
+# Comando: /tmp/claude-1000/-home-saferrari-Proyectos-NeuralDefender-IyCS-ALL/024b2b0f-57d2-4627-b394-4dc7978978d1/scratchpad/venv/bin/yamllint -f parsable entregables/1.3-evidencia-reglas/prueba-de-reglas/yaml/ejemplo_sintaxis_invalida.yml
+entregables/1.3-evidencia-reglas/prueba-de-reglas/yaml/ejemplo_sintaxis_invalida.yml:3:5: [error] syntax error: expected ',' or ']', but got ':' (syntax)
+# Codigo de salida: 1

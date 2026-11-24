@@ -1,0 +1,43 @@
+$kind: http-request
+name: CP-SERV-27 | Nota por encima del límite (501 caracteres)
+url: "{{url_gateway}}/api/v1/decision"
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+body:
+  type: json
+  content: '{"incident_id": "{{incident_id}}", "action_id": "{{action_id}}", "decision": "approved", "note": "{{nota_501}}"}'
+scripts:
+  - type: beforeRequest
+    code: |-
+      // Genera una nota de 501 caracteres: uno más que el límite.
+      pm.variables.set("nota_501", "x".repeat(501));
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-27 | Nota por encima del límite
+      // Requisito: RF-API-02
+      // Técnica: análisis de valores límite, primer valor inválido (501)
+      // Petición: POST /api/v1/decision con una nota de 501 caracteres
+      // Esperado: 400 con el mensaje que indica el límite y el largo recibido
+      // ============================================================
+
+      // 1. Código: 400.
+      pm.test("CP-SERV-27 | Código 400", function () {
+          pm.response.to.have.status(400);
+      });
+
+      const datos = pm.response.json();
+
+      // 2 y 3. Contrato y tipo del error.
+      pm.test("CP-SERV-27 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      // 4. Regla: el mensaje informa el límite y el largo recibido.
+      pm.test("CP-SERV-27 | Mensaje: note supera 500 caracteres (501)", function () {
+          pm.expect(datos.error).to.eql("note supera 500 caracteres (501)");
+      });
+    language: text/javascript
+order: 5000

@@ -1,0 +1,32 @@
+# Propiedad: Agregaciones sobre campos .keyword
+# Archivo mutado (en la copia): services/collector/es_client.py
+# Pruebas: tests/unit/test_agregaciones_keyword.py
+
+## 1. Codigo sano
+......                                                                   [100%]
+6 passed in 0.11s
+
+## 2. Defecto inyectado: p='services/collector/es_client.py'; s=open(p).read(); a='"field": "source_ip.keyword"'; assert a in s; open(p,'w').write(s.replace(a,'"field": "source_ip"'))
+_________________ test_la_agregacion_por_ip_origen_usa_keyword _________________
+tests/unit/test_agregaciones_keyword.py:69: in test_la_agregacion_por_ip_origen_usa_keyword
+    assert campos == ["source_ip.keyword"], (
+E   AssertionError: agregación sobre ['source_ip']: en filebeat-* eso es un campo `text` y Elasticsearch responde «Fielddata is disabled»
+E   assert ['source_ip'] == ['source_ip.keyword']
+E     
+E     At index 0 diff: 'source_ip' != 'source_ip.keyword'
+E     Use -v to get more diff
+=========================== short test summary info ============================
+FAILED tests/unit/test_agregaciones_keyword.py::test_la_agregacion_por_ip_origen_usa_keyword
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 0.12s
+
+## 3. Diferencia entre el archivo sano y el mutado
+@@ -278,7 +278,7 @@
+         },
+         "aggs": {
+             "by_source_ip": {
+-                "terms": {"field": "source_ip.keyword", "size": 10,
++                "terms": {"field": "source_ip", "size": 10,
+                           "order": {"_count": "desc"}}
+             }
+         },

@@ -1,0 +1,29 @@
+$kind: http-request
+name: CP-SERV-09b | Consulta después del cierre
+url: "{{url_gateway}}/api/v1/me"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-09b | Consulta después del cierre
+      // Requisito: RQ-SEC-13
+      // Técnica: transición de estados (verifica el estado final)
+      // Precondición: CP-SERV-09a ejecutado
+      // Petición: GET /api/v1/me con la misma cookie de antes
+      // Esperado: 401. La sesión quedó invalidada en el servidor.
+      // ============================================================
+
+      // 1. Código: la sesión ya no sirve, 401.
+      pm.test("CP-SERV-09b | La sesión quedó cerrada: 401", function () {
+          pm.response.to.have.status(401);
+      });
+
+      // 2 a 4. Contrato, tipo y mensaje del error.
+      pm.test("CP-SERV-09b | Mensaje: se requiere autenticación", function () {
+          const datos = pm.response.json();
+          pm.expect(datos.error).to.be.a("string");
+          pm.expect(datos.error).to.eql("se requiere autenticación");
+      });
+    language: text/javascript
+order: 12000

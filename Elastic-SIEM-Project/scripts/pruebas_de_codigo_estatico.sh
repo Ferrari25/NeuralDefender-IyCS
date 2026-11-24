@@ -15,7 +15,7 @@
 #   npm install
 # ─────────────────────────────────────────────────────────────────────────────
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 
 export PYTHONPATH="$PWD/.devtools${PYTHONPATH:+:$PYTHONPATH}"
 BIN=".devtools/bin"
@@ -56,7 +56,7 @@ registrar_fallo() {
 # Línea de base: hallazgos preexistentes documentados en
 # docs/04-auditoria-pruebas-y-demostracion.md. La puerta falla ante CUALQUIER hallazgo
 # NUEVO; estos números solo pueden bajar, nunca subir sin justificar por qué.
-BASE_RUFF=0
+BASE_RUFF=5   # C901 conocidos: _playbook, detect_auth_incidents, _link_campaigns, verify-cobertura.main, pentest.imprimir
 BASE_BANDIT_ALTOS=0
 
 linea_base() { # nombre  esperado  actual  pista

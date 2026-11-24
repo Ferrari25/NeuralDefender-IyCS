@@ -1,0 +1,41 @@
+$kind: http-request
+name: CP-SERV-30 | Cuerpo de más de 64 KB
+url: "{{url_gateway}}/api/v1/decision"
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+body:
+  type: json
+  content: "{{cuerpo_grande}}"
+scripts:
+  - type: beforeRequest
+    code: |-
+      // Genera un cuerpo de 70.000 caracteres (unos 70 KB), por encima del
+      // tope de 64 KB que acepta el gateway.
+      pm.variables.set("cuerpo_grande", "a".repeat(70000));
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-30 | Cuerpo de más de 64 KB
+      // Requisito: RQ-SEC-09 (protección ante entradas desmedidas)
+      // Técnica: análisis de valores límite (tamaño máximo del cuerpo)
+      // Petición: POST /api/v1/decision con un cuerpo de 70 KB
+      // Esperado: 413 Payload Too Large. El servidor rechaza el cuerpo
+      // antes de procesarlo, lo que evita que lo saturen con datos enormes.
+      // ============================================================
+
+      // 1. Código: 413.
+      pm.test("CP-SERV-30 | Código 413", function () {
+          pm.response.to.have.status(413);
+      });
+
+      const datos = pm.response.json();
+
+      // 2 y 3. Contrato: error controlado, con el código dentro del cuerpo.
+      pm.test("CP-SERV-30 | Contrato: error y status", function () {
+          pm.expect(datos.error).to.be.a("string");
+          pm.expect(datos.status).to.eql(413);
+      });
+    language: text/javascript
+order: 8000

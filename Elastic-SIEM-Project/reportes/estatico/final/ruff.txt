@@ -1,0 +1,9 @@
+services/classifier/classifier.py:380:5: C901 `_playbook` is too complex (11 > 10)
+services/classifier/classifier.py:800:5: C901 `detect_auth_incidents` is too complex (25 > 10)
+services/classifier/classifier.py:1193:5: C901 `_link_campaigns` is too complex (15 > 10)
+services/collector/verify-cobertura.py:130:5: C901 `main` is too complex (12 > 10)
+simulation/pentest.py:65:5: C901 `imprimir` is too complex (13 > 10)
+tests/integration/test_despliegue_de_reglas.py:60:9: C901 `_manejador` is too complex (17 > 10)
+tests/integration/test_respaldo_y_retencion.py:67:9: C901 `_manejador` is too complex (16 > 10)
+tests/integration/test_respaldo_y_retencion.py:82:17: C901 `_atender` is too complex (13 > 10)
+Found 8 errors.

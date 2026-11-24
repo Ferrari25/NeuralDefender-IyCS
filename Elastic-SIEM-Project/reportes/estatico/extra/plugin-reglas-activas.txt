@@ -1,0 +1,9 @@
+
+------------------------------------------------------------------
+prueba_plugin.py:15:0: E8013: Avoid using `pickle.load` and `pickle.loads` (avoid-pickle-load)
+prueba_plugin.py:16:0: E8014: Avoid using `marshal.load` and `marshal.loads` (avoid-marshal-load)
+prueba_plugin.py:17:0: E8015: Avoid using `shelve.open()` (avoid-shelve-open)
+prueba_plugin.py:7:0: E8002: Avoid using `os.system()` (avoid-os-system)
+prueba_plugin.py:8:0: W1510: 'subprocess.run' used without explicitly defining the value for 'check'. (subprocess-run-check)
+prueba_plugin.py:9:0: E8010: Avoid using `os.popen()` (avoid-os-popen)
+Your code has been rated at 0.00/10 (previous run: 0.00/10, +0.00)

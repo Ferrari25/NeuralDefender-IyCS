@@ -1,0 +1,78 @@
+$kind: http-request
+name: CP-SERV-18 | Contrato y reglas del listado de incidentes
+url: "{{url_gateway}}/api/v1/incidents"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-18 | Contrato y reglas del listado de incidentes
+      // Requisitos: RF-API-01, RF-CLA-05, RF-CLA-08, RF-ANA-04, RNF-RD-01
+      // Técnica: partición de equivalencia, partición válida
+      // Precondición: sesión de analista; la malla tiene 3 incidentes
+      // Petición: GET /api/v1/incidents
+      // Esperado: 200 en menos de 2 s, sin caché, con un contrato completo
+      // y coherente. El texto del análisis varía en cada corrida (puede venir
+      // del modelo de lenguaje), por eso se verifica su estructura y no su texto.
+      // ============================================================
+
+      // 1. Código y tiempo: 200 en menos de 2 segundos (RNF-RD-01).
+      pm.test("CP-SERV-18 | Código 200 en menos de 2 s", function () {
+          pm.response.to.have.status(200);
+          pm.expect(pm.response.responseTime).to.be.below(2000);
+      });
+
+      const datos = pm.response.json();
+
+      // Cabecera: el listado no se guarda en caché, porque cambia con cada decisión.
+      pm.test("CP-SERV-18 | Cabecera Cache-Control: no-store", function () {
+          pm.expect(pm.response.headers.get("Cache-Control")).to.include("no-store");
+      });
+
+      // 2. Contrato del primer nivel de la respuesta.
+      // analyst_mode no se exige acá: en la malla los incidentes vienen de datos de
+      // prueba que no pasaron por el analista. Se valida en la prueba 4b si está.
+      pm.test("CP-SERV-18 | Contrato del reporte", function () {
+          pm.expect(datos).to.include.all.keys("generated_at", "incident_count", "incidents");
+      });
+
+      // 3. Tipos de datos del reporte.
+      pm.test("CP-SERV-18 | Tipos de datos del reporte", function () {
+          pm.expect(datos.incident_count).to.be.a("number");
+          pm.expect(datos.incidents).to.be.an("array").that.is.not.empty;
+      });
+
+      // 4a. Regla: incident_count coincide con la cantidad real de incidentes.
+      pm.test("CP-SERV-18 | incident_count coincide con la lista", function () {
+          pm.expect(datos.incident_count).to.eql(datos.incidents.length);
+      });
+
+      // 4b. Regla: si el reporte declara el origen del análisis, es un valor admitido (RF-ANA-04).
+      pm.test("CP-SERV-18 | analyst_mode, si está, tiene un valor admitido", function () {
+          if (datos.analyst_mode !== undefined && datos.analyst_mode !== null) {
+              pm.expect(["fallback", "gemma", "gemma-nube", "gemini"]).to.include(datos.analyst_mode);
+          }
+      });
+
+      // 4c. Regla: cada incidente tiene su identificador, clasificación, severidad,
+      // riesgo y acciones recomendadas (RF-CLA-05, RF-CLA-08).
+      pm.test("CP-SERV-18 | Contrato y tipos de cada incidente", function () {
+          datos.incidents.forEach(function (inc, i) {
+              pm.expect(inc, "incidente " + i).to.include.all.keys("incident_id", "classification", "severity_siem", "risk_score", "recommended_actions");
+              pm.expect(inc.incident_id).to.match(/^INC-(AUTH|SCAN|PHISH)-/);
+              pm.expect(inc.risk_score).to.be.a("number");
+              pm.expect(inc.recommended_actions).to.be.an("array").that.is.not.empty;
+          });
+      });
+
+      // 4d. Regla: cada acción tiene un estado admitido (pendiente, aprobada o descartada).
+      pm.test("CP-SERV-18 | Cada acción tiene un estado admitido", function () {
+          datos.incidents.forEach(function (inc) {
+              inc.recommended_actions.forEach(function (accion) {
+                  pm.expect(accion.action_id).to.be.a("string").and.not.empty;
+                  pm.expect(["pending", "approved", "dismissed"]).to.include(accion.status);
+              });
+          });
+      });
+    language: text/javascript
+order: 1000

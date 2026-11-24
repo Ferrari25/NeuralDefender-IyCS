@@ -5,30 +5,17 @@
 # descrita en docs/10-auditoria-y-hallazgos.md y certificada por tests/test_no_autonomy.py.
 
 [MAIN]
-load-plugins=pylint_secure_coding_standard
+load-plugins=pylint_secure_coding_standard #<----------------------------------------------------------  
 ignore-paths=^\.devtools/.*$,^\.venv/.*$,^node_modules/.*$
 jobs=0
 
 [SECURE_CODING_STANDARD]
-# ── Ejecución de comandos: el corazón de la no-autonomía ──
-# `os.system` queda prohibido sin excepciones.
-os-system=True
-# `subprocess.run(...)` debe llevar `check=` explícito (nada de fallos silenciosos).
-subprocess-run-check=True
-# Prohibido lanzar procesos con una shell de por medio.
-check-on-os-popen=True
-check-on-os-spawn=True
-check-on-os-exec=True
-# ── Archivos y permisos: protege el registro append-only ──
-os-open-mode=0o600
+# El plugin (v1.5.1) solo define estas tres opciones. Las demas reglas
+# (os.system, os.popen, pickle, marshal, shelve) estan siempre activas y no se
+# configuran; subprocess.run sin `check=` lo detecta pylint (W1510).
+os-open-mode=0o600 #<---------------------  
 os-mkdir-mode=0o700
-os-mkfifo-mode=0o600
-os-makedirs-mode=0o700
-# ── Otros vectores ──
-# `pickle`, `marshal` y `shelve` deserializan código: no se usan en el proyecto.
-check-on-pickle=True
-check-on-marshal=True
-check-on-shelve=True
+os-mkfifo-mode=0o600 #<---------------------  
 
 [MESSAGES CONTROL]
 # El proyecto documenta a nivel de módulo y de función relevante, no de cada helper.

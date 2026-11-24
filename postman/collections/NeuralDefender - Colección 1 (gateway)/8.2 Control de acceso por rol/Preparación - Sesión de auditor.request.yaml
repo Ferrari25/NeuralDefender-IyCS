@@ -1,0 +1,19 @@
+$kind: http-request
+name: Preparación | Sesión de auditor
+url: "{{url_gateway}}/api/v1/login"
+method: POST
+body:
+  type: json
+  content: '{"username": "{{auditor}}", "password": "{{password}}"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // Preparación: abre la sesión del rol auditor y guarda su token CSRF.
+      // Deja listo el sistema para CP-SERV-14 y 16.
+      pm.test("Preparación | Sesión de auditor abierta", function () {
+          pm.response.to.have.status(200);
+          pm.expect(pm.response.json().rol).to.eql("auditor");
+      });
+      pm.environment.set("csrf_token", pm.response.json().csrf_token);
+    language: text/javascript
+order: 5000

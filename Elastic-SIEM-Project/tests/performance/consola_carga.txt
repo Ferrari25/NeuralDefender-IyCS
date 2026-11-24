@@ -1,0 +1,2732 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: tests/performance/k6_api_test.js
+ web dashboard:
+        output: -
+
+     scenarios: (100.00%) 8 scenarios, 169 max VUs, 5m0s max duration (incl. graceful stop):
+              * decisiones: Up to 0.14 iterations/s for 4m30s over 2 stages (maxVUs: 5-20, exec: decisiones, gracefulStop: 30s)
+              * informes: 0.01 iterations/s for 4m30s (maxVUs: 2-5, exec: informes, gracefulStop: 30s)
+              * lecturas: Up to 1.33 iterations/s for 4m30s over 2 stages (maxVUs: 30-100, exec: lecturas, gracefulStop: 30s)
+              * sonda: 0.10 iterations/s for 4m30s (maxVUs: 1-3, exec: sonda, gracefulStop: 30s)
+              * login_rafaga_1: 20 iterations shared among 20 VUs (maxDuration: 1m0s, exec: loginRafaga, startTime: 40s, gracefulStop: 30s)
+              * login_rafaga_2: 20 iterations shared among 20 VUs (maxDuration: 1m0s, exec: loginRafaga, startTime: 1m40s, gracefulStop: 30s)
+              * verificaciones: 1 iterations shared among 1 VUs (maxDuration: 1m0s, exec: verificar, startTime: 2m15s, gracefulStop: 30s)
+              * login_rafaga_3: 20 iterations shared among 20 VUs (maxDuration: 1m0s, exec: loginRafaga, startTime: 2m40s, gracefulStop: 30s)
+
+
+running (0m01.0s), 000/079 VUs, 2 complete and 0 interrupted iterations
+decisiones       [   0% ] 00/05 VUs    0m01.0s/4m30s  0.14 iters/s
+informes         [   0% ] 0/2 VUs      0m01.0s/4m30s  0.01 iters/s
+lecturas         [   0% ] 000/030 VUs  0m01.0s/4m30s  0.15 iters/s
+sonda            [   0% ] 0/1 VUs      0m01.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      39.0s         
+login_rafaga_2 • [   0% ] waiting      1m39.0s       
+verificaciones • [   0% ] waiting      2m14.0s       
+login_rafaga_3 • [   0% ] waiting      2m39.0s       
+
+running (0m02.0s), 000/079 VUs, 2 complete and 0 interrupted iterations
+decisiones       [   1% ] 00/05 VUs    0m02.0s/4m30s  0.14 iters/s
+informes         [   1% ] 0/2 VUs      0m02.0s/4m30s  0.01 iters/s
+lecturas         [   1% ] 000/030 VUs  0m02.0s/4m30s  0.15 iters/s
+sonda            [   1% ] 0/1 VUs      0m02.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      38.0s         
+login_rafaga_2 • [   0% ] waiting      1m38.0s       
+verificaciones • [   0% ] waiting      2m13.0s       
+login_rafaga_3 • [   0% ] waiting      2m38.0s       
+
+running (0m03.0s), 000/079 VUs, 2 complete and 0 interrupted iterations
+decisiones       [   1% ] 00/05 VUs    0m03.0s/4m30s  0.14 iters/s
+informes         [   1% ] 0/2 VUs      0m03.0s/4m30s  0.01 iters/s
+lecturas         [   1% ] 000/030 VUs  0m03.0s/4m30s  0.15 iters/s
+sonda            [   1% ] 0/1 VUs      0m03.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      37.0s         
+login_rafaga_2 • [   0% ] waiting      1m37.0s       
+verificaciones • [   0% ] waiting      2m12.0s       
+login_rafaga_3 • [   0% ] waiting      2m37.0s       
+
+running (0m04.0s), 000/079 VUs, 2 complete and 0 interrupted iterations
+decisiones       [   1% ] 00/05 VUs    0m04.0s/4m30s  0.14 iters/s
+informes         [   1% ] 0/2 VUs      0m04.0s/4m30s  0.01 iters/s
+lecturas         [   1% ] 000/030 VUs  0m04.0s/4m30s  0.15 iters/s
+sonda            [   1% ] 0/1 VUs      0m04.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      36.0s         
+login_rafaga_2 • [   0% ] waiting      1m36.0s       
+verificaciones • [   0% ] waiting      2m11.0s       
+login_rafaga_3 • [   0% ] waiting      2m36.0s       
+
+running (0m05.0s), 000/079 VUs, 2 complete and 0 interrupted iterations
+decisiones       [   2% ] 00/05 VUs    0m05.0s/4m30s  0.14 iters/s
+informes         [   2% ] 0/2 VUs      0m05.0s/4m30s  0.01 iters/s
+lecturas         [   2% ] 000/030 VUs  0m05.0s/4m30s  0.15 iters/s
+sonda            [   2% ] 0/1 VUs      0m05.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      35.0s         
+login_rafaga_2 • [   0% ] waiting      1m35.0s       
+verificaciones • [   0% ] waiting      2m10.0s       
+login_rafaga_3 • [   0% ] waiting      2m35.0s       
+
+running (0m06.0s), 000/079 VUs, 2 complete and 0 interrupted iterations
+decisiones       [   2% ] 00/05 VUs    0m06.0s/4m30s  0.14 iters/s
+informes         [   2% ] 0/2 VUs      0m06.0s/4m30s  0.01 iters/s
+lecturas         [   2% ] 000/030 VUs  0m06.0s/4m30s  0.15 iters/s
+sonda            [   2% ] 0/1 VUs      0m06.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      34.0s         
+login_rafaga_2 • [   0% ] waiting      1m34.0s       
+verificaciones • [   0% ] waiting      2m09.0s       
+login_rafaga_3 • [   0% ] waiting      2m34.0s       
+
+running (0m07.0s), 000/079 VUs, 3 complete and 0 interrupted iterations
+decisiones       [   3% ] 00/05 VUs    0m07.0s/4m30s  0.14 iters/s
+informes         [   3% ] 0/2 VUs      0m07.0s/4m30s  0.01 iters/s
+lecturas         [   3% ] 000/030 VUs  0m07.0s/4m30s  0.36 iters/s
+sonda            [   3% ] 0/1 VUs      0m07.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      33.0s         
+login_rafaga_2 • [   0% ] waiting      1m33.0s       
+verificaciones • [   0% ] waiting      2m08.0s       
+login_rafaga_3 • [   0% ] waiting      2m33.0s       
+
+running (0m08.0s), 000/079 VUs, 4 complete and 0 interrupted iterations
+decisiones       [   3% ] 00/05 VUs    0m08.0s/4m30s  0.14 iters/s
+informes         [   3% ] 0/2 VUs      0m08.0s/4m30s  0.01 iters/s
+lecturas         [   3% ] 000/030 VUs  0m08.0s/4m30s  0.36 iters/s
+sonda            [   3% ] 0/1 VUs      0m08.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      32.0s         
+login_rafaga_2 • [   0% ] waiting      1m32.0s       
+verificaciones • [   0% ] waiting      2m07.0s       
+login_rafaga_3 • [   0% ] waiting      2m32.0s       
+
+running (0m09.0s), 000/079 VUs, 4 complete and 0 interrupted iterations
+decisiones       [   3% ] 00/05 VUs    0m09.0s/4m30s  0.14 iters/s
+informes         [   3% ] 0/2 VUs      0m09.0s/4m30s  0.01 iters/s
+lecturas         [   3% ] 000/030 VUs  0m09.0s/4m30s  0.36 iters/s
+sonda            [   3% ] 0/1 VUs      0m09.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      31.0s         
+login_rafaga_2 • [   0% ] waiting      1m31.0s       
+verificaciones • [   0% ] waiting      2m06.0s       
+login_rafaga_3 • [   0% ] waiting      2m31.0s       
+
+running (0m10.0s), 000/079 VUs, 5 complete and 0 interrupted iterations
+decisiones       [   4% ] 00/05 VUs    0m10.0s/4m30s  0.14 iters/s
+informes         [   4% ] 0/2 VUs      0m10.0s/4m30s  0.01 iters/s
+lecturas         [   4% ] 000/030 VUs  0m10.0s/4m30s  0.47 iters/s
+sonda            [   4% ] 0/1 VUs      0m10.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      30.0s         
+login_rafaga_2 • [   0% ] waiting      1m30.0s       
+verificaciones • [   0% ] waiting      2m05.0s       
+login_rafaga_3 • [   0% ] waiting      2m30.0s       
+
+running (0m11.0s), 000/079 VUs, 6 complete and 0 interrupted iterations
+decisiones       [   4% ] 00/05 VUs    0m11.0s/4m30s  0.14 iters/s
+informes         [   4% ] 0/2 VUs      0m11.0s/4m30s  0.01 iters/s
+lecturas         [   4% ] 000/030 VUs  0m11.0s/4m30s  0.47 iters/s
+sonda            [   4% ] 0/1 VUs      0m11.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      29.0s         
+login_rafaga_2 • [   0% ] waiting      1m29.0s       
+verificaciones • [   0% ] waiting      2m04.0s       
+login_rafaga_3 • [   0% ] waiting      2m29.0s       
+
+running (0m12.0s), 000/079 VUs, 7 complete and 0 interrupted iterations
+decisiones       [   4% ] 00/05 VUs    0m12.0s/4m30s  0.14 iters/s
+informes         [   4% ] 0/2 VUs      0m12.0s/4m30s  0.01 iters/s
+lecturas         [   4% ] 000/030 VUs  0m12.0s/4m30s  0.56 iters/s
+sonda            [   4% ] 0/1 VUs      0m12.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      28.0s         
+login_rafaga_2 • [   0% ] waiting      1m28.0s       
+verificaciones • [   0% ] waiting      2m03.0s       
+login_rafaga_3 • [   0% ] waiting      2m28.0s       
+
+running (0m13.0s), 000/079 VUs, 7 complete and 0 interrupted iterations
+decisiones       [   5% ] 00/05 VUs    0m13.0s/4m30s  0.14 iters/s
+informes         [   5% ] 0/2 VUs      0m13.0s/4m30s  0.01 iters/s
+lecturas         [   5% ] 000/030 VUs  0m13.0s/4m30s  0.56 iters/s
+sonda            [   5% ] 0/1 VUs      0m13.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      27.0s         
+login_rafaga_2 • [   0% ] waiting      1m27.0s       
+verificaciones • [   0% ] waiting      2m02.0s       
+login_rafaga_3 • [   0% ] waiting      2m27.0s       
+
+running (0m14.0s), 000/079 VUs, 8 complete and 0 interrupted iterations
+decisiones       [   5% ] 00/05 VUs    0m14.0s/4m30s  0.14 iters/s
+informes         [   5% ] 0/2 VUs      0m14.0s/4m30s  0.01 iters/s
+lecturas         [   5% ] 000/030 VUs  0m14.0s/4m30s  0.63 iters/s
+sonda            [   5% ] 0/1 VUs      0m14.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      26.0s         
+login_rafaga_2 • [   0% ] waiting      1m26.0s       
+verificaciones • [   0% ] waiting      2m01.0s       
+login_rafaga_3 • [   0% ] waiting      2m26.0s       
+
+running (0m15.0s), 000/079 VUs, 9 complete and 0 interrupted iterations
+decisiones       [   6% ] 00/05 VUs    0m15.0s/4m30s  0.14 iters/s
+informes         [   6% ] 0/2 VUs      0m15.0s/4m30s  0.01 iters/s
+lecturas         [   6% ] 000/030 VUs  0m15.0s/4m30s  0.63 iters/s
+sonda            [   6% ] 0/1 VUs      0m15.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      25.0s         
+login_rafaga_2 • [   0% ] waiting      1m25.0s       
+verificaciones • [   0% ] waiting      2m00.0s       
+login_rafaga_3 • [   0% ] waiting      2m25.0s       
+
+running (0m16.0s), 000/079 VUs, 10 complete and 0 interrupted iterations
+decisiones       [   6% ] 00/05 VUs    0m16.0s/4m30s  0.14 iters/s
+informes         [   6% ] 0/2 VUs      0m16.0s/4m30s  0.01 iters/s
+lecturas         [   6% ] 000/030 VUs  0m16.0s/4m30s  0.70 iters/s
+sonda            [   6% ] 0/1 VUs      0m16.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      24.0s         
+login_rafaga_2 • [   0% ] waiting      1m24.0s       
+verificaciones • [   0% ] waiting      1m59.0s       
+login_rafaga_3 • [   0% ] waiting      2m24.0s       
+
+running (0m17.0s), 000/079 VUs, 11 complete and 0 interrupted iterations
+decisiones       [   6% ] 00/05 VUs    0m17.0s/4m30s  0.14 iters/s
+informes         [   6% ] 0/2 VUs      0m17.0s/4m30s  0.01 iters/s
+lecturas         [   6% ] 000/030 VUs  0m17.0s/4m30s  0.76 iters/s
+sonda            [   6% ] 0/1 VUs      0m17.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      23.0s         
+login_rafaga_2 • [   0% ] waiting      1m23.0s       
+verificaciones • [   0% ] waiting      1m58.0s       
+login_rafaga_3 • [   0% ] waiting      2m23.0s       
+
+running (0m18.0s), 000/079 VUs, 12 complete and 0 interrupted iterations
+decisiones       [   7% ] 00/05 VUs    0m18.0s/4m30s  0.14 iters/s
+informes         [   7% ] 0/2 VUs      0m18.0s/4m30s  0.01 iters/s
+lecturas         [   7% ] 000/030 VUs  0m18.0s/4m30s  0.82 iters/s
+sonda            [   7% ] 0/1 VUs      0m18.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      22.0s         
+login_rafaga_2 • [   0% ] waiting      1m22.0s       
+verificaciones • [   0% ] waiting      1m57.0s       
+login_rafaga_3 • [   0% ] waiting      2m22.0s       
+
+running (0m19.0s), 001/079 VUs, 12 complete and 0 interrupted iterations
+decisiones       [   7% ] 00/05 VUs    0m19.0s/4m30s  0.14 iters/s
+informes         [   7% ] 0/2 VUs      0m19.0s/4m30s  0.01 iters/s
+lecturas         [   7% ] 001/030 VUs  0m19.0s/4m30s  0.87 iters/s
+sonda            [   7% ] 0/1 VUs      0m19.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      21.0s         
+login_rafaga_2 • [   0% ] waiting      1m21.0s       
+verificaciones • [   0% ] waiting      1m56.0s       
+login_rafaga_3 • [   0% ] waiting      2m21.0s       
+
+running (0m20.0s), 000/079 VUs, 13 complete and 0 interrupted iterations
+decisiones       [   7% ] 00/05 VUs    0m20.0s/4m30s  0.14 iters/s
+informes         [   7% ] 0/2 VUs      0m20.0s/4m30s  0.01 iters/s
+lecturas         [   7% ] 000/030 VUs  0m20.0s/4m30s  0.87 iters/s
+sonda            [   7% ] 0/1 VUs      0m20.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      20.0s         
+login_rafaga_2 • [   0% ] waiting      1m20.0s       
+verificaciones • [   0% ] waiting      1m55.0s       
+login_rafaga_3 • [   0% ] waiting      2m20.0s       
+
+running (0m21.0s), 000/079 VUs, 15 complete and 0 interrupted iterations
+decisiones       [   8% ] 00/05 VUs    0m21.0s/4m30s  0.14 iters/s
+informes         [   8% ] 0/2 VUs      0m21.0s/4m30s  0.01 iters/s
+lecturas         [   8% ] 000/030 VUs  0m21.0s/4m30s  0.92 iters/s
+sonda            [   8% ] 0/1 VUs      0m21.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      19.0s         
+login_rafaga_2 • [   0% ] waiting      1m19.0s       
+verificaciones • [   0% ] waiting      1m54.0s       
+login_rafaga_3 • [   0% ] waiting      2m19.0s       
+
+running (0m22.0s), 000/079 VUs, 17 complete and 0 interrupted iterations
+decisiones       [   8% ] 00/05 VUs    0m22.0s/4m30s  0.14 iters/s
+informes         [   8% ] 0/2 VUs      0m22.0s/4m30s  0.01 iters/s
+lecturas         [   8% ] 000/030 VUs  0m22.0s/4m30s  0.97 iters/s
+sonda            [   8% ] 0/1 VUs      0m22.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      18.0s         
+login_rafaga_2 • [   0% ] waiting      1m18.0s       
+verificaciones • [   0% ] waiting      1m53.0s       
+login_rafaga_3 • [   0% ] waiting      2m18.0s       
+
+running (0m23.0s), 000/079 VUs, 18 complete and 0 interrupted iterations
+decisiones       [   9% ] 00/05 VUs    0m23.0s/4m30s  0.14 iters/s
+informes         [   9% ] 0/2 VUs      0m23.0s/4m30s  0.01 iters/s
+lecturas         [   9% ] 000/030 VUs  0m23.0s/4m30s  1.01 iters/s
+sonda            [   9% ] 0/1 VUs      0m23.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      17.0s         
+login_rafaga_2 • [   0% ] waiting      1m17.0s       
+verificaciones • [   0% ] waiting      1m52.0s       
+login_rafaga_3 • [   0% ] waiting      2m17.0s       
+
+running (0m24.0s), 000/079 VUs, 19 complete and 0 interrupted iterations
+decisiones       [   9% ] 00/05 VUs    0m24.0s/4m30s  0.14 iters/s
+informes         [   9% ] 0/2 VUs      0m24.0s/4m30s  0.01 iters/s
+lecturas         [   9% ] 000/030 VUs  0m24.0s/4m30s  1.05 iters/s
+sonda            [   9% ] 0/1 VUs      0m24.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      16.0s         
+login_rafaga_2 • [   0% ] waiting      1m16.0s       
+verificaciones • [   0% ] waiting      1m51.0s       
+login_rafaga_3 • [   0% ] waiting      2m16.0s       
+
+running (0m25.0s), 000/079 VUs, 20 complete and 0 interrupted iterations
+decisiones       [   9% ] 00/05 VUs    0m25.0s/4m30s  0.14 iters/s
+informes         [   9% ] 0/2 VUs      0m25.0s/4m30s  0.01 iters/s
+lecturas         [   9% ] 000/030 VUs  0m25.0s/4m30s  1.10 iters/s
+sonda            [   9% ] 0/1 VUs      0m25.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      15.0s         
+login_rafaga_2 • [   0% ] waiting      1m15.0s       
+verificaciones • [   0% ] waiting      1m50.0s       
+login_rafaga_3 • [   0% ] waiting      2m15.0s       
+
+running (0m26.0s), 001/079 VUs, 21 complete and 0 interrupted iterations
+decisiones       [  10% ] 00/05 VUs    0m26.0s/4m30s  0.14 iters/s
+informes         [  10% ] 0/2 VUs      0m26.0s/4m30s  0.01 iters/s
+lecturas         [  10% ] 001/030 VUs  0m26.0s/4m30s  1.17 iters/s
+sonda            [  10% ] 0/1 VUs      0m26.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      14.0s         
+login_rafaga_2 • [   0% ] waiting      1m14.0s       
+verificaciones • [   0% ] waiting      1m49.0s       
+login_rafaga_3 • [   0% ] waiting      2m14.0s       
+
+running (0m27.0s), 000/079 VUs, 23 complete and 0 interrupted iterations
+decisiones       [  10% ] 00/05 VUs    0m27.0s/4m30s  0.14 iters/s
+informes         [  10% ] 0/2 VUs      0m27.0s/4m30s  0.01 iters/s
+lecturas         [  10% ] 000/030 VUs  0m27.0s/4m30s  1.21 iters/s
+sonda            [  10% ] 0/1 VUs      0m27.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      13.0s         
+login_rafaga_2 • [   0% ] waiting      1m13.0s       
+verificaciones • [   0% ] waiting      1m48.0s       
+login_rafaga_3 • [   0% ] waiting      2m13.0s       
+
+running (0m28.0s), 000/079 VUs, 24 complete and 0 interrupted iterations
+decisiones       [  10% ] 00/05 VUs    0m28.0s/4m30s  0.14 iters/s
+informes         [  10% ] 0/2 VUs      0m28.0s/4m30s  0.01 iters/s
+lecturas         [  10% ] 000/030 VUs  0m28.0s/4m30s  1.25 iters/s
+sonda            [  10% ] 0/1 VUs      0m28.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      12.0s         
+login_rafaga_2 • [   0% ] waiting      1m12.0s       
+verificaciones • [   0% ] waiting      1m47.0s       
+login_rafaga_3 • [   0% ] waiting      2m12.0s       
+
+running (0m29.0s), 001/079 VUs, 25 complete and 0 interrupted iterations
+decisiones       [  11% ] 01/05 VUs    0m29.0s/4m30s  0.14 iters/s
+informes         [  11% ] 0/2 VUs      0m29.0s/4m30s  0.01 iters/s
+lecturas         [  11% ] 000/030 VUs  0m29.0s/4m30s  1.28 iters/s
+sonda            [  11% ] 0/1 VUs      0m29.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      11.0s         
+login_rafaga_2 • [   0% ] waiting      1m11.0s       
+verificaciones • [   0% ] waiting      1m46.0s       
+login_rafaga_3 • [   0% ] waiting      2m11.0s       
+
+running (0m30.0s), 000/079 VUs, 27 complete and 0 interrupted iterations
+decisiones       [  11% ] 00/05 VUs    0m30.0s/4m30s  0.14 iters/s
+informes         [  11% ] 0/2 VUs      0m30.0s/4m30s  0.01 iters/s
+lecturas         [  11% ] 000/030 VUs  0m30.0s/4m30s  1.32 iters/s
+sonda            [  11% ] 0/1 VUs      0m30.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      10.0s         
+login_rafaga_2 • [   0% ] waiting      1m10.0s       
+verificaciones • [   0% ] waiting      1m45.0s       
+login_rafaga_3 • [   0% ] waiting      2m10.0s       
+
+running (0m31.0s), 000/079 VUs, 30 complete and 0 interrupted iterations
+decisiones       [  11% ] 00/05 VUs    0m31.0s/4m30s  0.14 iters/s
+informes         [  11% ] 0/2 VUs      0m31.0s/4m30s  0.01 iters/s
+lecturas         [  11% ] 000/030 VUs  0m31.0s/4m30s  1.33 iters/s
+sonda            [  11% ] 0/1 VUs      0m31.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      09.0s         
+login_rafaga_2 • [   0% ] waiting      1m09.0s       
+verificaciones • [   0% ] waiting      1m44.0s       
+login_rafaga_3 • [   0% ] waiting      2m09.0s       
+
+running (0m32.0s), 000/079 VUs, 31 complete and 0 interrupted iterations
+decisiones       [  12% ] 00/05 VUs    0m32.0s/4m30s  0.14 iters/s
+informes         [  12% ] 0/2 VUs      0m32.0s/4m30s  0.01 iters/s
+lecturas         [  12% ] 000/030 VUs  0m32.0s/4m30s  1.33 iters/s
+sonda            [  12% ] 0/1 VUs      0m32.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      08.0s         
+login_rafaga_2 • [   0% ] waiting      1m08.0s       
+verificaciones • [   0% ] waiting      1m43.0s       
+login_rafaga_3 • [   0% ] waiting      2m08.0s       
+
+running (0m33.0s), 000/079 VUs, 32 complete and 0 interrupted iterations
+decisiones       [  12% ] 00/05 VUs    0m33.0s/4m30s  0.14 iters/s
+informes         [  12% ] 0/2 VUs      0m33.0s/4m30s  0.01 iters/s
+lecturas         [  12% ] 000/030 VUs  0m33.0s/4m30s  1.33 iters/s
+sonda            [  12% ] 0/1 VUs      0m33.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      07.0s         
+login_rafaga_2 • [   0% ] waiting      1m07.0s       
+verificaciones • [   0% ] waiting      1m42.0s       
+login_rafaga_3 • [   0% ] waiting      2m07.0s       
+
+running (0m34.0s), 000/079 VUs, 34 complete and 0 interrupted iterations
+decisiones       [  13% ] 00/05 VUs    0m34.0s/4m30s  0.14 iters/s
+informes         [  13% ] 0/2 VUs      0m34.0s/4m30s  0.01 iters/s
+lecturas         [  13% ] 000/030 VUs  0m34.0s/4m30s  1.33 iters/s
+sonda            [  13% ] 0/1 VUs      0m34.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      06.0s         
+login_rafaga_2 • [   0% ] waiting      1m06.0s       
+verificaciones • [   0% ] waiting      1m41.0s       
+login_rafaga_3 • [   0% ] waiting      2m06.0s       
+
+running (0m35.0s), 000/079 VUs, 35 complete and 0 interrupted iterations
+decisiones       [  13% ] 00/05 VUs    0m35.0s/4m30s  0.14 iters/s
+informes         [  13% ] 0/2 VUs      0m35.0s/4m30s  0.01 iters/s
+lecturas         [  13% ] 000/030 VUs  0m35.0s/4m30s  1.33 iters/s
+sonda            [  13% ] 0/1 VUs      0m35.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      05.0s         
+login_rafaga_2 • [   0% ] waiting      1m05.0s       
+verificaciones • [   0% ] waiting      1m40.0s       
+login_rafaga_3 • [   0% ] waiting      2m05.0s       
+
+running (0m36.0s), 000/079 VUs, 36 complete and 0 interrupted iterations
+decisiones       [  13% ] 00/05 VUs    0m36.0s/4m30s  0.14 iters/s
+informes         [  13% ] 0/2 VUs      0m36.0s/4m30s  0.01 iters/s
+lecturas         [  13% ] 000/030 VUs  0m36.0s/4m30s  1.33 iters/s
+sonda            [  13% ] 0/1 VUs      0m36.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      04.0s         
+login_rafaga_2 • [   0% ] waiting      1m04.0s       
+verificaciones • [   0% ] waiting      1m39.0s       
+login_rafaga_3 • [   0% ] waiting      2m04.0s       
+
+running (0m37.0s), 000/079 VUs, 39 complete and 0 interrupted iterations
+decisiones       [  14% ] 00/05 VUs    0m37.0s/4m30s  0.14 iters/s
+informes         [  14% ] 0/2 VUs      0m37.0s/4m30s  0.01 iters/s
+lecturas         [  14% ] 000/030 VUs  0m37.0s/4m30s  1.33 iters/s
+sonda            [  14% ] 0/1 VUs      0m37.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      03.0s         
+login_rafaga_2 • [   0% ] waiting      1m03.0s       
+verificaciones • [   0% ] waiting      1m38.0s       
+login_rafaga_3 • [   0% ] waiting      2m03.0s       
+
+running (0m38.0s), 000/079 VUs, 40 complete and 0 interrupted iterations
+decisiones       [  14% ] 00/05 VUs    0m38.0s/4m30s  0.14 iters/s
+informes         [  14% ] 0/2 VUs      0m38.0s/4m30s  0.01 iters/s
+lecturas         [  14% ] 000/030 VUs  0m38.0s/4m30s  1.33 iters/s
+sonda            [  14% ] 0/1 VUs      0m38.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      02.0s         
+login_rafaga_2 • [   0% ] waiting      1m02.0s       
+verificaciones • [   0% ] waiting      1m37.0s       
+login_rafaga_3 • [   0% ] waiting      2m02.0s       
+
+running (0m39.0s), 000/079 VUs, 41 complete and 0 interrupted iterations
+decisiones       [  14% ] 00/05 VUs    0m39.0s/4m30s  0.14 iters/s
+informes         [  14% ] 0/2 VUs      0m39.0s/4m30s  0.01 iters/s
+lecturas         [  14% ] 000/030 VUs  0m39.0s/4m30s  1.33 iters/s
+sonda            [  14% ] 0/1 VUs      0m39.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      01.0s         
+login_rafaga_2 • [   0% ] waiting      1m01.0s       
+verificaciones • [   0% ] waiting      1m36.0s       
+login_rafaga_3 • [   0% ] waiting      2m01.0s       
+
+running (0m40.0s), 000/079 VUs, 43 complete and 0 interrupted iterations
+decisiones       [  15% ] 00/05 VUs    0m40.0s/4m30s  0.14 iters/s
+informes         [  15% ] 0/2 VUs      0m40.0s/4m30s  0.01 iters/s
+lecturas         [  15% ] 000/030 VUs  0m40.0s/4m30s  1.33 iters/s
+sonda            [  15% ] 0/1 VUs      0m40.0s/4m30s  0.10 iters/s
+login_rafaga_1 • [   0% ] waiting      00.0s         
+login_rafaga_2 • [   0% ] waiting      1m00.0s       
+verificaciones • [   0% ] waiting      1m35.0s       
+login_rafaga_3 • [   0% ] waiting      2m00.0s       
+
+running (0m41.0s), 015/079 VUs, 50 complete and 0 interrupted iterations
+decisiones       [  15% ] 00/05 VUs    0m41.0s/4m30s  0.14 iters/s
+informes         [  15% ] 0/2 VUs      0m41.0s/4m30s  0.01 iters/s
+lecturas         [  15% ] 001/030 VUs  0m41.0s/4m30s  1.33 iters/s
+sonda            [  15% ] 0/1 VUs      0m41.0s/4m30s  0.10 iters/s
+login_rafaga_1   [  30% ] 20 VUs       0m01.0s/1m0s   06/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m59.0s       
+verificaciones • [   0% ] waiting      1m34.0s       
+login_rafaga_3 • [   0% ] waiting      1m59.0s       
+
+running (0m42.0s), 000/079 VUs, 66 complete and 0 interrupted iterations
+decisiones       [  16% ] 00/05 VUs    0m42.0s/4m30s  0.14 iters/s
+informes         [  16% ] 0/2 VUs      0m42.0s/4m30s  0.01 iters/s
+lecturas         [  16% ] 000/030 VUs  0m42.0s/4m30s  1.33 iters/s
+sonda            [  16% ] 0/1 VUs      0m42.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m58.0s       
+verificaciones • [   0% ] waiting      1m33.0s       
+login_rafaga_3 • [   0% ] waiting      1m58.0s       
+
+running (0m43.0s), 000/079 VUs, 68 complete and 0 interrupted iterations
+decisiones       [  16% ] 00/05 VUs    0m43.0s/4m30s  0.14 iters/s
+informes         [  16% ] 0/2 VUs      0m43.0s/4m30s  0.01 iters/s
+lecturas         [  16% ] 000/030 VUs  0m43.0s/4m30s  1.33 iters/s
+sonda            [  16% ] 0/1 VUs      0m43.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m57.0s       
+verificaciones • [   0% ] waiting      1m32.0s       
+login_rafaga_3 • [   0% ] waiting      1m57.0s       
+
+running (0m44.0s), 000/079 VUs, 70 complete and 0 interrupted iterations
+decisiones       [  16% ] 00/05 VUs    0m44.0s/4m30s  0.14 iters/s
+informes         [  16% ] 0/2 VUs      0m44.0s/4m30s  0.01 iters/s
+lecturas         [  16% ] 000/030 VUs  0m44.0s/4m30s  1.33 iters/s
+sonda            [  16% ] 0/1 VUs      0m44.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m56.0s       
+verificaciones • [   0% ] waiting      1m31.0s       
+login_rafaga_3 • [   0% ] waiting      1m56.0s       
+
+running (0m45.0s), 000/079 VUs, 71 complete and 0 interrupted iterations
+decisiones       [  17% ] 00/05 VUs    0m45.0s/4m30s  0.14 iters/s
+informes         [  17% ] 0/2 VUs      0m45.0s/4m30s  0.01 iters/s
+lecturas         [  17% ] 000/030 VUs  0m45.0s/4m30s  1.33 iters/s
+sonda            [  17% ] 0/1 VUs      0m45.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m55.0s       
+verificaciones • [   0% ] waiting      1m30.0s       
+login_rafaga_3 • [   0% ] waiting      1m55.0s       
+
+running (0m46.0s), 000/079 VUs, 73 complete and 0 interrupted iterations
+decisiones       [  17% ] 00/05 VUs    0m46.0s/4m30s  0.14 iters/s
+informes         [  17% ] 0/2 VUs      0m46.0s/4m30s  0.01 iters/s
+lecturas         [  17% ] 000/030 VUs  0m46.0s/4m30s  1.33 iters/s
+sonda            [  17% ] 0/1 VUs      0m46.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m54.0s       
+verificaciones • [   0% ] waiting      1m29.0s       
+login_rafaga_3 • [   0% ] waiting      1m54.0s       
+
+running (0m47.0s), 000/079 VUs, 74 complete and 0 interrupted iterations
+decisiones       [  17% ] 00/05 VUs    0m47.0s/4m30s  0.14 iters/s
+informes         [  17% ] 0/2 VUs      0m47.0s/4m30s  0.01 iters/s
+lecturas         [  17% ] 000/030 VUs  0m47.0s/4m30s  1.33 iters/s
+sonda            [  17% ] 0/1 VUs      0m47.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m53.0s       
+verificaciones • [   0% ] waiting      1m28.0s       
+login_rafaga_3 • [   0% ] waiting      1m53.0s       
+
+running (0m48.0s), 000/079 VUs, 75 complete and 0 interrupted iterations
+decisiones       [  18% ] 00/05 VUs    0m48.0s/4m30s  0.14 iters/s
+informes         [  18% ] 0/2 VUs      0m48.0s/4m30s  0.01 iters/s
+lecturas         [  18% ] 000/030 VUs  0m48.0s/4m30s  1.33 iters/s
+sonda            [  18% ] 0/1 VUs      0m48.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m52.0s       
+verificaciones • [   0% ] waiting      1m27.0s       
+login_rafaga_3 • [   0% ] waiting      1m52.0s       
+
+running (0m49.0s), 000/079 VUs, 77 complete and 0 interrupted iterations
+decisiones       [  18% ] 00/05 VUs    0m49.0s/4m30s  0.14 iters/s
+informes         [  18% ] 0/2 VUs      0m49.0s/4m30s  0.01 iters/s
+lecturas         [  18% ] 000/030 VUs  0m49.0s/4m30s  1.33 iters/s
+sonda            [  18% ] 0/1 VUs      0m49.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m51.0s       
+verificaciones • [   0% ] waiting      1m26.0s       
+login_rafaga_3 • [   0% ] waiting      1m51.0s       
+
+running (0m50.0s), 000/079 VUs, 78 complete and 0 interrupted iterations
+decisiones       [  19% ] 00/05 VUs    0m50.0s/4m30s  0.14 iters/s
+informes         [  19% ] 0/2 VUs      0m50.0s/4m30s  0.01 iters/s
+lecturas         [  19% ] 000/030 VUs  0m50.0s/4m30s  1.33 iters/s
+sonda            [  19% ] 0/1 VUs      0m50.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m50.0s       
+verificaciones • [   0% ] waiting      1m25.0s       
+login_rafaga_3 • [   0% ] waiting      1m50.0s       
+
+running (0m51.0s), 000/079 VUs, 81 complete and 0 interrupted iterations
+decisiones       [  19% ] 00/05 VUs    0m51.0s/4m30s  0.14 iters/s
+informes         [  19% ] 0/2 VUs      0m51.0s/4m30s  0.01 iters/s
+lecturas         [  19% ] 000/030 VUs  0m51.0s/4m30s  1.33 iters/s
+sonda            [  19% ] 0/1 VUs      0m51.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m49.0s       
+verificaciones • [   0% ] waiting      1m24.0s       
+login_rafaga_3 • [   0% ] waiting      1m49.0s       
+
+running (0m52.0s), 000/079 VUs, 83 complete and 0 interrupted iterations
+decisiones       [  19% ] 00/05 VUs    0m52.0s/4m30s  0.14 iters/s
+informes         [  19% ] 0/2 VUs      0m52.0s/4m30s  0.01 iters/s
+lecturas         [  19% ] 000/030 VUs  0m52.0s/4m30s  1.33 iters/s
+sonda            [  19% ] 0/1 VUs      0m52.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m48.0s       
+verificaciones • [   0% ] waiting      1m23.0s       
+login_rafaga_3 • [   0% ] waiting      1m48.0s       
+
+running (0m53.0s), 000/079 VUs, 84 complete and 0 interrupted iterations
+decisiones       [  20% ] 00/05 VUs    0m53.0s/4m30s  0.14 iters/s
+informes         [  20% ] 0/2 VUs      0m53.0s/4m30s  0.01 iters/s
+lecturas         [  20% ] 000/030 VUs  0m53.0s/4m30s  1.33 iters/s
+sonda            [  20% ] 0/1 VUs      0m53.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m47.0s       
+verificaciones • [   0% ] waiting      1m22.0s       
+login_rafaga_3 • [   0% ] waiting      1m47.0s       
+
+running (0m54.0s), 000/079 VUs, 85 complete and 0 interrupted iterations
+decisiones       [  20% ] 00/05 VUs    0m54.0s/4m30s  0.14 iters/s
+informes         [  20% ] 0/2 VUs      0m54.0s/4m30s  0.01 iters/s
+lecturas         [  20% ] 000/030 VUs  0m54.0s/4m30s  1.33 iters/s
+sonda            [  20% ] 0/1 VUs      0m54.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m46.0s       
+verificaciones • [   0% ] waiting      1m21.0s       
+login_rafaga_3 • [   0% ] waiting      1m46.0s       
+
+running (0m55.0s), 000/079 VUs, 87 complete and 0 interrupted iterations
+decisiones       [  20% ] 00/05 VUs    0m55.0s/4m30s  0.14 iters/s
+informes         [  20% ] 0/2 VUs      0m55.0s/4m30s  0.01 iters/s
+lecturas         [  20% ] 000/030 VUs  0m55.0s/4m30s  1.33 iters/s
+sonda            [  20% ] 0/1 VUs      0m55.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m45.0s       
+verificaciones • [   0% ] waiting      1m20.0s       
+login_rafaga_3 • [   0% ] waiting      1m45.0s       
+
+running (0m56.0s), 000/079 VUs, 88 complete and 0 interrupted iterations
+decisiones       [  21% ] 00/05 VUs    0m56.0s/4m30s  0.14 iters/s
+informes         [  21% ] 0/2 VUs      0m56.0s/4m30s  0.01 iters/s
+lecturas         [  21% ] 000/030 VUs  0m56.0s/4m30s  1.33 iters/s
+sonda            [  21% ] 0/1 VUs      0m56.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m44.0s       
+verificaciones • [   0% ] waiting      1m19.0s       
+login_rafaga_3 • [   0% ] waiting      1m44.0s       
+
+running (0m57.0s), 000/079 VUs, 89 complete and 0 interrupted iterations
+decisiones       [  21% ] 00/05 VUs    0m57.0s/4m30s  0.14 iters/s
+informes         [  21% ] 0/2 VUs      0m57.0s/4m30s  0.01 iters/s
+lecturas         [  21% ] 000/030 VUs  0m57.0s/4m30s  1.33 iters/s
+sonda            [  21% ] 0/1 VUs      0m57.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m43.0s       
+verificaciones • [   0% ] waiting      1m18.0s       
+login_rafaga_3 • [   0% ] waiting      1m43.0s       
+
+running (0m58.0s), 000/079 VUs, 92 complete and 0 interrupted iterations
+decisiones       [  21% ] 00/05 VUs    0m58.0s/4m30s  0.14 iters/s
+informes         [  21% ] 0/2 VUs      0m58.0s/4m30s  0.01 iters/s
+lecturas         [  21% ] 000/030 VUs  0m58.0s/4m30s  1.33 iters/s
+sonda            [  21% ] 0/1 VUs      0m58.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m42.0s       
+verificaciones • [   0% ] waiting      1m17.0s       
+login_rafaga_3 • [   0% ] waiting      1m42.0s       
+
+running (0m59.0s), 000/079 VUs, 93 complete and 0 interrupted iterations
+decisiones       [  22% ] 00/05 VUs    0m59.0s/4m30s  0.14 iters/s
+informes         [  22% ] 0/2 VUs      0m59.0s/4m30s  0.01 iters/s
+lecturas         [  22% ] 000/030 VUs  0m59.0s/4m30s  1.33 iters/s
+sonda            [  22% ] 0/1 VUs      0m59.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m41.0s       
+verificaciones • [   0% ] waiting      1m16.0s       
+login_rafaga_3 • [   0% ] waiting      1m41.0s       
+
+running (1m00.0s), 000/079 VUs, 94 complete and 0 interrupted iterations
+decisiones       [  22% ] 00/05 VUs    1m00.0s/4m30s  0.14 iters/s
+informes         [  22% ] 0/2 VUs      1m00.0s/4m30s  0.01 iters/s
+lecturas         [  22% ] 000/030 VUs  1m00.0s/4m30s  1.33 iters/s
+sonda            [  22% ] 0/1 VUs      1m00.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m40.0s       
+verificaciones • [   0% ] waiting      1m15.0s       
+login_rafaga_3 • [   0% ] waiting      1m40.0s       
+
+running (1m01.0s), 000/079 VUs, 97 complete and 0 interrupted iterations
+decisiones       [  23% ] 00/05 VUs    1m01.0s/4m30s  0.14 iters/s
+informes         [  23% ] 0/2 VUs      1m01.0s/4m30s  0.01 iters/s
+lecturas         [  23% ] 000/030 VUs  1m01.0s/4m30s  1.33 iters/s
+sonda            [  23% ] 0/1 VUs      1m01.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m39.0s       
+verificaciones • [   0% ] waiting      1m14.0s       
+login_rafaga_3 • [   0% ] waiting      1m39.0s       
+
+running (1m02.0s), 000/079 VUs, 98 complete and 0 interrupted iterations
+decisiones       [  23% ] 00/05 VUs    1m02.0s/4m30s  0.14 iters/s
+informes         [  23% ] 0/2 VUs      1m02.0s/4m30s  0.01 iters/s
+lecturas         [  23% ] 000/030 VUs  1m02.0s/4m30s  1.33 iters/s
+sonda            [  23% ] 0/1 VUs      1m02.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m38.0s       
+verificaciones • [   0% ] waiting      1m13.0s       
+login_rafaga_3 • [   0% ] waiting      1m38.0s       
+
+running (1m03.0s), 000/079 VUs, 99 complete and 0 interrupted iterations
+decisiones       [  23% ] 00/05 VUs    1m03.0s/4m30s  0.14 iters/s
+informes         [  23% ] 0/2 VUs      1m03.0s/4m30s  0.01 iters/s
+lecturas         [  23% ] 000/030 VUs  1m03.0s/4m30s  1.33 iters/s
+sonda            [  23% ] 0/1 VUs      1m03.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m37.0s       
+verificaciones • [   0% ] waiting      1m12.0s       
+login_rafaga_3 • [   0% ] waiting      1m37.0s       
+
+running (1m04.0s), 000/079 VUs, 101 complete and 0 interrupted iterations
+decisiones       [  24% ] 00/05 VUs    1m04.0s/4m30s  0.14 iters/s
+informes         [  24% ] 0/2 VUs      1m04.0s/4m30s  0.01 iters/s
+lecturas         [  24% ] 000/030 VUs  1m04.0s/4m30s  1.33 iters/s
+sonda            [  24% ] 0/1 VUs      1m04.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m36.0s       
+verificaciones • [   0% ] waiting      1m11.0s       
+login_rafaga_3 • [   0% ] waiting      1m36.0s       
+
+running (1m05.0s), 000/079 VUs, 103 complete and 0 interrupted iterations
+decisiones       [  24% ] 00/05 VUs    1m05.0s/4m30s  0.14 iters/s
+informes         [  24% ] 0/2 VUs      1m05.0s/4m30s  0.01 iters/s
+lecturas         [  24% ] 000/030 VUs  1m05.0s/4m30s  1.33 iters/s
+sonda            [  24% ] 0/1 VUs      1m05.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m35.0s       
+verificaciones • [   0% ] waiting      1m10.0s       
+login_rafaga_3 • [   0% ] waiting      1m35.0s       
+
+running (1m06.0s), 000/079 VUs, 104 complete and 0 interrupted iterations
+decisiones       [  24% ] 00/05 VUs    1m06.0s/4m30s  0.14 iters/s
+informes         [  24% ] 0/2 VUs      1m06.0s/4m30s  0.01 iters/s
+lecturas         [  24% ] 000/030 VUs  1m06.0s/4m30s  1.33 iters/s
+sonda            [  24% ] 0/1 VUs      1m06.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m34.0s       
+verificaciones • [   0% ] waiting      1m09.0s       
+login_rafaga_3 • [   0% ] waiting      1m34.0s       
+
+running (1m07.0s), 000/079 VUs, 106 complete and 0 interrupted iterations
+decisiones       [  25% ] 00/05 VUs    1m07.0s/4m30s  0.14 iters/s
+informes         [  25% ] 0/2 VUs      1m07.0s/4m30s  0.01 iters/s
+lecturas         [  25% ] 000/030 VUs  1m07.0s/4m30s  1.33 iters/s
+sonda            [  25% ] 0/1 VUs      1m07.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m33.0s       
+verificaciones • [   0% ] waiting      1m08.0s       
+login_rafaga_3 • [   0% ] waiting      1m33.0s       
+
+running (1m08.0s), 000/079 VUs, 107 complete and 0 interrupted iterations
+decisiones       [  25% ] 00/05 VUs    1m08.0s/4m30s  0.14 iters/s
+informes         [  25% ] 0/2 VUs      1m08.0s/4m30s  0.01 iters/s
+lecturas         [  25% ] 000/030 VUs  1m08.0s/4m30s  1.33 iters/s
+sonda            [  25% ] 0/1 VUs      1m08.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m32.0s       
+verificaciones • [   0% ] waiting      1m07.0s       
+login_rafaga_3 • [   0% ] waiting      1m32.0s       
+
+running (1m09.0s), 000/079 VUs, 108 complete and 0 interrupted iterations
+decisiones       [  26% ] 00/05 VUs    1m09.0s/4m30s  0.14 iters/s
+informes         [  26% ] 0/2 VUs      1m09.0s/4m30s  0.01 iters/s
+lecturas         [  26% ] 000/030 VUs  1m09.0s/4m30s  1.33 iters/s
+sonda            [  26% ] 0/1 VUs      1m09.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m31.0s       
+verificaciones • [   0% ] waiting      1m06.0s       
+login_rafaga_3 • [   0% ] waiting      1m31.0s       
+
+running (1m10.0s), 000/079 VUs, 110 complete and 0 interrupted iterations
+decisiones       [  26% ] 00/05 VUs    1m10.0s/4m30s  0.14 iters/s
+informes         [  26% ] 0/2 VUs      1m10.0s/4m30s  0.01 iters/s
+lecturas         [  26% ] 000/030 VUs  1m10.0s/4m30s  1.33 iters/s
+sonda            [  26% ] 0/1 VUs      1m10.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m30.0s       
+verificaciones • [   0% ] waiting      1m05.0s       
+login_rafaga_3 • [   0% ] waiting      1m30.0s       
+
+running (1m11.0s), 000/079 VUs, 112 complete and 0 interrupted iterations
+decisiones       [  26% ] 00/05 VUs    1m11.0s/4m30s  0.14 iters/s
+informes         [  26% ] 0/2 VUs      1m11.0s/4m30s  0.01 iters/s
+lecturas         [  26% ] 000/030 VUs  1m11.0s/4m30s  1.33 iters/s
+sonda            [  26% ] 0/1 VUs      1m11.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m29.0s       
+verificaciones • [   0% ] waiting      1m04.0s       
+login_rafaga_3 • [   0% ] waiting      1m29.0s       
+
+running (1m12.0s), 000/079 VUs, 113 complete and 0 interrupted iterations
+decisiones       [  27% ] 00/05 VUs    1m12.0s/4m30s  0.14 iters/s
+informes         [  27% ] 0/2 VUs      1m12.0s/4m30s  0.01 iters/s
+lecturas         [  27% ] 000/030 VUs  1m12.0s/4m30s  1.33 iters/s
+sonda            [  27% ] 0/1 VUs      1m12.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m28.0s       
+verificaciones • [   0% ] waiting      1m03.0s       
+login_rafaga_3 • [   0% ] waiting      1m28.0s       
+
+running (1m13.0s), 000/079 VUs, 116 complete and 0 interrupted iterations
+decisiones       [  27% ] 00/05 VUs    1m13.0s/4m30s  0.14 iters/s
+informes         [  27% ] 0/2 VUs      1m13.0s/4m30s  0.01 iters/s
+lecturas         [  27% ] 000/030 VUs  1m13.0s/4m30s  1.33 iters/s
+sonda            [  27% ] 0/1 VUs      1m13.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m27.0s       
+verificaciones • [   0% ] waiting      1m02.0s       
+login_rafaga_3 • [   0% ] waiting      1m27.0s       
+
+running (1m14.0s), 000/079 VUs, 117 complete and 0 interrupted iterations
+decisiones       [  27% ] 00/05 VUs    1m14.0s/4m30s  0.14 iters/s
+informes         [  27% ] 0/2 VUs      1m14.0s/4m30s  0.01 iters/s
+lecturas         [  27% ] 000/030 VUs  1m14.0s/4m30s  1.33 iters/s
+sonda            [  27% ] 0/1 VUs      1m14.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m26.0s       
+verificaciones • [   0% ] waiting      1m01.0s       
+login_rafaga_3 • [   0% ] waiting      1m26.0s       
+
+running (1m15.0s), 000/079 VUs, 118 complete and 0 interrupted iterations
+decisiones       [  28% ] 00/05 VUs    1m15.0s/4m30s  0.14 iters/s
+informes         [  28% ] 0/2 VUs      1m15.0s/4m30s  0.01 iters/s
+lecturas         [  28% ] 000/030 VUs  1m15.0s/4m30s  1.33 iters/s
+sonda            [  28% ] 0/1 VUs      1m15.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m25.0s       
+verificaciones • [   0% ] waiting      1m00.0s       
+login_rafaga_3 • [   0% ] waiting      1m25.0s       
+
+running (1m16.0s), 000/079 VUs, 120 complete and 0 interrupted iterations
+decisiones       [  28% ] 00/05 VUs    1m16.0s/4m30s  0.14 iters/s
+informes         [  28% ] 0/2 VUs      1m16.0s/4m30s  0.01 iters/s
+lecturas         [  28% ] 000/030 VUs  1m16.0s/4m30s  1.33 iters/s
+sonda            [  28% ] 0/1 VUs      1m16.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m24.0s       
+verificaciones • [   0% ] waiting      0m59.0s       
+login_rafaga_3 • [   0% ] waiting      1m24.0s       
+
+running (1m17.0s), 000/079 VUs, 121 complete and 0 interrupted iterations
+decisiones       [  29% ] 00/05 VUs    1m17.0s/4m30s  0.14 iters/s
+informes         [  29% ] 0/2 VUs      1m17.0s/4m30s  0.01 iters/s
+lecturas         [  29% ] 000/030 VUs  1m17.0s/4m30s  1.33 iters/s
+sonda            [  29% ] 0/1 VUs      1m17.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m23.0s       
+verificaciones • [   0% ] waiting      0m58.0s       
+login_rafaga_3 • [   0% ] waiting      1m23.0s       
+
+running (1m18.0s), 000/079 VUs, 122 complete and 0 interrupted iterations
+decisiones       [  29% ] 00/05 VUs    1m18.0s/4m30s  0.14 iters/s
+informes         [  29% ] 0/2 VUs      1m18.0s/4m30s  0.01 iters/s
+lecturas         [  29% ] 000/030 VUs  1m18.0s/4m30s  1.33 iters/s
+sonda            [  29% ] 0/1 VUs      1m18.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m22.0s       
+verificaciones • [   0% ] waiting      0m57.0s       
+login_rafaga_3 • [   0% ] waiting      1m22.0s       
+
+running (1m19.0s), 000/079 VUs, 124 complete and 0 interrupted iterations
+decisiones       [  29% ] 00/05 VUs    1m19.0s/4m30s  0.14 iters/s
+informes         [  29% ] 0/2 VUs      1m19.0s/4m30s  0.01 iters/s
+lecturas         [  29% ] 000/030 VUs  1m19.0s/4m30s  1.33 iters/s
+sonda            [  29% ] 0/1 VUs      1m19.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m21.0s       
+verificaciones • [   0% ] waiting      0m56.0s       
+login_rafaga_3 • [   0% ] waiting      1m21.0s       
+
+running (1m20.0s), 000/079 VUs, 126 complete and 0 interrupted iterations
+decisiones       [  30% ] 00/05 VUs    1m20.0s/4m30s  0.14 iters/s
+informes         [  30% ] 0/2 VUs      1m20.0s/4m30s  0.01 iters/s
+lecturas         [  30% ] 000/030 VUs  1m20.0s/4m30s  1.33 iters/s
+sonda            [  30% ] 0/1 VUs      1m20.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m20.0s       
+verificaciones • [   0% ] waiting      0m55.0s       
+login_rafaga_3 • [   0% ] waiting      1m20.0s       
+
+running (1m21.0s), 000/079 VUs, 128 complete and 0 interrupted iterations
+decisiones       [  30% ] 00/05 VUs    1m21.0s/4m30s  0.14 iters/s
+informes         [  30% ] 0/2 VUs      1m21.0s/4m30s  0.01 iters/s
+lecturas         [  30% ] 000/030 VUs  1m21.0s/4m30s  1.33 iters/s
+sonda            [  30% ] 0/1 VUs      1m21.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m19.0s       
+verificaciones • [   0% ] waiting      0m54.0s       
+login_rafaga_3 • [   0% ] waiting      1m19.0s       
+
+running (1m22.0s), 000/079 VUs, 130 complete and 0 interrupted iterations
+decisiones       [  30% ] 00/05 VUs    1m22.0s/4m30s  0.14 iters/s
+informes         [  30% ] 0/2 VUs      1m22.0s/4m30s  0.01 iters/s
+lecturas         [  30% ] 000/030 VUs  1m22.0s/4m30s  1.33 iters/s
+sonda            [  30% ] 0/1 VUs      1m22.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m18.0s       
+verificaciones • [   0% ] waiting      0m53.0s       
+login_rafaga_3 • [   0% ] waiting      1m18.0s       
+
+running (1m23.0s), 000/079 VUs, 131 complete and 0 interrupted iterations
+decisiones       [  31% ] 00/05 VUs    1m23.0s/4m30s  0.14 iters/s
+informes         [  31% ] 0/2 VUs      1m23.0s/4m30s  0.01 iters/s
+lecturas         [  31% ] 000/030 VUs  1m23.0s/4m30s  1.33 iters/s
+sonda            [  31% ] 0/1 VUs      1m23.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m17.0s       
+verificaciones • [   0% ] waiting      0m52.0s       
+login_rafaga_3 • [   0% ] waiting      1m17.0s       
+
+running (1m24.0s), 000/079 VUs, 132 complete and 0 interrupted iterations
+decisiones       [  31% ] 00/05 VUs    1m24.0s/4m30s  0.14 iters/s
+informes         [  31% ] 0/2 VUs      1m24.0s/4m30s  0.01 iters/s
+lecturas         [  31% ] 000/030 VUs  1m24.0s/4m30s  1.33 iters/s
+sonda            [  31% ] 0/1 VUs      1m24.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m16.0s       
+verificaciones • [   0% ] waiting      0m51.0s       
+login_rafaga_3 • [   0% ] waiting      1m16.0s       
+
+running (1m25.0s), 000/079 VUs, 134 complete and 0 interrupted iterations
+decisiones       [  31% ] 00/05 VUs    1m25.0s/4m30s  0.14 iters/s
+informes         [  31% ] 0/2 VUs      1m25.0s/4m30s  0.01 iters/s
+lecturas         [  31% ] 000/030 VUs  1m25.0s/4m30s  1.33 iters/s
+sonda            [  31% ] 0/1 VUs      1m25.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m15.0s       
+verificaciones • [   0% ] waiting      0m50.0s       
+login_rafaga_3 • [   0% ] waiting      1m15.0s       
+
+running (1m26.0s), 000/079 VUs, 135 complete and 0 interrupted iterations
+decisiones       [  32% ] 00/05 VUs    1m26.0s/4m30s  0.14 iters/s
+informes         [  32% ] 0/2 VUs      1m26.0s/4m30s  0.01 iters/s
+lecturas         [  32% ] 000/030 VUs  1m26.0s/4m30s  1.33 iters/s
+sonda            [  32% ] 0/1 VUs      1m26.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m14.0s       
+verificaciones • [   0% ] waiting      0m49.0s       
+login_rafaga_3 • [   0% ] waiting      1m14.0s       
+
+running (1m27.0s), 000/079 VUs, 137 complete and 0 interrupted iterations
+decisiones       [  32% ] 00/05 VUs    1m27.0s/4m30s  0.14 iters/s
+informes         [  32% ] 0/2 VUs      1m27.0s/4m30s  0.01 iters/s
+lecturas         [  32% ] 000/030 VUs  1m27.0s/4m30s  1.33 iters/s
+sonda            [  32% ] 0/1 VUs      1m27.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m13.0s       
+verificaciones • [   0% ] waiting      0m48.0s       
+login_rafaga_3 • [   0% ] waiting      1m13.0s       
+
+running (1m28.0s), 000/079 VUs, 139 complete and 0 interrupted iterations
+decisiones       [  33% ] 00/05 VUs    1m28.0s/4m30s  0.14 iters/s
+informes         [  33% ] 0/2 VUs      1m28.0s/4m30s  0.01 iters/s
+lecturas         [  33% ] 000/030 VUs  1m28.0s/4m30s  1.33 iters/s
+sonda            [  33% ] 0/1 VUs      1m28.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m12.0s       
+verificaciones • [   0% ] waiting      0m47.0s       
+login_rafaga_3 • [   0% ] waiting      1m12.0s       
+
+running (1m29.0s), 000/079 VUs, 140 complete and 0 interrupted iterations
+decisiones       [  33% ] 00/05 VUs    1m29.0s/4m30s  0.14 iters/s
+informes         [  33% ] 0/2 VUs      1m29.0s/4m30s  0.01 iters/s
+lecturas         [  33% ] 000/030 VUs  1m29.0s/4m30s  1.33 iters/s
+sonda            [  33% ] 0/1 VUs      1m29.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m11.0s       
+verificaciones • [   0% ] waiting      0m46.0s       
+login_rafaga_3 • [   0% ] waiting      1m11.0s       
+
+running (1m30.0s), 000/079 VUs, 141 complete and 0 interrupted iterations
+decisiones       [  33% ] 00/05 VUs    1m30.0s/4m30s  0.14 iters/s
+informes         [  33% ] 0/2 VUs      1m30.0s/4m30s  0.01 iters/s
+lecturas         [  33% ] 000/030 VUs  1m30.0s/4m30s  1.33 iters/s
+sonda            [  33% ] 0/1 VUs      1m30.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m10.0s       
+verificaciones • [   0% ] waiting      0m45.0s       
+login_rafaga_3 • [   0% ] waiting      1m10.0s       
+
+running (1m31.0s), 000/079 VUs, 144 complete and 0 interrupted iterations
+decisiones       [  34% ] 00/05 VUs    1m31.0s/4m30s  0.14 iters/s
+informes         [  34% ] 0/2 VUs      1m31.0s/4m30s  0.01 iters/s
+lecturas         [  34% ] 000/030 VUs  1m31.0s/4m30s  1.33 iters/s
+sonda            [  34% ] 0/1 VUs      1m31.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m09.0s       
+verificaciones • [   0% ] waiting      0m44.0s       
+login_rafaga_3 • [   0% ] waiting      1m09.0s       
+
+running (1m32.0s), 000/079 VUs, 145 complete and 0 interrupted iterations
+decisiones       [  34% ] 00/05 VUs    1m32.0s/4m30s  0.14 iters/s
+informes         [  34% ] 0/2 VUs      1m32.0s/4m30s  0.01 iters/s
+lecturas         [  34% ] 000/030 VUs  1m32.0s/4m30s  1.33 iters/s
+sonda            [  34% ] 0/1 VUs      1m32.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m08.0s       
+verificaciones • [   0% ] waiting      0m43.0s       
+login_rafaga_3 • [   0% ] waiting      1m08.0s       
+
+running (1m33.0s), 000/079 VUs, 146 complete and 0 interrupted iterations
+decisiones       [  34% ] 00/05 VUs    1m33.0s/4m30s  0.14 iters/s
+informes         [  34% ] 0/2 VUs      1m33.0s/4m30s  0.01 iters/s
+lecturas         [  34% ] 000/030 VUs  1m33.0s/4m30s  1.33 iters/s
+sonda            [  34% ] 0/1 VUs      1m33.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m07.0s       
+verificaciones • [   0% ] waiting      0m42.0s       
+login_rafaga_3 • [   0% ] waiting      1m07.0s       
+
+running (1m34.0s), 000/079 VUs, 149 complete and 0 interrupted iterations
+decisiones       [  35% ] 00/05 VUs    1m34.0s/4m30s  0.14 iters/s
+informes         [  35% ] 0/2 VUs      1m34.0s/4m30s  0.01 iters/s
+lecturas         [  35% ] 000/030 VUs  1m34.0s/4m30s  1.33 iters/s
+sonda            [  35% ] 0/1 VUs      1m34.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m06.0s       
+verificaciones • [   0% ] waiting      0m41.0s       
+login_rafaga_3 • [   0% ] waiting      1m06.0s       
+
+running (1m35.0s), 000/079 VUs, 150 complete and 0 interrupted iterations
+decisiones       [  35% ] 00/05 VUs    1m35.0s/4m30s  0.14 iters/s
+informes         [  35% ] 0/2 VUs      1m35.0s/4m30s  0.01 iters/s
+lecturas         [  35% ] 000/030 VUs  1m35.0s/4m30s  1.33 iters/s
+sonda            [  35% ] 0/1 VUs      1m35.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m05.0s       
+verificaciones • [   0% ] waiting      0m40.0s       
+login_rafaga_3 • [   0% ] waiting      1m05.0s       
+
+running (1m36.0s), 000/079 VUs, 151 complete and 0 interrupted iterations
+decisiones       [  36% ] 00/05 VUs    1m36.0s/4m30s  0.14 iters/s
+informes         [  36% ] 0/2 VUs      1m36.0s/4m30s  0.01 iters/s
+lecturas         [  36% ] 000/030 VUs  1m36.0s/4m30s  1.33 iters/s
+sonda            [  36% ] 0/1 VUs      1m36.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m04.0s       
+verificaciones • [   0% ] waiting      0m39.0s       
+login_rafaga_3 • [   0% ] waiting      1m04.0s       
+
+running (1m37.0s), 000/079 VUs, 153 complete and 0 interrupted iterations
+decisiones       [  36% ] 00/05 VUs    1m37.0s/4m30s  0.14 iters/s
+informes         [  36% ] 0/2 VUs      1m37.0s/4m30s  0.01 iters/s
+lecturas         [  36% ] 000/030 VUs  1m37.0s/4m30s  1.33 iters/s
+sonda            [  36% ] 0/1 VUs      1m37.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m03.0s       
+verificaciones • [   0% ] waiting      0m38.0s       
+login_rafaga_3 • [   0% ] waiting      1m03.0s       
+
+running (1m38.0s), 000/079 VUs, 154 complete and 0 interrupted iterations
+decisiones       [  36% ] 00/05 VUs    1m38.0s/4m30s  0.14 iters/s
+informes         [  36% ] 0/2 VUs      1m38.0s/4m30s  0.01 iters/s
+lecturas         [  36% ] 000/030 VUs  1m38.0s/4m30s  1.33 iters/s
+sonda            [  36% ] 0/1 VUs      1m38.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m02.0s       
+verificaciones • [   0% ] waiting      0m37.0s       
+login_rafaga_3 • [   0% ] waiting      1m02.0s       
+
+running (1m39.0s), 000/079 VUs, 155 complete and 0 interrupted iterations
+decisiones       [  37% ] 00/05 VUs    1m39.0s/4m30s  0.14 iters/s
+informes         [  37% ] 0/2 VUs      1m39.0s/4m30s  0.01 iters/s
+lecturas         [  37% ] 000/030 VUs  1m39.0s/4m30s  1.33 iters/s
+sonda            [  37% ] 0/1 VUs      1m39.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m01.0s       
+verificaciones • [   0% ] waiting      0m36.0s       
+login_rafaga_3 • [   0% ] waiting      1m01.0s       
+
+running (1m40.0s), 000/079 VUs, 157 complete and 0 interrupted iterations
+decisiones       [  37% ] 00/05 VUs    1m40.0s/4m30s  0.14 iters/s
+informes         [  37% ] 0/2 VUs      1m40.0s/4m30s  0.01 iters/s
+lecturas         [  37% ] 000/030 VUs  1m40.0s/4m30s  1.33 iters/s
+sonda            [  37% ] 0/1 VUs      1m40.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 • [   0% ] waiting      0m00.0s       
+verificaciones • [   0% ] waiting      0m35.0s       
+login_rafaga_3 • [   0% ] waiting      1m00.0s       
+
+running (1m41.0s), 006/079 VUs, 174 complete and 0 interrupted iterations
+decisiones       [  37% ] 01/05 VUs    1m41.0s/4m30s  0.14 iters/s
+informes         [  37% ] 0/2 VUs      1m41.0s/4m30s  0.01 iters/s
+lecturas         [  37% ] 001/030 VUs  1m41.0s/4m30s  1.33 iters/s
+sonda            [  37% ] 0/1 VUs      1m41.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2   [  80% ] 20 VUs       0m01.0s/1m0s   16/20 shared iters
+verificaciones • [   0% ] waiting      0m34.0s       
+login_rafaga_3 • [   0% ] waiting      0m59.0s       
+
+running (1m42.0s), 000/079 VUs, 181 complete and 0 interrupted iterations
+decisiones       [  38% ] 00/05 VUs    1m42.0s/4m30s  0.14 iters/s
+informes         [  38% ] 0/2 VUs      1m42.0s/4m30s  0.01 iters/s
+lecturas         [  38% ] 000/030 VUs  1m42.0s/4m30s  1.33 iters/s
+sonda            [  38% ] 0/1 VUs      1m42.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m33.0s       
+login_rafaga_3 • [   0% ] waiting      0m58.0s       
+
+running (1m43.0s), 000/079 VUs, 183 complete and 0 interrupted iterations
+decisiones       [  38% ] 00/05 VUs    1m43.0s/4m30s  0.14 iters/s
+informes         [  38% ] 0/2 VUs      1m43.0s/4m30s  0.01 iters/s
+lecturas         [  38% ] 000/030 VUs  1m43.0s/4m30s  1.33 iters/s
+sonda            [  38% ] 0/1 VUs      1m43.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m32.0s       
+login_rafaga_3 • [   0% ] waiting      0m57.0s       
+
+running (1m44.0s), 000/079 VUs, 184 complete and 0 interrupted iterations
+decisiones       [  39% ] 00/05 VUs    1m44.0s/4m30s  0.14 iters/s
+informes         [  39% ] 0/2 VUs      1m44.0s/4m30s  0.01 iters/s
+lecturas         [  39% ] 000/030 VUs  1m44.0s/4m30s  1.33 iters/s
+sonda            [  39% ] 0/1 VUs      1m44.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m31.0s       
+login_rafaga_3 • [   0% ] waiting      0m56.0s       
+
+running (1m45.0s), 000/079 VUs, 185 complete and 0 interrupted iterations
+decisiones       [  39% ] 00/05 VUs    1m45.0s/4m30s  0.14 iters/s
+informes         [  39% ] 0/2 VUs      1m45.0s/4m30s  0.01 iters/s
+lecturas         [  39% ] 000/030 VUs  1m45.0s/4m30s  1.33 iters/s
+sonda            [  39% ] 0/1 VUs      1m45.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m30.0s       
+login_rafaga_3 • [   0% ] waiting      0m55.0s       
+
+running (1m46.0s), 000/079 VUs, 187 complete and 0 interrupted iterations
+decisiones       [  39% ] 00/05 VUs    1m46.0s/4m30s  0.14 iters/s
+informes         [  39% ] 0/2 VUs      1m46.0s/4m30s  0.01 iters/s
+lecturas         [  39% ] 000/030 VUs  1m46.0s/4m30s  1.33 iters/s
+sonda            [  39% ] 0/1 VUs      1m46.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m29.0s       
+login_rafaga_3 • [   0% ] waiting      0m54.0s       
+
+running (1m47.0s), 000/079 VUs, 188 complete and 0 interrupted iterations
+decisiones       [  40% ] 00/05 VUs    1m47.0s/4m30s  0.14 iters/s
+informes         [  40% ] 0/2 VUs      1m47.0s/4m30s  0.01 iters/s
+lecturas         [  40% ] 000/030 VUs  1m47.0s/4m30s  1.33 iters/s
+sonda            [  40% ] 0/1 VUs      1m47.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m28.0s       
+login_rafaga_3 • [   0% ] waiting      0m53.0s       
+
+running (1m48.0s), 000/079 VUs, 189 complete and 0 interrupted iterations
+decisiones       [  40% ] 00/05 VUs    1m48.0s/4m30s  0.14 iters/s
+informes         [  40% ] 0/2 VUs      1m48.0s/4m30s  0.01 iters/s
+lecturas         [  40% ] 000/030 VUs  1m48.0s/4m30s  1.33 iters/s
+sonda            [  40% ] 0/1 VUs      1m48.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m27.0s       
+login_rafaga_3 • [   0% ] waiting      0m52.0s       
+
+running (1m49.0s), 000/079 VUs, 192 complete and 0 interrupted iterations
+decisiones       [  40% ] 00/05 VUs    1m49.0s/4m30s  0.14 iters/s
+informes         [  40% ] 0/2 VUs      1m49.0s/4m30s  0.01 iters/s
+lecturas         [  40% ] 000/030 VUs  1m49.0s/4m30s  1.33 iters/s
+sonda            [  40% ] 0/1 VUs      1m49.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m26.0s       
+login_rafaga_3 • [   0% ] waiting      0m51.0s       
+
+running (1m50.0s), 000/079 VUs, 193 complete and 0 interrupted iterations
+decisiones       [  41% ] 00/05 VUs    1m50.0s/4m30s  0.14 iters/s
+informes         [  41% ] 0/2 VUs      1m50.0s/4m30s  0.01 iters/s
+lecturas         [  41% ] 000/030 VUs  1m50.0s/4m30s  1.33 iters/s
+sonda            [  41% ] 0/1 VUs      1m50.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m25.0s       
+login_rafaga_3 • [   0% ] waiting      0m50.0s       
+
+running (1m51.0s), 000/079 VUs, 195 complete and 0 interrupted iterations
+decisiones       [  41% ] 00/05 VUs    1m51.0s/4m30s  0.14 iters/s
+informes         [  41% ] 0/2 VUs      1m51.0s/4m30s  0.01 iters/s
+lecturas         [  41% ] 000/030 VUs  1m51.0s/4m30s  1.33 iters/s
+sonda            [  41% ] 0/1 VUs      1m51.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m24.0s       
+login_rafaga_3 • [   0% ] waiting      0m49.0s       
+
+running (1m52.0s), 000/079 VUs, 197 complete and 0 interrupted iterations
+decisiones       [  41% ] 00/05 VUs    1m52.0s/4m30s  0.14 iters/s
+informes         [  41% ] 0/2 VUs      1m52.0s/4m30s  0.01 iters/s
+lecturas         [  41% ] 000/030 VUs  1m52.0s/4m30s  1.33 iters/s
+sonda            [  41% ] 0/1 VUs      1m52.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m23.0s       
+login_rafaga_3 • [   0% ] waiting      0m48.0s       
+
+running (1m53.0s), 000/079 VUs, 198 complete and 0 interrupted iterations
+decisiones       [  42% ] 00/05 VUs    1m53.0s/4m30s  0.14 iters/s
+informes         [  42% ] 0/2 VUs      1m53.0s/4m30s  0.01 iters/s
+lecturas         [  42% ] 000/030 VUs  1m53.0s/4m30s  1.33 iters/s
+sonda            [  42% ] 0/1 VUs      1m53.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m22.0s       
+login_rafaga_3 • [   0% ] waiting      0m47.0s       
+
+running (1m54.0s), 000/079 VUs, 199 complete and 0 interrupted iterations
+decisiones       [  42% ] 00/05 VUs    1m54.0s/4m30s  0.14 iters/s
+informes         [  42% ] 0/2 VUs      1m54.0s/4m30s  0.01 iters/s
+lecturas         [  42% ] 000/030 VUs  1m54.0s/4m30s  1.33 iters/s
+sonda            [  42% ] 0/1 VUs      1m54.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m21.0s       
+login_rafaga_3 • [   0% ] waiting      0m46.0s       
+
+running (1m55.0s), 000/079 VUs, 201 complete and 0 interrupted iterations
+decisiones       [  43% ] 00/05 VUs    1m55.0s/4m30s  0.14 iters/s
+informes         [  43% ] 0/2 VUs      1m55.0s/4m30s  0.01 iters/s
+lecturas         [  43% ] 000/030 VUs  1m55.0s/4m30s  1.33 iters/s
+sonda            [  43% ] 0/1 VUs      1m55.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m20.0s       
+login_rafaga_3 • [   0% ] waiting      0m45.0s       
+
+running (1m56.0s), 000/079 VUs, 203 complete and 0 interrupted iterations
+decisiones       [  43% ] 00/05 VUs    1m56.0s/4m30s  0.14 iters/s
+informes         [  43% ] 0/2 VUs      1m56.0s/4m30s  0.01 iters/s
+lecturas         [  43% ] 000/030 VUs  1m56.0s/4m30s  1.33 iters/s
+sonda            [  43% ] 0/1 VUs      1m56.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m19.0s       
+login_rafaga_3 • [   0% ] waiting      0m44.0s       
+
+running (1m57.0s), 000/079 VUs, 204 complete and 0 interrupted iterations
+decisiones       [  43% ] 00/05 VUs    1m57.0s/4m30s  0.14 iters/s
+informes         [  43% ] 0/2 VUs      1m57.0s/4m30s  0.01 iters/s
+lecturas         [  43% ] 000/030 VUs  1m57.0s/4m30s  1.33 iters/s
+sonda            [  43% ] 0/1 VUs      1m57.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m18.0s       
+login_rafaga_3 • [   0% ] waiting      0m43.0s       
+
+running (1m58.0s), 000/079 VUs, 206 complete and 0 interrupted iterations
+decisiones       [  44% ] 00/05 VUs    1m58.0s/4m30s  0.14 iters/s
+informes         [  44% ] 0/2 VUs      1m58.0s/4m30s  0.01 iters/s
+lecturas         [  44% ] 000/030 VUs  1m58.0s/4m30s  1.33 iters/s
+sonda            [  44% ] 0/1 VUs      1m58.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m17.0s       
+login_rafaga_3 • [   0% ] waiting      0m42.0s       
+
+running (1m59.0s), 000/079 VUs, 207 complete and 0 interrupted iterations
+decisiones       [  44% ] 00/05 VUs    1m59.0s/4m30s  0.14 iters/s
+informes         [  44% ] 0/2 VUs      1m59.0s/4m30s  0.01 iters/s
+lecturas         [  44% ] 000/030 VUs  1m59.0s/4m30s  1.33 iters/s
+sonda            [  44% ] 0/1 VUs      1m59.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m16.0s       
+login_rafaga_3 • [   0% ] waiting      0m41.0s       
+
+running (2m00.0s), 000/079 VUs, 208 complete and 0 interrupted iterations
+decisiones       [  44% ] 00/05 VUs    2m00.0s/4m30s  0.14 iters/s
+informes         [  44% ] 0/2 VUs      2m00.0s/4m30s  0.01 iters/s
+lecturas         [  44% ] 000/030 VUs  2m00.0s/4m30s  1.33 iters/s
+sonda            [  44% ] 0/1 VUs      2m00.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m15.0s       
+login_rafaga_3 • [   0% ] waiting      0m40.0s       
+
+running (2m01.0s), 000/079 VUs, 211 complete and 0 interrupted iterations
+decisiones       [  45% ] 00/05 VUs    2m01.0s/4m30s  0.14 iters/s
+informes         [  45% ] 0/2 VUs      2m01.0s/4m30s  0.01 iters/s
+lecturas         [  45% ] 000/030 VUs  2m01.0s/4m30s  1.33 iters/s
+sonda            [  45% ] 0/1 VUs      2m01.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m14.0s       
+login_rafaga_3 • [   0% ] waiting      0m39.0s       
+
+running (2m02.0s), 000/079 VUs, 212 complete and 0 interrupted iterations
+decisiones       [  45% ] 00/05 VUs    2m02.0s/4m30s  0.14 iters/s
+informes         [  45% ] 0/2 VUs      2m02.0s/4m30s  0.01 iters/s
+lecturas         [  45% ] 000/030 VUs  2m02.0s/4m30s  1.33 iters/s
+sonda            [  45% ] 0/1 VUs      2m02.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m13.0s       
+login_rafaga_3 • [   0% ] waiting      0m38.0s       
+
+running (2m03.0s), 000/079 VUs, 214 complete and 0 interrupted iterations
+decisiones       [  46% ] 00/05 VUs    2m03.0s/4m30s  0.14 iters/s
+informes         [  46% ] 0/2 VUs      2m03.0s/4m30s  0.01 iters/s
+lecturas         [  46% ] 000/030 VUs  2m03.0s/4m30s  1.33 iters/s
+sonda            [  46% ] 0/1 VUs      2m03.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m12.0s       
+login_rafaga_3 • [   0% ] waiting      0m37.0s       
+
+running (2m04.0s), 000/079 VUs, 216 complete and 0 interrupted iterations
+decisiones       [  46% ] 00/05 VUs    2m04.0s/4m30s  0.14 iters/s
+informes         [  46% ] 0/2 VUs      2m04.0s/4m30s  0.01 iters/s
+lecturas         [  46% ] 000/030 VUs  2m04.0s/4m30s  1.33 iters/s
+sonda            [  46% ] 0/1 VUs      2m04.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m11.0s       
+login_rafaga_3 • [   0% ] waiting      0m36.0s       
+
+running (2m05.0s), 000/079 VUs, 217 complete and 0 interrupted iterations
+decisiones       [  46% ] 00/05 VUs    2m05.0s/4m30s  0.14 iters/s
+informes         [  46% ] 0/2 VUs      2m05.0s/4m30s  0.01 iters/s
+lecturas         [  46% ] 000/030 VUs  2m05.0s/4m30s  1.33 iters/s
+sonda            [  46% ] 0/1 VUs      2m05.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m10.0s       
+login_rafaga_3 • [   0% ] waiting      0m35.0s       
+
+running (2m06.0s), 000/079 VUs, 218 complete and 0 interrupted iterations
+decisiones       [  47% ] 00/05 VUs    2m06.0s/4m30s  0.14 iters/s
+informes         [  47% ] 0/2 VUs      2m06.0s/4m30s  0.01 iters/s
+lecturas         [  47% ] 000/030 VUs  2m06.0s/4m30s  1.33 iters/s
+sonda            [  47% ] 0/1 VUs      2m06.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m09.0s       
+login_rafaga_3 • [   0% ] waiting      0m34.0s       
+
+running (2m07.0s), 000/079 VUs, 220 complete and 0 interrupted iterations
+decisiones       [  47% ] 00/05 VUs    2m07.0s/4m30s  0.14 iters/s
+informes         [  47% ] 0/2 VUs      2m07.0s/4m30s  0.01 iters/s
+lecturas         [  47% ] 000/030 VUs  2m07.0s/4m30s  1.33 iters/s
+sonda            [  47% ] 0/1 VUs      2m07.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m08.0s       
+login_rafaga_3 • [   0% ] waiting      0m33.0s       
+
+running (2m08.0s), 000/079 VUs, 221 complete and 0 interrupted iterations
+decisiones       [  47% ] 00/05 VUs    2m08.0s/4m30s  0.14 iters/s
+informes         [  47% ] 0/2 VUs      2m08.0s/4m30s  0.01 iters/s
+lecturas         [  47% ] 000/030 VUs  2m08.0s/4m30s  1.33 iters/s
+sonda            [  47% ] 0/1 VUs      2m08.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m07.0s       
+login_rafaga_3 • [   0% ] waiting      0m32.0s       
+
+running (2m09.0s), 000/079 VUs, 222 complete and 0 interrupted iterations
+decisiones       [  48% ] 00/05 VUs    2m09.0s/4m30s  0.14 iters/s
+informes         [  48% ] 0/2 VUs      2m09.0s/4m30s  0.01 iters/s
+lecturas         [  48% ] 000/030 VUs  2m09.0s/4m30s  1.33 iters/s
+sonda            [  48% ] 0/1 VUs      2m09.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m06.0s       
+login_rafaga_3 • [   0% ] waiting      0m31.0s       
+
+running (2m10.0s), 000/079 VUs, 225 complete and 0 interrupted iterations
+decisiones       [  48% ] 00/05 VUs    2m10.0s/4m30s  0.14 iters/s
+informes         [  48% ] 0/2 VUs      2m10.0s/4m30s  0.01 iters/s
+lecturas         [  48% ] 000/030 VUs  2m10.0s/4m30s  1.33 iters/s
+sonda            [  48% ] 0/1 VUs      2m10.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m05.0s       
+login_rafaga_3 • [   0% ] waiting      0m30.0s       
+
+running (2m11.0s), 000/079 VUs, 227 complete and 0 interrupted iterations
+decisiones       [  49% ] 00/05 VUs    2m11.0s/4m30s  0.14 iters/s
+informes         [  49% ] 0/2 VUs      2m11.0s/4m30s  0.01 iters/s
+lecturas         [  49% ] 000/030 VUs  2m11.0s/4m30s  1.33 iters/s
+sonda            [  49% ] 0/1 VUs      2m11.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m04.0s       
+login_rafaga_3 • [   0% ] waiting      0m29.0s       
+
+running (2m12.0s), 000/079 VUs, 228 complete and 0 interrupted iterations
+decisiones       [  49% ] 00/05 VUs    2m12.0s/4m30s  0.14 iters/s
+informes         [  49% ] 0/2 VUs      2m12.0s/4m30s  0.01 iters/s
+lecturas         [  49% ] 000/030 VUs  2m12.0s/4m30s  1.33 iters/s
+sonda            [  49% ] 0/1 VUs      2m12.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m03.0s       
+login_rafaga_3 • [   0% ] waiting      0m28.0s       
+
+running (2m13.0s), 000/079 VUs, 230 complete and 0 interrupted iterations
+decisiones       [  49% ] 00/05 VUs    2m13.0s/4m30s  0.14 iters/s
+informes         [  49% ] 0/2 VUs      2m13.0s/4m30s  0.01 iters/s
+lecturas         [  49% ] 000/030 VUs  2m13.0s/4m30s  1.33 iters/s
+sonda            [  49% ] 0/1 VUs      2m13.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m02.0s       
+login_rafaga_3 • [   0% ] waiting      0m27.0s       
+
+running (2m14.0s), 000/079 VUs, 231 complete and 0 interrupted iterations
+decisiones       [  50% ] 00/05 VUs    2m14.0s/4m30s  0.14 iters/s
+informes         [  50% ] 0/2 VUs      2m14.0s/4m30s  0.01 iters/s
+lecturas         [  50% ] 000/030 VUs  2m14.0s/4m30s  1.33 iters/s
+sonda            [  50% ] 0/1 VUs      2m14.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m01.0s       
+login_rafaga_3 • [   0% ] waiting      0m26.0s       
+
+running (2m15.0s), 000/079 VUs, 232 complete and 0 interrupted iterations
+decisiones       [  50% ] 00/05 VUs    2m15.0s/4m30s  0.14 iters/s
+informes         [  50% ] 0/2 VUs      2m15.0s/4m30s  0.01 iters/s
+lecturas         [  50% ] 000/030 VUs  2m15.0s/4m30s  1.33 iters/s
+sonda            [  50% ] 0/1 VUs      2m15.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones • [   0% ] waiting      0m00.0s       
+login_rafaga_3 • [   0% ] waiting      0m25.0s       
+
+running (2m16.0s), 000/079 VUs, 235 complete and 0 interrupted iterations
+decisiones       [  50% ] 00/05 VUs    2m16.0s/4m30s  0.14 iters/s
+informes         [  50% ] 0/2 VUs      2m16.0s/4m30s  0.01 iters/s
+lecturas         [  50% ] 000/030 VUs  2m16.0s/4m30s  1.33 iters/s
+sonda            [  50% ] 0/1 VUs      2m16.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m24.0s       
+
+running (2m17.0s), 000/079 VUs, 237 complete and 0 interrupted iterations
+decisiones       [  51% ] 00/05 VUs    2m17.0s/4m30s  0.14 iters/s
+informes         [  51% ] 0/2 VUs      2m17.0s/4m30s  0.01 iters/s
+lecturas         [  51% ] 000/030 VUs  2m17.0s/4m30s  1.33 iters/s
+sonda            [  51% ] 0/1 VUs      2m17.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m23.0s       
+
+running (2m18.0s), 000/079 VUs, 238 complete and 0 interrupted iterations
+decisiones       [  51% ] 00/05 VUs    2m18.0s/4m30s  0.14 iters/s
+informes         [  51% ] 0/2 VUs      2m18.0s/4m30s  0.01 iters/s
+lecturas         [  51% ] 000/030 VUs  2m18.0s/4m30s  1.33 iters/s
+sonda            [  51% ] 0/1 VUs      2m18.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m22.0s       
+
+running (2m19.0s), 000/079 VUs, 240 complete and 0 interrupted iterations
+decisiones       [  51% ] 00/05 VUs    2m19.0s/4m30s  0.14 iters/s
+informes         [  51% ] 0/2 VUs      2m19.0s/4m30s  0.01 iters/s
+lecturas         [  51% ] 000/030 VUs  2m19.0s/4m30s  1.33 iters/s
+sonda            [  51% ] 0/1 VUs      2m19.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m21.0s       
+
+running (2m20.0s), 000/079 VUs, 241 complete and 0 interrupted iterations
+decisiones       [  52% ] 00/05 VUs    2m20.0s/4m30s  0.14 iters/s
+informes         [  52% ] 0/2 VUs      2m20.0s/4m30s  0.01 iters/s
+lecturas         [  52% ] 000/030 VUs  2m20.0s/4m30s  1.33 iters/s
+sonda            [  52% ] 0/1 VUs      2m20.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m20.0s       
+
+running (2m21.0s), 000/079 VUs, 243 complete and 0 interrupted iterations
+decisiones       [  52% ] 00/05 VUs    2m21.0s/4m30s  0.14 iters/s
+informes         [  52% ] 0/2 VUs      2m21.0s/4m30s  0.01 iters/s
+lecturas         [  52% ] 000/030 VUs  2m21.0s/4m30s  1.33 iters/s
+sonda            [  52% ] 0/1 VUs      2m21.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m19.0s       
+
+running (2m22.0s), 000/079 VUs, 245 complete and 0 interrupted iterations
+decisiones       [  53% ] 00/05 VUs    2m22.0s/4m30s  0.14 iters/s
+informes         [  53% ] 0/2 VUs      2m22.0s/4m30s  0.01 iters/s
+lecturas         [  53% ] 000/030 VUs  2m22.0s/4m30s  1.33 iters/s
+sonda            [  53% ] 0/1 VUs      2m22.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m18.0s       
+
+running (2m23.0s), 000/079 VUs, 246 complete and 0 interrupted iterations
+decisiones       [  53% ] 00/05 VUs    2m23.0s/4m30s  0.14 iters/s
+informes         [  53% ] 0/2 VUs      2m23.0s/4m30s  0.01 iters/s
+lecturas         [  53% ] 000/030 VUs  2m23.0s/4m30s  1.33 iters/s
+sonda            [  53% ] 0/1 VUs      2m23.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m17.0s       
+
+running (2m24.0s), 000/079 VUs, 247 complete and 0 interrupted iterations
+decisiones       [  53% ] 00/05 VUs    2m24.0s/4m30s  0.14 iters/s
+informes         [  53% ] 0/2 VUs      2m24.0s/4m30s  0.01 iters/s
+lecturas         [  53% ] 000/030 VUs  2m24.0s/4m30s  1.33 iters/s
+sonda            [  53% ] 0/1 VUs      2m24.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m16.0s       
+
+running (2m25.0s), 000/079 VUs, 250 complete and 0 interrupted iterations
+decisiones       [  54% ] 00/05 VUs    2m25.0s/4m30s  0.14 iters/s
+informes         [  54% ] 0/2 VUs      2m25.0s/4m30s  0.01 iters/s
+lecturas         [  54% ] 000/030 VUs  2m25.0s/4m30s  1.33 iters/s
+sonda            [  54% ] 0/1 VUs      2m25.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m15.0s       
+
+running (2m26.0s), 000/079 VUs, 251 complete and 0 interrupted iterations
+decisiones       [  54% ] 00/05 VUs    2m26.0s/4m30s  0.14 iters/s
+informes         [  54% ] 0/2 VUs      2m26.0s/4m30s  0.01 iters/s
+lecturas         [  54% ] 000/030 VUs  2m26.0s/4m30s  1.33 iters/s
+sonda            [  54% ] 0/1 VUs      2m26.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m14.0s       
+
+running (2m27.0s), 000/079 VUs, 252 complete and 0 interrupted iterations
+decisiones       [  54% ] 00/05 VUs    2m27.0s/4m30s  0.14 iters/s
+informes         [  54% ] 0/2 VUs      2m27.0s/4m30s  0.01 iters/s
+lecturas         [  54% ] 000/030 VUs  2m27.0s/4m30s  1.33 iters/s
+sonda            [  54% ] 0/1 VUs      2m27.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m13.0s       
+
+running (2m28.0s), 000/079 VUs, 254 complete and 0 interrupted iterations
+decisiones       [  55% ] 00/05 VUs    2m28.0s/4m30s  0.14 iters/s
+informes         [  55% ] 0/2 VUs      2m28.0s/4m30s  0.01 iters/s
+lecturas         [  55% ] 000/030 VUs  2m28.0s/4m30s  1.33 iters/s
+sonda            [  55% ] 0/1 VUs      2m28.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m12.0s       
+
+running (2m29.0s), 000/079 VUs, 255 complete and 0 interrupted iterations
+decisiones       [  55% ] 00/05 VUs    2m29.0s/4m30s  0.14 iters/s
+informes         [  55% ] 0/2 VUs      2m29.0s/4m30s  0.01 iters/s
+lecturas         [  55% ] 000/030 VUs  2m29.0s/4m30s  1.33 iters/s
+sonda            [  55% ] 0/1 VUs      2m29.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m11.0s       
+
+running (2m30.0s), 000/079 VUs, 256 complete and 0 interrupted iterations
+decisiones       [  56% ] 00/05 VUs    2m30.0s/4m30s  0.14 iters/s
+informes         [  56% ] 0/2 VUs      2m30.0s/4m30s  0.01 iters/s
+lecturas         [  56% ] 000/030 VUs  2m30.0s/4m30s  1.33 iters/s
+sonda            [  56% ] 0/1 VUs      2m30.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m10.0s       
+
+running (2m31.0s), 000/079 VUs, 259 complete and 0 interrupted iterations
+decisiones       [  56% ] 00/05 VUs    2m31.0s/4m30s  0.14 iters/s
+informes         [  56% ] 0/2 VUs      2m31.0s/4m30s  0.01 iters/s
+lecturas         [  56% ] 000/030 VUs  2m31.0s/4m30s  1.33 iters/s
+sonda            [  56% ] 0/1 VUs      2m31.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m09.0s       
+
+running (2m32.0s), 000/079 VUs, 261 complete and 0 interrupted iterations
+decisiones       [  56% ] 00/05 VUs    2m32.0s/4m30s  0.14 iters/s
+informes         [  56% ] 0/2 VUs      2m32.0s/4m30s  0.01 iters/s
+lecturas         [  56% ] 000/030 VUs  2m32.0s/4m30s  1.33 iters/s
+sonda            [  56% ] 0/1 VUs      2m32.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m08.0s       
+
+running (2m33.0s), 000/079 VUs, 262 complete and 0 interrupted iterations
+decisiones       [  57% ] 00/05 VUs    2m33.0s/4m30s  0.14 iters/s
+informes         [  57% ] 0/2 VUs      2m33.0s/4m30s  0.01 iters/s
+lecturas         [  57% ] 000/030 VUs  2m33.0s/4m30s  1.33 iters/s
+sonda            [  57% ] 0/1 VUs      2m33.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m07.0s       
+
+running (2m34.0s), 000/079 VUs, 264 complete and 0 interrupted iterations
+decisiones       [  57% ] 00/05 VUs    2m34.0s/4m30s  0.14 iters/s
+informes         [  57% ] 0/2 VUs      2m34.0s/4m30s  0.01 iters/s
+lecturas         [  57% ] 000/030 VUs  2m34.0s/4m30s  1.33 iters/s
+sonda            [  57% ] 0/1 VUs      2m34.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m06.0s       
+
+running (2m35.0s), 000/079 VUs, 265 complete and 0 interrupted iterations
+decisiones       [  57% ] 00/05 VUs    2m35.0s/4m30s  0.14 iters/s
+informes         [  57% ] 0/2 VUs      2m35.0s/4m30s  0.01 iters/s
+lecturas         [  57% ] 000/030 VUs  2m35.0s/4m30s  1.33 iters/s
+sonda            [  57% ] 0/1 VUs      2m35.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m05.0s       
+
+running (2m36.0s), 000/079 VUs, 266 complete and 0 interrupted iterations
+decisiones       [  58% ] 00/05 VUs    2m36.0s/4m30s  0.14 iters/s
+informes         [  58% ] 0/2 VUs      2m36.0s/4m30s  0.01 iters/s
+lecturas         [  58% ] 000/030 VUs  2m36.0s/4m30s  1.33 iters/s
+sonda            [  58% ] 0/1 VUs      2m36.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m04.0s       
+
+running (2m37.0s), 000/079 VUs, 268 complete and 0 interrupted iterations
+decisiones       [  58% ] 00/05 VUs    2m37.0s/4m30s  0.14 iters/s
+informes         [  58% ] 0/2 VUs      2m37.0s/4m30s  0.01 iters/s
+lecturas         [  58% ] 000/030 VUs  2m37.0s/4m30s  1.33 iters/s
+sonda            [  58% ] 0/1 VUs      2m37.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m03.0s       
+
+running (2m38.0s), 000/079 VUs, 269 complete and 0 interrupted iterations
+decisiones       [  59% ] 00/05 VUs    2m38.0s/4m30s  0.14 iters/s
+informes         [  59% ] 0/2 VUs      2m38.0s/4m30s  0.01 iters/s
+lecturas         [  59% ] 000/030 VUs  2m38.0s/4m30s  1.33 iters/s
+sonda            [  59% ] 0/1 VUs      2m38.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m02.0s       
+
+running (2m39.0s), 000/079 VUs, 271 complete and 0 interrupted iterations
+decisiones       [  59% ] 00/05 VUs    2m39.0s/4m30s  0.14 iters/s
+informes         [  59% ] 0/2 VUs      2m39.0s/4m30s  0.01 iters/s
+lecturas         [  59% ] 000/030 VUs  2m39.0s/4m30s  1.33 iters/s
+sonda            [  59% ] 0/1 VUs      2m39.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m01.0s       
+
+running (2m40.0s), 000/079 VUs, 273 complete and 0 interrupted iterations
+decisiones       [  59% ] 00/05 VUs    2m40.0s/4m30s  0.14 iters/s
+informes         [  59% ] 0/2 VUs      2m40.0s/4m30s  0.01 iters/s
+lecturas         [  59% ] 000/030 VUs  2m40.0s/4m30s  1.33 iters/s
+sonda            [  59% ] 0/1 VUs      2m40.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 • [   0% ] waiting      0m00.0s       
+
+running (2m41.0s), 019/079 VUs, 276 complete and 0 interrupted iterations
+decisiones       [  60% ] 00/05 VUs    2m41.0s/4m30s  0.14 iters/s
+informes         [  60% ] 0/2 VUs      2m41.0s/4m30s  0.01 iters/s
+lecturas         [  60% ] 001/030 VUs  2m41.0s/4m30s  1.33 iters/s
+sonda            [  60% ] 0/1 VUs      2m41.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3   [  10% ] 20 VUs       0m01.0s/1m0s   02/20 shared iters
+
+running (2m42.0s), 000/079 VUs, 296 complete and 0 interrupted iterations
+decisiones       [  60% ] 00/05 VUs    2m42.0s/4m30s  0.14 iters/s
+informes         [  60% ] 0/2 VUs      2m42.0s/4m30s  0.01 iters/s
+lecturas         [  60% ] 000/030 VUs  2m42.0s/4m30s  1.33 iters/s
+sonda            [  60% ] 0/1 VUs      2m42.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (2m43.0s), 000/079 VUs, 298 complete and 0 interrupted iterations
+decisiones       [  60% ] 00/05 VUs    2m43.0s/4m30s  0.14 iters/s
+informes         [  60% ] 0/2 VUs      2m43.0s/4m30s  0.01 iters/s
+lecturas         [  60% ] 000/030 VUs  2m43.0s/4m30s  1.33 iters/s
+sonda            [  60% ] 0/1 VUs      2m43.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (2m44.0s), 000/079 VUs, 299 complete and 0 interrupted iterations
+decisiones       [  61% ] 00/05 VUs    2m44.0s/4m30s  0.14 iters/s
+informes         [  61% ] 0/2 VUs      2m44.0s/4m30s  0.01 iters/s
+lecturas         [  61% ] 000/030 VUs  2m44.0s/4m30s  1.33 iters/s
+sonda            [  61% ] 0/1 VUs      2m44.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (2m45.0s), 000/079 VUs, 300 complete and 0 interrupted iterations
+decisiones       [  61% ] 00/05 VUs    2m45.0s/4m30s  0.14 iters/s
+informes         [  61% ] 0/2 VUs      2m45.0s/4m30s  0.01 iters/s
+lecturas         [  61% ] 000/030 VUs  2m45.0s/4m30s  1.33 iters/s
+sonda            [  61% ] 0/1 VUs      2m45.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (2m46.0s), 000/079 VUs, 303 complete and 0 interrupted iterations
+decisiones       [  61% ] 00/05 VUs    2m46.0s/4m30s  0.14 iters/s
+informes         [  61% ] 0/2 VUs      2m46.0s/4m30s  0.01 iters/s
+lecturas         [  61% ] 000/030 VUs  2m46.0s/4m30s  1.33 iters/s
+sonda            [  61% ] 0/1 VUs      2m46.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (2m47.0s), 000/079 VUs, 304 complete and 0 interrupted iterations
+decisiones       [  62% ] 00/05 VUs    2m47.0s/4m30s  0.14 iters/s
+informes         [  62% ] 0/2 VUs      2m47.0s/4m30s  0.01 iters/s
+lecturas         [  62% ] 000/030 VUs  2m47.0s/4m30s  1.33 iters/s
+sonda            [  62% ] 0/1 VUs      2m47.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (2m48.0s), 000/079 VUs, 305 complete and 0 interrupted iterations
+decisiones       [  62% ] 00/05 VUs    2m48.0s/4m30s  0.14 iters/s
+informes         [  62% ] 0/2 VUs      2m48.0s/4m30s  0.01 iters/s
+lecturas         [  62% ] 000/030 VUs  2m48.0s/4m30s  1.33 iters/s
+sonda            [  62% ] 0/1 VUs      2m48.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (2m49.0s), 000/079 VUs, 307 complete and 0 interrupted iterations
+decisiones       [  63% ] 00/05 VUs    2m49.0s/4m30s  0.14 iters/s
+informes         [  63% ] 0/2 VUs      2m49.0s/4m30s  0.01 iters/s
+lecturas         [  63% ] 000/030 VUs  2m49.0s/4m30s  1.33 iters/s
+sonda            [  63% ] 0/1 VUs      2m49.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (2m50.0s), 000/079 VUs, 308 complete and 0 interrupted iterations
+decisiones       [  63% ] 00/05 VUs    2m50.0s/4m30s  0.14 iters/s
+informes         [  63% ] 0/2 VUs      2m50.0s/4m30s  0.01 iters/s
+lecturas         [  63% ] 000/030 VUs  2m50.0s/4m30s  1.33 iters/s
+sonda            [  63% ] 0/1 VUs      2m50.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (2m51.0s), 000/079 VUs, 310 complete and 0 interrupted iterations
+decisiones       [  63% ] 00/05 VUs    2m51.0s/4m30s  0.14 iters/s
+informes         [  63% ] 0/2 VUs      2m51.0s/4m30s  0.01 iters/s
+lecturas         [  63% ] 000/030 VUs  2m51.0s/4m30s  1.33 iters/s
+sonda            [  63% ] 0/1 VUs      2m51.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (2m52.0s), 000/079 VUs, 312 complete and 0 interrupted iterations
+decisiones       [  64% ] 00/05 VUs    2m52.0s/4m30s  0.14 iters/s
+informes         [  64% ] 0/2 VUs      2m52.0s/4m30s  0.01 iters/s
+lecturas         [  64% ] 000/030 VUs  2m52.0s/4m30s  1.33 iters/s
+sonda            [  64% ] 0/1 VUs      2m52.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (2m53.0s), 000/079 VUs, 314 complete and 0 interrupted iterations
+decisiones       [  64% ] 00/05 VUs    2m53.0s/4m30s  0.14 iters/s
+informes         [  64% ] 0/2 VUs      2m53.0s/4m30s  0.01 iters/s
+lecturas         [  64% ] 000/030 VUs  2m53.0s/4m30s  1.33 iters/s
+sonda            [  64% ] 0/1 VUs      2m53.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (2m54.0s), 000/079 VUs, 315 complete and 0 interrupted iterations
+decisiones       [  64% ] 00/05 VUs    2m54.0s/4m30s  0.14 iters/s
+informes         [  64% ] 0/2 VUs      2m54.0s/4m30s  0.01 iters/s
+lecturas         [  64% ] 000/030 VUs  2m54.0s/4m30s  1.33 iters/s
+sonda            [  64% ] 0/1 VUs      2m54.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (2m55.0s), 000/079 VUs, 317 complete and 0 interrupted iterations
+decisiones       [  65% ] 00/05 VUs    2m55.0s/4m30s  0.14 iters/s
+informes         [  65% ] 0/2 VUs      2m55.0s/4m30s  0.01 iters/s
+lecturas         [  65% ] 000/030 VUs  2m55.0s/4m30s  1.33 iters/s
+sonda            [  65% ] 0/1 VUs      2m55.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (2m56.0s), 000/079 VUs, 318 complete and 0 interrupted iterations
+decisiones       [  65% ] 00/05 VUs    2m56.0s/4m30s  0.14 iters/s
+informes         [  65% ] 0/2 VUs      2m56.0s/4m30s  0.01 iters/s
+lecturas         [  65% ] 000/030 VUs  2m56.0s/4m30s  1.33 iters/s
+sonda            [  65% ] 0/1 VUs      2m56.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (2m57.0s), 000/079 VUs, 319 complete and 0 interrupted iterations
+decisiones       [  66% ] 00/05 VUs    2m57.0s/4m30s  0.14 iters/s
+informes         [  66% ] 0/2 VUs      2m57.0s/4m30s  0.01 iters/s
+lecturas         [  66% ] 000/030 VUs  2m57.0s/4m30s  1.33 iters/s
+sonda            [  66% ] 0/1 VUs      2m57.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (2m58.0s), 000/079 VUs, 321 complete and 0 interrupted iterations
+decisiones       [  66% ] 00/05 VUs    2m58.0s/4m30s  0.14 iters/s
+informes         [  66% ] 0/2 VUs      2m58.0s/4m30s  0.01 iters/s
+lecturas         [  66% ] 000/030 VUs  2m58.0s/4m30s  1.33 iters/s
+sonda            [  66% ] 0/1 VUs      2m58.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (2m59.0s), 000/079 VUs, 322 complete and 0 interrupted iterations
+decisiones       [  66% ] 00/05 VUs    2m59.0s/4m30s  0.14 iters/s
+informes         [  66% ] 0/2 VUs      2m59.0s/4m30s  0.01 iters/s
+lecturas         [  66% ] 000/030 VUs  2m59.0s/4m30s  1.33 iters/s
+sonda            [  66% ] 0/1 VUs      2m59.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m00.0s), 000/079 VUs, 323 complete and 0 interrupted iterations
+decisiones       [  67% ] 00/05 VUs    3m00.0s/4m30s  0.14 iters/s
+informes         [  67% ] 0/2 VUs      3m00.0s/4m30s  0.01 iters/s
+lecturas         [  67% ] 000/030 VUs  3m00.0s/4m30s  1.33 iters/s
+sonda            [  67% ] 0/1 VUs      3m00.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m01.0s), 000/079 VUs, 328 complete and 0 interrupted iterations
+decisiones       [  67% ] 00/05 VUs    3m01.0s/4m30s  0.14 iters/s
+informes         [  67% ] 0/2 VUs      3m01.0s/4m30s  0.01 iters/s
+lecturas         [  67% ] 000/030 VUs  3m01.0s/4m30s  1.33 iters/s
+sonda            [  67% ] 0/1 VUs      3m01.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m02.0s), 000/079 VUs, 329 complete and 0 interrupted iterations
+decisiones       [  67% ] 00/05 VUs    3m02.0s/4m30s  0.14 iters/s
+informes         [  67% ] 0/2 VUs      3m02.0s/4m30s  0.01 iters/s
+lecturas         [  67% ] 000/030 VUs  3m02.0s/4m30s  1.33 iters/s
+sonda            [  67% ] 0/1 VUs      3m02.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m03.0s), 000/079 VUs, 330 complete and 0 interrupted iterations
+decisiones       [  68% ] 00/05 VUs    3m03.0s/4m30s  0.14 iters/s
+informes         [  68% ] 0/2 VUs      3m03.0s/4m30s  0.01 iters/s
+lecturas         [  68% ] 000/030 VUs  3m03.0s/4m30s  1.33 iters/s
+sonda            [  68% ] 0/1 VUs      3m03.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m04.0s), 000/079 VUs, 332 complete and 0 interrupted iterations
+decisiones       [  68% ] 00/05 VUs    3m04.0s/4m30s  0.14 iters/s
+informes         [  68% ] 0/2 VUs      3m04.0s/4m30s  0.01 iters/s
+lecturas         [  68% ] 000/030 VUs  3m04.0s/4m30s  1.33 iters/s
+sonda            [  68% ] 0/1 VUs      3m04.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m05.0s), 000/079 VUs, 333 complete and 0 interrupted iterations
+decisiones       [  69% ] 00/05 VUs    3m05.0s/4m30s  0.14 iters/s
+informes         [  69% ] 0/2 VUs      3m05.0s/4m30s  0.01 iters/s
+lecturas         [  69% ] 000/030 VUs  3m05.0s/4m30s  1.33 iters/s
+sonda            [  69% ] 0/1 VUs      3m05.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m06.0s), 000/079 VUs, 334 complete and 0 interrupted iterations
+decisiones       [  69% ] 00/05 VUs    3m06.0s/4m30s  0.14 iters/s
+informes         [  69% ] 0/2 VUs      3m06.0s/4m30s  0.01 iters/s
+lecturas         [  69% ] 000/030 VUs  3m06.0s/4m30s  1.33 iters/s
+sonda            [  69% ] 0/1 VUs      3m06.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m07.0s), 000/079 VUs, 336 complete and 0 interrupted iterations
+decisiones       [  69% ] 00/05 VUs    3m07.0s/4m30s  0.14 iters/s
+informes         [  69% ] 0/2 VUs      3m07.0s/4m30s  0.01 iters/s
+lecturas         [  69% ] 000/030 VUs  3m07.0s/4m30s  1.33 iters/s
+sonda            [  69% ] 0/1 VUs      3m07.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m08.0s), 000/079 VUs, 338 complete and 0 interrupted iterations
+decisiones       [  70% ] 00/05 VUs    3m08.0s/4m30s  0.14 iters/s
+informes         [  70% ] 0/2 VUs      3m08.0s/4m30s  0.01 iters/s
+lecturas         [  70% ] 000/030 VUs  3m08.0s/4m30s  1.33 iters/s
+sonda            [  70% ] 0/1 VUs      3m08.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m09.0s), 000/079 VUs, 339 complete and 0 interrupted iterations
+decisiones       [  70% ] 00/05 VUs    3m09.0s/4m30s  0.14 iters/s
+informes         [  70% ] 0/2 VUs      3m09.0s/4m30s  0.01 iters/s
+lecturas         [  70% ] 000/030 VUs  3m09.0s/4m30s  1.33 iters/s
+sonda            [  70% ] 0/1 VUs      3m09.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m10.0s), 000/079 VUs, 341 complete and 0 interrupted iterations
+decisiones       [  70% ] 00/05 VUs    3m10.0s/4m30s  0.14 iters/s
+informes         [  70% ] 0/2 VUs      3m10.0s/4m30s  0.01 iters/s
+lecturas         [  70% ] 000/030 VUs  3m10.0s/4m30s  1.33 iters/s
+sonda            [  70% ] 0/1 VUs      3m10.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m11.0s), 000/079 VUs, 343 complete and 0 interrupted iterations
+decisiones       [  71% ] 00/05 VUs    3m11.0s/4m30s  0.14 iters/s
+informes         [  71% ] 0/2 VUs      3m11.0s/4m30s  0.01 iters/s
+lecturas         [  71% ] 000/030 VUs  3m11.0s/4m30s  1.33 iters/s
+sonda            [  71% ] 0/1 VUs      3m11.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m12.0s), 000/079 VUs, 344 complete and 0 interrupted iterations
+decisiones       [  71% ] 00/05 VUs    3m12.0s/4m30s  0.14 iters/s
+informes         [  71% ] 0/2 VUs      3m12.0s/4m30s  0.01 iters/s
+lecturas         [  71% ] 000/030 VUs  3m12.0s/4m30s  1.33 iters/s
+sonda            [  71% ] 0/1 VUs      3m12.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m13.0s), 000/079 VUs, 346 complete and 0 interrupted iterations
+decisiones       [  71% ] 00/05 VUs    3m13.0s/4m30s  0.14 iters/s
+informes         [  71% ] 0/2 VUs      3m13.0s/4m30s  0.01 iters/s
+lecturas         [  71% ] 000/030 VUs  3m13.0s/4m30s  1.33 iters/s
+sonda            [  71% ] 0/1 VUs      3m13.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m14.0s), 000/079 VUs, 347 complete and 0 interrupted iterations
+decisiones       [  72% ] 00/05 VUs    3m14.0s/4m30s  0.14 iters/s
+informes         [  72% ] 0/2 VUs      3m14.0s/4m30s  0.01 iters/s
+lecturas         [  72% ] 000/030 VUs  3m14.0s/4m30s  1.33 iters/s
+sonda            [  72% ] 0/1 VUs      3m14.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m15.0s), 000/079 VUs, 349 complete and 0 interrupted iterations
+decisiones       [  72% ] 00/05 VUs    3m15.0s/4m30s  0.14 iters/s
+informes         [  72% ] 0/2 VUs      3m15.0s/4m30s  0.01 iters/s
+lecturas         [  72% ] 000/030 VUs  3m15.0s/4m30s  1.33 iters/s
+sonda            [  72% ] 0/1 VUs      3m15.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m16.0s), 000/079 VUs, 351 complete and 0 interrupted iterations
+decisiones       [  73% ] 00/05 VUs    3m16.0s/4m30s  0.14 iters/s
+informes         [  73% ] 0/2 VUs      3m16.0s/4m30s  0.01 iters/s
+lecturas         [  73% ] 000/030 VUs  3m16.0s/4m30s  1.33 iters/s
+sonda            [  73% ] 0/1 VUs      3m16.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m17.0s), 000/079 VUs, 352 complete and 0 interrupted iterations
+decisiones       [  73% ] 00/05 VUs    3m17.0s/4m30s  0.14 iters/s
+informes         [  73% ] 0/2 VUs      3m17.0s/4m30s  0.01 iters/s
+lecturas         [  73% ] 000/030 VUs  3m17.0s/4m30s  1.33 iters/s
+sonda            [  73% ] 0/1 VUs      3m17.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m18.0s), 000/079 VUs, 353 complete and 0 interrupted iterations
+decisiones       [  73% ] 00/05 VUs    3m18.0s/4m30s  0.14 iters/s
+informes         [  73% ] 0/2 VUs      3m18.0s/4m30s  0.01 iters/s
+lecturas         [  73% ] 000/030 VUs  3m18.0s/4m30s  1.33 iters/s
+sonda            [  73% ] 0/1 VUs      3m18.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m19.0s), 000/079 VUs, 355 complete and 0 interrupted iterations
+decisiones       [  74% ] 00/05 VUs    3m19.0s/4m30s  0.14 iters/s
+informes         [  74% ] 0/2 VUs      3m19.0s/4m30s  0.01 iters/s
+lecturas         [  74% ] 000/030 VUs  3m19.0s/4m30s  1.33 iters/s
+sonda            [  74% ] 0/1 VUs      3m19.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m20.0s), 000/079 VUs, 356 complete and 0 interrupted iterations
+decisiones       [  74% ] 00/05 VUs    3m20.0s/4m30s  0.14 iters/s
+informes         [  74% ] 0/2 VUs      3m20.0s/4m30s  0.01 iters/s
+lecturas         [  74% ] 000/030 VUs  3m20.0s/4m30s  1.33 iters/s
+sonda            [  74% ] 0/1 VUs      3m20.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m21.0s), 000/079 VUs, 358 complete and 0 interrupted iterations
+decisiones       [  74% ] 00/05 VUs    3m21.0s/4m30s  0.14 iters/s
+informes         [  74% ] 0/2 VUs      3m21.0s/4m30s  0.01 iters/s
+lecturas         [  74% ] 000/030 VUs  3m21.0s/4m30s  1.33 iters/s
+sonda            [  74% ] 0/1 VUs      3m21.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m22.0s), 000/079 VUs, 361 complete and 0 interrupted iterations
+decisiones       [  75% ] 00/05 VUs    3m22.0s/4m30s  0.14 iters/s
+informes         [  75% ] 0/2 VUs      3m22.0s/4m30s  0.01 iters/s
+lecturas         [  75% ] 000/030 VUs  3m22.0s/4m30s  1.33 iters/s
+sonda            [  75% ] 0/1 VUs      3m22.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m23.0s), 000/079 VUs, 362 complete and 0 interrupted iterations
+decisiones       [  75% ] 00/05 VUs    3m23.0s/4m30s  0.14 iters/s
+informes         [  75% ] 0/2 VUs      3m23.0s/4m30s  0.01 iters/s
+lecturas         [  75% ] 000/030 VUs  3m23.0s/4m30s  1.33 iters/s
+sonda            [  75% ] 0/1 VUs      3m23.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m24.0s), 000/079 VUs, 363 complete and 0 interrupted iterations
+decisiones       [  76% ] 00/05 VUs    3m24.0s/4m30s  0.14 iters/s
+informes         [  76% ] 0/2 VUs      3m24.0s/4m30s  0.01 iters/s
+lecturas         [  76% ] 000/030 VUs  3m24.0s/4m30s  1.33 iters/s
+sonda            [  76% ] 0/1 VUs      3m24.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m25.0s), 000/079 VUs, 365 complete and 0 interrupted iterations
+decisiones       [  76% ] 00/05 VUs    3m25.0s/4m30s  0.14 iters/s
+informes         [  76% ] 0/2 VUs      3m25.0s/4m30s  0.01 iters/s
+lecturas         [  76% ] 000/030 VUs  3m25.0s/4m30s  1.33 iters/s
+sonda            [  76% ] 0/1 VUs      3m25.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m26.0s), 000/079 VUs, 366 complete and 0 interrupted iterations
+decisiones       [  76% ] 00/05 VUs    3m26.0s/4m30s  0.14 iters/s
+informes         [  76% ] 0/2 VUs      3m26.0s/4m30s  0.01 iters/s
+lecturas         [  76% ] 000/030 VUs  3m26.0s/4m30s  1.33 iters/s
+sonda            [  76% ] 0/1 VUs      3m26.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m27.0s), 000/079 VUs, 367 complete and 0 interrupted iterations
+decisiones       [  77% ] 00/05 VUs    3m27.0s/4m30s  0.14 iters/s
+informes         [  77% ] 0/2 VUs      3m27.0s/4m30s  0.01 iters/s
+lecturas         [  77% ] 000/030 VUs  3m27.0s/4m30s  1.33 iters/s
+sonda            [  77% ] 0/1 VUs      3m27.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m28.0s), 000/079 VUs, 369 complete and 0 interrupted iterations
+decisiones       [  77% ] 00/05 VUs    3m28.0s/4m30s  0.14 iters/s
+informes         [  77% ] 0/2 VUs      3m28.0s/4m30s  0.01 iters/s
+lecturas         [  77% ] 000/030 VUs  3m28.0s/4m30s  1.33 iters/s
+sonda            [  77% ] 0/1 VUs      3m28.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m29.0s), 000/079 VUs, 371 complete and 0 interrupted iterations
+decisiones       [  77% ] 00/05 VUs    3m29.0s/4m30s  0.14 iters/s
+informes         [  77% ] 0/2 VUs      3m29.0s/4m30s  0.01 iters/s
+lecturas         [  77% ] 000/030 VUs  3m29.0s/4m30s  1.33 iters/s
+sonda            [  77% ] 0/1 VUs      3m29.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m30.0s), 000/079 VUs, 372 complete and 0 interrupted iterations
+decisiones       [  78% ] 00/05 VUs    3m30.0s/4m30s  0.14 iters/s
+informes         [  78% ] 0/2 VUs      3m30.0s/4m30s  0.01 iters/s
+lecturas         [  78% ] 000/030 VUs  3m30.0s/4m30s  1.33 iters/s
+sonda            [  78% ] 0/1 VUs      3m30.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m31.0s), 000/079 VUs, 375 complete and 0 interrupted iterations
+decisiones       [  78% ] 00/05 VUs    3m31.0s/4m30s  0.14 iters/s
+informes         [  78% ] 0/2 VUs      3m31.0s/4m30s  0.01 iters/s
+lecturas         [  78% ] 000/030 VUs  3m31.0s/4m30s  1.33 iters/s
+sonda            [  78% ] 0/1 VUs      3m31.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m32.0s), 000/079 VUs, 376 complete and 0 interrupted iterations
+decisiones       [  79% ] 00/05 VUs    3m32.0s/4m30s  0.14 iters/s
+informes         [  79% ] 0/2 VUs      3m32.0s/4m30s  0.01 iters/s
+lecturas         [  79% ] 000/030 VUs  3m32.0s/4m30s  1.33 iters/s
+sonda            [  79% ] 0/1 VUs      3m32.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m33.0s), 000/079 VUs, 377 complete and 0 interrupted iterations
+decisiones       [  79% ] 00/05 VUs    3m33.0s/4m30s  0.14 iters/s
+informes         [  79% ] 0/2 VUs      3m33.0s/4m30s  0.01 iters/s
+lecturas         [  79% ] 000/030 VUs  3m33.0s/4m30s  1.33 iters/s
+sonda            [  79% ] 0/1 VUs      3m33.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m34.0s), 000/079 VUs, 379 complete and 0 interrupted iterations
+decisiones       [  79% ] 00/05 VUs    3m34.0s/4m30s  0.14 iters/s
+informes         [  79% ] 0/2 VUs      3m34.0s/4m30s  0.01 iters/s
+lecturas         [  79% ] 000/030 VUs  3m34.0s/4m30s  1.33 iters/s
+sonda            [  79% ] 0/1 VUs      3m34.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m35.0s), 000/079 VUs, 380 complete and 0 interrupted iterations
+decisiones       [  80% ] 00/05 VUs    3m35.0s/4m30s  0.14 iters/s
+informes         [  80% ] 0/2 VUs      3m35.0s/4m30s  0.01 iters/s
+lecturas         [  80% ] 000/030 VUs  3m35.0s/4m30s  1.33 iters/s
+sonda            [  80% ] 0/1 VUs      3m35.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m36.0s), 000/079 VUs, 381 complete and 0 interrupted iterations
+decisiones       [  80% ] 00/05 VUs    3m36.0s/4m30s  0.14 iters/s
+informes         [  80% ] 0/2 VUs      3m36.0s/4m30s  0.01 iters/s
+lecturas         [  80% ] 000/030 VUs  3m36.0s/4m30s  1.33 iters/s
+sonda            [  80% ] 0/1 VUs      3m36.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m37.0s), 000/079 VUs, 384 complete and 0 interrupted iterations
+decisiones       [  80% ] 00/05 VUs    3m37.0s/4m30s  0.14 iters/s
+informes         [  80% ] 0/2 VUs      3m37.0s/4m30s  0.01 iters/s
+lecturas         [  80% ] 000/030 VUs  3m37.0s/4m30s  1.33 iters/s
+sonda            [  80% ] 0/1 VUs      3m37.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m38.0s), 000/079 VUs, 385 complete and 0 interrupted iterations
+decisiones       [  81% ] 00/05 VUs    3m38.0s/4m30s  0.14 iters/s
+informes         [  81% ] 0/2 VUs      3m38.0s/4m30s  0.01 iters/s
+lecturas         [  81% ] 000/030 VUs  3m38.0s/4m30s  1.33 iters/s
+sonda            [  81% ] 0/1 VUs      3m38.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m39.0s), 000/079 VUs, 386 complete and 0 interrupted iterations
+decisiones       [  81% ] 00/05 VUs    3m39.0s/4m30s  0.14 iters/s
+informes         [  81% ] 0/2 VUs      3m39.0s/4m30s  0.01 iters/s
+lecturas         [  81% ] 000/030 VUs  3m39.0s/4m30s  1.33 iters/s
+sonda            [  81% ] 0/1 VUs      3m39.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m40.0s), 000/079 VUs, 388 complete and 0 interrupted iterations
+decisiones       [  81% ] 00/05 VUs    3m40.0s/4m30s  0.14 iters/s
+informes         [  81% ] 0/2 VUs      3m40.0s/4m30s  0.01 iters/s
+lecturas         [  81% ] 000/030 VUs  3m40.0s/4m30s  1.33 iters/s
+sonda            [  81% ] 0/1 VUs      3m40.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m41.0s), 000/079 VUs, 390 complete and 0 interrupted iterations
+decisiones       [  82% ] 00/05 VUs    3m41.0s/4m30s  0.14 iters/s
+informes         [  82% ] 0/2 VUs      3m41.0s/4m30s  0.01 iters/s
+lecturas         [  82% ] 000/030 VUs  3m41.0s/4m30s  1.33 iters/s
+sonda            [  82% ] 0/1 VUs      3m41.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m42.0s), 000/079 VUs, 391 complete and 0 interrupted iterations
+decisiones       [  82% ] 00/05 VUs    3m42.0s/4m30s  0.14 iters/s
+informes         [  82% ] 0/2 VUs      3m42.0s/4m30s  0.01 iters/s
+lecturas         [  82% ] 000/030 VUs  3m42.0s/4m30s  1.33 iters/s
+sonda            [  82% ] 0/1 VUs      3m42.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m43.0s), 000/079 VUs, 393 complete and 0 interrupted iterations
+decisiones       [  83% ] 00/05 VUs    3m43.0s/4m30s  0.14 iters/s
+informes         [  83% ] 0/2 VUs      3m43.0s/4m30s  0.01 iters/s
+lecturas         [  83% ] 000/030 VUs  3m43.0s/4m30s  1.33 iters/s
+sonda            [  83% ] 0/1 VUs      3m43.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m44.0s), 000/079 VUs, 395 complete and 0 interrupted iterations
+decisiones       [  83% ] 00/05 VUs    3m44.0s/4m30s  0.14 iters/s
+informes         [  83% ] 0/2 VUs      3m44.0s/4m30s  0.01 iters/s
+lecturas         [  83% ] 000/030 VUs  3m44.0s/4m30s  1.33 iters/s
+sonda            [  83% ] 0/1 VUs      3m44.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m45.0s), 000/079 VUs, 396 complete and 0 interrupted iterations
+decisiones       [  83% ] 00/05 VUs    3m45.0s/4m30s  0.14 iters/s
+informes         [  83% ] 0/2 VUs      3m45.0s/4m30s  0.01 iters/s
+lecturas         [  83% ] 000/030 VUs  3m45.0s/4m30s  1.33 iters/s
+sonda            [  83% ] 0/1 VUs      3m45.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m46.0s), 000/079 VUs, 398 complete and 0 interrupted iterations
+decisiones       [  84% ] 00/05 VUs    3m46.0s/4m30s  0.14 iters/s
+informes         [  84% ] 0/2 VUs      3m46.0s/4m30s  0.01 iters/s
+lecturas         [  84% ] 000/030 VUs  3m46.0s/4m30s  1.33 iters/s
+sonda            [  84% ] 0/1 VUs      3m46.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m47.0s), 000/079 VUs, 399 complete and 0 interrupted iterations
+decisiones       [  84% ] 00/05 VUs    3m47.0s/4m30s  0.14 iters/s
+informes         [  84% ] 0/2 VUs      3m47.0s/4m30s  0.01 iters/s
+lecturas         [  84% ] 000/030 VUs  3m47.0s/4m30s  1.33 iters/s
+sonda            [  84% ] 0/1 VUs      3m47.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m48.0s), 000/079 VUs, 400 complete and 0 interrupted iterations
+decisiones       [  84% ] 00/05 VUs    3m48.0s/4m30s  0.14 iters/s
+informes         [  84% ] 0/2 VUs      3m48.0s/4m30s  0.01 iters/s
+lecturas         [  84% ] 000/030 VUs  3m48.0s/4m30s  1.33 iters/s
+sonda            [  84% ] 0/1 VUs      3m48.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m49.0s), 000/079 VUs, 402 complete and 0 interrupted iterations
+decisiones       [  85% ] 00/05 VUs    3m49.0s/4m30s  0.14 iters/s
+informes         [  85% ] 0/2 VUs      3m49.0s/4m30s  0.01 iters/s
+lecturas         [  85% ] 000/030 VUs  3m49.0s/4m30s  1.33 iters/s
+sonda            [  85% ] 0/1 VUs      3m49.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m50.0s), 000/079 VUs, 403 complete and 0 interrupted iterations
+decisiones       [  85% ] 00/05 VUs    3m50.0s/4m30s  0.14 iters/s
+informes         [  85% ] 0/2 VUs      3m50.0s/4m30s  0.01 iters/s
+lecturas         [  85% ] 000/030 VUs  3m50.0s/4m30s  1.33 iters/s
+sonda            [  85% ] 0/1 VUs      3m50.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m51.0s), 000/079 VUs, 406 complete and 0 interrupted iterations
+decisiones       [  86% ] 00/05 VUs    3m51.0s/4m30s  0.14 iters/s
+informes         [  86% ] 0/2 VUs      3m51.0s/4m30s  0.01 iters/s
+lecturas         [  86% ] 000/030 VUs  3m51.0s/4m30s  1.33 iters/s
+sonda            [  86% ] 0/1 VUs      3m51.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m52.0s), 000/079 VUs, 408 complete and 0 interrupted iterations
+decisiones       [  86% ] 00/05 VUs    3m52.0s/4m30s  0.14 iters/s
+informes         [  86% ] 0/2 VUs      3m52.0s/4m30s  0.01 iters/s
+lecturas         [  86% ] 000/030 VUs  3m52.0s/4m30s  1.33 iters/s
+sonda            [  86% ] 0/1 VUs      3m52.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m53.0s), 000/079 VUs, 409 complete and 0 interrupted iterations
+decisiones       [  86% ] 00/05 VUs    3m53.0s/4m30s  0.14 iters/s
+informes         [  86% ] 0/2 VUs      3m53.0s/4m30s  0.01 iters/s
+lecturas         [  86% ] 000/030 VUs  3m53.0s/4m30s  1.33 iters/s
+sonda            [  86% ] 0/1 VUs      3m53.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m54.0s), 000/079 VUs, 410 complete and 0 interrupted iterations
+decisiones       [  87% ] 00/05 VUs    3m54.0s/4m30s  0.14 iters/s
+informes         [  87% ] 0/2 VUs      3m54.0s/4m30s  0.01 iters/s
+lecturas         [  87% ] 000/030 VUs  3m54.0s/4m30s  1.33 iters/s
+sonda            [  87% ] 0/1 VUs      3m54.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m55.0s), 000/079 VUs, 412 complete and 0 interrupted iterations
+decisiones       [  87% ] 00/05 VUs    3m55.0s/4m30s  0.14 iters/s
+informes         [  87% ] 0/2 VUs      3m55.0s/4m30s  0.01 iters/s
+lecturas         [  87% ] 000/030 VUs  3m55.0s/4m30s  1.33 iters/s
+sonda            [  87% ] 0/1 VUs      3m55.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m56.0s), 000/079 VUs, 413 complete and 0 interrupted iterations
+decisiones       [  87% ] 00/05 VUs    3m56.0s/4m30s  0.14 iters/s
+informes         [  87% ] 0/2 VUs      3m56.0s/4m30s  0.01 iters/s
+lecturas         [  87% ] 000/030 VUs  3m56.0s/4m30s  1.33 iters/s
+sonda            [  87% ] 0/1 VUs      3m56.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m57.0s), 000/079 VUs, 414 complete and 0 interrupted iterations
+decisiones       [  88% ] 00/05 VUs    3m57.0s/4m30s  0.14 iters/s
+informes         [  88% ] 0/2 VUs      3m57.0s/4m30s  0.01 iters/s
+lecturas         [  88% ] 000/030 VUs  3m57.0s/4m30s  1.33 iters/s
+sonda            [  88% ] 0/1 VUs      3m57.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m58.0s), 000/079 VUs, 417 complete and 0 interrupted iterations
+decisiones       [  88% ] 00/05 VUs    3m58.0s/4m30s  0.14 iters/s
+informes         [  88% ] 0/2 VUs      3m58.0s/4m30s  0.01 iters/s
+lecturas         [  88% ] 000/030 VUs  3m58.0s/4m30s  1.33 iters/s
+sonda            [  88% ] 0/1 VUs      3m58.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (3m59.0s), 000/079 VUs, 418 complete and 0 interrupted iterations
+decisiones       [  89% ] 00/05 VUs    3m59.0s/4m30s  0.14 iters/s
+informes         [  89% ] 0/2 VUs      3m59.0s/4m30s  0.01 iters/s
+lecturas         [  89% ] 000/030 VUs  3m59.0s/4m30s  1.33 iters/s
+sonda            [  89% ] 0/1 VUs      3m59.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m00.0s), 000/079 VUs, 419 complete and 0 interrupted iterations
+decisiones       [  89% ] 00/05 VUs    4m00.0s/4m30s  0.14 iters/s
+informes         [  89% ] 0/2 VUs      4m00.0s/4m30s  0.01 iters/s
+lecturas         [  89% ] 000/030 VUs  4m00.0s/4m30s  1.33 iters/s
+sonda            [  89% ] 0/1 VUs      4m00.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m01.0s), 000/079 VUs, 422 complete and 0 interrupted iterations
+decisiones       [  89% ] 00/05 VUs    4m01.0s/4m30s  0.14 iters/s
+informes         [  89% ] 0/2 VUs      4m01.0s/4m30s  0.01 iters/s
+lecturas         [  89% ] 000/030 VUs  4m01.0s/4m30s  1.33 iters/s
+sonda            [  89% ] 0/1 VUs      4m01.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m02.0s), 000/079 VUs, 423 complete and 0 interrupted iterations
+decisiones       [  90% ] 00/05 VUs    4m02.0s/4m30s  0.14 iters/s
+informes         [  90% ] 0/2 VUs      4m02.0s/4m30s  0.01 iters/s
+lecturas         [  90% ] 000/030 VUs  4m02.0s/4m30s  1.33 iters/s
+sonda            [  90% ] 0/1 VUs      4m02.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m03.0s), 000/079 VUs, 424 complete and 0 interrupted iterations
+decisiones       [  90% ] 00/05 VUs    4m03.0s/4m30s  0.14 iters/s
+informes         [  90% ] 0/2 VUs      4m03.0s/4m30s  0.01 iters/s
+lecturas         [  90% ] 000/030 VUs  4m03.0s/4m30s  1.33 iters/s
+sonda            [  90% ] 0/1 VUs      4m03.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m04.0s), 000/079 VUs, 426 complete and 0 interrupted iterations
+decisiones       [  90% ] 00/05 VUs    4m04.0s/4m30s  0.14 iters/s
+informes         [  90% ] 0/2 VUs      4m04.0s/4m30s  0.01 iters/s
+lecturas         [  90% ] 000/030 VUs  4m04.0s/4m30s  1.33 iters/s
+sonda            [  90% ] 0/1 VUs      4m04.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m05.0s), 000/079 VUs, 428 complete and 0 interrupted iterations
+decisiones       [  91% ] 00/05 VUs    4m05.0s/4m30s  0.14 iters/s
+informes         [  91% ] 0/2 VUs      4m05.0s/4m30s  0.01 iters/s
+lecturas         [  91% ] 000/030 VUs  4m05.0s/4m30s  1.33 iters/s
+sonda            [  91% ] 0/1 VUs      4m05.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m06.0s), 000/079 VUs, 429 complete and 0 interrupted iterations
+decisiones       [  91% ] 00/05 VUs    4m06.0s/4m30s  0.14 iters/s
+informes         [  91% ] 0/2 VUs      4m06.0s/4m30s  0.01 iters/s
+lecturas         [  91% ] 000/030 VUs  4m06.0s/4m30s  1.33 iters/s
+sonda            [  91% ] 0/1 VUs      4m06.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m07.0s), 000/079 VUs, 431 complete and 0 interrupted iterations
+decisiones       [  91% ] 00/05 VUs    4m07.0s/4m30s  0.14 iters/s
+informes         [  91% ] 0/2 VUs      4m07.0s/4m30s  0.01 iters/s
+lecturas         [  91% ] 000/030 VUs  4m07.0s/4m30s  1.33 iters/s
+sonda            [  91% ] 0/1 VUs      4m07.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m08.0s), 000/079 VUs, 432 complete and 0 interrupted iterations
+decisiones       [  92% ] 00/05 VUs    4m08.0s/4m30s  0.14 iters/s
+informes         [  92% ] 0/2 VUs      4m08.0s/4m30s  0.01 iters/s
+lecturas         [  92% ] 000/030 VUs  4m08.0s/4m30s  1.33 iters/s
+sonda            [  92% ] 0/1 VUs      4m08.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m09.0s), 000/079 VUs, 433 complete and 0 interrupted iterations
+decisiones       [  92% ] 00/05 VUs    4m09.0s/4m30s  0.14 iters/s
+informes         [  92% ] 0/2 VUs      4m09.0s/4m30s  0.01 iters/s
+lecturas         [  92% ] 000/030 VUs  4m09.0s/4m30s  1.33 iters/s
+sonda            [  92% ] 0/1 VUs      4m09.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m10.0s), 000/079 VUs, 435 complete and 0 interrupted iterations
+decisiones       [  93% ] 00/05 VUs    4m10.0s/4m30s  0.14 iters/s
+informes         [  93% ] 0/2 VUs      4m10.0s/4m30s  0.01 iters/s
+lecturas         [  93% ] 000/030 VUs  4m10.0s/4m30s  1.33 iters/s
+sonda            [  93% ] 0/1 VUs      4m10.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m11.0s), 000/079 VUs, 437 complete and 0 interrupted iterations
+decisiones       [  93% ] 00/05 VUs    4m11.0s/4m30s  0.14 iters/s
+informes         [  93% ] 0/2 VUs      4m11.0s/4m30s  0.01 iters/s
+lecturas         [  93% ] 000/030 VUs  4m11.0s/4m30s  1.33 iters/s
+sonda            [  93% ] 0/1 VUs      4m11.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m12.0s), 000/079 VUs, 438 complete and 0 interrupted iterations
+decisiones       [  93% ] 00/05 VUs    4m12.0s/4m30s  0.14 iters/s
+informes         [  93% ] 0/2 VUs      4m12.0s/4m30s  0.01 iters/s
+lecturas         [  93% ] 000/030 VUs  4m12.0s/4m30s  1.33 iters/s
+sonda            [  93% ] 0/1 VUs      4m12.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m13.0s), 000/079 VUs, 441 complete and 0 interrupted iterations
+decisiones       [  94% ] 00/05 VUs    4m13.0s/4m30s  0.14 iters/s
+informes         [  94% ] 0/2 VUs      4m13.0s/4m30s  0.01 iters/s
+lecturas         [  94% ] 000/030 VUs  4m13.0s/4m30s  1.33 iters/s
+sonda            [  94% ] 0/1 VUs      4m13.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m14.0s), 000/079 VUs, 442 complete and 0 interrupted iterations
+decisiones       [  94% ] 00/05 VUs    4m14.0s/4m30s  0.14 iters/s
+informes         [  94% ] 0/2 VUs      4m14.0s/4m30s  0.01 iters/s
+lecturas         [  94% ] 000/030 VUs  4m14.0s/4m30s  1.33 iters/s
+sonda            [  94% ] 0/1 VUs      4m14.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m15.0s), 000/079 VUs, 443 complete and 0 interrupted iterations
+decisiones       [  94% ] 00/05 VUs    4m15.0s/4m30s  0.14 iters/s
+informes         [  94% ] 0/2 VUs      4m15.0s/4m30s  0.01 iters/s
+lecturas         [  94% ] 000/030 VUs  4m15.0s/4m30s  1.33 iters/s
+sonda            [  94% ] 0/1 VUs      4m15.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m16.0s), 000/079 VUs, 445 complete and 0 interrupted iterations
+decisiones       [  95% ] 00/05 VUs    4m16.0s/4m30s  0.14 iters/s
+informes         [  95% ] 0/2 VUs      4m16.0s/4m30s  0.01 iters/s
+lecturas         [  95% ] 000/030 VUs  4m16.0s/4m30s  1.33 iters/s
+sonda            [  95% ] 0/1 VUs      4m16.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m17.0s), 000/079 VUs, 446 complete and 0 interrupted iterations
+decisiones       [  95% ] 00/05 VUs    4m17.0s/4m30s  0.14 iters/s
+informes         [  95% ] 0/2 VUs      4m17.0s/4m30s  0.01 iters/s
+lecturas         [  95% ] 000/030 VUs  4m17.0s/4m30s  1.33 iters/s
+sonda            [  95% ] 0/1 VUs      4m17.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m18.0s), 000/079 VUs, 447 complete and 0 interrupted iterations
+decisiones       [  96% ] 00/05 VUs    4m18.0s/4m30s  0.14 iters/s
+informes         [  96% ] 0/2 VUs      4m18.0s/4m30s  0.01 iters/s
+lecturas         [  96% ] 000/030 VUs  4m18.0s/4m30s  1.33 iters/s
+sonda            [  96% ] 0/1 VUs      4m18.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m19.0s), 000/079 VUs, 449 complete and 0 interrupted iterations
+decisiones       [  96% ] 00/05 VUs    4m19.0s/4m30s  0.14 iters/s
+informes         [  96% ] 0/2 VUs      4m19.0s/4m30s  0.01 iters/s
+lecturas         [  96% ] 000/030 VUs  4m19.0s/4m30s  1.33 iters/s
+sonda            [  96% ] 0/1 VUs      4m19.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m20.0s), 000/079 VUs, 451 complete and 0 interrupted iterations
+decisiones       [  96% ] 00/05 VUs    4m20.0s/4m30s  0.14 iters/s
+informes         [  96% ] 0/2 VUs      4m20.0s/4m30s  0.01 iters/s
+lecturas         [  96% ] 000/030 VUs  4m20.0s/4m30s  1.33 iters/s
+sonda            [  96% ] 0/1 VUs      4m20.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m21.0s), 000/079 VUs, 453 complete and 0 interrupted iterations
+decisiones       [  97% ] 00/05 VUs    4m21.0s/4m30s  0.14 iters/s
+informes         [  97% ] 0/2 VUs      4m21.0s/4m30s  0.01 iters/s
+lecturas         [  97% ] 000/030 VUs  4m21.0s/4m30s  1.33 iters/s
+sonda            [  97% ] 0/1 VUs      4m21.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m22.0s), 000/079 VUs, 455 complete and 0 interrupted iterations
+decisiones       [  97% ] 00/05 VUs    4m22.0s/4m30s  0.14 iters/s
+informes         [  97% ] 0/2 VUs      4m22.0s/4m30s  0.01 iters/s
+lecturas         [  97% ] 000/030 VUs  4m22.0s/4m30s  1.33 iters/s
+sonda            [  97% ] 0/1 VUs      4m22.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m23.0s), 000/079 VUs, 456 complete and 0 interrupted iterations
+decisiones       [  97% ] 00/05 VUs    4m23.0s/4m30s  0.14 iters/s
+informes         [  97% ] 0/2 VUs      4m23.0s/4m30s  0.01 iters/s
+lecturas         [  97% ] 000/030 VUs  4m23.0s/4m30s  1.33 iters/s
+sonda            [  97% ] 0/1 VUs      4m23.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m24.0s), 000/079 VUs, 457 complete and 0 interrupted iterations
+decisiones       [  98% ] 00/05 VUs    4m24.0s/4m30s  0.14 iters/s
+informes         [  98% ] 0/2 VUs      4m24.0s/4m30s  0.01 iters/s
+lecturas         [  98% ] 000/030 VUs  4m24.0s/4m30s  1.33 iters/s
+sonda            [  98% ] 0/1 VUs      4m24.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m25.0s), 000/079 VUs, 459 complete and 0 interrupted iterations
+decisiones       [  98% ] 00/05 VUs    4m25.0s/4m30s  0.14 iters/s
+informes         [  98% ] 0/2 VUs      4m25.0s/4m30s  0.01 iters/s
+lecturas         [  98% ] 000/030 VUs  4m25.0s/4m30s  1.33 iters/s
+sonda            [  98% ] 0/1 VUs      4m25.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m26.0s), 000/079 VUs, 460 complete and 0 interrupted iterations
+decisiones       [  99% ] 00/05 VUs    4m26.0s/4m30s  0.14 iters/s
+informes         [  99% ] 0/2 VUs      4m26.0s/4m30s  0.01 iters/s
+lecturas         [  99% ] 000/030 VUs  4m26.0s/4m30s  1.33 iters/s
+sonda            [  99% ] 0/1 VUs      4m26.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m27.0s), 000/079 VUs, 462 complete and 0 interrupted iterations
+decisiones     ✗ [  99% ] 00/05 VUs    4m26.5s/4m30s  0.14 iters/s
+informes         [  99% ] 0/2 VUs      4m27.0s/4m30s  0.01 iters/s
+lecturas         [  99% ] 000/030 VUs  4m27.0s/4m30s  1.33 iters/s
+sonda            [  99% ] 0/1 VUs      4m27.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m28.0s), 000/079 VUs, 464 complete and 0 interrupted iterations
+decisiones     ✗ [  99% ] 00/05 VUs    4m26.5s/4m30s  0.14 iters/s
+informes         [  99% ] 0/2 VUs      4m28.0s/4m30s  0.01 iters/s
+lecturas         [  99% ] 000/030 VUs  4m28.0s/4m30s  1.33 iters/s
+sonda            [  99% ] 0/1 VUs      4m28.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m29.0s), 000/079 VUs, 465 complete and 0 interrupted iterations
+decisiones     ✗ [  99% ] 00/05 VUs    4m26.5s/4m30s  0.14 iters/s
+informes         [ 100% ] 0/2 VUs      4m29.0s/4m30s  0.01 iters/s
+lecturas         [ 100% ] 000/030 VUs  4m29.0s/4m30s  1.33 iters/s
+sonda            [ 100% ] 0/1 VUs      4m29.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m30.0s), 000/079 VUs, 466 complete and 0 interrupted iterations
+decisiones     ✗ [  99% ] 00/05 VUs    4m26.5s/4m30s  0.14 iters/s
+informes         [ 100% ] 0/2 VUs      4m30.0s/4m30s  0.01 iters/s
+lecturas         [ 100% ] 000/030 VUs  4m30.0s/4m30s  1.33 iters/s
+sonda            [ 100% ] 0/1 VUs      4m30.0s/4m30s  0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters
+
+running (4m30.1s), 000/079 VUs, 468 complete and 0 interrupted iterations
+decisiones     ✗ [  99% ] 00/05 VUs    4m26.5s/4m30s  0.14 iters/s
+informes       ✓ [ 100% ] 0/2 VUs      4m30s          0.01 iters/s
+lecturas       ✓ [ 100% ] 000/030 VUs  4m30s          1.33 iters/s
+sonda          ✓ [ 100% ] 0/1 VUs      4m30s          0.10 iters/s
+login_rafaga_1 ✓ [ 100% ] 20 VUs       0m01.1s/1m0s   20/20 shared iters
+login_rafaga_2 ✓ [ 100% ] 20 VUs       0m01.0s/1m0s   20/20 shared iters
+verificaciones ✓ [ 100% ] 1 VUs        0m00.1s/1m0s   1/1 shared iters
+login_rafaga_3 ✓ [ 100% ] 20 VUs       0m01.3s/1m0s   20/20 shared iters

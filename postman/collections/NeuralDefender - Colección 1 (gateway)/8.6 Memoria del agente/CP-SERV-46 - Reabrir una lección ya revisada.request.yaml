@@ -1,0 +1,37 @@
+$kind: http-request
+name: CP-SERV-46 | Reabrir una lección ya revisada
+url: "{{url_gateway}}/api/v1/memoria/lecciones/{{leccion_id}}/revision"
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+body:
+  type: json
+  content: '{"decision": "rechazar"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-46 | Reabrir una lección ya revisada
+      // Requisito: RF-MEM-04 (una lección aprobada no se reabre)
+      // Técnica: transición de estados, transición ilegal
+      // Precondición: CP-SERV-45 aprobó la lección
+      // Petición: intentar rechazar la misma lección
+      // Esperado: 400 controlado; la lección sigue aprobada
+      // ============================================================
+
+      pm.test("CP-SERV-46 | Código 400", function () {
+          pm.response.to.have.status(400);
+      });
+
+      const datos = pm.response.json();
+
+      pm.test("CP-SERV-46 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      // Regla: el mensaje indica que la lección ya fue revisada.
+      pm.test("CP-SERV-46 | Indica que ya fue revisada", function () {
+          pm.expect(datos.error).to.include("ya fue");
+      });
+    language: text/javascript
+order: 8000

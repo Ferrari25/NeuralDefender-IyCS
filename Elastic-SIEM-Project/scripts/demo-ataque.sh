@@ -31,7 +31,7 @@
 # incidentes, que de otro modo pasa desapercibida.
 # ─────────────────────────────────────────────────────────────────────────────
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 
 export PYTHONPATH="$PWD/.devtools${PYTHONPATH:+:$PYTHONPATH}"
 
@@ -130,6 +130,7 @@ case "$TIPO" in
     detalle "Es reconocimiento: busca qué servicios hay antes de elegir cuál atacar."
     detalle "MITRE ATT&CK T1046 · Network Service Discovery"
     pausa 3
+    # shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
     bash simulation/run-port-scan.sh --offline --ip "$IP_ATAQUE" >/dev/null 2>&1 \
       && ok "26 eventos de red generados" || { echo "  ✗ falló"; exit 1; }
     ;;
@@ -139,6 +140,7 @@ case "$TIPO" in
     detalle "El usuario 'testuser' visita /login y manda usuario y contraseña."
     detalle "MITRE ATT&CK T1566 · Phishing"
     pausa 3
+    # shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
     bash simulation/run-phishing.sh --offline --ip "$IP_ATAQUE" >/dev/null 2>&1 \
       && ok "visita + envío de credenciales generados" || { echo "  ✗ falló"; exit 1; }
     ;;
@@ -156,6 +158,7 @@ case "$TIPO" in
       docker exec hydra-attacker which hydra >/dev/null 2>&1 && break
       sleep 5
     done
+    # shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
     timeout 240 bash simulation/run-brute-force.sh >/dev/null 2>&1 \
       && ok "24 fallos de autenticación + 1 login exitoso" \
       || { echo "  ✗ no completó (¿están los contenedores de simulación?)"; exit 1; }
@@ -171,12 +174,14 @@ case "$TIPO" in
 
     detalle ""
     detalle "Fase 1 — reconocimiento (T1046): sondeo de 26 puertos"
+    # shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
     bash simulation/run-port-scan.sh --offline --ip "$IP_ATAQUE" >/dev/null 2>&1 \
       && ok "escaneo generado" || { echo "  ✗ falló"; exit 1; }
     pausa 4
 
     detalle ""
     detalle "Fase 2 — explotación (T1566): captura de credenciales desde la misma IP"
+    # shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
     bash simulation/run-phishing.sh --offline --ip "$IP_ATAQUE" >/dev/null 2>&1 \
       && ok "captura de credenciales generada" || { echo "  ✗ falló"; exit 1; }
     ;;

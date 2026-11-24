@@ -1,0 +1,3 @@
+# Comando: docker compose -f entregables/1.3-evidencia-reglas/prueba-de-reglas/yaml/ejemplo_compose_invalido.yml config -q
+service "web" has neither an image nor a build context specified: invalid compose project
+# Codigo de salida: 15

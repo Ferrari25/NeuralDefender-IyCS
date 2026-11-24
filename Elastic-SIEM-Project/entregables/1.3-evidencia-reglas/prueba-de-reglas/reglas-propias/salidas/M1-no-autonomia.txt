@@ -1,0 +1,39 @@
+# Propiedad: Ningun componente ejecuta procesos (AST)
+# Archivo mutado (en la copia): libs/siem_lib.py
+# Pruebas: tests/test_no_autonomy.py
+
+## 1. Codigo sano
+........................................................................ [ 81%]
+..............
+  ── Certificación de no-autonomía ──────────────────────────
+  Archivos .py analizados por AST : 35
+  Con import de subprocess        : ninguno
+  Allowlist                       : []
+  Rutas HTTP que ejecutan algo    : ninguna
+  Herramientas del LLM            : ninguna
+  ───────────────────────────────────────────────────────────
+..                                                         [100%]
+88 passed in 0.82s
+
+## 2. Defecto inyectado: p='libs/siem_lib.py'; s=open(p).read(); open(p,'w').write(s+'\nimport subprocess\nsubprocess.run(["ls"], check=True)\n')
+.F
+=================================== FAILURES ===================================
+__________________ test_sin_imports_de_ejecucion[siem_lib.py] __________________
+tests/test_no_autonomy.py:151: in test_sin_imports_de_ejecucion
+    assert not hallazgos, (
+E   AssertionError: Se importó un módulo con capacidad de ejecución:
+E       libs/siem_lib.py:225: import subprocess
+E   assert not ['libs/siem_lib.py:225: import subprocess']
+=========================== short test summary info ============================
+FAILED tests/test_no_autonomy.py::test_sin_imports_de_ejecucion[siem_lib.py]
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 1 passed in 0.16s
+
+## 3. Diferencia entre el archivo sano y el mutado
+@@ -221,3 +221,6 @@
+ 
+ def ventana_en_horas(ventana: str) -> float:
+     return int(ventana[:-1]) * _UNIDADES_VENTANA[ventana[-1]]
++
++import subprocess
++subprocess.run(["ls"], check=True)

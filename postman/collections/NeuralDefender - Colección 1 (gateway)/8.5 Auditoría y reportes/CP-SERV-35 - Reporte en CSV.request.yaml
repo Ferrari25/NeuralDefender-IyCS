@@ -1,0 +1,46 @@
+$kind: http-request
+name: CP-SERV-35 | Reporte en CSV
+url: "{{url_gateway}}/api/v1/reportes?formato=csv&desde=2026-01-01&hasta={{hoy}}"
+method: GET
+queryParams:
+  formato: csv
+  desde: 2026-01-01
+  hasta: "{{hoy}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-35 | Reporte en CSV
+      // Requisito: RF-REP-01
+      // Técnica: partición de equivalencia, partición válida
+      // Petición: GET /api/v1/reportes con formato=csv
+      // Esperado: 200 con un archivo CSV para descargar.
+      // Nota: el servidor envía "text/csv; charset=utf-8" repetido, por eso
+      // se verifica que el tipo INCLUYA text/csv y no que sea idéntico.
+      // ============================================================
+
+      // 1. Código: 200.
+      pm.test("CP-SERV-35 | Código 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      // 2. Contrato: el tipo de contenido es CSV.
+      pm.test("CP-SERV-35 | El contenido es CSV", function () {
+          pm.expect(pm.response.headers.get("Content-Type")).to.include("text/csv");
+      });
+
+      // 3. Contrato: se descarga como archivo .csv.
+      pm.test("CP-SERV-35 | Se descarga como archivo .csv", function () {
+          const disposicion = pm.response.headers.get("Content-Disposition");
+          pm.expect(disposicion).to.include("attachment");
+          pm.expect(disposicion).to.include(".csv");
+      });
+
+      // 4. Regla: la primera línea es la cabecera de columnas y hay datos.
+      pm.test("CP-SERV-35 | Tiene cabecera y filas de datos", function () {
+          const lineas = pm.response.text().trim().split("\n");
+          pm.expect(lineas[0]).to.include("registro");
+          pm.expect(lineas.length).to.be.above(1);
+      });
+    language: text/javascript
+order: 5000

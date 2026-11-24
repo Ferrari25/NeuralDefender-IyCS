@@ -1,0 +1,38 @@
+$kind: http-request
+name: CP-SERV-05 | Inicio de sesión con campos faltantes
+url: "{{url_gateway}}/api/v1/login"
+method: POST
+body:
+  type: json
+  content: "{}"
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-05 | Inicio de sesión con campos faltantes
+      // Requisito: RF-AUT-01
+      // Técnica: partición de equivalencia, partición inválida
+      // Petición: POST {{url_gateway}}/api/v1/login con body {}
+      // Esperado: 401 con el mensaje genérico de credenciales
+      // Decisión de contrato: se trata como credenciales incorrectas,
+      // para no revelar qué dato faltó.
+      // ============================================================
+
+      // 1. Código: sin usuario ni contraseña, 401 Unauthorized.
+      pm.test("CP-SERV-05 | Código 401", function () {
+          pm.response.to.have.status(401);
+      });
+
+      const datos = pm.response.json();
+
+      // 2 y 3. Contrato y tipo del error.
+      pm.test("CP-SERV-05 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      // 4. Regla: mensaje genérico.
+      pm.test("CP-SERV-05 | Mensaje genérico de credenciales", function () {
+          pm.expect(datos.error).to.eql("usuario o contraseña incorrectos");
+      });
+    language: text/javascript
+order: 3000

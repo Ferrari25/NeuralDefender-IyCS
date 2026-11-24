@@ -1,0 +1,328 @@
+# Comando: /tmp/claude-1000/-home-saferrari-Proyectos-NeuralDefender-IyCS-ALL/024b2b0f-57d2-4627-b394-4dc7978978d1/scratchpad/venv/bin/bandit -f txt entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	running on Python 3.13.5
+Run started:2026-11-22 16:11:57.138262+00:00
+
+Test results:
+>> Issue: [B403:blacklist] Consider possible security implications associated with pickle module.
+   Severity: Low   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b403-import-pickle
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:7:0
+6	import os
+7	import pickle
+8	import shelve
+
+--------------------------------------------------
+>> Issue: [B403:blacklist] Consider possible security implications associated with shelve module.
+   Severity: Low   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b403-import-pickle
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:8:0
+7	import pickle
+8	import shelve
+9	import subprocess
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:9:0
+8	import shelve
+9	import subprocess
+10	import yaml
+
+--------------------------------------------------
+>> Issue: [B405:blacklist] Using xml.etree.ElementTree to parse untrusted XML data is known to be vulnerable to XML attacks. Replace xml.etree.ElementTree with the equivalent defusedxml package, or make sure defusedxml.defuse_stdlib() is called.
+   Severity: Low   Confidence: High
+   CWE: CWE-20 (https://cwe.mitre.org/data/definitions/20.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b405-import-xml-etree
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:12:0
+11	import json
+12	import xml.etree.ElementTree as ET
+13	from typing import List
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'admin1234'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:17:11
+16	
+17	PASSWORD = "admin1234"  # S105 / B105: contrasena en el codigo
+18	
+
+--------------------------------------------------
+>> Issue: [B605:start_process_with_a_shell] Starting a process with a shell, possible injection detected, security issue.
+   Severity: High   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b605_start_process_with_a_shell.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:21:4
+20	def seguridad(dato, cursor, ruta=[]):  # B006: argumento mutable por defecto
+21	    os.system("ls " + dato)  # E8002 / S605 / B605: os.system
+22	    os.popen("ls")  # E8010 / S605 / B605: os.popen
+
+--------------------------------------------------
+>> Issue: [B605:start_process_with_a_shell] Starting a process with a shell: Seems safe, but may be changed in the future, consider rewriting without shell
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b605_start_process_with_a_shell.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:22:4
+21	    os.system("ls " + dato)  # E8002 / S605 / B605: os.system
+22	    os.popen("ls")  # E8010 / S605 / B605: os.popen
+23	    subprocess.run(["ls"])  # W1510 / S603 / B603 / B404: subprocess.run sin check
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:22:4
+21	    os.system("ls " + dato)  # E8002 / S605 / B605: os.system
+22	    os.popen("ls")  # E8010 / S605 / B605: os.popen
+23	    subprocess.run(["ls"])  # W1510 / S603 / B603 / B404: subprocess.run sin check
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:23:4
+22	    os.popen("ls")  # E8010 / S605 / B605: os.popen
+23	    subprocess.run(["ls"])  # W1510 / S603 / B603 / B404: subprocess.run sin check
+24	    subprocess.call("ls " + dato, shell=True)  # E8003 / S602 / B602: shell=True
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:23:4
+22	    os.popen("ls")  # E8010 / S605 / B605: os.popen
+23	    subprocess.run(["ls"])  # W1510 / S603 / B603 / B404: subprocess.run sin check
+24	    subprocess.call("ls " + dato, shell=True)  # E8003 / S602 / B602: shell=True
+
+--------------------------------------------------
+>> Issue: [B602:subprocess_popen_with_shell_equals_true] subprocess call with shell=True identified, security issue.
+   Severity: High   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b602_subprocess_popen_with_shell_equals_true.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:24:4
+23	    subprocess.run(["ls"])  # W1510 / S603 / B603 / B404: subprocess.run sin check
+24	    subprocess.call("ls " + dato, shell=True)  # E8003 / S602 / B602: shell=True
+25	    eval(dato)  # E8001 / S307 / B307: eval
+
+--------------------------------------------------
+>> Issue: [B307:blacklist] Use of possibly insecure function - consider using safer ast.literal_eval.
+   Severity: Medium   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b307-eval
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:25:4
+24	    subprocess.call("ls " + dato, shell=True)  # E8003 / S602 / B602: shell=True
+25	    eval(dato)  # E8001 / S307 / B307: eval
+26	    exec(dato)  # E8001 / S102 / B102: exec
+
+--------------------------------------------------
+>> Issue: [B102:exec_used] Use of exec detected.
+   Severity: Medium   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b102_exec_used.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:26:4
+25	    eval(dato)  # E8001 / S307 / B307: eval
+26	    exec(dato)  # E8001 / S102 / B102: exec
+27	    pickle.loads(dato)  # E8013 / S301 / B301: pickle
+
+--------------------------------------------------
+>> Issue: [B301:blacklist] Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.
+   Severity: Medium   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b301-pickle
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:27:4
+26	    exec(dato)  # E8001 / S102 / B102: exec
+27	    pickle.loads(dato)  # E8013 / S301 / B301: pickle
+28	    marshal.loads(dato)  # E8014 / S302 / B302: marshal
+
+--------------------------------------------------
+>> Issue: [B302:blacklist] Deserialization with the marshal module is possibly dangerous.
+   Severity: Medium   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b302-marshal
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:28:4
+27	    pickle.loads(dato)  # E8013 / S301 / B301: pickle
+28	    marshal.loads(dato)  # E8014 / S302 / B302: marshal
+29	    shelve.open("estado")  # E8015: shelve
+
+--------------------------------------------------
+>> Issue: [B301:blacklist] Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.
+   Severity: Medium   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b301-pickle
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:29:4
+28	    marshal.loads(dato)  # E8014 / S302 / B302: marshal
+29	    shelve.open("estado")  # E8015: shelve
+30	    hashlib.md5(dato)  # S324 / B324: hash debil MD5
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b324_hashlib.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:30:4
+29	    shelve.open("estado")  # E8015: shelve
+30	    hashlib.md5(dato)  # S324 / B324: hash debil MD5
+31	    hashlib.sha1(dato)  # S324 / B324: hash debil SHA-1
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak SHA1 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b324_hashlib.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:31:4
+30	    hashlib.md5(dato)  # S324 / B324: hash debil MD5
+31	    hashlib.sha1(dato)  # S324 / B324: hash debil SHA-1
+32	    yaml.load(dato)  # E8005 / S506 / B506: yaml.load inseguro
+
+--------------------------------------------------
+>> Issue: [B506:yaml_load] Use of unsafe yaml load. Allows instantiation of arbitrary objects. Consider yaml.safe_load().
+   Severity: Medium   Confidence: High
+   CWE: CWE-20 (https://cwe.mitre.org/data/definitions/20.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b506_yaml_load.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:32:4
+31	    hashlib.sha1(dato)  # S324 / B324: hash debil SHA-1
+32	    yaml.load(dato)  # E8005 / S506 / B506: yaml.load inseguro
+33	    requests.get("http://example.com")  # S113 / B113: requests sin timeout
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Call to requests without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b113_request_without_timeout.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:33:4
+32	    yaml.load(dato)  # E8005 / S506 / B506: yaml.load inseguro
+33	    requests.get("http://example.com")  # S113 / B113: requests sin timeout
+34	    ET.fromstring(dato)  # S314 / B314: XML inseguro
+
+--------------------------------------------------
+>> Issue: [B314:blacklist] Using xml.etree.ElementTree.fromstring to parse untrusted XML data is known to be vulnerable to XML attacks. Replace xml.etree.ElementTree.fromstring with its defusedxml equivalent function or make sure defusedxml.defuse_stdlib() is called
+   Severity: Medium   Confidence: High
+   CWE: CWE-20 (https://cwe.mitre.org/data/definitions/20.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b313-b320-xml-bad-elementtree
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:34:4
+33	    requests.get("http://example.com")  # S113 / B113: requests sin timeout
+34	    ET.fromstring(dato)  # S314 / B314: XML inseguro
+35	    assert dato  # S101 / B101: assert
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:35:4
+34	    ET.fromstring(dato)  # S314 / B314: XML inseguro
+35	    assert dato  # S101 / B101: assert
+36	    open("/tmp/salida", "w")  # S108 / B108: archivo temporal inseguro
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b108_hardcoded_tmp_directory.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:36:9
+35	    assert dato  # S101 / B101: assert
+36	    open("/tmp/salida", "w")  # S108 / B108: archivo temporal inseguro
+37	    cursor.execute("SELECT * FROM t WHERE id=" + dato)  # S608 / B608: SQL concatenado
+
+--------------------------------------------------
+>> Issue: [B608:hardcoded_sql_expressions] Possible SQL injection vector through string-based query construction.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-89 (https://cwe.mitre.org/data/definitions/89.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:37:19
+36	    open("/tmp/salida", "w")  # S108 / B108: archivo temporal inseguro
+37	    cursor.execute("SELECT * FROM t WHERE id=" + dato)  # S608 / B608: SQL concatenado
+38	    os.open("/tmp/f", os.O_WRONLY | os.O_CREAT, 0o777)  # modo de archivo mas permisivo que 0o600
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b108_hardcoded_tmp_directory.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:38:12
+37	    cursor.execute("SELECT * FROM t WHERE id=" + dato)  # S608 / B608: SQL concatenado
+38	    os.open("/tmp/f", os.O_WRONLY | os.O_CREAT, 0o777)  # modo de archivo mas permisivo que 0o600
+39	    os.mkdir("/tmp/d", 0o777)  # modo de directorio mas permisivo que 0o700
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b108_hardcoded_tmp_directory.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:39:13
+38	    os.open("/tmp/f", os.O_WRONLY | os.O_CREAT, 0o777)  # modo de archivo mas permisivo que 0o600
+39	    os.mkdir("/tmp/d", 0o777)  # modo de directorio mas permisivo que 0o700
+40	    os.makedirs("/tmp/d2")  # makedirs sin modo
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b108_hardcoded_tmp_directory.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:40:16
+39	    os.mkdir("/tmp/d", 0o777)  # modo de directorio mas permisivo que 0o700
+40	    os.makedirs("/tmp/d2")  # makedirs sin modo
+41	    os.spawnl(os.P_WAIT, "/bin/ls", "ls")  # spawn con proceso
+
+--------------------------------------------------
+>> Issue: [B606:start_process_with_no_shell] Starting a process without a shell.
+   Severity: Low   Confidence: Medium
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b606_start_process_with_no_shell.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:41:4
+40	    os.makedirs("/tmp/d2")  # makedirs sin modo
+41	    os.spawnl(os.P_WAIT, "/bin/ls", "ls")  # spawn con proceso
+42	    os.execl("/bin/ls", "ls")  # exec con proceso
+
+--------------------------------------------------
+>> Issue: [B606:start_process_with_no_shell] Starting a process without a shell.
+   Severity: Low   Confidence: Medium
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b606_start_process_with_no_shell.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:42:4
+41	    os.spawnl(os.P_WAIT, "/bin/ls", "ls")  # spawn con proceso
+42	    os.execl("/bin/ls", "ls")  # exec con proceso
+43	    os.mkfifo("/tmp/tuberia", 0o666)  # modo de fifo mas permisivo que 0o600
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b108_hardcoded_tmp_directory.html
+   Location: ./entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:43:14
+42	    os.execl("/bin/ls", "ls")  # exec con proceso
+43	    os.mkfifo("/tmp/tuberia", 0o666)  # modo de fifo mas permisivo que 0o600
+44	    return ruta
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 113
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 12
+		Medium: 14
+		High: 4
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 1
+		Medium: 9
+		High: 20
+Files skipped (0):
+# Codigo de salida: 1

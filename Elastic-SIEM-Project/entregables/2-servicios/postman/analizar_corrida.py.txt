@@ -1,0 +1,141 @@
+"""Analiza una corrida de Newman (los dos JSON de una carpeta) y calcula:
+
+  1. Por colección: peticiones, aserciones aprobadas y falladas.
+  2. El detalle de cada falla: caso, aserción, y lo esperado contra lo recibido (el mensaje de Newman).
+  3. La cobertura de los 56 endpoints: cuántos recibieron al menos una petición.
+
+Todo sale del JSON que exporta Newman (`run.executions` y `run.failures`): nada se estima.
+
+Cobertura, dos medidas:
+  - "Recibió una petición": hubo al menos una petición con el MÉTODO y la RUTA del endpoint (aunque
+    la respuesta haya sido un rechazo, por ejemplo 401 por falta de token).
+  - "Llegó a su lógica": además, al menos una respuesta que no fuera un rechazo previo a la lógica
+    (401, 403, 405 o 413). Un endpoint que solo recibió peticiones rechazadas por falta de token no
+    se probó de verdad.
+
+Uso:  python3 analizar_corrida.py.txt <carpeta con coleccion1-gateway.json y coleccion2-internos.json>
+Escribe resumen.json y resumen.md en esa carpeta.
+"""
+from __future__ import annotations
+
+import json
+import re
+import sys
+from collections import Counter, defaultdict
+from pathlib import Path
+
+PUERTOS = {18080: "gateway", 18001: "auth", 18002: "audit", 18003: "collector", 18004: "classifier",
+           18005: "analyst", 18006: "pipeline", 18007: "knowledge"}
+
+# (id, servicio, método, ruta con <x> para parámetros, clase)
+ENDPOINTS = [
+    ("G01", "gateway", "GET", "/login", "secundario"), ("G02", "gateway", "POST", "/api/v1/login", "core"),
+    ("G03", "gateway", "POST", "/api/v1/logout", "core"), ("G04", "gateway", "GET", "/api/v1/me", "core"),
+    ("G05", "gateway", "GET", "/", "secundario"), ("G06", "gateway", "GET", "/api/v1/healthz", "secundario"),
+    ("G07", "gateway", "GET", "/api/v1/incidents", "core"), ("G08", "gateway", "GET", "/api/v1/incidents/<x>", "core"),
+    ("G09", "gateway", "POST", "/api/v1/decision", "core"), ("G10", "gateway", "GET", "/api/v1/decisions", "core"),
+    ("G11", "gateway", "GET", "/api/v1/audit/verify", "core"), ("G12", "gateway", "GET", "/api/v1/memoria", "core"),
+    ("G13", "gateway", "POST", "/api/v1/memoria/documentos", "core"),
+    ("G14", "gateway", "POST", "/api/v1/memoria/lecciones", "core"),
+    ("G15", "gateway", "POST", "/api/v1/memoria/lecciones/<x>/revision", "core"),
+    ("G16", "gateway", "GET", "/api/v1/reportes", "core"), ("G17", "gateway", "GET", "/api/incidents", "secundario"),
+    ("G18", "gateway", "POST", "/api/decision", "secundario"), ("G19", "gateway", "GET", "/api/decisions", "secundario"),
+    ("G20", "gateway", "GET", "/static/<x>", "secundario"),
+    ("A01", "auth", "POST", "/v1/authenticate", "core"), ("A02", "auth", "GET", "/v1/users/<x>", "core"),
+    ("A03", "auth", "GET", "/v1/users-summary", "secundario"),
+    ("U01", "audit", "POST", "/v1/decisions", "core"), ("U02", "audit", "GET", "/v1/decisions", "core"),
+    ("U03", "audit", "GET", "/v1/decisions/verify", "core"), ("U04", "audit", "POST", "/v1/analysis-history", "core"),
+    ("U05", "audit", "GET", "/v1/analysis-history/verify", "core"), ("U06", "audit", "POST", "/v1/activity", "core"),
+    ("U07", "audit", "GET", "/v1/activity", "core"), ("U08", "audit", "GET", "/v1/activity/verify", "core"),
+    ("U09", "audit", "POST", "/v1/access", "core"), ("U10", "audit", "GET", "/v1/access", "core"),
+    ("U11", "audit", "GET", "/v1/access/verify", "core"), ("U12", "audit", "GET", "/v1/reports", "core"),
+    ("C01", "collector", "POST", "/v1/snapshots", "core"), ("C02", "collector", "GET", "/v1/snapshots/latest", "core"),
+    ("K01", "classifier", "POST", "/v1/classify", "core"), ("N01", "analyst", "POST", "/v1/analyze", "core"),
+    ("P01", "pipeline", "POST", "/v1/cycles", "core"), ("P02", "pipeline", "GET", "/v1/incidents", "core"),
+    ("P03", "pipeline", "GET", "/v1/incidents/<x>", "core"),
+    ("M01", "knowledge", "GET", "/v1/documents", "core"), ("M02", "knowledge", "POST", "/v1/documents", "core"),
+    ("M03", "knowledge", "POST", "/v1/cases", "core"), ("M04", "knowledge", "GET", "/v1/lessons", "core"),
+    ("M05", "knowledge", "POST", "/v1/lessons", "core"), ("M06", "knowledge", "POST", "/v1/lessons/<x>/review", "core"),
+    ("M07", "knowledge", "POST", "/v1/context", "core"),
+] + [(f"H{i + 1:02d}", s, "GET", "/v1/healthz", "secundario")
+     for i, s in enumerate(("auth", "audit", "collector", "classifier", "analyst", "pipeline", "knowledge"))]
+RECHAZOS_PREVIOS = {401, 403, 405, 413}
+
+
+def patron(ruta: str) -> re.Pattern:
+    return re.compile("^" + re.escape(ruta).replace(re.escape("<x>"), "[^/]+") + "$")
+
+
+def ejecuciones(ruta_json: Path) -> tuple[dict, list[dict]]:
+    run = json.loads(ruta_json.read_text(encoding="utf-8"))["run"]
+    filas = []
+    for e in run["executions"]:
+        u = e["request"]["url"]
+        filas.append({"servicio": PUERTOS.get(int(u.get("port", 0)), "?"), "metodo": e["request"]["method"],
+                      "ruta": "/" + "/".join(u.get("path", [])), "codigo": e.get("response", {}).get("code"),
+                      "item": e["item"]["name"]})
+    return run, filas
+
+
+def cobertura(filas: list[dict]) -> dict:
+    recibio, llego, por = set(), set(), defaultdict(list)
+    for f in filas:
+        for id_, svc, metodo, ruta, _ in ENDPOINTS:
+            if f["servicio"] == svc and f["metodo"] == metodo and patron(ruta).match(f["ruta"]):
+                recibio.add(id_)
+                por[id_].append(f["codigo"])
+                if f["codigo"] not in RECHAZOS_PREVIOS:
+                    llego.add(id_)
+    return {"recibio": sorted(recibio), "llego": sorted(llego), "codigos": {k: sorted(set(v)) for k, v in por.items()}}
+
+
+def resumen_coleccion(run: dict) -> dict:
+    st = run["stats"]
+    return {"pedidos": st["requests"]["total"], "pedidos_fallidos": st["requests"]["failed"],
+            "aserciones": st["assertions"]["total"], "falladas": st["assertions"]["failed"],
+            "aprobadas": st["assertions"]["total"] - st["assertions"]["failed"],
+            "scripts_con_error": st["testScripts"]["failed"],
+            "duracion_s": round((run["timings"]["completed"] - run["timings"]["started"]) / 1000, 1)}
+
+
+def fallas(run: dict) -> list[dict]:
+    salida = []
+    for f in run["failures"]:
+        e = f["error"]
+        salida.append({"peticion": f["source"]["name"], "aserción": e.get("test") or "(error del script, sin nombre de aserción)",
+                       "tipo": e.get("name"), "mensaje": (e.get("message") or "").replace("\n", " ")[:300]})
+    return salida
+
+
+def main() -> None:
+    carpeta = Path(sys.argv[1]).resolve()
+    colecciones = {"1": ("Colección 1 (gateway)", carpeta / "coleccion1-gateway.json"),
+                   "2": ("Colección 2 (servicios internos)", carpeta / "coleccion2-internos.json")}
+    resultado, todas = {}, []
+    for k, (nombre, ruta) in colecciones.items():
+        run, filas = ejecuciones(ruta)
+        todas += filas
+        por_peticion = Counter(f["item"] for f in filas)
+        resultado[k] = {"nombre": nombre, **resumen_coleccion(run), "fallas": fallas(run),
+                        "cobertura": cobertura(filas), "peticiones_repetidas": {n: c for n, c in por_peticion.items() if c > 1}}
+    resultado["combinada"] = cobertura(todas)
+    core = {e[0] for e in ENDPOINTS if e[4] == "core"}
+    total = len(ENDPOINTS)
+    for clave in ("1", "2", "combinada"):
+        c = resultado[clave]["cobertura"] if clave != "combinada" else resultado[clave]
+        c["total_endpoints"] = total
+        c["con_peticion"] = len(c["recibio"]); c["llegaron_a_su_logica"] = len(c["llego"])
+        c["core_con_peticion"] = len(core & set(c["recibio"])); c["core_total"] = len(core)
+        c["sin_peticion"] = [e[0] + " " + e[2] + " " + e[3] for e in ENDPOINTS if e[0] not in c["recibio"]]
+        c["solo_rechazadas"] = [i for i in c["recibio"] if i not in c["llego"]]
+    (carpeta / "resumen.json").write_text(json.dumps(resultado, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(json.dumps({k: {x: v[x] for x in ("pedidos", "aserciones", "aprobadas", "falladas", "scripts_con_error") if x in v}
+                      for k, v in resultado.items() if k != "combinada"}, ensure_ascii=False))
+    for clave, etiqueta in (("1", "Colección 1"), ("2", "Colección 2"), ("combinada", "Ambas")):
+        c = resultado[clave]["cobertura"] if clave != "combinada" else resultado[clave]
+        print(f"{etiqueta}: {c['con_peticion']}/{total} con petición, {c['llegaron_a_su_logica']}/{total} llegaron a su lógica, "
+              f"core {c['core_con_peticion']}/{c['core_total']} | sin petición: {c['sin_peticion']}")
+
+
+if __name__ == "__main__":
+    main()

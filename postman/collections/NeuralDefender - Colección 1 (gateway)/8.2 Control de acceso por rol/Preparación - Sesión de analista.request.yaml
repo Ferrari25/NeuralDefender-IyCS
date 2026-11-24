@@ -1,0 +1,19 @@
+$kind: http-request
+name: Preparación | Sesión de analista
+url: "{{url_gateway}}/api/v1/login"
+method: POST
+body:
+  type: json
+  content: '{"username": "{{analista}}", "password": "{{password}}"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // Preparación: abre la sesión del rol analista y guarda su token CSRF.
+      // La carpeta termina con esta sesión, que es la que necesitan 8.3 y 8.4.
+      pm.test("Preparación | Sesión de analista abierta", function () {
+          pm.response.to.have.status(200);
+          pm.expect(pm.response.json().rol).to.eql("analyst");
+      });
+      pm.environment.set("csrf_token", pm.response.json().csrf_token);
+    language: text/javascript
+order: 8000

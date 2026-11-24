@@ -118,7 +118,8 @@ def ejecutar_ciclo() -> dict:
     Lanza `CicloEnCurso` si ya hay otro corriendo y `ErrorDeEtapa` si una etapa
     crítica falla; en ese caso el reporte anterior queda intacto.
     """
-    if not _en_curso.acquire(blocking=False):
+    # Candado no bloqueante que se libera en el finally de abajo: `with` no aplica.
+    if not _en_curso.acquire(blocking=False):  # pylint: disable=consider-using-with
         raise CicloEnCurso("ya hay un ciclo de análisis en curso")
     try:
         etapas: list[dict] = []

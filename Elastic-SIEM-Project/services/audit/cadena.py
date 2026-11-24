@@ -79,22 +79,19 @@ def append_jsonl(path: str | Path, record: dict, encadenar: bool = True) -> dict
     # O_APPEND hace que cada write vaya al final aunque otro proceso haya escrito
     # en el medio; el modo solo aplica si el archivo se crea en esta llamada.
     fd = os.open(p, os.O_WRONLY | os.O_CREAT | os.O_APPEND, AUDIT_FILE_MODE)
-    try:
-        with os.fdopen(fd, "a", encoding="utf-8") as f:
-            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
-            try:
-                # El hash previo se lee CON el lock tomado: si se leyera antes,
-                # dos escrituras concurrentes encadenarían sobre el mismo eslabón.
-                completo = dict(record)
-                if encadenar:
-                    completo["prev_hash"] = _ultimo_hash(p)
-                f.write(json.dumps(completo, ensure_ascii=False) + "\n")
-                f.flush()
-                os.fsync(f.fileno())
-            finally:
-                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
-    except Exception:
-        raise
+    with os.fdopen(fd, "a", encoding="utf-8") as f:
+        fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+        try:
+            # El hash previo se lee CON el lock tomado: si se leyera antes,
+            # dos escrituras concurrentes encadenarían sobre el mismo eslabón.
+            completo = dict(record)
+            if encadenar:
+                completo["prev_hash"] = _ultimo_hash(p)
+            f.write(json.dumps(completo, ensure_ascii=False) + "\n")
+            f.flush()
+            os.fsync(f.fileno())
+        finally:
+            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
     return completo
 
 

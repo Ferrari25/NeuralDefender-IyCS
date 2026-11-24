@@ -1,0 +1,80 @@
+$kind: http-request
+name: CP-SERV-06 | Bloqueo tras 5 intentos fallidos
+url: "{{url_gateway}}/api/v1/login"
+method: POST
+body:
+  type: json
+  content: '{"username": "{{usuario_descartable}}", "password": "contrasena-incorrecta"}'
+scripts:
+  - type: beforeRequest
+    code: |-
+      // Antes de la petición principal se hacen 5 intentos fallidos con el
+      // usuario descartable, uno detrás de otro. Se guarda el código de
+      // cada intento para verificarlo después.
+      const url = pm.environment.get("url_gateway") + "/api/v1/login";
+      const cuerpo = JSON.stringify({
+          username: pm.environment.get("usuario_descartable"),
+          password: "contrasena-incorrecta"
+      });
+      const codigos = [];
+
+      function intento(numero) {
+          if (numero > 5) {
+              pm.variables.set("codigos_previos", JSON.stringify(codigos));
+              return;
+          }
+          pm.sendRequest({
+              url: url,
+              method: "POST",
+              header: { "Content-Type": "application/json" },
+              body: { mode: "raw", raw: cuerpo }
+          }, function (error, respuesta) {
+              codigos.push(respuesta.code);
+              console.log("Intento " + numero + ": HTTP " + respuesta.code);
+              intento(numero + 1);
+          });
+      }
+
+      intento(1);
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-06 | Bloqueo tras 5 intentos fallidos
+      // Requisito: RF-AUT-04 (bloqueo tras 5 intentos en 15 minutos,
+      // con espera creciente)
+      // Técnica: análisis de valores límite (5 intentos permitidos, el 6.º no)
+      // Precondición: el usuario descartable no tiene intentos previos
+      // Petición: el script "Before request" hace 5 intentos fallidos;
+      // esta petición es el 6.º intento
+      // Esperado: los intentos 1 a 5 responden 401; el 6.º responde 429
+      // Too Many Requests con reintentar_en = 60 segundos
+      // ============================================================
+
+      // 1. Límite: los 5 primeros intentos se rechazan como credenciales
+      // incorrectas, sin bloquear todavía.
+      pm.test("CP-SERV-06 | Los intentos 1 a 5 responden 401", function () {
+          const codigos = JSON.parse(pm.variables.get("codigos_previos"));
+          pm.expect(codigos).to.eql([401, 401, 401, 401, 401]);
+      });
+
+      // 2. Código: el 6.º intento queda bloqueado con 429.
+      pm.test("CP-SERV-06 | El 6.º intento responde 429", function () {
+          pm.response.to.have.status(429);
+      });
+
+      const datos = pm.response.json();
+
+      // 3. Contrato y tipos de la respuesta de bloqueo.
+      pm.test("CP-SERV-06 | Contrato: error y reintentar_en", function () {
+          pm.expect(datos).to.include.all.keys("error", "reintentar_en");
+          pm.expect(datos.reintentar_en).to.be.a("number");
+      });
+
+      // 4. Regla: la primera espera es de 60 segundos (luego crece).
+      pm.test("CP-SERV-06 | La espera inicial es de 60 s", function () {
+          pm.expect(datos.reintentar_en).to.eql(60);
+          pm.expect(datos.error).to.include("demasiados intentos");
+      });
+    language: text/javascript
+order: 1000

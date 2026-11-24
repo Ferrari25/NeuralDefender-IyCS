@@ -1,0 +1,4 @@
+# hadolint (análisis estático de Dockerfile).
+# Reglas del plan: DL3006/DL3007 (imagen con versión fija), DL3002 (sin root),
+# DL3020 (COPY en vez de ADD), DL3042 (pip --no-cache-dir). Vienen activas por defecto.
+failure-threshold: warning

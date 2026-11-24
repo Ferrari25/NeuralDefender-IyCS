@@ -76,7 +76,7 @@ def safe_token(valor: object) -> bool:
     """
     if not isinstance(valor, str) or not valor:
         return False
-    return not (_METACARACTERES_SHELL & set(valor))
+    return not _METACARACTERES_SHELL & set(valor)
 
 
 def resolver_ip_atacante(incidente_o_ips: object, respaldo: object = None) -> str | None:

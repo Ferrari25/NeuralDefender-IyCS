@@ -1,0 +1,68 @@
+# Comando: /tmp/claude-1000/-home-saferrari-Proyectos-NeuralDefender-IyCS-ALL/024b2b0f-57d2-4627-b394-4dc7978978d1/scratchpad/venv/bin/ruff check --output-format=concise entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:4:1: I001 [*] Import block is un-sorted or un-formatted
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:11:8: F401 [*] `json` imported but unused
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:13:1: UP035 `typing.List` is deprecated, use `list` instead
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:13:20: F401 [*] `typing.List` imported but unused
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:17:12: S105 Possible hardcoded password assigned to: "PASSWORD"
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:20:34: B006 Do not use mutable data structures for argument defaults
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:21:5: S605 Starting a process with a shell, possible injection detected
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:22:5: S605 Starting a process with a shell: seems safe, but may be changed in the future; consider rewriting without `shell`
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:22:14: S607 Starting a process with a partial executable path
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:23:20: S607 Starting a process with a partial executable path
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:24:5: S602 `subprocess` call with `shell=True` identified, security issue
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:25:5: S307 Use of possibly insecure function; consider using `ast.literal_eval`
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:26:5: S102 Use of `exec` detected
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:27:5: S301 `pickle` and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:28:5: S302 Deserialization with the `marshal` module is possibly dangerous
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:29:5: S301 `pickle` and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:29:5: SIM115 Use a context manager for opening files
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:30:5: S324 Probable use of insecure hash functions in `hashlib`: `md5`
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:31:5: S324 Probable use of insecure hash functions in `hashlib`: `sha1`
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:32:5: S506 Probable use of unsafe `yaml.load`. Allows instantiation of arbitrary objects. Consider `yaml.safe_load`.
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:33:5: S113 Probable use of `requests` call without timeout
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:34:5: S314 Using `xml` to parse untrusted data is known to be vulnerable to XML attacks; use `defusedxml` equivalents
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:35:5: S101 Use of `assert` detected
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:36:5: SIM115 Use a context manager for opening files
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:36:10: S108 Probable insecure usage of temporary file or directory: "/tmp/salida"
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:37:20: S608 Possible SQL injection vector through string-based query construction
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:38:13: S108 Probable insecure usage of temporary file or directory: "/tmp/f"
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:39:14: S108 Probable insecure usage of temporary file or directory: "/tmp/d"
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:40:17: S108 Probable insecure usage of temporary file or directory: "/tmp/d2"
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:41:5: S606 Starting a process without a shell
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:42:5: S606 Starting a process without a shell
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:43:15: S108 Probable insecure usage of temporary file or directory: "/tmp/tuberia"
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:48:5: SIM103 Return the condition `bool(x)` directly
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:55:12: C411 Unnecessary `list()` call (remove the outer call to `list()`)
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:55:17: C416 Unnecessary list comprehension (rewrite using `list()`)
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:63:13: E711 Comparison to `None` should be `cond is None`
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:65:13: W291 [*] Trailing whitespace
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:68:5: C901 `funcion_enorme` is too complex (18 > 10)
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:70:5: F841 Local variable `l02` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:71:5: F841 Local variable `l03` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:72:5: F841 Local variable `l04` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:73:5: F841 Local variable `l05` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:74:5: F841 Local variable `l06` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:75:5: F841 Local variable `l07` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:76:5: F841 Local variable `l08` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:77:5: F841 Local variable `l09` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:78:5: F841 Local variable `l10` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:79:5: F841 Local variable `l11` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:80:5: F841 Local variable `l12` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:81:5: F841 Local variable `l13` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:82:5: F841 Local variable `l14` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:83:5: F841 Local variable `l15` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:84:5: F841 Local variable `l16` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:85:5: F841 Local variable `l17` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:86:5: F841 Local variable `l18` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:87:5: F841 Local variable `l19` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:88:5: F841 Local variable `l20` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:89:5: F841 Local variable `l21` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:90:5: F841 Local variable `l22` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:91:5: F841 Local variable `l23` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:92:5: F841 Local variable `l24` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:93:5: F841 Local variable `l25` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:94:5: F841 Local variable `l26` is assigned to but never used
+entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py:128:9: F841 Local variable `l01` is assigned to but never used
+Found 64 errors.
+[*] 4 fixable with the `--fix` option (31 hidden fixes can be enabled with the `--unsafe-fixes` option).
+# Codigo de salida: 1

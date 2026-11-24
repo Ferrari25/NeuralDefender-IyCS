@@ -1,0 +1,40 @@
+$kind: http-request
+name: CP-SERV-48 | Lección inexistente
+url: "{{url_gateway}}/api/v1/memoria/lecciones/LEC-0000000000/revision?="
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+queryParams:
+  - key: ""
+    value: ""
+    disabled: false
+    description: ""
+body:
+  type: json
+  content: '{"decision": "aprobar"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-48 | Lección inexistente
+      // Requisito: RF-MEM-04
+      // Técnica: partición de equivalencia, partición inválida
+      // Petición: revisar LEC-0000000000, que tiene formato válido pero no existe
+      // Esperado: 404
+      // ============================================================
+
+      pm.test("CP-SERV-48 | Código 404", function () {
+          pm.response.to.have.status(404);
+      });
+
+      const datos = pm.response.json();
+
+      pm.test("CP-SERV-48 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      pm.test("CP-SERV-48 | El mensaje identifica la lección", function () {
+          pm.expect(datos.error).to.eql("no existe la lección 'LEC-0000000000'");
+      });
+    language: text/javascript
+order: 10000

@@ -1,0 +1,100 @@
+************* Module /home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS-20261122T063425Z-1-001/NeuralDefender-IyCS/Elastic-SIEM-Project/.pylintrc
+.pylintrc:1:0: E0015: Unrecognized option found: os-system, subprocess-run-check, check-on-os-popen, check-on-os-spawn, check-on-os-exec, os-makedirs-mode, check-on-pickle, check-on-marshal, check-on-shelve (unrecognized-option)
+************* Module siem_servicios
+libs/siem_servicios.py:130:4: W0603: Using the global statement (global-statement)
+************* Module siem_validators
+libs/siem_validators.py:79:0: C0325: Unnecessary parens after 'not' keyword (superfluous-parens)
+************* Module analyst_service
+services/analyst/analyst_service.py:11:0: C0301: Line too long (110/100) (line-too-long)
+************* Module proveedores_llm
+services/analyst/proveedores_llm.py:83:8: C0415: Import outside toplevel (google.genai) (import-outside-toplevel)
+services/analyst/proveedores_llm.py:104:8: C0415: Import outside toplevel (google.genai.types) (import-outside-toplevel)
+services/analyst/proveedores_llm.py:139:8: C0415: Import outside toplevel (google.genai.errors, google.genai.types) (import-outside-toplevel)
+services/analyst/proveedores_llm.py:211:11: W0718: Catching too general exception Exception (broad-exception-caught)
+************* Module siem_agent
+services/analyst/siem_agent.py:156:0: C0301: Line too long (109/100) (line-too-long)
+services/analyst/siem_agent.py:168:0: C0325: Unnecessary parens after 'not' keyword (superfluous-parens)
+services/analyst/siem_agent.py:176:0: C0301: Line too long (129/100) (line-too-long)
+services/analyst/siem_agent.py:189:0: C0301: Line too long (104/100) (line-too-long)
+services/analyst/siem_agent.py:261:0: C0301: Line too long (106/100) (line-too-long)
+services/analyst/siem_agent.py:361:0: C0301: Line too long (102/100) (line-too-long)
+services/analyst/siem_agent.py:550:0: C0301: Line too long (116/100) (line-too-long)
+services/analyst/siem_agent.py:571:0: C0301: Line too long (107/100) (line-too-long)
+services/analyst/siem_agent.py:682:0: C0301: Line too long (132/100) (line-too-long)
+services/analyst/siem_agent.py:293:0: R0917: Too many positional arguments (6/5) (too-many-positional-arguments)
+services/analyst/siem_agent.py:494:0: R0917: Too many positional arguments (6/5) (too-many-positional-arguments)
+services/analyst/siem_agent.py:499:15: W0718: Catching too general exception Exception (broad-exception-caught)
+************* Module audit_service
+services/audit/audit_service.py:95:0: R0911: Too many return statements (8/6) (too-many-return-statements)
+services/audit/audit_service.py:46:0: C0411: third party import "cadena.append_jsonl" should be placed before first party import "reportes"  (wrong-import-order)
+services/audit/audit_service.py:47:0: C0411: third party import "siem_lib.now_iso" should be placed before first party import "reportes"  (wrong-import-order)
+services/audit/audit_service.py:48:0: C0411: third party import "siem_servicios.crear_servicio" should be placed before first party import "reportes"  (wrong-import-order)
+************* Module audit_verify
+services/audit/audit_verify.py:103:0: C0301: Line too long (104/100) (line-too-long)
+************* Module cadena
+services/audit/cadena.py:96:4: W0706: The except handler raises immediately (try-except-raise)
+************* Module classifier
+services/classifier/classifier.py:52:0: C0301: Line too long (111/100) (line-too-long)
+services/classifier/classifier.py:53:0: C0301: Line too long (112/100) (line-too-long)
+services/classifier/classifier.py:54:0: C0301: Line too long (111/100) (line-too-long)
+services/classifier/classifier.py:327:0: C0301: Line too long (104/100) (line-too-long)
+services/classifier/classifier.py:347:0: C0301: Line too long (120/100) (line-too-long)
+services/classifier/classifier.py:454:0: C0301: Line too long (102/100) (line-too-long)
+services/classifier/classifier.py:465:0: C0301: Line too long (109/100) (line-too-long)
+services/classifier/classifier.py:559:0: C0301: Line too long (102/100) (line-too-long)
+services/classifier/classifier.py:598:0: C0301: Line too long (105/100) (line-too-long)
+services/classifier/classifier.py:613:0: C0301: Line too long (110/100) (line-too-long)
+services/classifier/classifier.py:661:0: C0301: Line too long (110/100) (line-too-long)
+services/classifier/classifier.py:684:0: C0301: Line too long (101/100) (line-too-long)
+services/classifier/classifier.py:744:0: C0301: Line too long (102/100) (line-too-long)
+services/classifier/classifier.py:944:0: C0301: Line too long (105/100) (line-too-long)
+services/classifier/classifier.py:950:0: C0301: Line too long (108/100) (line-too-long)
+services/classifier/classifier.py:959:0: C0301: Line too long (101/100) (line-too-long)
+services/classifier/classifier.py:960:0: C0301: Line too long (112/100) (line-too-long)
+services/classifier/classifier.py:1021:0: C0301: Line too long (115/100) (line-too-long)
+services/classifier/classifier.py:1051:0: C0301: Line too long (104/100) (line-too-long)
+services/classifier/classifier.py:1059:0: C0301: Line too long (112/100) (line-too-long)
+services/classifier/classifier.py:1078:0: C0301: Line too long (104/100) (line-too-long)
+services/classifier/classifier.py:1142:0: C0301: Line too long (154/100) (line-too-long)
+services/classifier/classifier.py:1158:0: C0301: Line too long (104/100) (line-too-long)
+services/classifier/classifier.py:1163:0: C0301: Line too long (114/100) (line-too-long)
+services/classifier/classifier.py:1373:0: C0301: Line too long (108/100) (line-too-long)
+services/classifier/classifier.py:1:0: C0302: Too many lines in module (1379/1000) (too-many-lines)
+services/classifier/classifier.py:115:0: R0902: Too many instance attributes (20/7) (too-many-instance-attributes)
+services/classifier/classifier.py:219:0: R0913: Too many arguments (10/6) (too-many-arguments)
+services/classifier/classifier.py:219:0: R0917: Too many positional arguments (10/5) (too-many-positional-arguments)
+services/classifier/classifier.py:248:0: R0913: Too many arguments (7/6) (too-many-arguments)
+services/classifier/classifier.py:248:0: R0917: Too many positional arguments (7/5) (too-many-positional-arguments)
+services/classifier/classifier.py:800:0: R0914: Too many local variables (36/25) (too-many-locals)
+services/classifier/classifier.py:800:0: R0912: Too many branches (21/15) (too-many-branches)
+services/classifier/classifier.py:800:0: R0915: Too many statements (90/60) (too-many-statements)
+************* Module get-logs
+services/collector/get-logs.py:1:0: C0103: Module name "get-logs" doesn't conform to snake_case naming style (invalid-name)
+************* Module verify-cobertura
+services/collector/verify-cobertura.py:1:0: C0103: Module name "verify-cobertura" doesn't conform to snake_case naming style (invalid-name)
+************* Module dashboard
+services/gateway/dashboard.py:216:0: C0301: Line too long (101/100) (line-too-long)
+services/gateway/dashboard.py:733:0: C0301: Line too long (101/100) (line-too-long)
+services/gateway/dashboard.py:734:0: C0301: Line too long (104/100) (line-too-long)
+services/gateway/dashboard.py:516:0: R0911: Too many return statements (7/6) (too-many-return-statements)
+services/gateway/dashboard.py:795:17: C0209: Formatting a regular string which could be an f-string (consider-using-f-string)
+************* Module sesion_web
+services/gateway/sesion_web.py:97:0: C0301: Line too long (101/100) (line-too-long)
+************* Module knowledge_service
+services/knowledge/knowledge_service.py:19:0: C0301: Line too long (119/100) (line-too-long)
+************* Module memoria
+services/knowledge/memoria.py:60:0: C0301: Line too long (103/100) (line-too-long)
+services/knowledge/memoria.py:318:0: C0301: Line too long (101/100) (line-too-long)
+services/knowledge/memoria.py:354:0: C0301: Line too long (101/100) (line-too-long)
+services/knowledge/memoria.py:231:0: R0917: Too many positional arguments (6/5) (too-many-positional-arguments)
+************* Module orquestador
+services/pipeline/orquestador.py:161:0: C0301: Line too long (105/100) (line-too-long)
+services/pipeline/orquestador.py:121:11: R1732: Consider using 'with' for resource-allocating operations (consider-using-with)
+************* Module programador
+services/pipeline/programador.py:51:0: C0301: Line too long (106/100) (line-too-long)
+services/pipeline/programador.py:34:0: C0103: Constant name "_hilo" doesn't conform to UPPER_CASE naming style (invalid-name)
+services/pipeline/programador.py:75:4: W0603: Using the global statement (global-statement)
+
+------------------------------------------------------------------
+Your code has been rated at 9.73/10 (previous run: 9.73/10, +0.00)
+

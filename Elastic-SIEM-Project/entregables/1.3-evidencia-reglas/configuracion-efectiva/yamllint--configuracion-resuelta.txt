@@ -1,0 +1,25 @@
+# Comando: python -c 'YamlLintConfig(file=".yamllint")' (yamllint 1.38.0 )
+# Reglas resueltas de .yamllint (extends: default):
+anchors: {'level': 'error', 'forbid-undeclared-aliases': True, 'forbid-duplicated-anchors': False, 'forbid-unused-anchors': False}
+braces: {'level': 'error', 'forbid': False, 'min-spaces-inside': 0, 'max-spaces-inside': 0, 'min-spaces-inside-empty': -1, 'max-spaces-inside-empty': -1}
+brackets: {'level': 'error', 'forbid': False, 'min-spaces-inside': 0, 'max-spaces-inside': 0, 'min-spaces-inside-empty': -1, 'max-spaces-inside-empty': -1}
+colons: {'level': 'error', 'max-spaces-before': 0, 'max-spaces-after': 1}
+commas: {'level': 'error', 'max-spaces-before': 0, 'min-spaces-after': 1, 'max-spaces-after': 1}
+comments: {'level': 'warning', 'require-starting-space': True, 'ignore-shebangs': True, 'min-spaces-from-content': 2}
+comments-indentation: {'level': 'warning'}
+document-end: False
+document-start: False
+empty-lines: {'level': 'error', 'max': 2, 'max-start': 0, 'max-end': 0}
+empty-values: False
+float-values: False
+hyphens: {'level': 'error', 'max-spaces-after': 1}
+indentation: {'level': 'error', 'spaces': 'consistent', 'indent-sequences': True, 'check-multi-line-strings': False}
+key-duplicates: {'level': 'error', 'forbid-duplicated-merge-keys': False}
+key-ordering: False
+line-length: False
+new-line-at-end-of-file: {'level': 'error'}
+new-lines: {'level': 'error', 'type': 'unix'}
+octal-values: False
+quoted-strings: False
+trailing-spaces: {'level': 'error'}
+truthy: {'level': 'warning', 'allowed-values': ['true', 'false'], 'check-keys': False}

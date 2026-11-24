@@ -1,0 +1,31 @@
+$kind: http-request
+name: CP-SERV-39a | Decisión con una nota que parece una fórmula
+url: "{{url_gateway}}/api/v1/decision"
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+body:
+  type: json
+  content: '{"incident_id": "{{incident_id}}", "action_id": "{{action_id}}", "decision": "approved", "note": "=HYPERLINK(\"x\")"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-39a | Decisión con una nota que parece una fórmula
+      // Requisito: RF-REP-03 (primera mitad del caso)
+      // Técnica: caja gris
+      // Precondición: sesión de analista (la que dejó la carpeta 8.2)
+      // Petición: POST /api/v1/decision con note = =HYPERLINK("x")
+      // Esperado: 201. La nota se guarda tal cual; el riesgo aparece recién
+      // al abrir el CSV en Excel, y eso lo verifica CP-SERV-39b.
+      // ============================================================
+
+      pm.test("CP-SERV-39a | Código 201", function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test("CP-SERV-39a | La nota se registró sin modificar", function () {
+          pm.expect(pm.response.json().record.note).to.eql("=HYPERLINK(\"x\")");
+      });
+    language: text/javascript
+order: 1000

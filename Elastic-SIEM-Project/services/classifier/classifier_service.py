@@ -38,6 +38,10 @@ def clasificar():
     siem_data = datos.get("siem_data") or {}
     if not isinstance(siem_data, dict):
         return jsonify({"error": "siem_data debe ser un objeto"}), 400
+    alertas = siem_data.get("alerts")
+    if alertas is not None and (not isinstance(alertas, list)
+                                or not all(isinstance(a, dict) for a in alertas)):
+        return jsonify({"error": "siem_data.alerts debe ser una lista de objetos"}), 400
     # Identidad de los incidentes del ciclo anterior (la manda el orquestador):
     # un ataque en curso conserva su ID aunque la muestra de la captura avance.
     anteriores = datos.get("anteriores")

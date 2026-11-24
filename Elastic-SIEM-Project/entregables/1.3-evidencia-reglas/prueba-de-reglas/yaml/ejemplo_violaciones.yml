@@ -1,0 +1,10 @@
+# ARCHIVO DE PRUEBA: contiene violaciones intencionales.
+servicio:
+  puerto: 8080
+  puerto: 9090
+  vacio: { clave: 1 }
+a:
+  b: 1
+c:
+    d: 2
+#comentario sin espacio inicial

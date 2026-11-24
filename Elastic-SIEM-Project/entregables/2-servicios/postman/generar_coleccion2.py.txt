@@ -1,0 +1,691 @@
+"""Genera la colección 2 de Postman (servicios internos), formato v2.1, con los casos CP-SERV-50 a 89
+de las secciones 8.7 y 8.8 del plan de pruebas de servicios.
+
+Cada petición lleva un script "After response" (evento `test`) que empieza con un comentario con el
+requisito, la técnica, la petición y el resultado esperado, y después las cuatro aserciones: código,
+contrato, tipos y regla de negocio. La colección trae además las tres aserciones globales.
+
+Los casos CP-SERV-61, 63 y 65 esperan 400. Hoy el sistema devuelve 500 (defectos D1 a D4): el valor
+esperado NO se cambia para que pasen.
+
+Se guarda como `.py.txt` para que ni ruff ni la prueba de no-autonomía lo recorran. Uso:
+    python3 entregables/2-servicios/postman/generar_coleccion2.py.txt
+"""
+from __future__ import annotations
+
+import json
+import textwrap
+import uuid
+from pathlib import Path
+
+DESTINO = Path(__file__).resolve().parent / "NeuralDefender-Coleccion2-internos.postman_collection.json"
+ESQUEMA = "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+SERVICIOS = ("auth", "audit", "collector", "classifier", "analyst", "pipeline", "knowledge")
+RAYA = "// " + "=" * 60
+
+
+# ─── Construcción de scripts ────────────────────────────────────────────────
+
+def cabecera(cp: str, objetivo: str, requisitos: str, tecnica: str, peticion: str, esperado: str) -> str:
+    def campo(nombre: str, texto: str) -> list[str]:
+        return textwrap.wrap(f"{nombre}: {texto}", width=68, initial_indent="// ",
+                             subsequent_indent="// ") or [f"// {nombre}:"]
+    lineas = [RAYA, f"// {cp} | {objetivo}"]
+    for nombre, texto in (("Requisitos", requisitos), ("Técnica", tecnica),
+                          ("Petición", peticion), ("Esperado", esperado)):
+        lineas += campo(nombre, texto)
+    return "\n".join(lineas + [RAYA])
+
+
+def cuatro(cp: str, status: int, contrato: tuple[str, str], tipos: str, regla: tuple[str, str],
+           *, json_: bool = True, extra: str = "") -> str:
+    """Las cuatro aserciones: 1 código, 2 contrato, 3 tipos, 4 regla de negocio."""
+    partes = [f'''// 1. Código: {status}.
+pm.test("{cp} | Código {status}", function () {{
+    pm.response.to.have.status({status});
+}});
+''']
+    if json_:
+        partes.append("const datos = pm.response.json();\n")
+    else:
+        partes.append("const cuerpo = pm.response.text();\n")
+    partes.append(f'''// 2. Contrato: {contrato[0]}.
+pm.test("{cp} | Contrato: {contrato[0]}", function () {{
+{_sangrar(contrato[1])}
+}});
+''')
+    partes.append(f'''// 3. Tipos de datos.
+pm.test("{cp} | Tipos de datos", function () {{
+{_sangrar(tipos)}
+}});
+''')
+    partes.append(f'''// 4. Regla de negocio: {regla[0]}.
+pm.test("{cp} | {regla[0]}", function () {{
+{_sangrar(regla[1])}
+}});''')
+    if extra:
+        partes.append("\n" + extra.strip("\n"))
+    return "\n".join(partes)
+
+
+def _sangrar(js: str) -> str:
+    return "\n".join("    " + l if l.strip() else l for l in js.strip("\n").split("\n"))
+
+
+def error_js(esperado_texto: str | None = None) -> tuple[tuple[str, str], str]:
+    contrato = ("el error trae el campo error", 'pm.expect(datos).to.have.property("error");')
+    tipos = 'pm.expect(datos.error).to.be.a("string").and.not.empty;'
+    return contrato, tipos
+
+
+# ─── Peticiones ─────────────────────────────────────────────────────────────
+
+def pedido(nombre: str, metodo: str, url: str, script: str, *, token: bool | str = True,
+           cuerpo: str | None = None, previo: str | None = None, seguir_redirecciones: bool = True) -> dict:
+    cab = []
+    if token is True:
+        cab.append({"key": "X-Internal-Token", "value": "{{token}}", "type": "text"})
+    elif token == "falso":
+        cab.append({"key": "X-Internal-Token", "value": "token-falso", "type": "text"})
+    if cuerpo is not None:
+        cab.append({"key": "Content-Type", "value": "application/json", "type": "text"})
+    sin_esquema = url.split("{{", 1)[1].split("}}", 1)
+    host = "{{" + sin_esquema[0] + "}}"
+    ruta = sin_esquema[1]
+    path_ = [p for p in ruta.split("?")[0].split("/") if p]
+    objeto_url = {"raw": url, "host": [host], "path": path_}
+    if "?" in ruta:
+        objeto_url["query"] = [{"key": k, "value": v} for k, v in
+                               (par.split("=", 1) for par in ruta.split("?", 1)[1].split("&"))]
+    req = {"method": metodo, "header": cab, "url": objeto_url}
+    if cuerpo is not None:
+        req["body"] = {"mode": "raw", "raw": cuerpo, "options": {"raw": {"language": "json"}}}
+    eventos = []
+    if previo:
+        eventos.append({"listen": "prerequest",
+                        "script": {"type": "text/javascript", "exec": previo.split("\n")}})
+    eventos.append({"listen": "test", "script": {"type": "text/javascript", "exec": script.split("\n")}})
+    item = {"name": nombre, "event": eventos, "request": req}
+    if not seguir_redirecciones:
+        item["protocolProfileBehavior"] = {"followRedirects": False}
+    return item
+
+
+def caso(cp: str, objetivo: str, requisitos: str, tecnica: str, peticion: str, esperado: str,
+         metodo: str, url: str, status: int, contrato: tuple[str, str], tipos: str,
+         regla: tuple[str, str], **kw) -> dict:
+    extra = kw.pop("extra", "")
+    json_ = kw.pop("json_", True)
+    script = cabecera(cp, objetivo, requisitos, tecnica, peticion, esperado) + "\n\n" + cuatro(
+        cp, status, contrato, tipos, regla, json_=json_, extra=extra)
+    return pedido(f"{cp} | {objetivo}", metodo, url, script, **kw)
+
+
+def preparacion(nombre: str, metodo: str, url: str, para: str, status: int, extra: str = "",
+                cuerpo: str | None = None) -> dict:
+    """Pedido auxiliar (no es un caso del plan): deja listo lo que necesita un caso posterior."""
+    script = (cabecera(nombre, "preparación", "—", "No es un caso de prueba", f"{metodo} {url}", para)
+              + f'\n\n// Verifica que la preparación salió bien.\npm.test("{nombre} | Código {status}", '
+                f'function () {{\n    pm.response.to.have.status({status});\n}});\n' + extra)
+    return pedido(nombre, metodo, url, script, token=False, cuerpo=cuerpo)
+
+
+# ─── Casos de la sección 8.7 ────────────────────────────────────────────────
+
+def seccion_87() -> list[dict]:
+    it: list[dict] = []
+    req_por_servicio = {
+        "auth": ("GET", "/v1/users-summary", None),
+        "audit": ("GET", "/v1/decisions", None),
+        "collector": ("GET", "/v1/snapshots/latest", None),
+        "classifier": ("POST", "/v1/classify", "{}"),
+        "analyst": ("POST", "/v1/analyze", '{"incidents": []}'),
+        "pipeline": ("GET", "/v1/incidents", None),
+        "knowledge": ("GET", "/v1/documents", None),
+    }
+
+    # CP-SERV-50: sonda de salud de los 7 servicios
+    for letra, svc in zip("abcdefg", SERVICIOS):
+        cp = f"CP-SERV-50{letra}"
+        it.append(caso(cp, f"Sonda de salud pública: {svc}", "RNF-CONF-05", "PE válida",
+                       f"GET {{{{url_{svc}}}}}/v1/healthz, sin token",
+                       f"200 con status = ok y servicio = {svc}.",
+                       "GET", f"{{{{url_{svc}}}}}/v1/healthz", 200,
+                       ("status y servicio", 'pm.expect(datos).to.include.all.keys("status", "servicio");'),
+                       'pm.expect(datos.status).to.be.a("string");\npm.expect(datos.servicio).to.be.a("string");',
+                       (f"status = ok y servicio = {svc}",
+                        f'pm.expect(datos.status).to.eql("ok");\npm.expect(datos.servicio).to.eql("{svc}");'),
+                       token=False))
+
+    # CP-SERV-51 y 52: token ausente o falso, en cada servicio
+    for numero, token, objetivo, texto in ((51, False, "Petición sin token", "sin la cabecera X-Internal-Token"),
+                                           (52, "falso", "Token falso", "con X-Internal-Token: token-falso")):
+        for letra, svc in zip("abcdefg", SERVICIOS):
+            metodo, ruta, cuerpo = req_por_servicio[svc]
+            cp = f"CP-SERV-{numero}{letra}"
+            it.append(caso(cp, f"{objetivo}: {svc}", "RQ-SEC-25", "PE inválida",
+                           f"{metodo} {{{{url_{svc}}}}}{ruta} {texto}",
+                           "401 con token interno ausente o inválido.",
+                           metodo, f"{{{{url_{svc}}}}}{ruta}", 401,
+                           ("el error trae el campo error", 'pm.expect(datos).to.have.property("error");'),
+                           'pm.expect(datos.error).to.be.a("string").and.not.empty;',
+                           ("mensaje exacto y ningún dato en la respuesta",
+                            'pm.expect(datos.error).to.eql("token interno ausente o inválido");\n'
+                            'pm.expect(Object.keys(datos)).to.have.lengthOf(1);'),
+                           token=token, cuerpo=cuerpo))
+
+    it.append(caso("CP-SERV-53", "Autenticación interna válida", "RF-AUT-02", "PE válida",
+                   "POST {{url_auth}}/v1/authenticate con las credenciales del analista de prueba",
+                   "200 con usuario, rol y permisos, sin ningún campo de contraseña ni hash.",
+                   "POST", "{{url_auth}}/v1/authenticate", 200,
+                   ("usuario, rol y permisos", 'pm.expect(datos).to.include.all.keys("usuario", "rol", "permisos");'),
+                   'pm.expect(datos.usuario).to.be.a("string");\npm.expect(datos.rol).to.be.a("string");\n'
+                   'pm.expect(datos.permisos).to.be.an("array").that.is.not.empty;',
+                   ("usuario y rol correctos, y la respuesta no trae contraseña ni hash",
+                    'pm.expect(datos.usuario).to.eql(pm.environment.get("analista"));\n'
+                    'pm.expect(datos.rol).to.eql("analyst");\n'
+                    'pm.expect(datos.permisos).to.include("decidir");\n'
+                    'pm.expect(JSON.stringify(datos)).to.not.match(/password|hash|argon2/i);'),
+                   cuerpo='{"username": "{{analista}}", "password": "{{password}}", "client_ip": "127.0.0.53"}'))
+
+    it.append(caso("CP-SERV-54a", "Consulta de un usuario existente", "RF-AUT-02", "PE válida",
+                   "GET {{url_auth}}/v1/users/{{analista}}",
+                   "200 con activo, rol y permisos, sin el hash.",
+                   "GET", "{{url_auth}}/v1/users/{{analista}}", 200,
+                   ("username, activo, rol y permisos",
+                    'pm.expect(datos).to.include.all.keys("username", "activo", "rol", "permisos");'),
+                   'pm.expect(datos.username).to.be.a("string");\npm.expect(datos.activo).to.be.a("boolean");\n'
+                   'pm.expect(datos.rol).to.be.a("string");\npm.expect(datos.permisos).to.be.an("array");',
+                   ("es el usuario pedido, está activo, y no se expone el hash",
+                    'pm.expect(datos.username).to.eql(pm.environment.get("analista"));\n'
+                    'pm.expect(datos.activo).to.eql(true);\n'
+                    'pm.expect(JSON.stringify(datos)).to.not.match(/password|hash|argon2/i);')))
+
+    it.append(caso("CP-SERV-54b", "Consulta de un usuario inexistente", "RF-AUT-02", "PE inválida",
+                   "GET {{url_auth}}/v1/users/usuario-que-no-existe",
+                   "404 con usuario inexistente.",
+                   "GET", "{{url_auth}}/v1/users/usuario-que-no-existe", 404,
+                   *error_js(), ("el mensaje es usuario inexistente",
+                                 'pm.expect(datos.error).to.eql("usuario inexistente");')))
+
+    it.append(caso("CP-SERV-55", "Campo no permitido en una decisión", "RF-SUP-05, RQ-SEC-09", "PE inválida",
+                   'POST {{url_audit}}/v1/decisions con un campo "comando" (rm -rf /)',
+                   "400 con campos no permitidos: comando. El registro nunca guarda órdenes de ejecución.",
+                   "POST", "{{url_audit}}/v1/decisions", 400,
+                   *error_js(), ("rechaza el campo comando por nombre",
+                                 'pm.expect(datos.error).to.eql("campos no permitidos: comando");'),
+                   cuerpo='{"incident_id": "INC-CP55", "action_id": "ACC-CP55", "decision": "approved", '
+                          '"analyst": "cp-serv-55", "comando": "rm -rf /"}'))
+
+    it.append(caso("CP-SERV-56", "Integridad del registro de decisiones", "RQ-SEC-14", "PE válida",
+                   "GET {{url_audit}}/v1/decisions/verify", "200 con chain_ok = true.",
+                   "GET", "{{url_audit}}/v1/decisions/verify", 200,
+                   ("chain_ok, estado, records, first_broken y reason",
+                    'pm.expect(datos).to.include.all.keys("chain_ok", "estado", "records", "first_broken", "reason");'),
+                   'pm.expect(datos.chain_ok).to.be.a("boolean");\npm.expect(datos.estado).to.be.a("string");\n'
+                   'pm.expect(datos.records).to.be.a("number");',
+                   ("la cadena está íntegra",
+                    'pm.expect(datos.chain_ok).to.eql(true);\npm.expect(datos.estado).to.eql("ok");\n'
+                    'pm.expect(datos.first_broken).to.eql(null);')))
+
+    it.append(caso("CP-SERV-57", "Evento de acceso no admitido", "RF-AUD-05", "PE inválida",
+                   "POST {{url_audit}}/v1/access con evento = login_admin",
+                   "400 con la lista de eventos admitidos.",
+                   "POST", "{{url_audit}}/v1/access", 400,
+                   *error_js(), ("el mensaje lista los cuatro eventos admitidos",
+                                 'pm.expect(datos.error).to.include("evento inválido");\n'
+                                 '["login_exitoso", "login_fallido", "login_bloqueado", "logout"].forEach(function (e) {\n'
+                                 '    pm.expect(datos.error).to.include(e);\n});'),
+                   cuerpo='{"evento": "login_admin", "usuario": "cp-serv-57"}'))
+
+    it.append(caso("CP-SERV-58", "Captura de eventos", "RF-ING-01 a RF-ING-06", "PE válida",
+                   "POST {{url_collector}}/v1/snapshots, sin cuerpo (Elasticsearch activo)",
+                   "201 con snapshot que contiene alerts, summary y generated_at.",
+                   "POST", "{{url_collector}}/v1/snapshots", 201,
+                   ("ok y snapshot con alerts, summary y generated_at",
+                    'pm.expect(datos).to.include.all.keys("ok", "snapshot");\n'
+                    'pm.expect(datos.snapshot).to.include.all.keys("alerts", "summary", "generated_at");'),
+                   'pm.expect(datos.ok).to.be.a("boolean");\npm.expect(datos.snapshot.alerts).to.be.an("array");\n'
+                   'pm.expect(datos.snapshot.summary).to.be.an("object");\n'
+                   'pm.expect(datos.snapshot.generated_at).to.be.a("string");',
+                   ("ok es verdadero y la fecha de generación es válida",
+                    'pm.expect(datos.ok).to.eql(true);\n'
+                    'pm.expect(Number.isNaN(Date.parse(datos.snapshot.generated_at))).to.eql(false);'),
+                   extra='''// Se guarda la captura para CP-SERV-59 y CP-SERV-60.
+if (datos.snapshot) {
+    pm.collectionVariables.set("snapshot", JSON.stringify(datos.snapshot));
+    pm.collectionVariables.set("snapshot_generated_at", datos.snapshot.generated_at);
+}'''))
+
+    it.append(caso("CP-SERV-59", "Última captura", "RF-ING-01", "PE válida",
+                   "GET {{url_collector}}/v1/snapshots/latest (después de CP-SERV-58)",
+                   "200 con la captura guardada.",
+                   "GET", "{{url_collector}}/v1/snapshots/latest", 200,
+                   ("snapshot con alerts, summary y generated_at",
+                    'pm.expect(datos).to.have.property("snapshot");\n'
+                    'pm.expect(datos.snapshot).to.include.all.keys("alerts", "summary", "generated_at");'),
+                   'pm.expect(datos.snapshot.alerts).to.be.an("array");\n'
+                   'pm.expect(datos.snapshot.summary).to.be.an("object");',
+                   ("es la misma captura que se hizo en CP-SERV-58",
+                    'pm.expect(datos.snapshot.generated_at).to.eql(pm.collectionVariables.get("snapshot_generated_at"));')))
+
+    cuerpo_clasificar = '{"siem_data": {{snapshot}}}'
+    for letra in "ab":
+        extra = ""
+        if letra == "a":
+            extra = '''// Se guardan los incidentes para CP-SERV-60b y CP-SERV-62.
+pm.collectionVariables.set("ids_clasificados", JSON.stringify(datos.incidents.map(function (i) { return i.incident_id; }).sort()));
+pm.collectionVariables.set("clasificados", JSON.stringify(datos.incidents));'''
+            regla_extra = ""
+        it.append(caso(f"CP-SERV-60{letra}", f"Identificador determinístico ({'primera' if letra == 'a' else 'segunda'} vez)",
+                       "RF-CLA-09", "PE válida",
+                       "POST {{url_classifier}}/v1/classify con la captura de CP-SERV-58",
+                       "200 con incident_id que cumplen ^INC-(AUTH|SCAN|PHISH)-"
+                       + ("." if letra == "a" else ", iguales a los de la primera vez."),
+                       "POST", "{{url_classifier}}/v1/classify", 200,
+                       ("generated_at, incident_count e incidents",
+                        'pm.expect(datos).to.include.all.keys("generated_at", "incident_count", "incidents");'),
+                       'pm.expect(datos.generated_at).to.be.a("string");\npm.expect(datos.incident_count).to.be.a("number");\n'
+                       'pm.expect(datos.incidents).to.be.an("array");',
+                       ("los identificadores cumplen el formato" + ("" if letra == "a" else " y no cambian entre corridas"),
+                        'pm.expect(datos.incident_count).to.eql(datos.incidents.length);\n'
+                        'datos.incidents.forEach(function (i) {\n'
+                        '    pm.expect(i.incident_id).to.match(/^INC-(AUTH|SCAN|PHISH)-/);\n});'
+                        + ("" if letra == "a" else
+                           '\npm.expect(JSON.stringify(datos.incidents.map(function (i) { return i.incident_id; }).sort()))'
+                           '.to.eql(pm.collectionVariables.get("ids_clasificados"));')),
+                       cuerpo=cuerpo_clasificar, extra=extra))
+
+    it.append(caso("CP-SERV-61", "Alertas con tipo inválido (defectos D1 y D2)", "RQ-SEC-19", "PE inválida",
+                   'POST {{url_classifier}}/v1/classify con {"siem_data":{"alerts":[1,2]}}',
+                   "400. HOY DEVUELVE 500 (defecto D2): el esperado no se cambia.",
+                   "POST", "{{url_classifier}}/v1/classify", 400,
+                   *error_js(), ("rechaza la entrada con un mensaje y no con un error del servidor",
+                                 'pm.expect(datos.error).to.not.include("internal error");'),
+                   cuerpo='{"siem_data": {"alerts": [1, 2]}}'))
+
+    it.append(caso("CP-SERV-62", "Análisis de incidentes", "RF-ANA-01, RF-ANA-04, RNF-CONF-04", "PE válida",
+                   "POST {{url_analyst}}/v1/analyze con los incidentes clasificados en CP-SERV-60a",
+                   "200 con analyst_mode admitido (fallback, gemma, gemma-nube o gemini) y un análisis no vacío por incidente.",
+                   "POST", "{{url_analyst}}/v1/analyze", 200,
+                   ("analyst_mode, analyzed_at e incidents",
+                    'pm.expect(datos).to.include.all.keys("analyst_mode", "analyzed_at", "incidents");'),
+                   'pm.expect(datos.analyst_mode).to.be.a("string");\npm.expect(datos.analyzed_at).to.be.a("string");\n'
+                   'pm.expect(datos.incidents).to.be.an("array");',
+                   ("modo admitido, un incidente por cada uno enviado y análisis no vacío",
+                    'pm.expect(["fallback", "gemma", "gemma-nube", "gemini"]).to.include(datos.analyst_mode);\n'
+                    'pm.expect(datos.incidents).to.have.lengthOf(JSON.parse(pm.collectionVariables.get("clasificados")).length);\n'
+                    'datos.incidents.forEach(function (i) {\n'
+                    '    pm.expect(i.analysis).to.be.an("object");\n'
+                    '    pm.expect(Object.keys(i.analysis)).to.not.be.empty;\n});'),
+                   cuerpo='{"incidents": {{clasificados}}}'))
+
+    it.append(caso("CP-SERV-63", "Incidentes con tipo inválido (defecto D3)", "RQ-SEC-19", "PE inválida",
+                   'POST {{url_analyst}}/v1/analyze con {"incidents":[1,2]}',
+                   "400. HOY DEVUELVE 500 (defecto D3): el esperado no se cambia.",
+                   "POST", "{{url_analyst}}/v1/analyze", 400,
+                   *error_js(), ("rechaza la entrada con un mensaje y no con un error del servidor",
+                                 'pm.expect(datos.error).to.not.include("internal error");'),
+                   cuerpo='{"incidents": [1, 2]}'))
+
+    it.append(caso("CP-SERV-64", "Contexto de memoria para el análisis", "RF-MEM-06, RQ-SEC-26", "PE válida",
+                   "POST {{url_knowledge}}/v1/context con un incidente que trae incident_id",
+                   "200 con casos_similares, documentos y lecciones para ese incidente.",
+                   "POST", "{{url_knowledge}}/v1/context", 200,
+                   ("la clave del incidente con casos_similares, documentos y lecciones",
+                    'pm.expect(datos).to.have.property("INC-CP64");\n'
+                    'pm.expect(datos["INC-CP64"]).to.include.all.keys("casos_similares", "documentos", "lecciones");'),
+                   'pm.expect(datos["INC-CP64"].casos_similares).to.be.an("array");\n'
+                   'pm.expect(datos["INC-CP64"].documentos).to.be.an("array");\n'
+                   'pm.expect(datos["INC-CP64"].lecciones).to.be.an("array");',
+                   ("devuelve contexto solo para el incidente pedido",
+                    'pm.expect(Object.keys(datos)).to.eql(["INC-CP64"]);'),
+                   cuerpo='{"incidents": [{"incident_id": "INC-CP64", "attack_type": "ssh_brute_force", '
+                          '"source_ip": "203.0.113.64", "attacker_ips": ["203.0.113.64"], '
+                          '"target_users": ["root"], "target_hosts": ["host-64"]}]}'))
+
+    it.append(caso("CP-SERV-65", "Lista de IP con tipo inválido (defecto D4)", "RQ-SEC-19", "PE inválida",
+                   "POST {{url_knowledge}}/v1/context con attacker_ips = 5",
+                   "400. HOY DEVUELVE 500 (defecto D4): el esperado no se cambia.",
+                   "POST", "{{url_knowledge}}/v1/context", 400,
+                   *error_js(), ("rechaza la entrada con un mensaje y no con un error del servidor",
+                                 'pm.expect(datos.error).to.not.include("internal error");'),
+                   cuerpo='{"incidents": [{"incident_id": "INC-CP65", "attacker_ips": 5}]}'))
+
+    it.append(caso("CP-SERV-66", "Ciclo completo de análisis", "RNF-RD-07", "PE válida",
+                   "POST {{url_pipeline}}/v1/cycles, sin cuerpo (Elasticsearch activo)",
+                   "200 con las etapas collector, classifier, analyst y audit en estado ok.",
+                   "POST", "{{url_pipeline}}/v1/cycles", 200,
+                   ("etapas y report", 'pm.expect(datos).to.include.all.keys("etapas", "report");'),
+                   'pm.expect(datos.etapas).to.be.an("array").with.lengthOf(4);\n'
+                   'pm.expect(datos.report).to.be.an("object");\n'
+                   'pm.expect(datos.report.incidents).to.be.an("array");',
+                   ("las cuatro etapas, en orden, terminaron ok",
+                    'pm.expect(datos.etapas.map(function (e) { return e.etapa; })).to.eql(["collector", "classifier", "analyst", "audit"]);\n'
+                    'datos.etapas.forEach(function (e) {\n    pm.expect(e.estado).to.eql("ok");\n});\n'
+                    'pm.expect(datos.report.incident_count).to.eql(datos.report.incidents.length);')))
+
+    it.append(caso("CP-SERV-67", "Último reporte de incidentes", "RF-API-01", "PE válida",
+                   "GET {{url_pipeline}}/v1/incidents (después de CP-SERV-66)",
+                   "200 con incidents e incident_count.",
+                   "GET", "{{url_pipeline}}/v1/incidents", 200,
+                   ("incidents e incident_count", 'pm.expect(datos).to.include.all.keys("incidents", "incident_count");'),
+                   'pm.expect(datos.incidents).to.be.an("array");\npm.expect(datos.incident_count).to.be.a("number");',
+                   ("el contador coincide con la lista y cada incidente trae sus acciones",
+                    'pm.expect(datos.incident_count).to.eql(datos.incidents.length);\n'
+                    'datos.incidents.forEach(function (i) {\n'
+                    '    pm.expect(i.incident_id).to.be.a("string");\n'
+                    '    pm.expect(i.recommended_actions).to.be.an("array");\n});'),
+                   extra='''// Se guardan un incidente y una acción reales para CP-SERV-84.
+const primero = datos.incidents.find(function (i) { return i.recommended_actions.length > 0; });
+if (primero) {
+    pm.environment.set("incident_id", primero.incident_id);
+    pm.environment.set("action_id", primero.recommended_actions[0].action_id);
+}'''))
+
+    previo_68 = '''// Datos únicos por corrida: la memoria no vuelve a proponer un patrón que ya tiene lección.
+const sufijo = Date.now().toString();
+pm.collectionVariables.set("ip68", "198.51.100." + (Math.floor(Math.random() * 250) + 1));
+pm.collectionVariables.set("sufijo68", sufijo);'''
+    for letra, incid in (("a", "A"), ("b", "B")):
+        propone = letra == "b"
+        cuerpo = ('{"incident_id": "INC-CP68-' + incid + '-{{sufijo68}}", "action_id": "ACC-CP68-' + incid + '", '
+                  '"decision": "dismissed", "analyst": "cp-serv-68", "attack_type": "ssh_brute_force", '
+                  '"source_ip": "{{ip68}}", "attacker_ips": ["{{ip68}}"], "note": "falso positivo de prueba"}')
+        it.append(caso(f"CP-SERV-68{letra}",
+                       "Propuesta automática de una lección" + (" (segundo caso)" if propone else " (primer caso)"),
+                       "RF-MEM-02", "Tabla de decisión",
+                       "POST {{url_knowledge}}/v1/cases con el mismo tipo de ataque, la misma IP y el mismo desenlace "
+                       "en un incidente distinto",
+                       "201" + (" y lecciones_propuestas contiene una lección." if propone
+                                else " y todavía ninguna lección propuesta (un solo caso no alcanza)."),
+                       "POST", "{{url_knowledge}}/v1/cases", 201,
+                       ("ok, caso y lecciones_propuestas", 'pm.expect(datos).to.include.all.keys("ok", "caso", "lecciones_propuestas");'),
+                       'pm.expect(datos.ok).to.be.a("boolean");\npm.expect(datos.caso).to.be.an("object");\n'
+                       'pm.expect(datos.lecciones_propuestas).to.be.an("array");',
+                       (("con dos casos iguales se propone una lección falso_positivo" if propone
+                         else "con un solo caso no se propone ninguna lección"),
+                        ('pm.expect(datos.lecciones_propuestas).to.have.lengthOf(1);\n'
+                         'const leccion = datos.lecciones_propuestas[0];\n'
+                         'pm.expect(leccion.estado).to.eql("propuesta");\n'
+                         'pm.expect(leccion.tipo).to.eql("falso_positivo");\n'
+                         'pm.expect(leccion.attack_type).to.eql("ssh_brute_force");\n'
+                         'pm.expect(leccion.ip).to.eql(pm.collectionVariables.get("ip68"));\n'
+                         'pm.expect(leccion.propuesta_por).to.eql("sistema");' if propone else
+                         'pm.expect(datos.lecciones_propuestas).to.have.lengthOf(0);\n'
+                         'pm.expect(datos.caso.decision).to.eql("dismissed");')),
+                       cuerpo=cuerpo, previo=previo_68 if letra == "a" else None))
+    return it
+
+
+# ─── Casos de la sección 8.8 ────────────────────────────────────────────────
+
+def lista_json(cp, endpoint, requisito, objetivo, esperado, url, extra_tipos="", regla=None, contrato=None, **kw):
+    return caso(cp, objetivo, requisito, "No indicada en el plan (cobertura de contrato)", f"GET {endpoint}", esperado,
+                "GET", url, 200,
+                contrato or ("la respuesta es una lista", 'pm.expect(datos).to.be.an("array");'),
+                extra_tipos or 'datos.forEach(function (r) {\n    pm.expect(r).to.be.an("object");\n});',
+                regla, **kw)
+
+
+def seccion_88() -> list[dict]:
+    it: list[dict] = []
+    TEC = "No indicada en el plan (cobertura de contrato)"
+
+    it.append(caso("CP-SERV-69", "Pantalla de login pública", "RF-AUT-01", TEC, "GET {{url_gateway}}/login",
+                   "200 con Content-Type: text/html.", "GET", "{{url_gateway}}/login", 200,
+                   ("el tipo de contenido es HTML", 'pm.expect(pm.response.headers.get("Content-Type")).to.include("text/html");'),
+                   'pm.expect(pm.response.headers.get("Content-Type")).to.be.a("string");\n'
+                   'pm.expect(cuerpo).to.be.a("string").and.not.empty;',
+                   ("es la pantalla de NeuralDefender y no pide sesión",
+                    'pm.expect(cuerpo.toLowerCase()).to.include("<html");\npm.expect(cuerpo).to.include("NeuralDefender");'),
+                   token=False, json_=False))
+
+    it.append(caso("CP-SERV-70", "Panel sin sesión redirige al login", "RF-AUT-01", TEC,
+                   "GET {{url_gateway}}/ sin sesión, sin seguir la redirección",
+                   "302 hacia /login.", "GET", "{{url_gateway}}/", 302,
+                   ("trae la cabecera Location", 'pm.expect(pm.response.headers.has("Location")).to.eql(true);'),
+                   'pm.expect(pm.response.headers.get("Location")).to.be.a("string").and.not.empty;',
+                   ("redirige a /login", 'pm.expect(pm.response.headers.get("Location")).to.match(/\\/login$/);'),
+                   token=False, json_=False, seguir_redirecciones=False))
+
+    login = '{"username": "{{analista}}", "password": "{{password}}"}'
+    it.append(preparacion("Preparación | Iniciar sesión como analista (para CP-SERV-71 y 72)", "POST",
+                          "{{url_gateway}}/api/v1/login", "200 y el token CSRF guardado en el entorno.", 200,
+                          extra='\nconst sesion = pm.response.json();\n// Se guarda el token CSRF en el entorno.\n'
+                                'pm.environment.set("csrf_token", sesion.csrf_token);', cuerpo=login))
+    it.append(preparacion("Preparación | Referencia de GET /api/v1/incidents (para CP-SERV-71)", "GET",
+                          "{{url_gateway}}/api/v1/incidents", "200 y la respuesta guardada para comparar.", 200,
+                          extra='\n// Se guarda la respuesta para comparar con el alias.\n'
+                                'pm.collectionVariables.set("incidentes_v1", pm.response.text());'))
+    it.append(preparacion("Preparación | Referencia de GET /api/v1/decisions (para CP-SERV-72)", "GET",
+                          "{{url_gateway}}/api/v1/decisions", "200 y la respuesta guardada para comparar.", 200,
+                          extra='\n// Se guarda la respuesta para comparar con el alias.\n'
+                                'pm.collectionVariables.set("decisiones_v1", pm.response.text());'))
+
+    it.append(caso("CP-SERV-71", "Alias GET /api/incidents", "RF-API-01", TEC, "GET {{url_gateway}}/api/incidents con sesión",
+                   "200 con lo mismo que /api/v1/incidents.", "GET", "{{url_gateway}}/api/incidents", 200,
+                   ("incidents e incident_count", 'pm.expect(datos).to.include.all.keys("incidents", "incident_count");'),
+                   'pm.expect(datos.incidents).to.be.an("array");\npm.expect(datos.incident_count).to.be.a("number");',
+                   ("es idéntico a la respuesta de /api/v1/incidents",
+                    'pm.expect(datos).to.eql(JSON.parse(pm.collectionVariables.get("incidentes_v1")));'), token=False))
+
+    it.append(caso("CP-SERV-72", "Alias GET /api/decisions", "RF-API-03", TEC, "GET {{url_gateway}}/api/decisions con sesión",
+                   "200 con lo mismo que /api/v1/decisions.", "GET", "{{url_gateway}}/api/decisions", 200,
+                   ("la respuesta es una lista", 'pm.expect(datos).to.be.an("array");'),
+                   'datos.forEach(function (r) {\n    pm.expect(r).to.be.an("object");\n});',
+                   ("es idéntica a la respuesta de /api/v1/decisions",
+                    'pm.expect(datos).to.eql(JSON.parse(pm.collectionVariables.get("decisiones_v1")));'), token=False))
+
+    it.append(caso("CP-SERV-73", "Archivo estático app.js", "—", TEC, "GET {{url_gateway}}/static/app.js",
+                   "200 con un tipo de contenido JavaScript.", "GET", "{{url_gateway}}/static/app.js", 200,
+                   ("el tipo de contenido es JavaScript", 'pm.expect(pm.response.headers.get("Content-Type")).to.match(/javascript/i);'),
+                   'pm.expect(cuerpo).to.be.a("string");',
+                   ("el archivo no está vacío", 'pm.expect(cuerpo.length).to.be.above(500);'),
+                   token=False, json_=False))
+
+    it.append(lista_json("CP-SERV-74", "{{url_auth}}/v1/users-summary", "RF-AUT-02", "Resumen de usuarios",
+                         "200 con total numérico y activos_por_rol.", "{{url_auth}}/v1/users-summary",
+                         contrato=("total y activos_por_rol", 'pm.expect(datos).to.include.all.keys("total", "activos_por_rol");'),
+                         extra_tipos='pm.expect(datos.total).to.be.a("number");\npm.expect(datos.activos_por_rol).to.be.an("object");',
+                         regla=("el total es coherente con los activos por rol",
+                                'const activos = Object.values(datos.activos_por_rol);\n'
+                                'activos.forEach(function (n) { pm.expect(n).to.be.a("number"); });\n'
+                                'pm.expect(datos.total).to.be.at.least(activos.reduce(function (a, b) { return a + b; }, 0));')))
+
+    it.append(lista_json("CP-SERV-75", "{{url_audit}}/v1/decisions", "RF-API-03", "Lista de decisiones registradas",
+                         "200 con una lista de registros.", "{{url_audit}}/v1/decisions",
+                         regla=("cada registro trae una decisión admitida",
+                                'datos.forEach(function (r) {\n    pm.expect(["approved", "dismissed"]).to.include(r.decision);\n});')))
+
+    it.append(caso("CP-SERV-76", "Registrar una corrida de análisis", "RF-ANA-07, RQ-SEC-15", TEC,
+                   "POST {{url_audit}}/v1/analysis-history", "201 con prev_hash y ts.",
+                   "POST", "{{url_audit}}/v1/analysis-history", 201,
+                   ("ok y record con prev_hash y ts",
+                    'pm.expect(datos).to.include.all.keys("ok", "record");\npm.expect(datos.record).to.include.all.keys("prev_hash", "ts");'),
+                   'pm.expect(datos.ok).to.be.a("boolean");\npm.expect(datos.record.prev_hash).to.be.a("string");\n'
+                   'pm.expect(datos.record.ts).to.be.a("string");',
+                   ("prev_hash es un SHA-256 y el sello de tiempo es válido",
+                    'pm.expect(datos.record.prev_hash).to.match(/^[0-9a-f]{64}$/);\n'
+                    'pm.expect(Number.isNaN(Date.parse(datos.record.ts))).to.eql(false);\n'
+                    'pm.expect(datos.record.analyst_mode).to.eql("fallback");'),
+                   cuerpo='{"analyst_mode": "fallback", "incident_count": 1, "incident_ids": ["INC-CP76"]}'))
+
+    verificacion = lambda cp, req, ruta, objetivo: caso(  # noqa: E731
+        cp, objetivo, req, TEC, f"GET {{{{url_audit}}}}{ruta}", "200 con chain_ok = true.", "GET", f"{{{{url_audit}}}}{ruta}", 200,
+        ("chain_ok, estado y records", 'pm.expect(datos).to.include.all.keys("chain_ok", "estado", "records");'),
+        'pm.expect(datos.chain_ok).to.be.a("boolean");\npm.expect(datos.estado).to.be.a("string");\n'
+        'pm.expect(datos.records).to.be.a("number");',
+        ("la cadena está íntegra", 'pm.expect(datos.chain_ok).to.eql(true);\npm.expect(datos.estado).to.eql("ok");'))
+    it.append(verificacion("CP-SERV-77", "RQ-SEC-14, RQ-SEC-15", "/v1/analysis-history/verify", "Integridad del historial de corridas"))
+
+    it.append(caso("CP-SERV-78", "Registrar actividad de la memoria", "RF-REP-04", TEC, "POST {{url_audit}}/v1/activity",
+                   "201 con un evento admitido.", "POST", "{{url_audit}}/v1/activity", 201,
+                   ("ok y record con evento, actor, prev_hash y ts",
+                    'pm.expect(datos).to.include.all.keys("ok", "record");\n'
+                    'pm.expect(datos.record).to.include.all.keys("evento", "actor", "prev_hash", "ts");'),
+                   'pm.expect(datos.ok).to.be.a("boolean");\npm.expect(datos.record.evento).to.be.a("string");\n'
+                   'pm.expect(datos.record.actor).to.be.a("string");',
+                   ("el evento es uno de los admitidos y el actor es el enviado",
+                    'pm.expect(["documento_cargado", "leccion_propuesta", "leccion_aprobada", "leccion_rechazada"]).to.include(datos.record.evento);\n'
+                    'pm.expect(datos.record.actor).to.eql("cp-serv-78");'),
+                   cuerpo='{"evento": "documento_cargado", "actor": "cp-serv-78", "detalle": "prueba de cobertura"}'))
+
+    it.append(lista_json("CP-SERV-79", "{{url_audit}}/v1/activity", "RF-REP-04", "Lista de actividad de la memoria",
+                         "200 con una lista de eventos.", "{{url_audit}}/v1/activity",
+                         regla=("incluye el evento de CP-SERV-78 y todos son de un tipo admitido",
+                                'pm.expect(datos.some(function (r) { return r.actor === "cp-serv-78"; })).to.eql(true);\n'
+                                'datos.forEach(function (r) {\n    pm.expect(["documento_cargado", "leccion_propuesta", "leccion_aprobada", "leccion_rechazada"]).to.include(r.evento);\n});')))
+    it.append(verificacion("CP-SERV-80", "RF-REP-04, RQ-SEC-14", "/v1/activity/verify", "Integridad del registro de actividad"))
+
+    it.append(lista_json("CP-SERV-81", "{{url_audit}}/v1/access", "RF-AUD-05", "Lista de accesos al panel",
+                         "200 con una lista de accesos.", "{{url_audit}}/v1/access",
+                         regla=("incluye el inicio de sesión de la preparación y todos los eventos son admitidos",
+                                'pm.expect(datos.some(function (r) { return r.evento === "login_exitoso"; })).to.eql(true);\n'
+                                'datos.forEach(function (r) {\n    pm.expect(["login_exitoso", "login_fallido", "login_bloqueado", "logout"]).to.include(r.evento);\n});')))
+    it.append(verificacion("CP-SERV-82", "RF-AUD-05, RQ-SEC-14", "/v1/access/verify", "Integridad del registro de accesos"))
+
+    it.append(caso("CP-SERV-83", "Reporte en CSV del servicio audit", "RF-REP-01", TEC,
+                   "GET {{url_audit}}/v1/reports?formato=csv", "200 con el CSV dentro del campo csv.",
+                   "GET", "{{url_audit}}/v1/reports?formato=csv", 200,
+                   ("csv y periodo", 'pm.expect(datos).to.include.all.keys("csv", "periodo");'),
+                   'pm.expect(datos.csv).to.be.a("string").and.not.empty;\npm.expect(datos.periodo).to.be.an("object");',
+                   ("la primera línea del CSV es el encabezado esperado",
+                    'pm.expect(datos.csv.split("\\n")[0]).to.eql("ts,registro,analista,rol,evento,incident_id,action_id,accion,attack_type,severidad,falso_positivo,ip,detalle");')))
+
+    it.append(caso("CP-SERV-84a", "Un incidente del pipeline", "RF-API-01", TEC,
+                   "GET {{url_pipeline}}/v1/incidents/{{incident_id}} (incident_id guardado en CP-SERV-67)",
+                   "200 con el incidente.", "GET", "{{url_pipeline}}/v1/incidents/{{incident_id}}", 200,
+                   ("incident_id, classification y recommended_actions",
+                    'pm.expect(datos).to.include.all.keys("incident_id", "classification", "recommended_actions");'),
+                   'pm.expect(datos.incident_id).to.be.a("string");\npm.expect(datos.classification).to.be.an("object");\n'
+                   'pm.expect(datos.recommended_actions).to.be.an("array");',
+                   ("es el incidente pedido", 'pm.expect(datos.incident_id).to.eql(pm.environment.get("incident_id"));')))
+    it.append(caso("CP-SERV-84b", "Un incidente inexistente del pipeline", "RF-API-01", TEC,
+                   "GET {{url_pipeline}}/v1/incidents/INC-NO-EXISTE", "404.",
+                   "GET", "{{url_pipeline}}/v1/incidents/INC-NO-EXISTE", 404, *error_js(),
+                   ("el mensaje nombra el incidente",
+                    'pm.expect(datos.error).to.eql("incidente \'INC-NO-EXISTE\' no encontrado");')))
+
+    # CP-SERV-86 va antes que CP-SERV-85 para que la lista no esté vacía.
+    contenido86 = "Un escaneo de 100 puertos en 1 minuto es hostil."
+    it.append(caso("CP-SERV-86", "Cargar un documento", "RF-MEM-05", TEC, "POST {{url_knowledge}}/v1/documents",
+                   "201 con el documento sin su contenido. (Se ejecuta antes que CP-SERV-85 para que la lista no esté vacía.)",
+                   "POST", "{{url_knowledge}}/v1/documents", 201,
+                   ("ok y documento con doc_id, titulo, subido_por, ts y caracteres",
+                    'pm.expect(datos).to.include.all.keys("ok", "documento");\n'
+                    'pm.expect(datos.documento).to.include.all.keys("doc_id", "titulo", "subido_por", "ts", "caracteres");'),
+                   'pm.expect(datos.documento.doc_id).to.be.a("string");\npm.expect(datos.documento.titulo).to.be.a("string");\n'
+                   'pm.expect(datos.documento.caracteres).to.be.a("number");',
+                   ("el identificador cumple el formato y no se devuelve el contenido",
+                    f'const contenido = "{contenido86}";\n'
+                    'pm.expect(datos.documento.doc_id).to.match(/^DOC-[0-9a-f]{10}$/);\n'
+                    'pm.expect(datos.documento).to.not.have.property("contenido");\n'
+                    'pm.expect(datos.documento.caracteres).to.eql(contenido.length);'),
+                   cuerpo=json.dumps({"titulo": "Guía de escaneo CP-86", "contenido": contenido86, "subido_por": "cp-serv-86"},
+                                     ensure_ascii=False),
+                   extra='// Se guarda el identificador para CP-SERV-85.\npm.collectionVariables.set("doc_id86", datos.documento.doc_id);'))
+    it.append(lista_json("CP-SERV-85", "{{url_knowledge}}/v1/documents", "RF-MEM-05", "Lista de documentos (metadatos)",
+                         "200 con los metadatos sin el contenido.", "{{url_knowledge}}/v1/documents",
+                         extra_tipos='datos.forEach(function (d) {\n    pm.expect(d.doc_id).to.be.a("string");\n'
+                                     '    pm.expect(d.titulo).to.be.a("string");\n    pm.expect(d.caracteres).to.be.a("number");\n});',
+                         regla=("ningún documento trae su contenido y está el cargado en CP-SERV-86",
+                                'datos.forEach(function (d) {\n    pm.expect(d).to.not.have.property("contenido");\n});\n'
+                                'pm.expect(datos.some(function (d) { return d.doc_id === pm.collectionVariables.get("doc_id86"); })).to.eql(true);')))
+
+    it.append(lista_json("CP-SERV-87", "{{url_knowledge}}/v1/lessons", "RF-MEM-04", "Lista de lecciones",
+                         "200 con lecciones en estado propuesta, aprobada o rechazada.", "{{url_knowledge}}/v1/lessons",
+                         extra_tipos='datos.forEach(function (l) {\n    pm.expect(l.leccion_id).to.be.a("string");\n'
+                                     '    pm.expect(l.estado).to.be.a("string");\n});',
+                         regla=("todo estado es uno de los tres admitidos y la propuesta automática de CP-SERV-68b está",
+                                'datos.forEach(function (l) {\n    pm.expect(["propuesta", "aprobada", "rechazada"]).to.include(l.estado);\n});\n'
+                                'pm.expect(datos.some(function (l) { return l.propuesta_por === "sistema"; })).to.eql(true);')))
+
+    it.append(caso("CP-SERV-88", "Proponer una lección", "RF-MEM-03", TEC, "POST {{url_knowledge}}/v1/lessons",
+                   "201 con la lección en estado propuesta.", "POST", "{{url_knowledge}}/v1/lessons", 201,
+                   ("ok y leccion con leccion_id, estado, attack_type, ip y propuesta_por",
+                    'pm.expect(datos).to.include.all.keys("ok", "leccion");\n'
+                    'pm.expect(datos.leccion).to.include.all.keys("leccion_id", "estado", "attack_type", "ip", "propuesta_por");'),
+                   'pm.expect(datos.ok).to.be.a("boolean");\npm.expect(datos.leccion.leccion_id).to.be.a("string");\n'
+                   'pm.expect(datos.leccion.estado).to.be.a("string");',
+                   ("nace propuesta y el identificador cumple el formato",
+                    'pm.expect(datos.leccion.estado).to.eql("propuesta");\n'
+                    'pm.expect(datos.leccion.leccion_id).to.match(/^LEC-[0-9a-f]{10}$/);\n'
+                    'pm.expect(datos.leccion.propuesta_por).to.eql("cp-serv-88");'),
+                   cuerpo='{"texto": "Escaneos desde el monitoreo interno son legítimos.", "attack_type": "port_scan", '
+                          '"ip": "10.0.0.9", "propuesta_por": "cp-serv-88"}',
+                   extra='// Se guarda el identificador para CP-SERV-89.\npm.environment.set("leccion_id", datos.leccion.leccion_id);'))
+
+    it.append(caso("CP-SERV-89a", "Revisar una lección propuesta", "RF-MEM-04", TEC,
+                   "POST {{url_knowledge}}/v1/lessons/{{leccion_id}}/review con decision = aprobar",
+                   "200 con la lección revisada.", "POST", "{{url_knowledge}}/v1/lessons/{{leccion_id}}/review", 200,
+                   ("ok y leccion", 'pm.expect(datos).to.include.all.keys("ok", "leccion");'),
+                   'pm.expect(datos.ok).to.be.a("boolean");\npm.expect(datos.leccion.estado).to.be.a("string");',
+                   ("queda aprobada y registra quién la revisó",
+                    'pm.expect(datos.leccion.estado).to.eql("aprobada");\n'
+                    'pm.expect(datos.leccion.revisada_por).to.eql("cp-serv-89");\n'
+                    'pm.expect(datos.leccion.leccion_id).to.eql(pm.environment.get("leccion_id"));'),
+                   cuerpo='{"decision": "aprobar", "revisor": "cp-serv-89"}'))
+    it.append(caso("CP-SERV-89b", "Revisar de nuevo una lección ya revisada", "RF-MEM-04", TEC,
+                   "POST {{url_knowledge}}/v1/lessons/{{leccion_id}}/review otra vez",
+                   "400: una lección ya revisada no se reabre.", "POST",
+                   "{{url_knowledge}}/v1/lessons/{{leccion_id}}/review", 400, *error_js(),
+                   ("el mensaje dice que ya fue aprobada", 'pm.expect(datos.error).to.eql("la lección ya fue aprobada");'),
+                   cuerpo='{"decision": "rechazar", "revisor": "cp-serv-89"}'))
+    return it
+
+
+# ─── Aserciones globales ────────────────────────────────────────────────────
+
+GLOBALES = '''// Aserciones globales de la colección (plan, sección 4.5). Se ejecutan después de TODAS las peticiones.
+
+// RNF-RD-01: el tiempo de respuesta es menor a 2 segundos.
+pm.test("Global | RNF-RD-01 | Responde en menos de 2 s", function () {
+    pm.expect(pm.response.responseTime).to.be.below(2000);
+});
+
+// RQ-SEC-18: una respuesta de error no expone trazas, rutas internas ni nombres de archivos .py.
+pm.test("Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py", function () {
+    if (pm.response.code >= 400) {
+        const texto = pm.response.text();
+        pm.expect(texto).to.not.include("Traceback");
+        pm.expect(texto).to.not.include("/home/");
+        pm.expect(texto).to.not.match(/\\.py\\b/);
+    }
+});
+
+// Contrato de la API: las respuestas de /api/ (gateway) y de /v1/ (servicios internos) son JSON.
+pm.test("Global | Contrato | Las respuestas de /api/ y /v1/ son JSON", function () {
+    const ruta = pm.request.url.getPath();
+    if (ruta.indexOf("/api/") === 0 || ruta.indexOf("/v1/") === 0) {
+        pm.expect(pm.response.headers.get("Content-Type")).to.include("application/json");
+    }
+});'''
+
+
+def main() -> None:
+    coleccion = {
+        "info": {
+            "_postman_id": str(uuid.uuid4()),
+            "name": "NeuralDefender - Colección 2 (servicios internos)",
+            "description": "Casos CP-SERV-50 a 89 (secciones 8.7 y 8.8 del plan de pruebas de servicios). "
+                           "Se ejecuta sobre la malla aislada con el entorno NeuralDefender-malla. "
+                           "CP-SERV-61, 63 y 65 esperan 400 y hoy fallan (defectos D1 a D4).",
+            "schema": ESQUEMA,
+        },
+        "item": [
+            {"name": "8.7 Servicios internos: contrato principal", "item": seccion_87()},
+            {"name": "8.8 Cobertura de contrato", "item": seccion_88()},
+        ],
+        "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": GLOBALES.split("\n")}}],
+    }
+    DESTINO.write_text(json.dumps(coleccion, indent="\t", ensure_ascii=False) + "\n", encoding="utf-8")
+    pedidos = [i for c in coleccion["item"] for i in c["item"]]
+    casos = sorted({i["name"].split(" | ")[0] for i in pedidos if i["name"].startswith("CP-SERV-")})
+    print(f"{DESTINO.name}: {len(pedidos)} pedidos, {len(casos)} identificadores, "
+          f"{sum(len(c['item']) for c in coleccion['item'][:1])} en 8.7 y "
+          f"{sum(len(c['item']) for c in coleccion['item'][1:])} en 8.8")
+
+
+if __name__ == "__main__":
+    main()

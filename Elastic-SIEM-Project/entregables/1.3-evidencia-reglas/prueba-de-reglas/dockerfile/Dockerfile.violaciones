@@ -1,0 +1,6 @@
+# ARCHIVO DE PRUEBA: contiene violaciones intencionales. No es una imagen del producto.
+FROM python
+FROM ubuntu:latest
+ADD requirements.txt /app/requirements.txt
+RUN pip install flask
+USER root

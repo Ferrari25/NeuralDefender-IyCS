@@ -1,0 +1,34 @@
+# Propiedad: Reglas de deteccion sin acciones automaticas
+# Archivo mutado (en la copia): rules/ndjson/A1-ssh-brute-force-basic-threshold.ndjson
+# Pruebas: tests/unit/test_reglas_como_codigo.py
+
+## 1. Codigo sano
+........................................................................ [ 46%]
+.......................................................................s [ 92%]
+.....sss.s.                                                              [100%]
+=========================== short test summary info ============================
+SKIPPED [1] tests/unit/test_reglas_como_codigo.py:359: A4 no documenta un umbral numérico
+SKIPPED [1] tests/unit/test_reglas_como_codigo.py:359: B3 no documenta un umbral numérico
+SKIPPED [1] tests/unit/test_reglas_como_codigo.py:359: B4 no documenta un umbral numérico
+SKIPPED [1] tests/unit/test_reglas_como_codigo.py:359: C1 no documenta un umbral numérico
+SKIPPED [1] tests/unit/test_reglas_como_codigo.py:359: C3 no documenta un umbral numérico
+150 passed, 5 skipped in 0.25s
+
+## 2. Defecto inyectado: p='rules/ndjson/A1-ssh-brute-force-basic-threshold.ndjson'; s=open(p).read(); a='"actions": []'; assert a in s; open(p,'w').write(s.replace(a,'"actions": [{"id": "webhook"}]',1))
+_____________________ test_ninguna_regla_dispara_acciones ______________________
+tests/unit/test_reglas_como_codigo.py:247: in test_ninguna_regla_dispara_acciones
+    assert regla.get("actions", []) == [], (
+E   AssertionError: A1-ssh-brute-force-basic-threshold.ndjson tiene acciones automáticas: [{'id': 'webhook'}]
+E   assert [{'id': 'webhook'}] == []
+E     
+E     Left contains one more item: {'id': 'webhook'}
+E     Use -v to get more diff
+=========================== short test summary info ============================
+FAILED tests/unit/test_reglas_como_codigo.py::test_ninguna_regla_dispara_acciones
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 132 passed in 0.23s
+
+## 3. Diferencia entre el archivo sano y el mutado
+@@ -1 +1 @@
+-{"actions": [], "author": ["NeuralDefender"], "description": "Detecta 5 o más fallos de autenticación SSH desde el mismo host en una ventana corta. Línea base de detección de fuerza bruta.", "enabled": true, "exceptions_list": [], "false_positives": ["Usuarios que olvidaron su contraseña y reintentaron varias veces."], "filters": [], "from": "now-6m", "immutable": false, "index": ["filebeat-*"], "interval": "5m", "language": "kuery", "license": "DRL", "max_signals": 100, "meta": {"from": "1m"}, "name": "SSH Brute Force – Basic Threshold", "note": "Revisar source_ip y user. ¿La IP es interna/conocida? ¿Hubo un authentication_success posterior?", "output_index": "", "query": "tags:authentication_failure or message:*Failed password*", "references": ["https://attack.mitre.org/techniques/T1110/"], "related_integrations": [], "required_fields": [], "risk_score": 47, "risk_score_mapping": [], "rule_id": "ssh-brute-force-basic-threshold", "setup": "", "severity": "medium", "severity_mapping": [], "tags": ["brute-force", "authentication", "ssh", "credential-access"], "threat": [{"framework": "MITRE ATT&CK", "tactic": {"id": "TA0006", "name": "Credential Access", "reference": "https://attack.mitre.org/tactics/TA0006/"}, "technique": [{"id": "T1110", "name": "Brute Force", "reference": "https://attack.mitre.org/techniques/T1110/"}]}], "threshold": {"cardinality": [], "field": ["host.ip.keyword"], "value": 5}, "to": "now", "type": "threshold", "version": 1}
++{"actions": [{"id": "webhook"}], "author": ["NeuralDefender"], "description": "Detecta 5 o más fallos de autenticación SSH desde el mismo host en una ventana corta. Línea base de detección de fuerza bruta.", "enabled": true, "exceptions_list": [], "false_positives": ["Usuarios que olvidaron su contraseña y reintentaron varias veces."], "filters": [], "from": "now-6m", "immutable": false, "index": ["filebeat-*"], "interval": "5m", "language": "kuery", "license": "DRL", "max_signals": 100, "meta": {"from": "1m"}, "name": "SSH Brute Force – Basic Threshold", "note": "Revisar source_ip y user. ¿La IP es interna/conocida? ¿Hubo un authentication_success posterior?", "output_index": "", "query": "tags:authentication_failure or message:*Failed password*", "references": ["https://attack.mitre.org/techniques/T1110/"], "related_integrations": [], "required_fields": [], "risk_score": 47, "risk_score_mapping": [], "rule_id": "ssh-brute-force-basic-threshold", "setup": "", "severity": "medium", "severity_mapping": [], "tags": ["brute-force", "authentication", "ssh", "credential-access"], "threat": [{"framework": "MITRE ATT&CK", "tactic": {"id": "TA0006", "name": "Credential Access", "reference": "https://attack.mitre.org/tactics/TA0006/"}, "technique": [{"id": "T1110", "name": "Brute Force", "reference": "https://attack.mitre.org/techniques/T1110/"}]}], "threshold": {"cardinality": [], "field": ["host.ip.keyword"], "value": 5}, "to": "now", "type": "threshold", "version": 1}

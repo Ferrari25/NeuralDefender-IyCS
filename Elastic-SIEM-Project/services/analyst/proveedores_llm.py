@@ -80,7 +80,8 @@ class ClienteGemini:
     """
 
     def __init__(self, api_key: str, modelo: str, fuente: str = "gemini"):
-        from google import genai
+        # SDK opcional: solo se importa si el proveedor es Gemini.
+        from google import genai  # pylint: disable=import-outside-toplevel
         self._cliente = genai.Client(api_key=api_key)
         self.modelo = modelo
         self.fuente = fuente
@@ -101,7 +102,8 @@ class ClienteGemini:
 
     def generar_json(self, sistema: str, prompt: str, esquema: dict, timeout: float) -> str:
         del esquema  # el SDK no restringe la decodificación por esquema acá
-        from google.genai import types
+        # SDK opcional: solo se importa si el proveedor es Gemini.
+        from google.genai import types  # pylint: disable=import-outside-toplevel
         # Sin esto la llamada no tiene plazo: un 503/429 con reintentos podría
         # pasarse del presupuesto del LLM y del timeout del orquestador.
         http = types.HttpOptions(timeout=max(1000, int(timeout * 1000)))
@@ -136,7 +138,8 @@ class ClienteGemini:
         evita mandar ese incidente al fallback. El reintento usa solo lo que
         queda del plazo, así no se pasa del presupuesto del LLM.
         """
-        from google.genai import errors, types
+        # SDK opcional: solo se importa si el proveedor es Gemini.
+        from google.genai import errors, types  # pylint: disable=import-outside-toplevel
         limite = time.monotonic() + timeout
         try:
             resp = self._cliente.models.generate_content(model=self.modelo, contents=contenido,
@@ -208,6 +211,6 @@ def construir() -> ClienteOllama | ClienteGemini | None:
     try:
         print(f"[INFO] Agente 2 con {nombre} ({modelo}).")
         return ClienteGemini(api_key, modelo, fuente=elegido)
-    except Exception as e:  # SDK ausente o key inválida en init
+    except Exception as e:  # pylint: disable=broad-exception-caught  # SDK ausente o key inválida
         print(f"[WARN] No se pudo inicializar el cliente Gemini ({e}). Usando fallback.")
         return None

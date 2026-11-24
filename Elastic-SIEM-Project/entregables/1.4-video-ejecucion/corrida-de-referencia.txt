@@ -1,0 +1,877 @@
+[H[2J[3J
+------------------------------------------------------------------------
+NeuralDefender - Evaluación estática de código (documento 1.1)
+------------------------------------------------------------------------
+  Fecha     : 2026-11-22 15:30:18
+  Carpeta   : /home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS-20261122T063425Z-1-001/NeuralDefender-IyCS/Elastic-SIEM-Project
+  Rama git  : main (43fd91c)
+
+  Versiones de las herramientas:
+    ruff         ruff 0.16.9
+    pylint       pylint 4.0.10 + secure-coding-standard 1.5.1
+    bandit       bandit 1.9.4
+    eslint       v9.39.5
+    shellcheck   version: 0.11.0
+    hadolint     Haskell Dockerfile Linter 2.15.1
+    yamllint     yamllint 1.38.0
+    pytest       pytest 9.2.0
+
+  CÓMO LEER ESTA CORRIDA
+    Cada bloque muestra cuatro cosas: (1) qué va a pasar, (2) de dónde salen las reglas, es 
+    decir las líneas reales de los archivos de configuración del proyecto, (3) la salida de 
+    la herramienta, y (4) qué significa el resultado. Las herramientas no traen reglas 
+    escondidas: todo lo que aplican sale de esos archivos o del catálogo oficial de cada 
+    herramienta, y en cada caso se indica cuál.
+
+
+------------------------------------------------------------------------
+PARTE 1 - El código del producto SUPERA las reglas
+------------------------------------------------------------------------
+    Aquí se analiza el código real del producto. Lo esperado es que cada bloque termine en 
+    PASA: ningún hallazgo nuevo.
+
+
+[1. Compuerta oficial del proyecto]
+  Regla del documento 1.1 : ruff (calidad + seguridad S + complejidad C901), eslint (JS + seguridad), pylint + secure-coding-standard, bandit
+  Configuración           : ruff.toml, eslint.config.js, .pylintrc, .bandit y los límites de scripts/pruebas_de_codigo_estatico.sh
+  Comando                 : ./scripts/pruebas_de_codigo_estatico.sh
+
+  QUÉ VA A PASAR
+    El script del proyecto encadena cuatro herramientas sobre el código real: ruff (estilo, 
+    seguridad y complejidad de Python), eslint (JavaScript del panel, incluido XSS), pylint con 
+    el plugin de seguridad (Python) y bandit (seguridad de Python). Ninguna regla está escrita 
+    en el script: cada herramienta lee su propio archivo de configuración, que se muestra 
+    abajo.
+
+  DE DÓNDE SALEN LAS REGLAS - ruff (archivo ruff.toml)
+    ruff.toml  (lineas 9 a 15)
+         9 | [lint]
+        10 | select = ["E", "F", "W", "I", "UP", "B", "S", "C4", "SIM", "C901"]
+        11 | ignore = ["E501"]
+        12 | 
+        13 | [lint.mccabe]
+        14 | # Complejidad ciclomática máxima por función (regla C901 del plan).
+        15 | max-complexity = 10
+    ruff.toml  (lineas 29 a 29)
+        29 | "tests/**" = ["C901", "S101", "S105", "S106", "S314", "S404", "S603", "S607", "SIM117"]
+    Línea 10: las familias de reglas activas. La S es la de seguridad (contraseñas en el 
+    código, eval, exec, pickle, shell=True) y C901 la de complejidad. Línea 15: la 
+    complejidad máxima permitida es 10. Línea 29: las únicas excepciones, y solo para la 
+    carpeta tests/.
+
+
+  DE DÓNDE SALEN LAS REGLAS - pylint (archivo .pylintrc)
+    .pylintrc  (lineas 7 a 8)
+         7 | [MAIN]
+         8 | load-plugins=pylint_secure_coding_standard
+    .pylintrc  (lineas 16 a 18)
+        16 | os-open-mode=0o600
+        17 | os-mkdir-mode=0o700
+        18 | os-mkfifo-mode=0o600
+    .pylintrc  (lineas 30 a 30)
+        30 | max-line-length=100
+    .pylintrc  (lineas 35 a 38)
+        35 | max-locals=25
+        36 | max-branches=15
+        37 | max-statements=60
+        38 | max-args=6
+    Línea 8: carga el plugin de seguridad, que aporta reglas contra os.system, os.popen, 
+    pickle, marshal y shelve. Líneas 16 a 18: permisos máximos de archivos, directorios y 
+    fifos. Línea 30: largo de línea 100. Líneas 35 a 38: límites de variables locales, 
+    ramas, sentencias y argumentos por función.
+
+
+  DE DÓNDE SALEN LAS REGLAS - eslint (archivo eslint.config.js)
+    eslint.config.js  (lineas 66 a 67)
+        66 |       "no-unsanitized/property": ["error", { escape: { taggedTemplates: ["html"] } }],
+        67 |       "no-unsanitized/method": ["error", { escape: { taggedTemplates: ["html"] } }],
+    eslint.config.js  (lineas 70 a 75)
+        70 |       "security/detect-eval-with-expression": "error",
+        71 |       "security/detect-non-literal-require": "error",
+        72 |       "security/detect-child-process": "error",
+        73 |       "no-eval": "error",
+        74 |       "no-implied-eval": "error",
+        75 |       "no-new-func": "error",
+    eslint.config.js  (lineas 78 a 80)
+        78 |       "security/detect-object-injection": "warn",
+        79 |       "security/detect-non-literal-regexp": "warn",
+        80 |       "security/detect-unsafe-regex": "error",
+    eslint.config.js  (lineas 83 a 84)
+        83 |       "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+        84 |       "eqeqeq": ["error", "smart"],
+    Líneas 66 y 67: las reglas contra XSS (no asignar a innerHTML un dato sin sanear). Líneas 
+    70 a 75: ejecución de código (eval, new Function, child_process). Líneas 78 a 80: 
+    expresiones regulares peligrosas. Las de nivel error bloquean; las de nivel warn se revisan.
+
+
+  DE DÓNDE SALEN LAS REGLAS - bandit (archivo .bandit)
+    .bandit  (lineas 11 a 12)
+        11 | [bandit]
+        12 | exclude_dirs = ["./.devtools", "./.venv", "./node_modules", "./tests", "./elasticsearch"]
+    scripts/pruebas_de_codigo_estatico.sh  (lineas 22 a 22)
+        22 | EXCLUIR='./.devtools,./.venv,./node_modules,./tests,./elasticsearch'
+    El archivo .bandit no lista pruebas: bandit ejecuta TODAS las que trae incorporadas (B101 
+    assert, B113 requests sin timeout, B301 pickle, B324 hash débil, B602 shell=True, B608 SQL 
+    concatenado, entre otras). Las carpetas excluidas están en el script de la compuerta, 
+    línea 22, porque la opción exclude_dirs de .bandit no se aplica en modo recursivo.
+
+
+  DE DÓNDE SALEN LAS REGLAS - Criterios de aprobación (script de la compuerta)
+    scripts/pruebas_de_codigo_estatico.sh  (lineas 59 a 60)
+        59 | BASE_RUFF=5   # C901 conocidos: _playbook, detect_auth_incidents, _link_campaigns, verify-cobertura.main, pentest.imprimir
+        60 | BASE_BANDIT_ALTOS=0
+    scripts/pruebas_de_codigo_estatico.sh  (lineas 108 a 110)
+       108 | paso "pylint + secure-coding-standard" $BIN/pylint --fail-under=9.0 \
+       109 |      --init-hook="import sys, glob; sys.path[:0] = ['libs', *sorted(glob.glob('services/*'))]" \
+       110 |      "${CODIGO[@]}"
+    Línea 59: BASE_RUFF=5 son los 5 hallazgos de complejidad ya declarados: la compuerta falla 
+    ante cualquier hallazgo nuevo. Línea 108: pylint exige un puntaje mínimo de 9,0 sobre 10.
+
+
+
+
+▶ LINTERS   — estilo y prolijidad, no buscan vulnerabilidades
+    ruff · tests/                  ✔ OK
+    ruff · proyecto                BASE   5 hallazgo(s) conocido(s), sin regresiones
+    eslint (gateway/static/*.js)    ✔ OK
+
+▶ SAST      — seguridad: vulnerabilidades conocidas, no ejecuta nada
+    pylint + secure-coding-standard ✔ OK
+    bandit · severidad alta        BASE   0 hallazgo(s) conocido(s), sin regresiones
+                                    nota: eslint-plugin-security / no-unsanitized ya corrieron arriba, dentro de eslint
+
+════════════════════════════════════════════════════════════
+  RESUMEN — CÓDIGO ESTÁTICO
+════════════════════════════════════════════════════════════
+  LINTERS — estilo y prolijidad, no buscan vulnerabilidades ✔
+  SAST — seguridad: vulnerabilidades conocidas, no ejecuta nada ✔
+
+  ✅ Todo en verde.
+
+  QUÉ SIGNIFICA
+    PASA significa que las cuatro herramientas terminaron sin hallazgos nuevos. 'OK' es cero 
+    hallazgos. 'BASE 5' en ruff son los 5 hallazgos de complejidad conocidos y declarados en la 
+    línea 59: no hay regresiones, o sea nada nuevo respecto de la línea de base. 'BASE 0' en 
+    bandit es cero hallazgos de severidad alta.
+
+  >>> PASA (código de salida 0)
+
+
+[1b. (informativo) Los 5 C901 conocidos de ruff]
+  Regla del documento 1.1 : C901 complejidad ciclomática mayor a 10
+  Configuración           : ruff.toml líneas 10 y 15; línea de base BASE_RUFF=5 en scripts/pruebas_de_codigo_estatico.sh:59
+  Comando                 : .devtools/bin/ruff check . --output-format=concise
+
+  QUÉ VA A PASAR
+    Se pide a ruff que liste los hallazgos de complejidad ciclomática (regla C901) que la 
+    compuerta del paso anterior tolera como línea de base.
+
+  DE DÓNDE SALEN LAS REGLAS
+    ruff.toml  (lineas 13 a 15)
+        13 | [lint.mccabe]
+        14 | # Complejidad ciclomática máxima por función (regla C901 del plan).
+        15 | max-complexity = 10
+    scripts/pruebas_de_codigo_estatico.sh  (lineas 59 a 59)
+        59 | BASE_RUFF=5   # C901 conocidos: _playbook, detect_auth_incidents, _link_campaigns, verify-cobertura.main, pentest.imprimir
+    La regla C901 se activa en la línea 10 de ruff.toml y su límite (10) está en la línea 
+    15.
+
+
+services/classifier/classifier.py:380:5: C901 `_playbook` is too complex (11 > 10)
+services/classifier/classifier.py:800:5: C901 `detect_auth_incidents` is too complex (25 > 10)
+services/classifier/classifier.py:1193:5: C901 `_link_campaigns` is too complex (15 > 10)
+services/collector/verify-cobertura.py:130:5: C901 `main` is too complex (12 > 10)
+simulation/pentest.py:65:5: C901 `imprimir` is too complex (13 > 10)
+Found 5 errors.
+
+  QUÉ SIGNIFICA
+    Cada línea es una función cuya complejidad supera el límite de 10: por ejemplo 
+    detect_auth_incidents tiene 25. Son deuda técnica DECLARADA, no ocultada: la compuerta 
+    tolera exactamente estos 5 y falla ante cualquier otro nuevo. Este bloque es informativo: 
+    no cuenta como PASA ni FALLA.
+
+
+
+[2. shellcheck (27 scripts)]
+  Regla del documento 1.1 : SC2086 variables sin comillas, SC2035 globbing, SC2164 cd sin control
+  Configuración           : '.shellcheckrc' (shell=bash)
+  Comando                 : .devtools/bin/shellcheck scripts/*.sh simulation/*.sh backup/*.sh
+
+  QUÉ VA A PASAR
+    shellcheck lee los 27 scripts de bash sin ejecutarlos y busca errores típicos: variables 
+    sin comillas (SC2086), globs peligrosos (SC2035) y cd sin control de error (SC2164).
+
+  DE DÓNDE SALEN LAS REGLAS
+    .shellcheckrc  (lineas 1 a 5)
+         1 | # shellcheck (análisis estático de los scripts de bash).
+         2 | # Las reglas de seguridad y calidad del plan (SC2086 variables sin comillas,
+         3 | # SC2035 globbing como opción, SC2164 cd sin control) vienen activas por defecto.
+         4 | shell=bash
+         5 | external-sources=true
+    Las reglas SC2086, SC2035 y SC2164 no están escritas en ningún archivo del proyecto: 
+    vienen incluidas en shellcheck y están activas por defecto. El archivo .shellcheckrc solo 
+    fija el dialecto (línea 4: shell=bash). Catálogo oficial: 
+    https://www.shellcheck.net/wiki/SC2086
+
+
+
+  QUÉ SIGNIFICA
+    Que no aparezca ninguna línea de salida y el código sea 0 significa que ninguno de los 27 
+    scripts tiene esos problemas.
+
+  >>> PASA (código de salida 0)
+
+
+[3. bash -n (sintaxis de los 27 scripts)]
+  Regla del documento 1.1 : bash -n: detecta errores de sintaxis sin ejecutar
+  Configuración           : (comando de bash, sin archivo)
+  Comando                 : for f in scripts/*.sh simulation/*.sh backup/*.sh; do bash -n $f; done
+
+  QUÉ VA A PASAR
+    bash lee cada script y comprueba que su sintaxis sea válida, sin ejecutarlo. Detecta, por 
+    ejemplo, un if sin su fi.
+
+  DE DÓNDE SALEN LAS REGLAS
+    Acá no hay archivo de reglas: la regla es la gramática del propio lenguaje bash.
+
+
+scripts con error de sintaxis: 0 de 27
+
+  QUÉ SIGNIFICA
+    '0 de 27' significa que ningún script tiene un error de sintaxis.
+
+  >>> PASA (código de salida 0)
+
+
+[4. hadolint (9 Dockerfile)]
+  Regla del documento 1.1 : DL3006/DL3007 imagen con versión, DL3002 sin root, DL3020 COPY en vez de ADD, DL3042 pip --no-cache-dir
+  Configuración           : .hadolint.yaml
+  Comando                 : docker run --rm -v $PWD:/w -w /w hadolint/hadolint hadolint services/*/Dockerfile backup/Dockerfile
+
+  QUÉ VA A PASAR
+    hadolint lee los 9 Dockerfile (8 microservicios y el de respaldo) y busca malas prácticas: 
+    imagen base sin versión, contenedor corriendo como root, ADD en lugar de COPY, pip sin 
+    --no-cache-dir.
+
+  DE DÓNDE SALEN LAS REGLAS
+    .hadolint.yaml  (lineas 1 a 4)
+         1 | # hadolint (análisis estático de Dockerfile).
+         2 | # Reglas del plan: DL3006/DL3007 (imagen con versión fija), DL3002 (sin root),
+         3 | # DL3020 (COPY en vez de ADD), DL3042 (pip --no-cache-dir). Vienen activas por defecto.
+         4 | failure-threshold: warning
+    Las reglas DL3006, DL3007, DL3002, DL3020 y DL3042 vienen incluidas en hadolint y están 
+    activas por defecto. El archivo solo fija el umbral (línea 4: fallar desde el nivel 
+    warning). Catálogo oficial: https://github.com/hadolint/hadolint/wiki/DL3006
+
+
+
+  QUÉ SIGNIFICA
+    Sin ninguna línea de salida y código 0 significa que ningún Dockerfile infringe esas 
+    reglas: las imágenes tienen versión fija y corren con usuario sin privilegios.
+
+  >>> PASA (código de salida 0)
+
+
+[5. yamllint (5 archivos YAML)]
+  Regla del documento 1.1 : syntax, indentation, key-duplicates
+  Configuración           : .yamllint
+  Comando                 : .devtools/bin/yamllint docker-compose.yml elasticsearch/elasticsearch.yml kibana/kibana.yml filebeat/filebeat.yml logstash/config/logstash.yml
+
+  QUÉ VA A PASAR
+    yamllint lee los 5 archivos de configuración YAML (compose, Elasticsearch, Kibana, 
+    Filebeat y Logstash) y comprueba sintaxis, sangría y claves repetidas.
+
+  DE DÓNDE SALEN LAS REGLAS
+    .yamllint  (lineas 1 a 11)
+         1 | # yamllint (sintaxis, sangría y claves duplicadas de la configuración YAML).
+         2 | extends: default
+         3 | rules:
+         4 |   # Los archivos de Compose y Logstash tienen líneas largas por naturaleza.
+         5 |   line-length: disable
+         6 |   # Los YAML de configuración no usan el marcador "---".
+         7 |   document-start: disable
+         8 |   # `on`/`off` no se usan como booleanos en estos archivos; se revisan solo los valores.
+         9 |   truthy:
+        10 |     check-keys: false
+    La línea 2 (extends: default) significa 'usar el conjunto estándar de reglas de 
+    yamllint', que incluye syntax, indentation y key-duplicates. Las líneas 5 a 10 solo 
+    relajan tres reglas que no aplican a estos archivos.
+
+
+
+  QUÉ SIGNIFICA
+    Sin salida y código 0 significa que los 5 YAML están bien formados, con sangría 
+    consistente y sin claves repetidas.
+
+  >>> PASA (código de salida 0)
+
+
+[6. docker compose config -q]
+  Regla del documento 1.1 : Validez del compose: el despliegue no falla por configuración
+  Configuración           : (comando de Docker Compose)
+  Comando                 : docker compose config -q
+
+  QUÉ VA A PASAR
+    Docker Compose lee docker-compose.yml, lo valida contra su esquema y comprueba que el 
+    proyecto sea desplegable. La opción -q hace que no imprima nada si todo está bien.
+
+  DE DÓNDE SALEN LAS REGLAS
+    Acá la regla es el esquema de Docker Compose, no un archivo del proyecto.
+
+
+
+  QUÉ SIGNIFICA
+    Sin salida y código 0 significa que la configuración de despliegue es válida.
+
+  >>> PASA (código de salida 0)
+
+
+[7. Reglas propias del sistema (9 archivos de prueba)]
+  Regla del documento 1.1 : No-autonomía (AST), lista blanca de IP/usuario, XSS, reglas de detección sin acciones, compose, .keyword, tokens CSS, contraste WCAG
+  Configuración           : tests/ (pytest.ini)
+  Comando                 : .devtools/bin/pytest -q test_no_autonomy.py test_s01_inyeccion_comandos.py test_validators.py test_s02_xss_dashboard.py test_reglas_como_codigo.py test_despliegue_compose.py test_agregaciones_keyword.py test_tokens_de_diseno.py test_contraste_de_la_interfaz.py
+
+  QUÉ VA A PASAR
+    Son reglas propias de NeuralDefender que ninguna herramienta genérica puede comprobar. 
+    Cada archivo de prueba lee el código fuente (sin ejecutar el sistema) y falla si se viola 
+    una propiedad del sistema: por ejemplo, recorre el árbol sintáctico de los 35 archivos 
+    Python y falla si aparece subprocess, shell o una conexión remota.
+
+  DE DÓNDE SALEN LAS REGLAS
+    tests/test_no_autonomy.py  (lineas 76 a 76)
+        76 | EXCLUIDOS = {".devtools", ".venv", "venv", "node_modules", "__pycache__", ".git", "tests"}
+    tests/test_no_autonomy.py  (lineas 134 a 136)
+       134 | @pytest.mark.parametrize("ruta", _archivos_python(), ids=lambda p: p.name)
+       135 | def test_sin_imports_de_ejecucion(ruta: Path):
+       136 |     if ruta.name in ALLOWLIST:
+    pytest.ini  (lineas 1 a 3)
+         1 | [pytest]
+         2 | testpaths = tests
+         3 | python_files = test_*.py
+    En este caso las reglas no están en un archivo de configuración: SON las pruebas. 
+    test_no_autonomy.py línea 135 es la regla 'ningún componente ejecuta procesos'; la línea 
+    76 define qué carpetas no se analizan. pytest.ini indica dónde están las pruebas. Los 
+    otros 8 archivos cubren la lista blanca de IP y usuario, el XSS del panel, las reglas de 
+    detección sin acciones automáticas, los límites del compose, las consultas con .keyword, 
+    los tokens de diseño CSS y el contraste WCAG.
+
+
+........................................................................ [ 12%]
+..............
+  ── Certificación de no-autonomía ──────────────────────────
+  Archivos .py analizados por AST : 35
+  Con import de subprocess        : ninguno
+  Allowlist                       : []
+  Rutas HTTP que ejecutan algo    : ninguna
+  Herramientas del LLM            : ninguna
+  ───────────────────────────────────────────────────────────
+.......................................................... [ 24%]
+........................................................................ [ 37%]
+........................................................................ [ 49%]
+........................................................................ [ 61%]
+.......................................................................s [ 74%]
+.....sss.s.............................................................. [ 86%]
+........................................................................ [ 98%]
+......                                                                   [100%]
+=========================== short test summary info ============================
+SKIPPED [1] tests/unit/test_reglas_como_codigo.py:359: A4 no documenta un umbral numérico
+SKIPPED [1] tests/unit/test_reglas_como_codigo.py:359: B3 no documenta un umbral numérico
+SKIPPED [1] tests/unit/test_reglas_como_codigo.py:359: B4 no documenta un umbral numérico
+SKIPPED [1] tests/unit/test_reglas_como_codigo.py:359: C1 no documenta un umbral numérico
+SKIPPED [1] tests/unit/test_reglas_como_codigo.py:359: C3 no documenta un umbral numérico
+577 passed, 5 skipped in 5.13s
+
+  QUÉ SIGNIFICA
+    '577 passed' son las comprobaciones que se cumplieron y 0 fallaron. Las 5 'SKIPPED' son 
+    reglas de detección que no documentan un umbral numérico: se omiten a propósito. El 
+    cartel 'Certificación de no-autonomía' resume el resultado: 35 archivos analizados, sin 
+    subprocess, sin rutas HTTP que ejecuten nada.
+
+  >>> PASA (código de salida 0)
+
+
+------------------------------------------------------------------------
+PARTE 2 - Las reglas DETECTAN violaciones (prueba de que se ejecutan)
+------------------------------------------------------------------------
+    Que un análisis dé cero hallazgos podría significar que la herramienta no hace nada. 
+    Para descartarlo, ahora se les pasa código con violaciones intencionales (los ejemplos del 
+    entregable 1.3) y se espera lo contrario: que cada herramienta ENCUENTRE el problema. Para 
+    cada bloque se muestra la violación, la regla y el hallazgo.
+    Los ejemplos de Python y JavaScript se leen por entrada estándar: no se crea ningún 
+    archivo dentro del producto.
+
+
+[8. ruff sobre el ejemplo de Python]
+  Regla del documento 1.1 : Familia S (seguridad), C901, B, F, UP, SIM...
+  Configuración           : ruff.toml
+  Comando                 : ruff check --stdin-filename libs/demo.py - < ejemplo_violaciones_python.py.txt
+
+  QUÉ VA A PASAR
+    Se le pasa a ruff el archivo de ejemplo con violaciones de seguridad y de calidad. La 
+    opción --stdin-filename libs/demo.py le dice que lo trate como si fuera código del 
+    producto, para que aplique las reglas del producto y no las excepciones de tests/.
+
+  VIOLACIÓN INTENCIONAL (archivo de ejemplo)
+    entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py.txt  (lineas 17 a 29)
+        17 | PASSWORD = "admin1234"  # S105 / B105: contrasena en el codigo
+        18 | 
+        19 | 
+        20 | def seguridad(dato, cursor, ruta=[]):  # B006: argumento mutable por defecto
+        21 |     os.system("ls " + dato)  # E8002 / S605 / B605: os.system
+        22 |     os.popen("ls")  # E8010 / S605 / B605: os.popen
+        23 |     subprocess.run(["ls"])  # W1510 / S603 / B603 / B404: subprocess.run sin check
+        24 |     subprocess.call("ls " + dato, shell=True)  # E8003 / S602 / B602: shell=True
+        25 |     eval(dato)  # E8001 / S307 / B307: eval
+        26 |     exec(dato)  # E8001 / S102 / B102: exec
+        27 |     pickle.loads(dato)  # E8013 / S301 / B301: pickle
+        28 |     marshal.loads(dato)  # E8014 / S302 / B302: marshal
+        29 |     shelve.open("estado")  # E8015: shelve
+
+  DE DÓNDE SALEN LAS REGLAS
+    ruff.toml  (lineas 10 a 10)
+        10 | select = ["E", "F", "W", "I", "UP", "B", "S", "C4", "SIM", "C901"]
+    Las reglas que detectan esto son las familias de la línea 10 de ruff.toml: S (seguridad: 
+    contraseña en el código, eval, exec, pickle, shell=True), B, F, UP, SIM, C4 y C901. Cada 
+    hallazgo muestra su código, por ejemplo S105 (contraseña) o S102 (exec).
+
+
+libs/demo.py:4:1: I001 [*] Import block is un-sorted or un-formatted
+libs/demo.py:11:8: F401 [*] `json` imported but unused
+libs/demo.py:13:1: UP035 `typing.List` is deprecated, use `list` instead
+libs/demo.py:13:20: F401 [*] `typing.List` imported but unused
+libs/demo.py:17:12: S105 Possible hardcoded password assigned to: "PASSWORD"
+libs/demo.py:20:34: B006 Do not use mutable data structures for argument defaults
+libs/demo.py:21:5: S605 Starting a process with a shell, possible injection detected
+libs/demo.py:22:5: S605 Starting a process with a shell: seems safe, but may be changed in the future; consider rewriting without `shell`
+libs/demo.py:22:14: S607 Starting a process with a partial executable path
+libs/demo.py:23:20: S607 Starting a process with a partial executable path
+libs/demo.py:24:5: S602 `subprocess` call with `shell=True` identified, security issue
+libs/demo.py:25:5: S307 Use of possibly insecure function; consider using `ast.literal_eval`
+libs/demo.py:26:5: S102 Use of `exec` detected
+libs/demo.py:27:5: S301 `pickle` and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue
+  ... (66 líneas de salida en total)
+
+  QUÉ SIGNIFICA
+    Cada línea de salida tiene archivo, línea, código de la regla y qué encontró, por 
+    ejemplo 'S105 Possible hardcoded password' en la línea 17. El código de salida 1 
+    significa que ruff encontró problemas, que es lo esperado.
+
+  >>> DETECTÓ la violación (código de salida 1)
+
+
+[9. pylint + secure-coding-standard sobre el ejemplo]
+  Regla del documento 1.1 : os.system, os.popen, pickle, marshal, shelve, shell=True, permisos de archivos
+  Configuración           : .pylintrc
+  Comando                 : pylint --from-stdin libs/demo.py < ejemplo_violaciones_python.py.txt
+
+  QUÉ VA A PASAR
+    Se le pasa a pylint el mismo archivo de ejemplo. pylint carga un plugin de seguridad y se 
+    muestran solo los mensajes de seguridad (E80xx, W80xx, C80xx y W1510).
+
+  VIOLACIÓN INTENCIONAL (archivo de ejemplo)
+    entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py.txt  (lineas 21 a 29)
+        21 |     os.system("ls " + dato)  # E8002 / S605 / B605: os.system
+        22 |     os.popen("ls")  # E8010 / S605 / B605: os.popen
+        23 |     subprocess.run(["ls"])  # W1510 / S603 / B603 / B404: subprocess.run sin check
+        24 |     subprocess.call("ls " + dato, shell=True)  # E8003 / S602 / B602: shell=True
+        25 |     eval(dato)  # E8001 / S307 / B307: eval
+        26 |     exec(dato)  # E8001 / S102 / B102: exec
+        27 |     pickle.loads(dato)  # E8013 / S301 / B301: pickle
+        28 |     marshal.loads(dato)  # E8014 / S302 / B302: marshal
+        29 |     shelve.open("estado")  # E8015: shelve
+
+  DE DÓNDE SALEN LAS REGLAS
+    .pylintrc  (lineas 7 a 8)
+         7 | [MAIN]
+         8 | load-plugins=pylint_secure_coding_standard
+    .pylintrc  (lineas 14 a 18)
+        14 | # (os.system, os.popen, pickle, marshal, shelve) estan siempre activas y no se
+        15 | # configuran; subprocess.run sin `check=` lo detecta pylint (W1510).
+        16 | os-open-mode=0o600
+        17 | os-mkdir-mode=0o700
+        18 | os-mkfifo-mode=0o600
+    El plugin se carga en la línea 8 de .pylintrc (load-plugins). Las reglas de os.system, 
+    os.popen, pickle, marshal y shelve vienen incluidas en el plugin y están siempre activas. 
+    Las líneas 16 a 18 configuran los permisos máximos de archivos, directorios y fifos.
+
+
+libs/demo.py:21:4: E8002: Avoid using `os.system()` (avoid-os-system)
+libs/demo.py:22:4: E8010: Avoid using `os.popen()` (avoid-os-popen)
+libs/demo.py:23:4: W1510: 'subprocess.run' used without explicitly defining the value for 'check'. (subprocess-run-check)
+libs/demo.py:24:4: E8003: Avoid using `shell=True` when calling `subprocess` functions and avoid functions that internally call it (avoid-shell-true)
+libs/demo.py:25:4: E8001: Avoid using `exec()` and `eval()` (avoid-eval-exec)
+libs/demo.py:26:4: E8001: Avoid using `exec()` and `eval()` (avoid-eval-exec)
+libs/demo.py:27:4: E8013: Avoid using `pickle.load` and `pickle.loads` (avoid-pickle-load)
+libs/demo.py:28:4: E8014: Avoid using `marshal.load` and `marshal.loads` (avoid-marshal-load)
+libs/demo.py:29:4: E8015: Avoid using `shelve.open()` (avoid-shelve-open)
+libs/demo.py:32:4: E8005: Avoid using unsafe PyYAML loading functions (avoid-yaml-unsafe-load)
+libs/demo.py:35:4: C8008: Avoid `assert` statements in production code (avoid-assert)
+libs/demo.py:38:4: W8012: Avoid using `os.open` with unsafe permissions (should be 0 < mode < 0o600) (os-open-unsafe-permissions)
+libs/demo.py:39:4: W8016: Avoid using `os.mkdir` and `os.makedirs` with unsafe permissions (should be 0 < mode < 0o700) (os-mkdir-unsafe-permissions)
+libs/demo.py:43:4: W8017: Avoid using `os.mkfifo` with unsafe permissions (should be 0 < mode < 0o600) (os-mkfifo-unsafe-permissions)
+
+  QUÉ SIGNIFICA
+    E8002 es 'no usar os.system', E8013 'no usar pickle', E8001 'no usar eval/exec', y así 
+    cada código. Los números a la izquierda son las líneas del ejemplo que se mostraron 
+    arriba (21 a 29). El código de salida 1 significa que pylint encontró problemas.
+
+  >>> DETECTÓ la violación (código de salida 1)
+
+
+[10. bandit sobre el ejemplo]
+  Regla del documento 1.1 : B101, B113, B301, B324, B404, B602, B603, B605, B506, B608, B108
+  Configuración           : .bandit (todas las pruebas activas)
+  Comando                 : bandit -f txt - < ejemplo_violaciones_python.py.txt
+
+  QUÉ VA A PASAR
+    Se le pasa a bandit el mismo archivo de ejemplo y se listan sus hallazgos de seguridad.
+
+  VIOLACIÓN INTENCIONAL (archivo de ejemplo)
+    entregables/1.3-evidencia-reglas/prueba-de-reglas/python/ejemplo_violaciones_python.py.txt  (lineas 21 a 37)
+        21 |     os.system("ls " + dato)  # E8002 / S605 / B605: os.system
+        22 |     os.popen("ls")  # E8010 / S605 / B605: os.popen
+        23 |     subprocess.run(["ls"])  # W1510 / S603 / B603 / B404: subprocess.run sin check
+        24 |     subprocess.call("ls " + dato, shell=True)  # E8003 / S602 / B602: shell=True
+        25 |     eval(dato)  # E8001 / S307 / B307: eval
+        26 |     exec(dato)  # E8001 / S102 / B102: exec
+        27 |     pickle.loads(dato)  # E8013 / S301 / B301: pickle
+        28 |     marshal.loads(dato)  # E8014 / S302 / B302: marshal
+        29 |     shelve.open("estado")  # E8015: shelve
+        30 |     hashlib.md5(dato)  # S324 / B324: hash debil MD5
+        31 |     hashlib.sha1(dato)  # S324 / B324: hash debil SHA-1
+        32 |     yaml.load(dato)  # E8005 / S506 / B506: yaml.load inseguro
+        33 |     requests.get("http://example.com")  # S113 / B113: requests sin timeout
+        34 |     ET.fromstring(dato)  # S314 / B314: XML inseguro
+        35 |     assert dato  # S101 / B101: assert
+        36 |     open("/tmp/salida", "w")  # S108 / B108: archivo temporal inseguro
+        37 |     cursor.execute("SELECT * FROM t WHERE id=" + dato)  # S608 / B608: SQL concatenado
+
+  DE DÓNDE SALEN LAS REGLAS
+    .bandit  (lineas 11 a 12)
+        11 | [bandit]
+        12 | exclude_dirs = ["./.devtools", "./.venv", "./node_modules", "./tests", "./elasticsearch"]
+    El archivo .bandit no define una lista de pruebas, así que bandit ejecuta todas las que 
+    trae (la lista completa está en 
+    entregables/1.3-evidencia-reglas/configuracion-efectiva/bandit--pruebas-activas.txt). Cada 
+    hallazgo tiene un código B: B101 assert, B113 requests sin timeout, B301 pickle, B324 hash 
+    débil, B602 shell=True, B608 SQL concatenado.
+
+
+>> Issue: [B403:blacklist] Consider possible security implications associated with pickle module.
+>> Issue: [B403:blacklist] Consider possible security implications associated with shelve module.
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+>> Issue: [B405:blacklist] Using xml.etree.ElementTree to parse untrusted XML data is known to be vulnerable to XML attacks. Replace xml.etree.ElementTree with the equivalent defusedxml package, or make sure defusedxml.defuse_stdlib() is called.
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'admin1234'
+>> Issue: [B605:start_process_with_a_shell] Starting a process with a shell, possible injection detected, security issue.
+>> Issue: [B605:start_process_with_a_shell] Starting a process with a shell: Seems safe, but may be changed in the future, consider rewriting without shell
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+>> Issue: [B602:subprocess_popen_with_shell_equals_true] subprocess call with shell=True identified, security issue.
+>> Issue: [B307:blacklist] Use of possibly insecure function - consider using safer ast.literal_eval.
+>> Issue: [B102:exec_used] Use of exec detected.
+>> Issue: [B301:blacklist] Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.
+  ... (30 líneas de salida en total)
+
+  QUÉ SIGNIFICA
+    Cada línea es un hallazgo con su código B y su descripción. Se ven, entre otros, B605 
+    (proceso con shell), B602 (shell=True), B307 (eval), B102 (exec) y B301 (pickle). El 
+    código de salida 1 significa que bandit encontró problemas.
+
+  >>> DETECTÓ la violación (código de salida 1)
+
+
+[11. eslint sobre el ejemplo de JavaScript]
+  Regla del documento 1.1 : no-unsanitized (XSS), no-eval, no-new-func, security/*
+  Configuración           : eslint.config.js
+  Comando                 : eslint --stdin --stdin-filename services/gateway/static/demo.js < ejemplo_violaciones_js.js
+
+  QUÉ VA A PASAR
+    Se le pasa a eslint un archivo JavaScript con violaciones de seguridad. La opción 
+    --stdin-filename le dice que lo trate como si estuviera en services/gateway/static/ (el 
+    JavaScript del panel), para que aplique las mismas reglas que a app.js.
+
+  VIOLACIÓN INTENCIONAL (archivo de ejemplo)
+    entregables/1.3-evidencia-reglas/prueba-de-reglas/javascript/ejemplo_violaciones_js.js  (lineas 9 a 20)
+         9 | document.getElementById("a").innerHTML = datos; // no-unsanitized/property: innerHTML con datos
+        10 | document.body.insertAdjacentHTML("beforeend", datos); // no-unsanitized/method
+        11 | eval(datos); // no-eval y security/detect-eval-with-expression
+        12 | setTimeout("alert(1)", 10); // no-implied-eval
+        13 | const f = new Function("return " + datos); // no-new-func
+        14 | const cp = require("child_process"); // (sin la llamada a exec, la regla no se dispara)
+        15 | cp.exec(datos); // security/detect-child-process: exec con dato no literal
+        16 | const m = require(datos); // security/detect-non-literal-require
+        17 | const re1 = /(a+)+$/; // security/detect-unsafe-regex (ReDoS)
+        18 | const re2 = new RegExp(datos); // security/detect-non-literal-regexp (warn)
+        19 | const x = objeto[datos]; // security/detect-object-injection (warn)
+        20 | if (a == b) { // eqeqeq
+
+  DE DÓNDE SALEN LAS REGLAS
+    eslint.config.js  (lineas 66 a 67)
+        66 |       "no-unsanitized/property": ["error", { escape: { taggedTemplates: ["html"] } }],
+        67 |       "no-unsanitized/method": ["error", { escape: { taggedTemplates: ["html"] } }],
+    eslint.config.js  (lineas 70 a 75)
+        70 |       "security/detect-eval-with-expression": "error",
+        71 |       "security/detect-non-literal-require": "error",
+        72 |       "security/detect-child-process": "error",
+        73 |       "no-eval": "error",
+        74 |       "no-implied-eval": "error",
+        75 |       "no-new-func": "error",
+    eslint.config.js  (lineas 78 a 80)
+        78 |       "security/detect-object-injection": "warn",
+        79 |       "security/detect-non-literal-regexp": "warn",
+        80 |       "security/detect-unsafe-regex": "error",
+    Las líneas 66 y 67 son las reglas contra XSS: no-unsanitized prohíbe asignar a innerHTML 
+    un dato no controlado. Las líneas 70 a 75 son las de ejecución de código (eval, new 
+    Function, child_process) y las 78 a 80 las de expresiones regulares peligrosas.
+
+
+
+/home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS-20261122T063425Z-1-001/NeuralDefender-IyCS/Elastic-SIEM-Project/services/gateway/static/demo.js
+   9:1   error    Unsafe assignment to innerHTML (Variable 'datos' initialized with unsafe value at 4:14)                                  no-unsanitized/property
+  10:1   error    Unsafe call to document.body.insertAdjacentHTML for argument 1 (Variable 'datos' initialized with unsafe value at 4:14)  no-unsanitized/method
+  11:1   error    eval with argument of type Identifier                                                                                    security/detect-eval-with-expression
+  11:1   error    eval can be harmful                                                                                                      no-eval
+  12:1   error    Implied eval. Consider passing a function instead of a string                                                            no-implied-eval
+  13:11  error    The Function constructor is eval                                                                                         no-new-func
+  14:12  error    'require' is not defined                                                                                                 no-undef
+  15:1   error    Found child_process.exec() with non Literal first argument                                                               security/detect-child-process
+  16:11  error    Found non-literal argument in require                                                                                    security/detect-non-literal-require
+  16:11  error    'require' is not defined                                                                                                 no-undef
+  17:13  error    Unsafe Regular Expression                                                                                                security/detect-unsafe-regex
+  18:13  warning  Found non-literal argument to RegExp Constructor                                                                         security/detect-non-literal-regexp
+  ... (20 líneas de salida en total)
+
+  QUÉ SIGNIFICA
+    El hallazgo de la línea 9 'Unsafe assignment to innerHTML' es exactamente el vector de XSS 
+    que preocupa en el panel. Los 'error' bloquean y los 'warning' se revisan. El código de 
+    salida 1 significa que hay al menos un error.
+
+  >>> DETECTÓ la violación (código de salida 1)
+
+
+[12. shellcheck sobre el ejemplo de shell]
+  Regla del documento 1.1 : SC2086, SC2035, SC2164
+  Configuración           : .shellcheckrc
+  Comando                 : shellcheck -f gcc ejemplo_violaciones_shell.sh
+
+  QUÉ VA A PASAR
+    Se le pasa a shellcheck un script con tres problemas típicos: variable sin comillas, glob 
+    peligroso y cd sin control de error.
+
+  VIOLACIÓN INTENCIONAL (archivo de ejemplo)
+    entregables/1.3-evidencia-reglas/prueba-de-reglas/shell/ejemplo_violaciones_shell.sh  (lineas 4 a 10)
+         4 | archivo=$1
+         5 | rm -rf $archivo/*                          # SC2086: variable sin comillas
+         6 | cd /tmp                                    # SC2164: cd sin control de error
+         7 | rm *.log                                   # SC2035: glob que puede leerse como opcion
+         8 | echo $(cat $archivo)                       # SC2046 y SC2086: sustitucion sin comillas
+         9 | [ -f "$archivo" ] && echo si || echo no    # SC2015: A && B || C no es if/else
+        10 | for f in $(ls /tmp); do echo $f; done      # SC2045 y SC2086: iterar sobre la salida de ls
+
+  DE DÓNDE SALEN LAS REGLAS
+    .shellcheckrc  (lineas 1 a 5)
+         1 | # shellcheck (análisis estático de los scripts de bash).
+         2 | # Las reglas de seguridad y calidad del plan (SC2086 variables sin comillas,
+         3 | # SC2035 globbing como opción, SC2164 cd sin control) vienen activas por defecto.
+         4 | shell=bash
+         5 | external-sources=true
+    Las reglas SC2086, SC2035 y SC2164 vienen incluidas en shellcheck. El archivo .shellcheckrc 
+    solo fija el dialecto bash.
+
+
+entregables/1.3-evidencia-reglas/prueba-de-reglas/shell/ejemplo_violaciones_shell.sh:5:8: warning: Use "${var:?}" to ensure this never expands to /* . [SC2115]
+entregables/1.3-evidencia-reglas/prueba-de-reglas/shell/ejemplo_violaciones_shell.sh:5:8: note: Double quote to prevent globbing and word splitting. [SC2086]
+entregables/1.3-evidencia-reglas/prueba-de-reglas/shell/ejemplo_violaciones_shell.sh:6:1: warning: Use 'cd ... || exit' or 'cd ... || return' in case cd fails. [SC2164]
+entregables/1.3-evidencia-reglas/prueba-de-reglas/shell/ejemplo_violaciones_shell.sh:7:4: note: Use ./*glob* or -- *glob* so names with dashes won't become options. [SC2035]
+entregables/1.3-evidencia-reglas/prueba-de-reglas/shell/ejemplo_violaciones_shell.sh:8:6: warning: Quote this to prevent word splitting. [SC2046]
+entregables/1.3-evidencia-reglas/prueba-de-reglas/shell/ejemplo_violaciones_shell.sh:8:6: note: Useless echo? Instead of 'echo $(cmd)', just use 'cmd'. [SC2005]
+entregables/1.3-evidencia-reglas/prueba-de-reglas/shell/ejemplo_violaciones_shell.sh:8:12: note: Double quote to prevent globbing and word splitting. [SC2086]
+entregables/1.3-evidencia-reglas/prueba-de-reglas/shell/ejemplo_violaciones_shell.sh:10:10: error: Iterating over ls output is fragile. Use globs. [SC2045]
+entregables/1.3-evidencia-reglas/prueba-de-reglas/shell/ejemplo_violaciones_shell.sh:10:30: note: Double quote to prevent globbing and word splitting. [SC2086]
+
+  QUÉ SIGNIFICA
+    SC2086 (línea 5) es la variable sin comillas, SC2164 (línea 6) el cd sin control y SC2035 
+    (línea 7) el glob. shellcheck no ejecutó nada: solo leyó el archivo.
+
+  >>> DETECTÓ la violación (código de salida 1)
+
+
+[13. bash -n sobre un script con sintaxis inválida]
+  Regla del documento 1.1 : Sintaxis
+  Configuración           : (comando de bash)
+  Comando                 : bash -n ejemplo_sintaxis_invalida.sh
+
+  QUÉ VA A PASAR
+    bash -n lee un script que tiene un if sin su fi y comprueba su sintaxis.
+
+  VIOLACIÓN INTENCIONAL (archivo de ejemplo)
+    entregables/1.3-evidencia-reglas/prueba-de-reglas/shell/ejemplo_sintaxis_invalida.sh  (lineas 1 a 5)
+         1 | #!/bin/bash
+         2 | # ARCHIVO DE PRUEBA: sintaxis invalida (falta el fi). bash -n lo detecta sin ejecutarlo.
+         3 | if [ -f "$1" ]; then
+         4 |   echo "existe"
+
+  DE DÓNDE SALEN LAS REGLAS
+    La regla es la gramática de bash: no hay archivo de configuración.
+
+
+entregables/1.3-evidencia-reglas/prueba-de-reglas/shell/ejemplo_sintaxis_invalida.sh: line 5: syntax error: unexpected end of file
+
+  QUÉ SIGNIFICA
+    'unexpected end of file' significa que bash llegó al final del archivo y le faltaba cerrar 
+    el if. Un script así fallaría al ejecutarse, y se detectó sin ejecutarlo.
+
+  >>> DETECTÓ la violación (código de salida 2)
+
+
+[14. hadolint sobre un Dockerfile con violaciones]
+  Regla del documento 1.1 : DL3006, DL3007, DL3002, DL3020, DL3042
+  Configuración           : .hadolint.yaml
+  Comando                 : hadolint Dockerfile.violaciones
+
+  QUÉ VA A PASAR
+    Se le pasa a hadolint un Dockerfile con cinco malas prácticas: imagen sin versión, 
+    etiqueta latest, ADD en lugar de COPY, pip sin --no-cache-dir y usuario root.
+
+  VIOLACIÓN INTENCIONAL (archivo de ejemplo)
+    entregables/1.3-evidencia-reglas/prueba-de-reglas/dockerfile/Dockerfile.violaciones  (lineas 2 a 6)
+         2 | FROM python
+         3 | FROM ubuntu:latest
+         4 | ADD requirements.txt /app/requirements.txt
+         5 | RUN pip install flask
+         6 | USER root
+
+  DE DÓNDE SALEN LAS REGLAS
+    .hadolint.yaml  (lineas 1 a 4)
+         1 | # hadolint (análisis estático de Dockerfile).
+         2 | # Reglas del plan: DL3006/DL3007 (imagen con versión fija), DL3002 (sin root),
+         3 | # DL3020 (COPY en vez de ADD), DL3042 (pip --no-cache-dir). Vienen activas por defecto.
+         4 | failure-threshold: warning
+    Las reglas DL3006, DL3007, DL3020, DL3042 y DL3002 vienen incluidas en hadolint. El archivo 
+    fija el umbral de falla (línea 4).
+
+
+entregables/1.3-evidencia-reglas/prueba-de-reglas/dockerfile/Dockerfile.violaciones:2 DL3006 warning: Always tag the version of an image explicitly
+entregables/1.3-evidencia-reglas/prueba-de-reglas/dockerfile/Dockerfile.violaciones:3 DL3007 warning: Using latest is prone to errors if the image will ever update. Pin the version explicitly to a release tag
+entregables/1.3-evidencia-reglas/prueba-de-reglas/dockerfile/Dockerfile.violaciones:4 DL3020 error: Use COPY instead of ADD for files and folders
+entregables/1.3-evidencia-reglas/prueba-de-reglas/dockerfile/Dockerfile.violaciones:5 DL3013 warning: Pin versions in pip. Instead of `pip install <package>` use `pip install <package>==<version>` or `pip install --requirement <requirements file>`
+entregables/1.3-evidencia-reglas/prueba-de-reglas/dockerfile/Dockerfile.violaciones:5 DL3042 warning: Avoid use of cache directory with pip. Use `pip install --no-cache-dir <package>`
+entregables/1.3-evidencia-reglas/prueba-de-reglas/dockerfile/Dockerfile.violaciones:6 DL3002 warning: Last USER should not be root
+entregables/1.3-evidencia-reglas/prueba-de-reglas/dockerfile/Dockerfile.violaciones:6 DL3066 info: Non-numeric user-id may not be resolvable by host system
+
+  QUÉ SIGNIFICA
+    DL3006 es 'imagen sin etiqueta' (línea 2), DL3007 'etiqueta latest' (línea 3), DL3020 
+    'ADD en lugar de COPY' (línea 4), DL3042 'pip sin --no-cache-dir' (línea 5) y DL3002 
+    'último USER es root' (línea 6).
+
+  >>> DETECTÓ la violación (código de salida 1)
+
+
+[15. yamllint sobre un YAML con violaciones]
+  Regla del documento 1.1 : key-duplicates, indentation, braces
+  Configuración           : .yamllint
+  Comando                 : yamllint -f parsable ejemplo_violaciones.yml
+
+  QUÉ VA A PASAR
+    Se le pasa a yamllint un YAML con una clave repetida, una sangría inconsistente y espacios 
+    de más dentro de llaves.
+
+  VIOLACIÓN INTENCIONAL (archivo de ejemplo)
+    entregables/1.3-evidencia-reglas/prueba-de-reglas/yaml/ejemplo_violaciones.yml  (lineas 2 a 10)
+         2 | servicio:
+         3 |   puerto: 8080
+         4 |   puerto: 9090
+         5 |   vacio: { clave: 1 }
+         6 | a:
+         7 |   b: 1
+         8 | c:
+         9 |     d: 2
+        10 | #comentario sin espacio inicial
+
+  DE DÓNDE SALEN LAS REGLAS
+    .yamllint  (lineas 1 a 3)
+         1 | # yamllint (sintaxis, sangría y claves duplicadas de la configuración YAML).
+         2 | extends: default
+         3 | rules:
+    La línea 2 (extends: default) incluye las reglas key-duplicates, indentation y braces, 
+    entre otras.
+
+
+entregables/1.3-evidencia-reglas/prueba-de-reglas/yaml/ejemplo_violaciones.yml:4:3: [error] duplication of key "puerto" in mapping (key-duplicates)
+entregables/1.3-evidencia-reglas/prueba-de-reglas/yaml/ejemplo_violaciones.yml:5:11: [error] too many spaces inside braces (braces)
+entregables/1.3-evidencia-reglas/prueba-de-reglas/yaml/ejemplo_violaciones.yml:5:20: [error] too many spaces inside braces (braces)
+entregables/1.3-evidencia-reglas/prueba-de-reglas/yaml/ejemplo_violaciones.yml:9:5: [error] wrong indentation: expected 2 but found 4 (indentation)
+entregables/1.3-evidencia-reglas/prueba-de-reglas/yaml/ejemplo_violaciones.yml:10:2: [warning] missing starting space in comment (comments)
+
+  QUÉ SIGNIFICA
+    key-duplicates (línea 4) indica que la clave 'puerto' aparece dos veces: YAML se quedaría 
+    con la última sin avisar. indentation (línea 9) indica que se esperaban 2 espacios y hay 
+    4.
+
+  >>> DETECTÓ la violación (código de salida 1)
+
+
+[16. docker compose config sobre un compose inválido]
+  Regla del documento 1.1 : Validez del compose
+  Configuración           : (comando de Docker Compose)
+  Comando                 : docker compose -f ejemplo_compose_invalido.yml config -q
+
+  QUÉ VA A PASAR
+    Se le pasa a Docker Compose un archivo en el que un servicio no tiene ni image ni build.
+
+  VIOLACIÓN INTENCIONAL (archivo de ejemplo)
+    entregables/1.3-evidencia-reglas/prueba-de-reglas/yaml/ejemplo_compose_invalido.yml  (lineas 2 a 4)
+         2 | services:
+         3 |   web:
+         4 |     ports: ["80:80"]
+
+  DE DÓNDE SALEN LAS REGLAS
+    La regla es el esquema de Docker Compose.
+
+
+service "web" has neither an image nor a build context specified: invalid compose project
+
+  QUÉ SIGNIFICA
+    Docker informa que el servicio 'web' no sabe de dónde sacar su imagen y rechaza el 
+    proyecto: un despliegue con este archivo habría fallado.
+
+  >>> DETECTÓ la violación (código de salida 15)
+
+
+------------------------------------------------------------------------
+RESUMEN
+------------------------------------------------------------------------
+  Bloque                                                         Resultado
+  ------                                                         ---------
+  1. Compuerta oficial del proyecto                              PASA
+  2. shellcheck (27 scripts)                                     PASA
+  3. bash -n (sintaxis de los 27 scripts)                        PASA
+  4. hadolint (9 Dockerfile)                                     PASA
+  5. yamllint (5 archivos YAML)                                  PASA
+  6. docker compose config -q                                    PASA
+  7. Reglas propias del sistema (9 archivos de prueba)           PASA
+  8. ruff sobre el ejemplo de Python                             DETECTO
+  9. pylint + secure-coding-standard sobre el ejemplo            DETECTO
+  10. bandit sobre el ejemplo                                    DETECTO
+  11. eslint sobre el ejemplo de JavaScript                      DETECTO
+  12. shellcheck sobre el ejemplo de shell                       DETECTO
+  13. bash -n sobre un script con sintaxis inválida             DETECTO
+  14. hadolint sobre un Dockerfile con violaciones               DETECTO
+  15. yamllint sobre un YAML con violaciones                     DETECTO
+  16. docker compose config sobre un compose inválido           DETECTO
+
+  Todo en orden: el código supera las reglas y las reglas detectan las violaciones.
+
+  MAPA: DE DÓNDE SALE CADA REGLA
+    Herramienta Archivo de reglas        Qué hay ahí
+    ----------- -----------------        -----------
+    ruff        ruff.toml                familias activas (línea 10), complejidad máxima (15), excepciones de tests (29)
+    pylint      .pylintrc                plugin de seguridad (8), permisos (16-18), límites de tamaño (35-38)
+    bandit      .bandit                  sin lista de pruebas: aplica todas las de bandit
+    eslint      eslint.config.js         reglas de seguridad y XSS (66-80), calidad (83-84)
+    shellcheck  .shellcheckrc            dialecto bash; las reglas SC vienen con la herramienta
+    hadolint    .hadolint.yaml           umbral de falla; las reglas DL vienen con la herramienta
+    yamllint    .yamllint                conjunto estándar (extends: default) con 3 ajustes
+    propias     tests/*.py               cada archivo de prueba ES una regla del sistema
+    compuerta   scripts/pruebas_de_codigo_estatico.sh puntaje mínimo (108), carpetas excluidas (22), línea de base (59)

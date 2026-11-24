@@ -1,0 +1,9 @@
+# Comando: docker run --rm -v /home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS-20261122T063425Z-1-001/NeuralDefender-IyCS/Elastic-SIEM-Project:/w -w /w hadolint/hadolint hadolint entregables/1.3-evidencia-reglas/prueba-de-reglas/dockerfile/Dockerfile.violaciones
+entregables/1.3-evidencia-reglas/prueba-de-reglas/dockerfile/Dockerfile.violaciones:2 DL3006 warning: Always tag the version of an image explicitly
+entregables/1.3-evidencia-reglas/prueba-de-reglas/dockerfile/Dockerfile.violaciones:3 DL3007 warning: Using latest is prone to errors if the image will ever update. Pin the version explicitly to a release tag
+entregables/1.3-evidencia-reglas/prueba-de-reglas/dockerfile/Dockerfile.violaciones:4 DL3020 error: Use COPY instead of ADD for files and folders
+entregables/1.3-evidencia-reglas/prueba-de-reglas/dockerfile/Dockerfile.violaciones:5 DL3013 warning: Pin versions in pip. Instead of `pip install <package>` use `pip install <package>==<version>` or `pip install --requirement <requirements file>`
+entregables/1.3-evidencia-reglas/prueba-de-reglas/dockerfile/Dockerfile.violaciones:5 DL3042 warning: Avoid use of cache directory with pip. Use `pip install --no-cache-dir <package>`
+entregables/1.3-evidencia-reglas/prueba-de-reglas/dockerfile/Dockerfile.violaciones:6 DL3002 warning: Last USER should not be root
+entregables/1.3-evidencia-reglas/prueba-de-reglas/dockerfile/Dockerfile.violaciones:6 DL3066 info: Non-numeric user-id may not be resolvable by host system
+# Codigo de salida: 1

@@ -1,0 +1,545 @@
+newman
+
+NeuralDefender - Colección 1 (gateway)
+
+❏ 8.1 Autenticación y sesión
+↳ CP-SERV-11 | Sonda de salud pública
+  GET http://127.0.0.1:18080/api/v1/healthz [200 OK, 217B, 26ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-11 | Código 200
+  ✓  CP-SERV-11 | Contrato: status e incidents_file
+  ✓  CP-SERV-11 | Tipos de datos
+  ✓  CP-SERV-11 | status = ok
+
+↳ CP-SERV-04 | Login con JSON mal formado
+  POST http://127.0.0.1:18080/api/v1/login [400 BAD REQUEST, 227B, 7ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-04 | Código 400
+  ✓  CP-SERV-04 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-04 | Mensaje: se esperaba un cuerpo JSON
+
+↳ CP-SERV-05 | Inicio de sesión con campos faltantes
+  POST http://127.0.0.1:18080/api/v1/login [401 UNAUTHORIZED, 239B, 6ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-05 | Código 401
+  ✓  CP-SERV-05 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-05 | Mensaje genérico de credenciales
+
+↳ CP-SERV-02 | Contraseña incorrecta
+  POST http://127.0.0.1:18080/api/v1/login [401 UNAUTHORIZED, 239B, 57ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-02 | Código 401
+  ✓  CP-SERV-02 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-02 | Mensaje genérico y sin sesión
+
+↳ CP-SERV-03 | Usuario inexistente
+  POST http://127.0.0.1:18080/api/v1/login [401 UNAUTHORIZED, 239B, 8ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-03 | Código 401
+  ✓  CP-SERV-03 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-03 | Mismo mensaje que con contraseña incorrecta
+
+↳ CP-SERV-08 | Consulta de la sesión sin haber iniciado sesión
+  GET http://127.0.0.1:18080/api/v1/me [401 UNAUTHORIZED, 232B, 3ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-08 | Código 401
+  ✓  CP-SERV-08 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-08 | Mensaje: se requiere autenticación
+
+↳ CP-SERV-19 | Listado de incidentes sin sesión •
+  GET http://127.0.0.1:18080/api/v1/incidents [401 UNAUTHORIZED, 232B, 3ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-19 | Código 401
+  ✓  CP-SERV-19 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-19 | No devuelve incidentes
+
+↳ CP-SERV-01 | Inicio de sesión válido (analista)
+  POST http://127.0.0.1:18080/api/v1/login [200 OK, 878B, 85ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-01 | Código 200
+  ✓  CP-SERV-01 | Contrato de la respuesta
+  ✓  CP-SERV-01 | Tipos de datos
+  ✓  CP-SERV-01 | Usuario, rol analyst y permiso decidir
+  ✓  CP-SERV-01 | Cookie de sesión HttpOnly y SameSite=Lax
+
+↳ CP-SERV-07 | Datos de la sesión activa
+  GET http://127.0.0.1:18080/api/v1/me [200 OK, 835B, 6ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-07 | Código 200
+  ✓  CP-SERV-07 | Contrato de la respuesta
+  ✓  CP-SERV-07 | Tipos de datos
+  ✓  CP-SERV-07 | Ningún usuario puede ejecutar acciones
+
+↳ CP-SERV-10 | Cierre de sesión sin token CSRF
+  POST http://127.0.0.1:18080/api/v1/logout [403 FORBIDDEN, 261B, 3ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-10 | Código 403
+  ✓  CP-SERV-10 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-10 | El motivo es el token CSRF
+
+↳ CP-SERV-09a | Cierre de sesión
+  POST http://127.0.0.1:18080/api/v1/logout [204 NO CONTENT, 284B, 6ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  CP-SERV-09a | Código 204
+  ✓  CP-SERV-09a | Sin cuerpo
+
+↳ CP-SERV-09b | Consulta después del cierre
+  GET http://127.0.0.1:18080/api/v1/me [401 UNAUTHORIZED, 232B, 3ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-09b | La sesión quedó cerrada: 401
+  ✓  CP-SERV-09b | Mensaje: se requiere autenticación
+
+❏ 8.2 Control de acceso por rol
+↳ Preparación | Sesión de observador
+  POST http://127.0.0.1:18080/api/v1/login [200 OK, 869B, 57ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  Preparación | Sesión de observador abierta
+
+↳ CP-SERV-12 | El observador consulta incidentes
+  GET http://127.0.0.1:18080/api/v1/incidents [200 OK, 39.48kB, 9ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-12 | Código 200
+  ✓  CP-SERV-12 | Contrato: lista de incidentes
+
+↳ CP-SERV-13 | El observador intenta decidir
+  POST http://127.0.0.1:18080/api/v1/decision [403 FORBIDDEN, 698B, 5ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-13 | Código 403
+  ✓  CP-SERV-13 | Contrato: error y permiso_requerido
+  ✓  CP-SERV-13 | Falta el permiso decidir
+
+↳ CP-SERV-17 | El observador intenta cargar un documento
+  POST http://127.0.0.1:18080/api/v1/memoria/documentos [403 FORBIDDEN, 698B, 5ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-17 | Código 403
+  ✓  CP-SERV-17 | Contrato: error y permiso_requerido
+  ✓  CP-SERV-17 | Falta el permiso decidir
+
+↳ Preparación | Sesión de auditor
+  POST http://127.0.0.1:18080/api/v1/login [200 OK, 884B, 59ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  Preparación | Sesión de auditor abierta
+
+↳ CP-SERV-14 | El auditor verifica la integridad
+  GET http://127.0.0.1:18080/api/v1/audit/verify [200 OK, 732B, 6ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-14 | Código 200
+  ✓  CP-SERV-14 | Contrato del resultado
+  ✓  CP-SERV-14 | Tipos de datos
+  ✓  CP-SERV-14 | La cadena está íntegra
+
+↳ CP-SERV-16 | El auditor intenta decidir
+  POST http://127.0.0.1:18080/api/v1/decision [403 FORBIDDEN, 694B, 6ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-16 | Código 403
+  ✓  CP-SERV-16 | Contrato: error y permiso_requerido
+  ✓  CP-SERV-16 | Falta el permiso decidir
+
+↳ Preparación | Sesión de analista
+  POST http://127.0.0.1:18080/api/v1/login [200 OK, 878B, 54ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  Preparación | Sesión de analista abierta
+
+↳ CP-SERV-15 | El analista intenta verificar la integridad
+  GET http://127.0.0.1:18080/api/v1/audit/verify [403 FORBIDDEN, 714B, 5ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-15 | Código 403
+  ✓  CP-SERV-15 | Contrato: error y permiso_requerido
+  ✓  CP-SERV-15 | Falta el permiso verificar_cadena
+
+❏ 8.3 Incidentes
+↳ CP-SERV-18 | Contrato y reglas del listado de incidentes
+  GET http://127.0.0.1:18080/api/v1/incidents [200 OK, 39.48kB, 8ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-18 | Código 200 en menos de 2 s
+  ✓  CP-SERV-18 | Cabecera Cache-Control: no-store
+  ✓  CP-SERV-18 | Contrato del reporte
+  ✓  CP-SERV-18 | Tipos de datos del reporte
+  ✓  CP-SERV-18 | incident_count coincide con la lista
+  ✓  CP-SERV-18 | analyst_mode, si está, tiene un valor admitido
+  ✓  CP-SERV-18 | Contrato y tipos de cada incidente
+  ✓  CP-SERV-18 | Cada acción tiene un estado admitido
+
+↳ CP-SERV-20 | Detalle de un incidente existente
+  GET http://127.0.0.1:18080/api/v1/incidents/INC-SCAN-172.18.0.7-8e58721f [200 OK, 11.82kB, 9ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-20 | Código 200
+  ✓  CP-SERV-20 | Contrato del incidente
+  ✓  CP-SERV-20 | Tipos de datos
+  ✓  CP-SERV-20 | Es el incidente solicitado
+
+↳ CP-SERV-21 | Incidente inexistente
+  GET http://127.0.0.1:18080/api/v1/incidents/INC-NO-EXISTE [404 NOT FOUND, 657B, 9ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-21 | Código 404
+  ✓  CP-SERV-21 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-21 | El mensaje menciona el identificador
+
+↳ CP-SERV-22 | Intento de recorrer directorios
+  GET http://127.0.0.1:18080/api/v1/incidents/..%2f..%2fetc%2fpasswd [404 NOT FOUND, 752B, 4ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-22 | Código 404
+  ✓  CP-SERV-22 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-22 | No expone archivos del sistema
+
+❏ 8.4 Decisiones
+↳ CP-SERV-23 | Registrar una aprobación
+  POST http://127.0.0.1:18080/api/v1/decision [201 CREATED, 1.25kB, 12ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-23 | Código 201 en menos de 500 ms
+  ✓  CP-SERV-23 | Contrato del registro
+  ✓  CP-SERV-23 | Tipos de datos
+  ✓  CP-SERV-23 | Se registró la decisión pedida
+  ✓  CP-SERV-23 | Firmada con el usuario de la sesión
+
+↳ CP-SERV-24 | Valor de decisión no admitido
+  POST http://127.0.0.1:18080/api/v1/decision [400 BAD REQUEST, 662B, 4ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-24 | Código 400
+  ✓  CP-SERV-24 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-24 | Indica los valores admitidos
+
+↳ CP-SERV-25 | Identificadores numéricos
+  POST http://127.0.0.1:18080/api/v1/decision [400 BAD REQUEST, 649B, 4ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-25 | Código 400
+  ✓  CP-SERV-25 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-25 | Mensaje: faltan incident_id / action_id
+
+↳ CP-SERV-26 | Nota en el límite permitido (500 caracteres)
+  POST http://127.0.0.1:18080/api/v1/decision [201 CREATED, 1.73kB, 11ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-26 | Código 201
+  ✓  CP-SERV-26 | El registro incluye la nota
+  ✓  CP-SERV-26 | La nota tiene los 500 caracteres
+
+↳ CP-SERV-27 | Nota por encima del límite (501 caracteres)
+  POST http://127.0.0.1:18080/api/v1/decision [400 BAD REQUEST, 652B, 5ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-27 | Código 400
+  ✓  CP-SERV-27 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-27 | Mensaje: note supera 500 caracteres (501)
+
+↳ CP-SERV-28 | Acción inexistente en el incidente
+  POST http://127.0.0.1:18080/api/v1/decision [404 NOT FOUND, 709B, 8ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-28 | Código 404
+  ✓  CP-SERV-28 | Contrato: error y sin registro
+  ✓  CP-SERV-28 | El mensaje menciona la acción
+
+↳ CP-SERV-29 | Decisión sin token CSRF
+  POST http://127.0.0.1:18080/api/v1/decision [403 FORBIDDEN, 261B, 3ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-29 | Código 403
+  ✓  CP-SERV-29 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-29 | El motivo es el token CSRF
+
+↳ CP-SERV-30 | Cuerpo de más de 64 KB
+  POST http://127.0.0.1:18080/api/v1/decision [413 REQUEST ENTITY TOO LARGE, 281B, 2ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-30 | Código 413
+  ✓  CP-SERV-30 | Contrato: error y status
+
+↳ CP-SERV-31 | El historial incluye la decisión registrada
+  GET http://127.0.0.1:18080/api/v1/decisions [200 OK, 2.26kB, 7ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-31 | Código 200
+  ✓  CP-SERV-31 | Es una lista de decisiones
+  ✓  CP-SERV-31 | Contiene la aprobación registrada
+
+↳ CP-SERV-32 | No existe forma de borrar decisiones
+  DELETE http://127.0.0.1:18080/api/v1/decisions [405 METHOD NOT ALLOWED, 687B, 5ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-32 | Código 405
+  ✓  CP-SERV-32 | Contrato: error y status
+
+❏ 8.5 Auditoría y reportes
+↳ CP-SERV-39a | Decisión con una nota que parece una fórmula
+  POST http://127.0.0.1:18080/api/v1/decision [201 CREATED, 1.25kB, 11ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-39a | Código 201
+  ✓  CP-SERV-39a | La nota se registró sin modificar
+
+↳ Preparación | Sesión de auditor (reportes)
+  POST http://127.0.0.1:18080/api/v1/login [200 OK, 884B, 55ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  Preparación | Sesión de auditor abierta
+
+↳ CP-SERV-33 | La cadena sigue íntegra tras registrar decisiones
+  GET http://127.0.0.1:18080/api/v1/audit/verify [200 OK, 699B, 6ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-33 | Código 200
+  ✓  CP-SERV-33 | Contrato y tipos
+  ✓  CP-SERV-33 | La cadena sigue íntegra
+  ✓  CP-SERV-33 | Hay más registros que en CP-SERV-14
+
+↳ CP-SERV-34 | Reporte en JSON
+  GET http://127.0.0.1:18080/api/v1/reportes?formato=json&desde=2026-01-01&hasta=2026-11-23 [200 OK, 5.95kB, 8ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  CP-SERV-34 | Código 200
+  ✓  CP-SERV-34 | Contrato del reporte
+  ✓  CP-SERV-34 | Tipos de datos
+  ✓  CP-SERV-34 | Incluye las decisiones de hoy
+
+↳ CP-SERV-35 | Reporte en CSV
+  GET http://127.0.0.1:18080/api/v1/reportes?formato=csv&desde=2026-01-01&hasta=2026-11-23 [200 OK, 2.92kB, 6ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  CP-SERV-35 | Código 200
+  ✓  CP-SERV-35 | El contenido es CSV
+  ✓  CP-SERV-35 | Se descarga como archivo .csv
+  ✓  CP-SERV-35 | Tiene cabecera y filas de datos
+
+↳ CP-SERV-36 | Formato no admitido
+  GET http://127.0.0.1:18080/api/v1/reportes?formato=xml [400 BAD REQUEST, 650B, 6ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  CP-SERV-36 | Código 400
+  ✓  CP-SERV-36 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-36 | Indica los formatos admitidos
+
+↳ CP-SERV-38 | Rango de fechas invertido
+  GET http://127.0.0.1:18080/api/v1/reportes?desde=2026-02-01&hasta=2026-01-01 [400 BAD REQUEST, 648B, 6ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  CP-SERV-38 | Código 400
+  ✓  CP-SERV-38 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-38 | Indica que el rango está invertido
+
+↳ CP-SERV-39b | El CSV neutraliza la fórmula
+  GET http://127.0.0.1:18080/api/v1/reportes?formato=csv&desde=2026-01-01&hasta=2026-11-23 [200 OK, 2.92kB, 6ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  CP-SERV-39b | Código 200
+  ✓  CP-SERV-39b | El CSV contiene la nota de 39a
+  ✓  CP-SERV-39b | La celda empieza con apóstrofo
+  ✓  CP-SERV-39b | Ninguna celda empieza con =
+
+❏ 8.6 Memoria del agente
+↳ Preparación | Sesión de analista (memoria)
+  POST http://127.0.0.1:18080/api/v1/login [200 OK, 876B, 53ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  Preparación | Sesión de analista abierta
+
+↳ CP-SERV-40 | Cargar un documento
+  POST http://127.0.0.1:18080/api/v1/memoria/documentos [201 CREATED, 766B, 7ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-40 | Código 201
+  ✓  CP-SERV-40 | Contrato del documento
+  ✓  CP-SERV-40 | Tipos y formato del doc_id
+  ✓  CP-SERV-40 | Autor tomado de la sesión
+
+↳ CP-SERV-41 | Título por encima del límite (121 caracteres)
+  POST http://127.0.0.1:18080/api/v1/memoria/documentos [400 BAD REQUEST, 655B, 6ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-41 | Código 400
+  ✓  CP-SERV-41 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-41 | Mensaje con el límite y el largo
+
+↳ CP-SERV-42 | Proponer una lección
+  POST http://127.0.0.1:18080/api/v1/memoria/lecciones [201 CREATED, 935B, 7ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-42 | Código 201
+  ✓  CP-SERV-42 | Contrato de la lección
+  ✓  CP-SERV-42 | Formato del leccion_id
+  ✓  CP-SERV-42 | La lección nace propuesta
+
+↳ CP-SERV-43 | Tipo de ataque desconocido
+  POST http://127.0.0.1:18080/api/v1/memoria/lecciones [400 BAD REQUEST, 655B, 6ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-43 | Código 400
+  ✓  CP-SERV-43 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-43 | Mensaje: tipo de ataque desconocido
+
+↳ CP-SERV-44 | Texto de lección por encima del límite (401 caracteres)
+  POST http://127.0.0.1:18080/api/v1/memoria/lecciones [400 BAD REQUEST, 657B, 6ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-44 | Código 400
+  ✓  CP-SERV-44 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-44 | No se creó la lección
+
+↳ CP-SERV-45 | Aprobar la lección propuesta
+  POST http://127.0.0.1:18080/api/v1/memoria/lecciones/LEC-397dbe6b07/revision [200 OK, 969B, 8ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-45 | Código 200
+  ✓  CP-SERV-45 | Contrato de la lección
+  ✓  CP-SERV-45 | Es la lección de CP-SERV-42
+  ✓  CP-SERV-45 | La lección quedó aprobada
+
+↳ CP-SERV-46 | Reabrir una lección ya revisada
+  POST http://127.0.0.1:18080/api/v1/memoria/lecciones/LEC-397dbe6b07/revision [400 BAD REQUEST, 653B, 7ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-46 | Código 400
+  ✓  CP-SERV-46 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-46 | Indica que ya fue revisada
+
+↳ CP-SERV-47 | Identificador de lección con formato inválido
+  POST http://127.0.0.1:18080/api/v1/memoria/lecciones/XYZ/revision [400 BAD REQUEST, 665B, 4ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-47 | Código 400
+  ✓  CP-SERV-47 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-47 | Mensaje: identificador inválido
+
+↳ CP-SERV-48 | Lección inexistente
+  POST http://127.0.0.1:18080/api/v1/memoria/lecciones/LEC-0000000000/revision [404 NOT FOUND, 662B, 6ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-48 | Código 404
+  ✓  CP-SERV-48 | Contrato: campo error de tipo texto
+  ✓  CP-SERV-48 | El mensaje identifica la lección
+
+↳ CP-SERV-49 | La memoria refleja lo cargado
+  GET http://127.0.0.1:18080/api/v1/memoria [200 OK, 1.14kB, 7ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-49 | Código 200
+  ✓  CP-SERV-49 | Contrato: documentos y lecciones
+  ✓  CP-SERV-49 | Incluye el documento de CP-SERV-40
+  ✓  CP-SERV-49 | Incluye la lección aprobada de CP-SERV-42
+
+❏ 9. Bloqueo por intentos (al final)
+↳ CP-SERV-06 | Bloqueo tras 5 intentos fallidos
+  POST http://127.0.0.1:18080/api/v1/login [401 UNAUTHORIZED, 239B, 58ms]
+  ┌
+  │ 'Intento 1: HTTP 401'
+  └
+  POST http://127.0.0.1:18080/api/v1/login [401 UNAUTHORIZED, 239B, 52ms]
+  ┌
+  │ 'Intento 2: HTTP 401'
+  └
+  POST http://127.0.0.1:18080/api/v1/login [401 UNAUTHORIZED, 239B, 53ms]
+  ┌
+  │ 'Intento 3: HTTP 401'
+  └
+  POST http://127.0.0.1:18080/api/v1/login [401 UNAUTHORIZED, 239B, 54ms]
+  ┌
+  │ 'Intento 4: HTTP 401'
+  └
+  POST http://127.0.0.1:18080/api/v1/login [401 UNAUTHORIZED, 239B, 58ms]
+  ┌
+  │ 'Intento 5: HTTP 401'
+  └
+  POST http://127.0.0.1:18080/api/v1/login [429 TOO MANY REQUESTS, 278B, 6ms]
+  ✓  [Global] Tiempo de respuesta menor a 2 s (RNF-RD-01)
+  ✓  [Global] Sin trazas ni rutas internas (RQ-SEC-18)
+  ✓  [Global] La API responde JSON
+  ✓  CP-SERV-06 | Los intentos 1 a 5 responden 401
+  ✓  CP-SERV-06 | El 6.º intento responde 429
+  ✓  CP-SERV-06 | Contrato: error y reintentar_en
+  ✓  CP-SERV-06 | La espera inicial es de 60 s
+
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│                         │         executed │           failed │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              iterations │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│                requests │               60 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│            test-scripts │              110 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│      prerequest-scripts │                7 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              assertions │              330 │                0 │
+├─────────────────────────┴──────────────────┴──────────────────┤
+│ total run duration: 2s                                        │
+├───────────────────────────────────────────────────────────────┤
+│ total data received: 108.36kB (approx)                        │
+├───────────────────────────────────────────────────────────────┤
+│ average response time: 16ms [min: 2ms, max: 85ms, s.d.: 21ms] │
+└───────────────────────────────────────────────────────────────┘

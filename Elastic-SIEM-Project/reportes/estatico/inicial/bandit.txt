@@ -1,0 +1,33 @@
+[main]	INFO	Found project level .bandit file: ./.bandit
+[main]	INFO	Using command line arg for selected targets
+Run started:2026-11-22 15:30:25.085232+00:00
+
+Test results:
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'X-Internal-Token'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: ./libs/siem_servicios.py:43:19
+42	PUERTO_INTERNO = 8000
+43	ENCABEZADO_TOKEN = "X-Internal-Token"  # noqa: S105 — el NOMBRE del encabezado, no un secreto
+44	TOKEN_MIN = 32
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 6124
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 1
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 1
+		High: 0
+Files skipped (0):

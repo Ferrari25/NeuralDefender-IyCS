@@ -1,0 +1,48 @@
+$kind: http-request
+name: CP-SERV-42 | Proponer una lección
+url: "{{url_gateway}}/api/v1/memoria/lecciones"
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+body:
+  type: json
+  content: '{"texto": "Los escaneos desde 10.0.0.9 son del monitoreo interno.", "attack_type": "port_scan", "ip": "10.0.0.9"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-42 | Proponer una lección
+      // Requisitos: RF-MEM-03 (lección escrita a mano), RF-MEM-04 (nace propuesta)
+      // Técnica: partición de equivalencia, partición válida
+      // Petición: POST /api/v1/memoria/lecciones con texto, tipo de ataque e IP
+      // Esperado: 201 con la lección en estado "propuesta". Todavía no afecta
+      // a ningún análisis: necesita aprobación (CP-SERV-45).
+      // Efecto: guarda el leccion_id para CP-SERV-45 y 46.
+      // ============================================================
+
+      // 1. Código: 201.
+      pm.test("CP-SERV-42 | Código 201", function () {
+          pm.response.to.have.status(201);
+      });
+
+      const datos = pm.response.json();
+
+      // 2. Contrato de la lección creada.
+      pm.test("CP-SERV-42 | Contrato de la lección", function () {
+          pm.expect(datos).to.include.all.keys("ok", "leccion");
+          pm.expect(datos.leccion).to.include.all.keys("leccion_id", "estado");
+      });
+
+      // 3. Formato del identificador: LEC- más 10 caracteres hexadecimales.
+      pm.test("CP-SERV-42 | Formato del leccion_id", function () {
+          pm.expect(datos.leccion.leccion_id).to.match(/^LEC-[0-9a-f]{10}$/);
+      });
+
+      // 4. Regla: toda lección nace en estado propuesta (RF-MEM-04).
+      pm.test("CP-SERV-42 | La lección nace propuesta", function () {
+          pm.expect(datos.leccion.estado).to.eql("propuesta");
+      });
+
+      pm.environment.set("leccion_id", datos.leccion.leccion_id);
+    language: text/javascript
+order: 4000

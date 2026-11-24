@@ -1,0 +1,8 @@
+## script ORIGINAL: eslint --no-error-on-unmatched-pattern 'static/**/*.js'
+codigo de salida: 0 (sin archivos analizados, sin aviso)
+
+## script CORREGIDO: npm run lint:js:report
+codigo de salida: 0
+archivos que analiza ahora:
+  services/gateway/static/app.js
+  services/gateway/static/login.js

@@ -335,6 +335,7 @@ function render() {
   const mode = lastData.analyst_mode;
   const badge = document.getElementById("modeBadge");
   if (Object.hasOwn(NOMBRE_DEL_MODELO, mode ?? "")) {
+    // eslint-disable-next-line security/detect-object-injection -- `mode` se validó con Object.hasOwn(NOMBRE_DEL_MODELO, mode) en el if de arriba
     pintar(badge, html`<span class="punto"></span> IA (${NOMBRE_DEL_MODELO[mode]})`);
     badge.className = "mode-badge mode-gemini";
   } else if (mode === "fallback") {
@@ -425,21 +426,26 @@ function renderSummary(incs) {
     ${barra}`);
 }
 
+const MAX_INCIDENTES_POR_VISTA = 100;
+
 function renderEventsTable(incs) {
   const wrap = document.getElementById("eventsTableWrap");
   if (!incs.length) {
     pintar(wrap, html`<div class="empty">No hay eventos que coincidan con el filtro.</div>`);
     return;
   }
+  // H-3 (RNF-RD-06): como máximo 100 incidentes por vista; el resto se alcanza con los filtros.
+  const visibles = incs.slice(0, MAX_INCIDENTES_POR_VISTA);
   pintar(wrap, html`
     <table class="events">
       <thead><tr>
         <th>ID</th><th>Severidad</th><th>IP origen</th><th>Tipo de ataque</th><th>Regla disparada</th><th>Análisis de IA</th>
       </tr></thead>
       <tbody>
-        ${incs.map(rowHtml)}
+        ${visibles.map(rowHtml)}
       </tbody>
-    </table>`);
+    </table>
+    ${incs.length > visibles.length ? html`<div class="meta limite-vista">Se muestran ${visibles.length} de ${incs.length} incidentes: usá los filtros para ver el resto.</div>` : ""}`);
 }
 
 // "Resuelto" no es un campo que mande el servidor: se deriva de si ALGUNA

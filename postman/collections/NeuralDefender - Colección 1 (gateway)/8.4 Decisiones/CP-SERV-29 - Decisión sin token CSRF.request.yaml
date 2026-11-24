@@ -1,0 +1,39 @@
+$kind: http-request
+name: CP-SERV-29 | Decisión sin token CSRF
+url: "{{url_gateway}}/api/v1/decision"
+method: POST
+body:
+  type: json
+  content: '{"incident_id": "{{incident_id}}", "action_id": "{{action_id}}", "decision": "approved"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-29 | Decisión sin token CSRF
+      // Requisito: RQ-SEC-11
+      // Técnica: partición de equivalencia, partición inválida
+      // Precondición: sesión de analista abierta (tiene permiso para decidir)
+      // Petición: POST /api/v1/decision válida pero SIN X-CSRFToken
+      // Esperado: 403. Aunque el usuario tenga permiso, sin el token CSRF
+      // la decisión no se registra. Así otra página web no puede decidir
+      // en nombre del analista.
+      // ============================================================
+
+      // 1. Código: 403.
+      pm.test("CP-SERV-29 | Código 403", function () {
+          pm.response.to.have.status(403);
+      });
+
+      const datos = pm.response.json();
+
+      // 2 y 3. Contrato y tipo del error.
+      pm.test("CP-SERV-29 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      // 4. Regla: el motivo es el token CSRF.
+      pm.test("CP-SERV-29 | El motivo es el token CSRF", function () {
+          pm.expect(datos.error).to.include("token CSRF");
+      });
+    language: text/javascript
+order: 7000

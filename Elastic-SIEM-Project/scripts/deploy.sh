@@ -68,6 +68,7 @@ paso() { PASO_ACTUAL="$1"; printf '\n\033[1;36m━━ %s ━━\033[0m\n' "$1"; 
 ok()   { printf '  \033[32m✔\033[0m %s\n' "$1"; }
 mal()  { printf '  \033[31m✗\033[0m %s\n' "$1"; }
 
+# shellcheck disable=SC2154 # rc se asigna dentro del propio trap (rc=$?)
 trap 'rc=$?; if (( rc != 0 )); then mal "deploy.sh se cortó en el paso «$PASO_ACTUAL» (código $rc). El panel NO quedó corriendo."; fi' EXIT
 
 # ─── 1 · Requisitos ──────────────────────────────────────────────────────────
@@ -109,6 +110,7 @@ DE_ROOT=$(find . -path ./node_modules -prune -o -path ./.devtools -prune -o -pat
 # caso que se quiere arreglar— y con `set -e` eso cortaría el script.)
 if [[ -n "$DE_ROOT" ]]; then
   echo "  Hay archivos del proyecto que no son tuyos (corrida anterior con sudo); se corrigen:"
+  # shellcheck disable=SC2001 # se antepone sangría a CADA línea de un texto multilínea; ${var//} no lo hace
   echo "$DE_ROOT" | sed 's/^/    /'
   if ! echo "$DE_ROOT" | xargs -d '\n' sudo chown -R "$(id -u):$(id -g)"; then
     mal "no se pudieron corregir los permisos (sudo chown falló)."

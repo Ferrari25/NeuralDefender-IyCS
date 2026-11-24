@@ -1,0 +1,40 @@
+$kind: http-request
+name: CP-SERV-41 | Título por encima del límite (121 caracteres)
+url: "{{url_gateway}}/api/v1/memoria/documentos"
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+body:
+  type: json
+  content: '{"titulo": "{{titulo_121}}", "contenido": "Contenido de prueba"}'
+scripts:
+  - type: beforeRequest
+    code: |-
+      // Genera un título de 121 caracteres: uno más que el límite de 120.
+      pm.variables.set("titulo_121", "T".repeat(121));
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-41 | Título por encima del límite
+      // Requisito: RF-MEM-05
+      // Técnica: análisis de valores límite, primer valor inválido (121)
+      // Petición: POST /api/v1/memoria/documentos con un título de 121 caracteres
+      // Esperado: 400 con el límite y el largo recibido
+      // ============================================================
+
+      pm.test("CP-SERV-41 | Código 400", function () {
+          pm.response.to.have.status(400);
+      });
+
+      const datos = pm.response.json();
+
+      pm.test("CP-SERV-41 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      pm.test("CP-SERV-41 | Mensaje con el límite y el largo", function () {
+          pm.expect(datos.error).to.eql("'titulo' supera 120 caracteres (121)");
+      });
+    language: text/javascript
+order: 3000

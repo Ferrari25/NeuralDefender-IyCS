@@ -42,10 +42,16 @@ from __future__ import annotations
 
 from flask import jsonify, request
 
+# pylint no resuelve los módulos hermanos del servicio y los toma por de terceros: el orden
+# lo fija ruff (isort), así que wrong-import-order es un falso positivo.
 import reportes
-from cadena import append_jsonl, read_jsonl, verificar_cadena
-from siem_lib import now_iso
-from siem_servicios import crear_servicio, cuerpo_json
+from cadena import (  # pylint: disable=wrong-import-order
+    append_jsonl,
+    read_jsonl,
+    verificar_cadena,
+)
+from siem_lib import now_iso  # pylint: disable=wrong-import-order
+from siem_servicios import crear_servicio, cuerpo_json  # pylint: disable=wrong-import-order
 
 DECISIONS_FILE = "data/decisions.jsonl"
 HISTORY_FILE = "data/analysis_history.jsonl"

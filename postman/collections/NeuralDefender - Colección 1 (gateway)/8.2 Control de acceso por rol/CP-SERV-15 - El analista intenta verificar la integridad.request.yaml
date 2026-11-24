@@ -1,0 +1,34 @@
+$kind: http-request
+name: CP-SERV-15 | El analista intenta verificar la integridad
+url: "{{url_gateway}}/api/v1/audit/verify"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-15 | El analista intenta verificar la integridad
+      // Requisito: RF-AUT-02 (verificar la integridad es del auditor)
+      // Técnica: tabla de decisión (rol analyst, operación verificar)
+      // Precondición: sesión de analista
+      // Petición: GET /api/v1/audit/verify
+      // Esperado: 403 con permiso_requerido = "verificar_cadena"
+      // ============================================================
+
+      // 1. Código: 403.
+      pm.test("CP-SERV-15 | Código 403", function () {
+          pm.response.to.have.status(403);
+      });
+
+      const datos = pm.response.json();
+
+      // 2 y 3. Contrato del error.
+      pm.test("CP-SERV-15 | Contrato: error y permiso_requerido", function () {
+          pm.expect(datos).to.include.all.keys("error", "permiso_requerido");
+      });
+
+      // 4. Regla: al analista le falta el permiso verificar_cadena.
+      pm.test("CP-SERV-15 | Falta el permiso verificar_cadena", function () {
+          pm.expect(datos.permiso_requerido).to.eql("verificar_cadena");
+      });
+    language: text/javascript
+order: 9000

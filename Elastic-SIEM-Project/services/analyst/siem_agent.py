@@ -165,7 +165,7 @@ def historical_context(incident: dict, decisions: list[dict]) -> str:
         if d.get("incident_id") == incident.get("incident_id"):
             continue
         d_ips = {d.get("source_ip")} | set(d.get("attacker_ips") or [])
-        if not (d_ips & ips):
+        if not d_ips & ips:
             continue
         if d.get("action_id") in seen_actions:
             continue
@@ -496,7 +496,7 @@ def analyze_incident(client, incident: dict, historical: str, campaign: str | No
     if client is not None:
         try:
             analysis = _llm_analysis(client, incident, historical, campaign, memoria, timeout)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught  # cualquier fallo del LLM cae al fallback
             print(f"  [WARN] LLM falló en {incident['incident_id']} ({e}). Usando fallback.")
             analysis = _fallback_analysis(incident)
     else:

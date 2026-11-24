@@ -1,0 +1,5 @@
+# shellcheck (análisis estático de los scripts de bash).
+# Las reglas de seguridad y calidad del plan (SC2086 variables sin comillas,
+# SC2035 globbing como opción, SC2164 cd sin control) vienen activas por defecto.
+shell=bash
+external-sources=true

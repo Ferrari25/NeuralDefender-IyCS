@@ -1,0 +1,16 @@
+# Comando: hadolint muestra_hadolint_solo_info.Dockerfile   (lee .hadolint.yaml: failure-threshold: warning)
+entregables/1.3-evidencia-reglas/configuracion-efectiva/muestra_hadolint_solo_info.Dockerfile:3 DL3059 info: Multiple consecutive `RUN` instructions. Consider consolidation.
+codigo de salida: 0
+
+# Comando: hadolint --failure-threshold info muestra_hadolint_solo_info.Dockerfile
+entregables/1.3-evidencia-reglas/configuracion-efectiva/muestra_hadolint_solo_info.Dockerfile:3 DL3059 info: Multiple consecutive `RUN` instructions. Consider consolidation.
+codigo de salida: 1
+
+# hadolint --version
+Haskell Dockerfile Linter 2.15.1
+
+# Contenido de .hadolint.yaml
+# hadolint (análisis estático de Dockerfile).
+# Reglas del plan: DL3006/DL3007 (imagen con versión fija), DL3002 (sin root),
+# DL3020 (COPY en vez de ADD), DL3042 (pip --no-cache-dir). Vienen activas por defecto.
+failure-threshold: warning

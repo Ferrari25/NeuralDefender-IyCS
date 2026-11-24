@@ -1,0 +1,1 @@
+{"corrida": "carga", "escenario": "carga", "grupo": "", "inicio": "2026-11-24T12:29:22-03:00", "fin": "2026-11-24T12:34:05-03:00", "segundos": 283, "codigo_k6": 0, "escala": 1, "resumen": "summary.json", "nota": "Repetición: la primera corrida de este escenario tuvo conexiones rechazadas al inicio (carga: 4; auditoría: 1) que no se reprodujeron; ver corrida_previa_con_rechazos/"}

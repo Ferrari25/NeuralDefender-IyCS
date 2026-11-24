@@ -1,0 +1,18 @@
+Fecha de la corrida inicial: 2026-11-22T12:29:19-03:00
+Commit base: 43fd91c (con archivos ya modificados antes: ver _originales/git-status-antes.txt)
+Sistema: Linux 7.1.13+parrot7-amd64 | Python 3.13.5 | node v22.23.3 | bash 5.2.37(1)-release
+Versiones alineadas con las que tenia .devtools del proyecto (ruff 0.16.9, pylint 4.0.10, astroid 4.0.4, plugin 1.5.1, bandit 1.9.4, coverage 7.16.2)
+== ruff: ruff 0.16.9
+== pylint: pylint 4.0.10
+== bandit: bandit 1.9.4
+== pytest: pytest 9.2.0
+== coverage: Coverage.py, version 7.16.2 with C extension
+== yamllint: yamllint 1.38.0
+== pylint-secure-coding-standard: Version: 1.5.1
+== shellcheck: version: 0.11.0
+== eslint: v9.39.5
+== @eslint/js: 9.39.5
+== eslint-plugin-security: 3.0.1
+== eslint-plugin-no-unsanitized: 4.1.5
+== hadolint: Haskell Dockerfile Linter 2.15.1
+== Docker Compose version 2.26.1-4

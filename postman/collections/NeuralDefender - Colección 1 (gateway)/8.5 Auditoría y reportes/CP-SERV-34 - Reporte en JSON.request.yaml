@@ -1,0 +1,46 @@
+$kind: http-request
+name: CP-SERV-34 | Reporte en JSON
+url: "{{url_gateway}}/api/v1/reportes?formato=json&desde=2026-01-01&hasta={{hoy}}"
+method: GET
+queryParams:
+  formato: json
+  desde: 2026-01-01
+  hasta: "{{hoy}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-34 | Reporte en JSON
+      // Requisitos: RF-REP-01 (reporte filtrable), RF-REP-02 (resúmenes e integridad)
+      // Técnica: partición de equivalencia, partición válida
+      // Petición: GET /api/v1/reportes desde el 1 de enero hasta hoy, en JSON
+      // Esperado: 200 con decisiones, accesos, actividad, integridad,
+      // período y resumen
+      // ============================================================
+
+      // 1. Código: 200.
+      pm.test("CP-SERV-34 | Código 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      const datos = pm.response.json();
+
+      // 2. Contrato completo del reporte.
+      pm.test("CP-SERV-34 | Contrato del reporte", function () {
+          pm.expect(datos).to.include.all.keys("accesos", "actividad", "decisiones", "generado_en", "integridad", "periodo", "resumen");
+      });
+
+      // 3. Tipos de datos.
+      pm.test("CP-SERV-34 | Tipos de datos", function () {
+          pm.expect(datos.decisiones).to.be.an("array");
+          pm.expect(datos.accesos).to.be.an("array");
+          pm.expect(datos.integridad).to.be.an("object");
+          pm.expect(datos.resumen).to.be.an("object");
+      });
+
+      // 4. Regla: el reporte incluye las decisiones registradas hoy.
+      pm.test("CP-SERV-34 | Incluye las decisiones de hoy", function () {
+          pm.expect(datos.decisiones.length).to.be.above(0);
+      });
+    language: text/javascript
+order: 4000

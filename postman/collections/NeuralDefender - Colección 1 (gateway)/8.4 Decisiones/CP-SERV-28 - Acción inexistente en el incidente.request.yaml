@@ -1,0 +1,40 @@
+$kind: http-request
+name: CP-SERV-28 | Acción inexistente en el incidente
+url: "{{url_gateway}}/api/v1/decision"
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+body:
+  type: json
+  content: '{"incident_id": "{{incident_id}}", "action_id": "ACCION-INVENTADA", "decision": "approved"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-28 | Acción inexistente en el incidente
+      // Requisito: RF-API-02
+      // Técnica: partición de equivalencia, partición inválida
+      // Petición: POST /api/v1/decision con un incidente real y una acción inventada
+      // Esperado: 404. El sistema no registra decisiones sobre acciones que no
+      // existen, para no contaminar la auditoría, que es permanente.
+      // ============================================================
+
+      // 1. Código: 404.
+      pm.test("CP-SERV-28 | Código 404", function () {
+          pm.response.to.have.status(404);
+      });
+
+      const datos = pm.response.json();
+
+      // 2 y 3. Contrato: es un error y no se devuelve ningún registro.
+      pm.test("CP-SERV-28 | Contrato: error y sin registro", function () {
+          pm.expect(datos.error).to.be.a("string");
+          pm.expect(datos).to.not.have.property("record");
+      });
+
+      // 4. Regla: el mensaje identifica la acción inexistente.
+      pm.test("CP-SERV-28 | El mensaje menciona la acción", function () {
+          pm.expect(datos.error).to.include("ACCION-INVENTADA");
+      });
+    language: text/javascript
+order: 6000

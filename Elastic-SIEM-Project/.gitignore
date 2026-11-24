@@ -203,3 +203,4 @@ data/backup/
 .env.respaldo-*
 .env.tmp
 .k6-credenciales
+.env.bak*

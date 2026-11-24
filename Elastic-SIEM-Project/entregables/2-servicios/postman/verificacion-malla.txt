@@ -1,0 +1,49 @@
+##### A. Servicios internos, desde el equipo (sin Docker)
+auth (puerto 18001)  GET /v1/users-summary                 salud=200  sin_token=401  con_token=200
+audit (puerto 18002)  GET /v1/decisions/verify             salud=200  sin_token=401  con_token=200
+collector (puerto 18003)  GET /v1/snapshots/latest         salud=200  sin_token=401  con_token=404
+classifier (puerto 18004)  POST /v1/classify               salud=200  sin_token=401  con_token=200
+analyst (puerto 18005)  POST /v1/analyze                   salud=200  sin_token=401  con_token=200
+pipeline (puerto 18006)  GET /v1/incidents                 salud=200  sin_token=401  con_token=200
+knowledge (puerto 18007)  GET /v1/documents                salud=200  sin_token=401  con_token=200
+(collector con token da 404 porque la malla todavía no tiene ninguna captura: el token SÍ se aceptó)
+
+##### Inicio de sesión como analista00 y como auditor00
+login analista00: HTTP 200
+incidente y acción usados: INC-SCAN-172.18.0.7-8e58721f  INC-SCAN-172.18.0.7-8e58721f-3af475
+
+##### B. DELETE /api/v1/decisions (no debe existir forma de borrar decisiones)
+GET    /api/v1/decisions (la ruta existe)                  HTTP 200
+DELETE /api/v1/decisions con sesión de analista + CSRF    HTTP 405  {"error":"The method is not allowed for the requested URL.","status":405}
+DELETE /api/v1/decisions con sesión, sin CSRF             HTTP 405
+DELETE /api/v1/decisions sin sesión                       HTTP 405
+DELETE /v1/decisions en audit (con token)                  HTTP 405
+
+##### C. Título de documento (límite 120 caracteres)
+POST /api/v1/memoria/documentos, titulo de 120 caracteres  HTTP 201  {"documento":{"caracteres":19,"doc_id":"DOC-8a3fd03a5e","subido_por":"analista00
+POST /api/v1/memoria/documentos, titulo de 121 caracteres  HTTP 400  {"error":"'titulo' supera 120 caracteres (121)"}
+POST /api/v1/memoria/documentos, titulo de 0 caracteres    HTTP 400  {"error":"falta 'titulo'"}
+
+##### D. Neutralización de fórmulas en el CSV del reporte (RF-REP-03)
+-- Notas que se mandan por el gateway (el gateway recorta espacios y tabuladores del inicio):
+  POST /api/v1/decision note==HYPERLINK(\"x\")             HTTP 201
+  POST /api/v1/decision note=+1+1                          HTTP 201
+  POST /api/v1/decision note=-2+3                          HTTP 201
+  POST /api/v1/decision note=@SUM(A1)                      HTTP 201
+  POST /api/v1/decision note=texto normal                  HTTP 201
+-- Notas con tabulador o retorno de carro al inicio (solo se pueden mandar directo al servicio audit):
+  POST /v1/decisions (audit) note=\t=cmd                   HTTP 201
+  POST /v1/decisions (audit) note=\r=cmd                   HTTP 201
+-- GET /api/v1/reportes?formato=csv: HTTP/1.1 200 OK | Content-Type: text/csv; charset=utf-8; charset=utf-8 | Content-Disposition: attachment; filename="reporte-neuraldefender_inicio_hoy.csv"
+-- Columna 'detalle' (la nota) de cada fila de decisión, tal como la leería Excel:
+  '\'=HYPERLINK("x")'          empieza con caracter de formula: no
+  "'+1+1"                      empieza con caracter de formula: no
+  "'-2+3"                      empieza con caracter de formula: no
+  "'@SUM(A1)"                  empieza con caracter de formula: no
+  'texto normal'               empieza con caracter de formula: no
+  "'\t=cmd"                    empieza con caracter de formula: no
+  "'\r=cmd"                    empieza con caracter de formula: no
+-- Filas de decision: 7 | celdas de nota que empiezan con =, +, -, @, tab o CR: 0
+-- Texto crudo de las primeras líneas del CSV:
+6:2026-11-22T23:09:32.205660+00:00,decisIP que realiza el escaneo en el firewall,port_scan,high,,172.18.0.7,"'=HYPERLINK(""x"")"
+9:2026-11-22T23:09:32.249665+00:00,decisIP que realiza el escaneo en el firewall,port_scan,high,,172.18.0.7,'@SUM(A1)

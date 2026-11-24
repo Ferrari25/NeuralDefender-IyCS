@@ -1,0 +1,35 @@
+$kind: http-request
+name: CP-SERV-47 | Identificador de lección con formato inválido
+url: "{{url_gateway}}/api/v1/memoria/lecciones/XYZ/revision"
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+body:
+  type: json
+  content: '{"decision": "aprobar"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-47 | Identificador de lección con formato inválido
+      // Requisito: RQ-SEC-09 (validar la entrada antes de usarla)
+      // Técnica: partición de equivalencia, partición inválida
+      // Petición: revisar la lección "XYZ", que no cumple LEC- más 10 hexadecimales
+      // Esperado: 400. El formato se valida antes de buscar la lección.
+      // ============================================================
+
+      pm.test("CP-SERV-47 | Código 400", function () {
+          pm.response.to.have.status(400);
+      });
+
+      const datos = pm.response.json();
+
+      pm.test("CP-SERV-47 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      pm.test("CP-SERV-47 | Mensaje: identificador inválido", function () {
+          pm.expect(datos.error).to.eql("identificador de lección inválido");
+      });
+    language: text/javascript
+order: 9000

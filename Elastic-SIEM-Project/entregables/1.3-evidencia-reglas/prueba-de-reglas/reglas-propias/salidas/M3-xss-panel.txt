@@ -1,0 +1,32 @@
+# Propiedad: Ausencia de XSS en el panel (sin handlers inline)
+# Archivo mutado (en la copia): services/gateway/templates/index.html
+# Pruebas: tests/unit/test_s02_xss_dashboard.py
+
+## 1. Codigo sano
+....................................................                     [100%]
+52 passed in 1.20s
+
+## 2. Defecto inyectado: p='services/gateway/templates/index.html'; s=open(p).read(); a='<body'; i=s.index(a); j=s.index('>',i)+1; open(p,'w').write(s[:j]+'<button onclick="alert(document.cookie)">x</button>'+s[j:])
+________________________ test_no_quedan_handlers_inline ________________________
+tests/unit/test_s02_xss_dashboard.py:84: in test_no_quedan_handlers_inline
+    assert handlers == [], f"quedaron handlers inline: {handlers}"
+E   AssertionError: quedaron handlers inline: [' onclick="']
+E   assert [' onclick="'] == []
+E     
+E     Left contains one more item: ' onclick="'
+E     Use -v to get more diff
+=========================== short test summary info ============================
+FAILED tests/unit/test_s02_xss_dashboard.py::test_no_quedan_handlers_inline
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 0.16s
+
+## 3. Diferencia entre el archivo sano y el mutado
+@@ -8,7 +8,7 @@
+   <link rel="stylesheet" href="{{ url_for('static', filename='iconos.css') }}">
+   <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+ </head>
+-<body>
++<body><button onclick="alert(document.cookie)">x</button>
+ {% include '_iconos.html' %}
+   <header>
+     <h1><svg class="ico"><use href="#i-escudo"></use></svg> NeuralDefender · Panel de supervisión</h1>

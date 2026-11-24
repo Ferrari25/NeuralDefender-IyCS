@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title id="head-title">reporte.html</title>
+      <style type="text/css">body {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  /* do not increase min-width as some may use split screens */
+  min-width: 800px;
+  color: #999;
+}
+
+h1 {
+  font-size: 24px;
+  color: black;
+}
+
+h2 {
+  font-size: 16px;
+  color: black;
+}
+
+p {
+  color: black;
+}
+
+a {
+  color: #999;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+/******************************
+ * SUMMARY INFORMATION
+ ******************************/
+#environment td {
+  padding: 5px;
+  border: 1px solid #e6e6e6;
+  vertical-align: top;
+}
+#environment tr:nth-child(odd) {
+  background-color: #f6f6f6;
+}
+#environment ul {
+  margin: 0;
+  padding: 0 20px;
+}
+
+/******************************
+ * TEST RESULT COLORS
+ ******************************/
+span.passed,
+.passed .col-result {
+  color: green;
+}
+
+span.skipped,
+span.xfailed,
+span.rerun,
+.skipped .col-result,
+.xfailed .col-result,
+.rerun .col-result {
+  color: orange;
+}
+
+span.error,
+span.failed,
+span.xpassed,
+.error .col-result,
+.failed .col-result,
+.xpassed .col-result {
+  color: red;
+}
+
+.col-links__extra {
+  margin-right: 3px;
+}
+
+/******************************
+ * RESULTS TABLE
+ *
+ * 1. Table Layout
+ * 2. Extra
+ * 3. Sorting items
+ *
+ ******************************/
+/*------------------
+ * 1. Table Layout
+ *------------------*/
+#results-table {
+  border: 1px solid #e6e6e6;
+  color: #999;
+  font-size: 12px;
+  width: 100%;
+}
+#results-table th,
+#results-table td {
+  padding: 5px;
+  border: 1px solid #e6e6e6;
+  text-align: left;
+}
+#results-table th {
+  font-weight: bold;
+}
+
+/*------------------
+ * 2. Extra
+ *------------------*/
+.logwrapper {
+  max-height: 230px;
+  overflow-y: scroll;
+  background-color: #e6e6e6;
+}
+.logwrapper.expanded {
+  max-height: none;
+}
+.logwrapper.expanded .logexpander:after {
+  content: "collapse [-]";
+}
+.logwrapper .logexpander {
+  z-index: 1;
+  position: sticky;
+  top: 10px;
+  width: max-content;
+  border: 1px solid;
+  border-radius: 3px;
+  padding: 5px 7px;
+  margin: 10px 0 10px calc(100% - 80px);
+  cursor: pointer;
+  background-color: #e6e6e6;
+}
+.logwrapper .logexpander:after {
+  content: "expand [+]";
+}
+.logwrapper .logexpander:hover {
+  color: #000;
+  border-color: #000;
+}
+.logwrapper .log {
+  min-height: 40px;
+  position: relative;
+  top: -50px;
+  height: calc(100% + 50px);
+  border: 1px solid #e6e6e6;
+  color: black;
+  display: block;
+  font-family: "Courier New", Courier, monospace;
+  padding: 5px;
+  padding-right: 80px;
+  white-space: pre-wrap;
+}
+
+div.media {
+  border: 1px solid #e6e6e6;
+  float: right;
+  height: 240px;
+  margin: 0 5px;
+  overflow: hidden;
+  width: 320px;
+}
+
+.media-container {
+  display: grid;
+  grid-template-columns: 25px auto 25px;
+  align-items: center;
+  flex: 1 1;
+  overflow: hidden;
+  height: 200px;
+}
+
+.media-container--fullscreen {
+  grid-template-columns: 0px auto 0px;
+}
+
+.media-container__nav--right,
+.media-container__nav--left {
+  text-align: center;
+  cursor: pointer;
+}
+
+.media-container__viewport {
+  cursor: pointer;
+  text-align: center;
+  height: inherit;
+}
+.media-container__viewport img,
+.media-container__viewport video {
+  object-fit: cover;
+  width: 100%;
+  max-height: 100%;
+}
+
+.media__name,
+.media__counter {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  flex: 0 0 25px;
+  align-items: center;
+}
+
+.collapsible td:not(.col-links) {
+  cursor: pointer;
+}
+.collapsible td:not(.col-links):hover::after {
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.col-result {
+  width: 130px;
+}
+.col-result:hover::after {
+  content: " (hide details)";
+}
+
+.col-result.collapsed:hover::after {
+  content: " (show details)";
+}
+
+#environment-header h2:hover::after {
+  content: " (hide details)";
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+#environment-header.collapsed h2:hover::after {
+  content: " (show details)";
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/*------------------
+ * 3. Sorting items
+ *------------------*/
+.sortable {
+  cursor: pointer;
+}
+.sortable.desc:after {
+  content: " ";
+  position: relative;
+  left: 5px;
+  bottom: -12.5px;
+  border: 10px solid #4caf50;
+  border-bottom: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+.sortable.asc:after {
+  content: " ";
+  position: relative;
+  left: 5px;
+  bottom: 12.5px;
+  border: 10px solid #4caf50;
+  border-top: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+
+.hidden, .summary__reload__button.hidden {
+  display: none;
+}
+
+.summary__data {
+  flex: 0 0 550px;
+}
+.summary__reload {
+  flex: 1 1;
+  display: flex;
+  justify-content: center;
+}
+.summary__reload__button {
+  flex: 0 0 300px;
+  display: flex;
+  color: white;
+  font-weight: bold;
+  background-color: #4caf50;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.summary__reload__button:hover {
+  background-color: #46a049;
+}
+.summary__spacer {
+  flex: 0 0 550px;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+}
+
+.filters,
+.collapse {
+  display: flex;
+  align-items: center;
+}
+.filters button,
+.collapse button {
+  color: #999;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.filters button:hover,
+.collapse button:hover {
+  color: #ccc;
+}
+
+.filter__label {
+  margin-right: 10px;
+}
+
+      </style>
+    
+  </head>
+  <body>
+    <h1 id="title">reporte.html</h1>
+    <p>Report generated on 23-Nov-2026 at 02:26:56 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a>
+        v4.2.0</p>
+    <div id="environment-header">
+      <h2>Environment</h2>
+    </div>
+    <table id="environment"></table>
+    <!-- TEMPLATES -->
+      <template id="template_environment_row">
+      <tr>
+        <td></td>
+        <td></td>
+      </tr>
+    </template>
+    <template id="template_results-table__body--empty">
+      <tbody class="results-table-row">
+        <tr id="not-found-message">
+          <td colspan="4">No results found. Check the filters.</td>
+        </tr>
+      </tbody>
+    </template>
+    <template id="template_results-table__tbody">
+      <tbody class="results-table-row">
+        <tr class="collapsible">
+        </tr>
+        <tr class="extras-row">
+          <td class="extra" colspan="4">
+            <div class="extraHTML"></div>
+            <div class="media">
+              <div class="media-container">
+                  <div class="media-container__nav--left">&lt;</div>
+                  <div class="media-container__viewport">
+                    <img src="" />
+                    <video controls>
+                      <source src="" type="video/mp4">
+                    </video>
+                  </div>
+                  <div class="media-container__nav--right">&gt;</div>
+                </div>
+                <div class="media__name"></div>
+                <div class="media__counter"></div>
+            </div>
+            <div class="logwrapper">
+              <div class="logexpander"></div>
+              <div class="log"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </template>
+    <!-- END TEMPLATES -->
+    <div class="summary">
+      <div class="summary__data">
+        <h2>Summary</h2>
+        <div class="additional-summary prefix">
+        </div>
+        <p class="run-count">67 tests took 00:01:36.</p>
+        <p class="filter">(Un)check the boxes to filter the results.</p>
+        <div class="summary__reload">
+          <div class="summary__reload__button hidden" onclick="location.reload()">
+            <div>There are still tests running. <br />Reload this page to get the latest results!</div>
+          </div>
+        </div>
+        <div class="summary__spacer"></div>
+        <div class="controls">
+          <div class="filters">
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="failed" disabled>
+            <span class="failed">0 Failed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="passed" >
+            <span class="passed">67 Passed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="skipped" disabled>
+            <span class="skipped">0 Skipped,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xfailed" disabled>
+            <span class="xfailed">0 Expected failures,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xpassed" disabled>
+            <span class="xpassed">0 Unexpected passes,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="error" disabled>
+            <span class="error">0 Errors,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="rerun" disabled>
+            <span class="rerun">0 Reruns</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="retried" disabled>
+            <span class="retried">0 Retried,</span>
+          </div>
+          <div class="collapse">
+            <button id="show_all_details">Show all details</button>&nbsp;/&nbsp;<button id="hide_all_details">Hide all details</button>
+          </div>
+        </div>
+      </div>
+      <div class="additional-summary summary">
+      </div>
+      <div class="additional-summary postfix">
+      </div>
+    </div>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable" data-column-type="result">Result</th>
+          <th class="sortable" data-column-type="testId">Test</th>
+          <th class="sortable" data-column-type="duration">Duration</th>
+          <th>Links</th>
+        </tr>
+      </thead>
+    </table>
+  <footer>
+    <div id="data-container" data-jsonblob="{&#34;environment&#34;: {&#34;Python&#34;: &#34;3.13.5&#34;, &#34;Platform&#34;: &#34;Linux-7.1.13+parrot7-amd64-x86_64-with-glibc2.41&#34;, &#34;Packages&#34;: {&#34;pytest&#34;: &#34;9.2.0&#34;, &#34;pluggy&#34;: &#34;1.6.0&#34;}, &#34;Plugins&#34;: {&#34;platformdirs&#34;: &#34;4.12.2&#34;, &#34;anyio&#34;: &#34;4.15.1&#34;, &#34;cov&#34;: &#34;7.1.0&#34;, &#34;playwright&#34;: &#34;0.10.0&#34;, &#34;html&#34;: &#34;4.2.0&#34;, &#34;metadata&#34;: &#34;3.1.1&#34;, &#34;typeguard&#34;: &#34;4.4.2&#34;}}, &#34;tests&#34;: {&#34;tests/interfaz/test_panel.py::test_cp_ui_07_sin_sesion_el_panel_manda_al_login[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-07-sin-sesion-el-panel-manda-al-login-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_panel.py::test_cp_ui_07_sin_sesion_el_panel_manda_al_login[chromium]&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_panel.py::test_cp_ui_07_sin_sesion_el_panel_manda_al_login[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-07-sin-sesion-el-panel-manda-al-login-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:21] &amp;quot;GET / HTTP/1.1&amp;quot; 302 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:21] &amp;quot;GET /login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:21] &amp;quot;GET /static/login.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:21] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:21] &amp;quot;GET /static/login.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:21] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 200 -\n\n&#34;}], &#34;tests/interfaz/test_panel.py::test_cp_ui_02_contrasena_incorrecta_muestra_el_error_y_vacia_el_campo[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-02-contrasena-incorrecta-muestra-el-error-y-vacia-el-campo-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_panel.py::test_cp_ui_02_contrasena_incorrecta_muestra_el_error_y_vacia_el_campo[chromium]&#34;, &#34;duration&#34;: &#34;799 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_panel.py::test_cp_ui_02_contrasena_incorrecta_muestra_el_error_y_vacia_el_campo[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;799 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-02-contrasena-incorrecta-muestra-el-error-y-vacia-el-campo-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:22] &amp;quot;GET /login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:22] &amp;quot;GET /static/login.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:22] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:22] &amp;quot;GET /static/login.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:22] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:22] &amp;quot;POST /api/v1/login HTTP/1.1&amp;quot; 401 -\n\n&#34;}], &#34;tests/interfaz/test_panel.py::test_cp_ui_08_login_correcto_muestra_usuario_rol_e_incidentes[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-08-login-correcto-muestra-usuario-rol-e-incidentes-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_panel.py::test_cp_ui_08_login_correcto_muestra_usuario_rol_e_incidentes[chromium]&#34;, &#34;duration&#34;: &#34;896 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_panel.py::test_cp_ui_08_login_correcto_muestra_usuario_rol_e_incidentes[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;896 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-08-login-correcto-muestra-usuario-rol-e-incidentes-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET /login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET /static/login.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET /static/login.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;POST /api/v1/login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET / HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET /static/app.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET /static/app.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET /api/v1/me HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET /api/v1/decisions HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET /api/v1/incidents HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET /api/v1/memoria HTTP/1.1&amp;quot; 200 -\n\n&#34;}], &#34;tests/interfaz/test_panel.py::test_cp_ui_09_cerrar_sesion_vuelve_al_login_y_corta_el_acceso[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-09-cerrar-sesion-vuelve-al-login-y-corta-el-acceso-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_panel.py::test_cp_ui_09_cerrar_sesion_vuelve_al_login_y_corta_el_acceso[chromium]&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_panel.py::test_cp_ui_09_cerrar_sesion_vuelve_al_login_y_corta_el_acceso[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-09-cerrar-sesion-vuelve-al-login-y-corta-el-acceso-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET /login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET /static/login.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:23] &amp;quot;GET /static/login.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;POST /api/v1/login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET / HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /static/app.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /static/app.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /api/v1/me HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /api/v1/incidents HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /api/v1/decisions HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /api/v1/memoria HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;POST /api/v1/logout HTTP/1.1&amp;quot; 204 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /static/login.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /static/login.js HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET / HTTP/1.1&amp;quot; 302 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /static/login.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /static/login.js HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 304 -\n\n&#34;}], &#34;tests/interfaz/test_panel.py::test_cp_ui_17_el_buscador_filtra_la_tabla[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-17-el-buscador-filtra-la-tabla-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_panel.py::test_cp_ui_17_el_buscador_filtra_la_tabla[chromium]&#34;, &#34;duration&#34;: &#34;919 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_panel.py::test_cp_ui_17_el_buscador_filtra_la_tabla[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;919 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-17-el-buscador-filtra-la-tabla-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /static/login.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:24] &amp;quot;GET /static/login.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:25] &amp;quot;POST /api/v1/login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:25] &amp;quot;GET / HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:25] &amp;quot;GET /static/app.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:25] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:25] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:25] &amp;quot;GET /static/app.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:25] &amp;quot;GET /api/v1/me HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:25] &amp;quot;GET /api/v1/decisions HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:25] &amp;quot;GET /api/v1/incidents HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:25] &amp;quot;GET /api/v1/memoria HTTP/1.1&amp;quot; 200 -\n\n&#34;}], &#34;tests/interfaz/test_panel.py::test_cp_ui_22_clic_en_una_fila_abre_el_detalle_con_sus_acciones[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-22-clic-en-una-fila-abre-el-detalle-con-sus-acciones-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_panel.py::test_cp_ui_22_clic_en_una_fila_abre_el_detalle_con_sus_acciones[chromium]&#34;, &#34;duration&#34;: &#34;915 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_panel.py::test_cp_ui_22_clic_en_una_fila_abre_el_detalle_con_sus_acciones[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;915 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-22-clic-en-una-fila-abre-el-detalle-con-sus-acciones-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:25] &amp;quot;GET /login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:25] &amp;quot;GET /static/login.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:25] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:25] &amp;quot;GET /static/login.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:25] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;POST /api/v1/login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET / HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET /static/app.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET /static/app.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET /api/v1/me HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET /api/v1/decisions HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET /api/v1/incidents HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET /api/v1/memoria HTTP/1.1&amp;quot; 200 -\n\n&#34;}], &#34;tests/interfaz/test_panel.py::test_cp_ui_23_una_fila_se_abre_con_el_teclado[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-23-una-fila-se-abre-con-el-teclado-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_panel.py::test_cp_ui_23_una_fila_se_abre_con_el_teclado[chromium]&#34;, &#34;duration&#34;: &#34;914 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_panel.py::test_cp_ui_23_una_fila_se_abre_con_el_teclado[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;914 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-23-una-fila-se-abre-con-el-teclado-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET /login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET /static/login.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET /static/login.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;POST /api/v1/login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET / HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET /static/app.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET /static/app.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:26] &amp;quot;GET /api/v1/me HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:27] &amp;quot;GET /api/v1/decisions HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:27] &amp;quot;GET /api/v1/incidents HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:27] &amp;quot;GET /api/v1/memoria HTTP/1.1&amp;quot; 200 -\n\n&#34;}], &#34;tests/interfaz/test_panel.py::test_cp_ui_29_cancelar_la_confirmacion_no_registra_nada[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-29-cancelar-la-confirmacion-no-registra-nada-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_panel.py::test_cp_ui_29_cancelar_la_confirmacion_no_registra_nada[chromium]&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_panel.py::test_cp_ui_29_cancelar_la_confirmacion_no_registra_nada[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-29-cancelar-la-confirmacion-no-registra-nada-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:27] &amp;quot;GET /login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:27] &amp;quot;GET /static/login.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:27] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:27] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:27] &amp;quot;GET /static/login.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:27] &amp;quot;POST /api/v1/login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:27] &amp;quot;GET / HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:27] &amp;quot;GET /static/app.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:27] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:27] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:27] &amp;quot;GET /static/app.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:27] &amp;quot;GET /api/v1/me HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:27] &amp;quot;GET /api/v1/decisions HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:27] &amp;quot;GET /api/v1/incidents HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:27] &amp;quot;GET /api/v1/memoria HTTP/1.1&amp;quot; 200 -\n\n&#34;}], &#34;tests/interfaz/test_panel.py::test_cp_ui_28_aprobar_con_confirmacion_queda_en_pantalla_y_en_el_registro[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-28-aprobar-con-confirmacion-queda-en-pantalla-y-en-el-registro-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_panel.py::test_cp_ui_28_aprobar_con_confirmacion_queda_en_pantalla_y_en_el_registro[chromium]&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_panel.py::test_cp_ui_28_aprobar_con_confirmacion_queda_en_pantalla_y_en_el_registro[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-28-aprobar-con-confirmacion-queda-en-pantalla-y-en-el-registro-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;GET /login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;GET /static/login.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;GET /static/login.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;POST /api/v1/login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;GET / HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;GET /static/app.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;GET /static/app.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;GET /api/v1/me HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;GET /api/v1/decisions HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;GET /api/v1/incidents HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;GET /api/v1/memoria HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;POST /api/v1/decision HTTP/1.1&amp;quot; 201 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;GET /api/v1/decisions HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;GET /api/v1/incidents HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:29] &amp;quot;GET /api/v1/memoria HTTP/1.1&amp;quot; 200 -\n\n&#34;}], &#34;tests/interfaz/test_panel.py::test_cp_ui_30_descartar_pide_motivo_y_lo_guarda[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-30-descartar-pide-motivo-y-lo-guarda-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_panel.py::test_cp_ui_30_descartar_pide_motivo_y_lo_guarda[chromium]&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_panel.py::test_cp_ui_30_descartar_pide_motivo_y_lo_guarda[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-30-descartar-pide-motivo-y-lo-guarda-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:30] &amp;quot;GET /login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:30] &amp;quot;GET /static/login.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:30] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:30] &amp;quot;GET /static/login.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:30] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:30] &amp;quot;POST /api/v1/login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:30] &amp;quot;GET / HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:30] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:30] &amp;quot;GET /static/app.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:30] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:30] &amp;quot;GET /static/app.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:30] &amp;quot;GET /api/v1/me HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:30] &amp;quot;GET /api/v1/decisions HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:30] &amp;quot;GET /api/v1/incidents HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:30] &amp;quot;GET /api/v1/memoria HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:31] &amp;quot;POST /api/v1/decision HTTP/1.1&amp;quot; 201 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:31] &amp;quot;GET /api/v1/decisions HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:31] &amp;quot;GET /api/v1/incidents HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:31] &amp;quot;GET /api/v1/memoria HTTP/1.1&amp;quot; 200 -\n\n&#34;}], &#34;tests/interfaz/test_panel.py::test_cp_ui_13_un_viewer_no_ve_los_botones_de_decision[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-13-un-viewer-no-ve-los-botones-de-decision-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_panel.py::test_cp_ui_13_un_viewer_no_ve_los_botones_de_decision[chromium]&#34;, &#34;duration&#34;: &#34;913 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_panel.py::test_cp_ui_13_un_viewer_no_ve_los_botones_de_decision[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;913 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-13-un-viewer-no-ve-los-botones-de-decision-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:32] &amp;quot;GET /login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:32] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:32] &amp;quot;GET /static/login.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:32] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:32] &amp;quot;GET /static/login.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:32] &amp;quot;POST /api/v1/login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:32] &amp;quot;GET / HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:32] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:32] &amp;quot;GET /static/app.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:32] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:32] &amp;quot;GET /static/app.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:32] &amp;quot;GET /api/v1/me HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:32] &amp;quot;GET /api/v1/decisions HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:32] &amp;quot;GET /api/v1/incidents HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:32] &amp;quot;GET /api/v1/memoria HTTP/1.1&amp;quot; 200 -\n\n&#34;}], &#34;tests/interfaz/test_panel.py::test_cp_ui_54_un_analisis_de_gemma_se_identifica_en_pantalla[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-54-un-analisis-de-gemma-se-identifica-en-pantalla-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_panel.py::test_cp_ui_54_un_analisis_de_gemma_se_identifica_en_pantalla[chromium]&#34;, &#34;duration&#34;: &#34;915 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_panel.py::test_cp_ui_54_un_analisis_de_gemma_se_identifica_en_pantalla[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;915 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-54-un-analisis-de-gemma-se-identifica-en-pantalla-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:33] &amp;quot;GET /login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:33] &amp;quot;GET /static/login.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:33] &amp;quot;GET /static/login.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:33] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:33] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:33] &amp;quot;POST /api/v1/login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:33] &amp;quot;GET / HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:33] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:33] &amp;quot;GET /static/app.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:33] &amp;quot;GET /static/app.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:33] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:33] &amp;quot;GET /api/v1/me HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:33] &amp;quot;GET /api/v1/decisions HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:33] &amp;quot;GET /api/v1/incidents HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:33] &amp;quot;GET /api/v1/memoria HTTP/1.1&amp;quot; 200 -\n\n&#34;}], &#34;tests/interfaz/test_panel.py::test_cp_ui_48_un_texto_hostil_del_llm_se_muestra_como_texto_y_no_se_ejecuta[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-48-un-texto-hostil-del-llm-se-muestra-como-texto-y-no-se-ejecuta-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_panel.py::test_cp_ui_48_un_texto_hostil_del_llm_se_muestra_como_texto_y_no_se_ejecuta[chromium]&#34;, &#34;duration&#34;: &#34;925 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_panel.py::test_cp_ui_48_un_texto_hostil_del_llm_se_muestra_como_texto_y_no_se_ejecuta[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;925 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-panel-py-test-cp-ui-48-un-texto-hostil-del-llm-se-muestra-como-texto-y-no-se-ejecuta-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:34] &amp;quot;GET /login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:34] &amp;quot;GET /static/login.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:34] &amp;quot;GET /static/login.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:34] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:34] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:34] &amp;quot;POST /api/v1/login HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:34] &amp;quot;GET / HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:34] &amp;quot;GET /static/tokens.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:34] &amp;quot;GET /static/app.css HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:34] &amp;quot;GET /static/iconos.css HTTP/1.1&amp;quot; 304 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:34] &amp;quot;GET /static/app.js HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:34] &amp;quot;GET /api/v1/me HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:34] &amp;quot;GET /api/v1/decisions HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:34] &amp;quot;GET /api/v1/incidents HTTP/1.1&amp;quot; 200 -\nINFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:25:34] &amp;quot;GET /api/v1/memoria HTTP/1.1&amp;quot; 200 -\n\n&#34;}], &#34;tests/interfaz/test_s1_inicio_de_sesion.py::test_cp_ui_01_login_valido_entra_al_panel[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s1-inicio-de-sesion-py-test-cp-ui-01-login-valido-entra-al-panel-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s1_inicio_de_sesion.py::test_cp_ui_01_login_valido_entra_al_panel[chromium]&#34;, &#34;duration&#34;: &#34;376 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s1_inicio_de_sesion.py::test_cp_ui_01_login_valido_entra_al_panel[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;376 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s1-inicio-de-sesion-py-test-cp-ui-01-login-valido-entra-al-panel-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s1_inicio_de_sesion.py::test_cp_ui_02_contrasena_incorrecta_muestra_error_y_vacia_el_campo[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s1-inicio-de-sesion-py-test-cp-ui-02-contrasena-incorrecta-muestra-error-y-vacia-el-campo-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s1_inicio_de_sesion.py::test_cp_ui_02_contrasena_incorrecta_muestra_error_y_vacia_el_campo[chromium]&#34;, &#34;duration&#34;: &#34;306 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s1_inicio_de_sesion.py::test_cp_ui_02_contrasena_incorrecta_muestra_error_y_vacia_el_campo[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;306 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s1-inicio-de-sesion-py-test-cp-ui-02-contrasena-incorrecta-muestra-error-y-vacia-el-campo-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s1_inicio_de_sesion.py::test_cp_ui_03_usuario_inexistente_no_revela_que_no_existe[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s1-inicio-de-sesion-py-test-cp-ui-03-usuario-inexistente-no-revela-que-no-existe-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s1_inicio_de_sesion.py::test_cp_ui_03_usuario_inexistente_no_revela_que_no_existe[chromium]&#34;, &#34;duration&#34;: &#34;246 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s1_inicio_de_sesion.py::test_cp_ui_03_usuario_inexistente_no_revela_que_no_existe[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;246 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s1-inicio-de-sesion-py-test-cp-ui-03-usuario-inexistente-no-revela-que-no-existe-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s1_inicio_de_sesion.py::test_cp_ui_04_campos_vacios_no_envian_el_formulario[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s1-inicio-de-sesion-py-test-cp-ui-04-campos-vacios-no-envian-el-formulario-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s1_inicio_de_sesion.py::test_cp_ui_04_campos_vacios_no_envian_el_formulario[chromium]&#34;, &#34;duration&#34;: &#34;226 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s1_inicio_de_sesion.py::test_cp_ui_04_campos_vacios_no_envian_el_formulario[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;226 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s1-inicio-de-sesion-py-test-cp-ui-04-campos-vacios-no-envian-el-formulario-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s1_inicio_de_sesion.py::test_cp_ui_05_bloqueo_tras_cinco_intentos_fallidos[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s1-inicio-de-sesion-py-test-cp-ui-05-bloqueo-tras-cinco-intentos-fallidos-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s1_inicio_de_sesion.py::test_cp_ui_05_bloqueo_tras_cinco_intentos_fallidos[chromium]&#34;, &#34;duration&#34;: &#34;924 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s1_inicio_de_sesion.py::test_cp_ui_05_bloqueo_tras_cinco_intentos_fallidos[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;924 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s1-inicio-de-sesion-py-test-cp-ui-05-bloqueo-tras-cinco-intentos-fallidos-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s1_inicio_de_sesion.py::test_cp_ui_06_con_sesion_abierta_login_redirige_al_panel[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s1-inicio-de-sesion-py-test-cp-ui-06-con-sesion-abierta-login-redirige-al-panel-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s1_inicio_de_sesion.py::test_cp_ui_06_con_sesion_abierta_login_redirige_al_panel[chromium]&#34;, &#34;duration&#34;: &#34;419 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s1_inicio_de_sesion.py::test_cp_ui_06_con_sesion_abierta_login_redirige_al_panel[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;419 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s1-inicio-de-sesion-py-test-cp-ui-06-con-sesion-abierta-login-redirige-al-panel-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s2_acceso_y_sesion.py::test_cp_ui_07_panel_sin_sesion_redirige_al_login[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s2-acceso-y-sesion-py-test-cp-ui-07-panel-sin-sesion-redirige-al-login-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s2_acceso_y_sesion.py::test_cp_ui_07_panel_sin_sesion_redirige_al_login[chromium]&#34;, &#34;duration&#34;: &#34;156 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s2_acceso_y_sesion.py::test_cp_ui_07_panel_sin_sesion_redirige_al_login[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;156 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s2-acceso-y-sesion-py-test-cp-ui-07-panel-sin-sesion-redirige-al-login-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s2_acceso_y_sesion.py::test_cp_ui_08_el_panel_carga_completo_y_sin_errores[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s2-acceso-y-sesion-py-test-cp-ui-08-el-panel-carga-completo-y-sin-errores-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s2_acceso_y_sesion.py::test_cp_ui_08_el_panel_carga_completo_y_sin_errores[chromium]&#34;, &#34;duration&#34;: &#34;867 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s2_acceso_y_sesion.py::test_cp_ui_08_el_panel_carga_completo_y_sin_errores[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;867 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s2-acceso-y-sesion-py-test-cp-ui-08-el-panel-carga-completo-y-sin-errores-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s2_acceso_y_sesion.py::test_cp_ui_09_cerrar_sesion_corta_el_acceso[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s2-acceso-y-sesion-py-test-cp-ui-09-cerrar-sesion-corta-el-acceso-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s2_acceso_y_sesion.py::test_cp_ui_09_cerrar_sesion_corta_el_acceso[chromium]&#34;, &#34;duration&#34;: &#34;470 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s2_acceso_y_sesion.py::test_cp_ui_09_cerrar_sesion_corta_el_acceso[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;470 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s2-acceso-y-sesion-py-test-cp-ui-09-cerrar-sesion-corta-el-acceso-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s2_acceso_y_sesion.py::test_cp_ui_10_una_respuesta_401_en_el_refresco_redirige_al_login[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s2-acceso-y-sesion-py-test-cp-ui-10-una-respuesta-401-en-el-refresco-redirige-al-login-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s2_acceso_y_sesion.py::test_cp_ui_10_una_respuesta_401_en_el_refresco_redirige_al_login[chromium]&#34;, &#34;duration&#34;: &#34;00:00:15&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s2_acceso_y_sesion.py::test_cp_ui_10_una_respuesta_401_en_el_refresco_redirige_al_login[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:15&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s2-acceso-y-sesion-py-test-cp-ui-10-una-respuesta-401-en-el-refresco-redirige-al-login-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s2_acceso_y_sesion.py::test_cp_ui_11_el_panel_se_actualiza_cada_15_segundos[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s2-acceso-y-sesion-py-test-cp-ui-11-el-panel-se-actualiza-cada-15-segundos-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s2_acceso_y_sesion.py::test_cp_ui_11_el_panel_se_actualiza_cada_15_segundos[chromium]&#34;, &#34;duration&#34;: &#34;00:00:16&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s2_acceso_y_sesion.py::test_cp_ui_11_el_panel_se_actualiza_cada_15_segundos[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:16&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s2-acceso-y-sesion-py-test-cp-ui-11-el-panel-se-actualiza-cada-15-segundos-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s3_permisos_por_rol.py::test_cp_ui_12_el_analista_ve_los_controles_de_decision[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s3-permisos-por-rol-py-test-cp-ui-12-el-analista-ve-los-controles-de-decision-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s3_permisos_por_rol.py::test_cp_ui_12_el_analista_ve_los_controles_de_decision[chromium]&#34;, &#34;duration&#34;: &#34;939 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s3_permisos_por_rol.py::test_cp_ui_12_el_analista_ve_los_controles_de_decision[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;939 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s3-permisos-por-rol-py-test-cp-ui-12-el-analista-ve-los-controles-de-decision-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s3_permisos_por_rol.py::test_cp_ui_13_el_observador_no_ve_controles_de_decision_ni_de_memoria[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s3-permisos-por-rol-py-test-cp-ui-13-el-observador-no-ve-controles-de-decision-ni-de-memoria-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s3_permisos_por_rol.py::test_cp_ui_13_el_observador_no_ve_controles_de_decision_ni_de_memoria[chromium]&#34;, &#34;duration&#34;: &#34;469 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s3_permisos_por_rol.py::test_cp_ui_13_el_observador_no_ve_controles_de_decision_ni_de_memoria[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;469 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s3-permisos-por-rol-py-test-cp-ui-13-el-observador-no-ve-controles-de-decision-ni-de-memoria-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s3_permisos_por_rol.py::test_cp_ui_14_el_auditor_no_ve_controles_de_decision_ni_de_memoria[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s3-permisos-por-rol-py-test-cp-ui-14-el-auditor-no-ve-controles-de-decision-ni-de-memoria-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s3_permisos_por_rol.py::test_cp_ui_14_el_auditor_no_ve_controles_de_decision_ni_de_memoria[chromium]&#34;, &#34;duration&#34;: &#34;454 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s3_permisos_por_rol.py::test_cp_ui_14_el_auditor_no_ve_controles_de_decision_ni_de_memoria[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;454 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s3-permisos-por-rol-py-test-cp-ui-14-el-auditor-no-ve-controles-de-decision-ni-de-memoria-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s4_filtros.py::test_cp_ui_15_filtrar_por_severidad[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s4-filtros-py-test-cp-ui-15-filtrar-por-severidad-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s4_filtros.py::test_cp_ui_15_filtrar_por_severidad[chromium]&#34;, &#34;duration&#34;: &#34;400 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s4_filtros.py::test_cp_ui_15_filtrar_por_severidad[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;400 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s4-filtros-py-test-cp-ui-15-filtrar-por-severidad-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s4_filtros.py::test_cp_ui_16_filtrar_por_tipo_de_ataque[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s4-filtros-py-test-cp-ui-16-filtrar-por-tipo-de-ataque-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s4_filtros.py::test_cp_ui_16_filtrar_por_tipo_de_ataque[chromium]&#34;, &#34;duration&#34;: &#34;427 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s4_filtros.py::test_cp_ui_16_filtrar_por_tipo_de_ataque[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;427 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s4-filtros-py-test-cp-ui-16-filtrar-por-tipo-de-ataque-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s4_filtros.py::test_cp_ui_17_filtrar_por_ip[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s4-filtros-py-test-cp-ui-17-filtrar-por-ip-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s4_filtros.py::test_cp_ui_17_filtrar_por_ip[chromium]&#34;, &#34;duration&#34;: &#34;409 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s4_filtros.py::test_cp_ui_17_filtrar_por_ip[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;409 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s4-filtros-py-test-cp-ui-17-filtrar-por-ip-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s4_filtros.py::test_cp_ui_18_filtros_combinados[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s4-filtros-py-test-cp-ui-18-filtros-combinados-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s4_filtros.py::test_cp_ui_18_filtros_combinados[chromium]&#34;, &#34;duration&#34;: &#34;509 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s4_filtros.py::test_cp_ui_18_filtros_combinados[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;509 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s4-filtros-py-test-cp-ui-18-filtros-combinados-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s4_filtros.py::test_cp_ui_19_ip_inexistente_muestra_el_mensaje_de_sin_resultados[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s4-filtros-py-test-cp-ui-19-ip-inexistente-muestra-el-mensaje-de-sin-resultados-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s4_filtros.py::test_cp_ui_19_ip_inexistente_muestra_el_mensaje_de_sin_resultados[chromium]&#34;, &#34;duration&#34;: &#34;382 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s4_filtros.py::test_cp_ui_19_ip_inexistente_muestra_el_mensaje_de_sin_resultados[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;382 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s4-filtros-py-test-cp-ui-19-ip-inexistente-muestra-el-mensaje-de-sin-resultados-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s4_filtros.py::test_cp_ui_20_los_filtros_se_conservan_tras_el_refresco[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s4-filtros-py-test-cp-ui-20-los-filtros-se-conservan-tras-el-refresco-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s4_filtros.py::test_cp_ui_20_los_filtros_se_conservan_tras_el_refresco[chromium]&#34;, &#34;duration&#34;: &#34;00:00:16&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s4_filtros.py::test_cp_ui_20_los_filtros_se_conservan_tras_el_refresco[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:16&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s4-filtros-py-test-cp-ui-20-los-filtros-se-conservan-tras-el-refresco-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s4_filtros.py::test_cp_ui_21_la_tabla_muestra_severidad_y_tipo_sin_abrir_el_detalle[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s4-filtros-py-test-cp-ui-21-la-tabla-muestra-severidad-y-tipo-sin-abrir-el-detalle-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s4_filtros.py::test_cp_ui_21_la_tabla_muestra_severidad_y_tipo_sin_abrir_el_detalle[chromium]&#34;, &#34;duration&#34;: &#34;447 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s4_filtros.py::test_cp_ui_21_la_tabla_muestra_severidad_y_tipo_sin_abrir_el_detalle[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;447 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s4-filtros-py-test-cp-ui-21-la-tabla-muestra-severidad-y-tipo-sin-abrir-el-detalle-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_22_abrir_la_ficha_con_un_clic[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s5-detalle-incidente-py-test-cp-ui-22-abrir-la-ficha-con-un-clic-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_22_abrir_la_ficha_con_un_clic[chromium]&#34;, &#34;duration&#34;: &#34;454 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_22_abrir_la_ficha_con_un_clic[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;454 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s5-detalle-incidente-py-test-cp-ui-22-abrir-la-ficha-con-un-clic-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_23_abrir_la_ficha_con_el_teclado[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s5-detalle-incidente-py-test-cp-ui-23-abrir-la-ficha-con-el-teclado-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_23_abrir_la_ficha_con_el_teclado[chromium]&#34;, &#34;duration&#34;: &#34;449 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_23_abrir_la_ficha_con_el_teclado[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;449 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s5-detalle-incidente-py-test-cp-ui-23-abrir-la-ficha-con-el-teclado-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_24_cerrar_la_ficha_quita_la_marca_de_la_fila[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s5-detalle-incidente-py-test-cp-ui-24-cerrar-la-ficha-quita-la-marca-de-la-fila-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_24_cerrar_la_ficha_quita_la_marca_de_la_fila[chromium]&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_24_cerrar_la_ficha_quita_la_marca_de_la_fila[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s5-detalle-incidente-py-test-cp-ui-24-cerrar-la-ficha-quita-la-marca-de-la-fila-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_25_desplegar_evidencia_y_alternativas[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s5-detalle-incidente-py-test-cp-ui-25-desplegar-evidencia-y-alternativas-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_25_desplegar_evidencia_y_alternativas[chromium]&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_25_desplegar_evidencia_y_alternativas[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s5-detalle-incidente-py-test-cp-ui-25-desplegar-evidencia-y-alternativas-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_26_enlace_a_un_incidente_de_la_misma_campana[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s5-detalle-incidente-py-test-cp-ui-26-enlace-a-un-incidente-de-la-misma-campana-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_26_enlace_a_un_incidente_de_la_misma_campana[chromium]&#34;, &#34;duration&#34;: &#34;889 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_26_enlace_a_un_incidente_de_la_misma_campana[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;889 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s5-detalle-incidente-py-test-cp-ui-26-enlace-a-un-incidente-de-la-misma-campana-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_27_el_comando_se_muestra_como_texto_con_su_explicacion[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s5-detalle-incidente-py-test-cp-ui-27-el-comando-se-muestra-como-texto-con-su-explicacion-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_27_el_comando_se_muestra_como_texto_con_su_explicacion[chromium]&#34;, &#34;duration&#34;: &#34;626 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_27_el_comando_se_muestra_como_texto_con_su_explicacion[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;626 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s5-detalle-incidente-py-test-cp-ui-27-el-comando-se-muestra-como-texto-con-su-explicacion-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s6_decisiones.py::test_cp_ui_28_aprobar_con_confirmacion_en_tres_interacciones[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s6-decisiones-py-test-cp-ui-28-aprobar-con-confirmacion-en-tres-interacciones-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s6_decisiones.py::test_cp_ui_28_aprobar_con_confirmacion_en_tres_interacciones[chromium]&#34;, &#34;duration&#34;: &#34;954 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s6_decisiones.py::test_cp_ui_28_aprobar_con_confirmacion_en_tres_interacciones[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;954 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s6-decisiones-py-test-cp-ui-28-aprobar-con-confirmacion-en-tres-interacciones-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s6_decisiones.py::test_cp_ui_29_cancelar_la_confirmacion_no_registra_nada[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s6-decisiones-py-test-cp-ui-29-cancelar-la-confirmacion-no-registra-nada-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s6_decisiones.py::test_cp_ui_29_cancelar_la_confirmacion_no_registra_nada[chromium]&#34;, &#34;duration&#34;: &#34;954 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s6_decisiones.py::test_cp_ui_29_cancelar_la_confirmacion_no_registra_nada[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;954 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s6-decisiones-py-test-cp-ui-29-cancelar-la-confirmacion-no-registra-nada-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s6_decisiones.py::test_cp_ui_30_descartar_con_motivo_guarda_la_nota[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s6-decisiones-py-test-cp-ui-30-descartar-con-motivo-guarda-la-nota-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s6_decisiones.py::test_cp_ui_30_descartar_con_motivo_guarda_la_nota[chromium]&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s6_decisiones.py::test_cp_ui_30_descartar_con_motivo_guarda_la_nota[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s6-decisiones-py-test-cp-ui-30-descartar-con-motivo-guarda-la-nota-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s6_decisiones.py::test_cp_ui_31_descartar_sin_motivo_advierte_y_no_registra[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s6-decisiones-py-test-cp-ui-31-descartar-sin-motivo-advierte-y-no-registra-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s6_decisiones.py::test_cp_ui_31_descartar_sin_motivo_advierte_y_no_registra[chromium]&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s6_decisiones.py::test_cp_ui_31_descartar_sin_motivo_advierte_y_no_registra[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s6-decisiones-py-test-cp-ui-31-descartar-sin-motivo-advierte-y-no-registra-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s6_decisiones.py::test_cp_ui_32_cancelar_el_formulario_del_motivo[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s6-decisiones-py-test-cp-ui-32-cancelar-el-formulario-del-motivo-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s6_decisiones.py::test_cp_ui_32_cancelar_el_formulario_del_motivo[chromium]&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s6_decisiones.py::test_cp_ui_32_cancelar_el_formulario_del_motivo[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s6-decisiones-py-test-cp-ui-32-cancelar-el-formulario-del-motivo-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s6_decisiones.py::test_cp_ui_33_decidir_de_nuevo_advierte_que_reemplaza_la_decision[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s6-decisiones-py-test-cp-ui-33-decidir-de-nuevo-advierte-que-reemplaza-la-decision-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s6_decisiones.py::test_cp_ui_33_decidir_de_nuevo_advierte_que_reemplaza_la_decision[chromium]&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s6_decisiones.py::test_cp_ui_33_decidir_de_nuevo_advierte_que_reemplaza_la_decision[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s6-decisiones-py-test-cp-ui-33-decidir-de-nuevo-advierte-que-reemplaza-la-decision-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s6_decisiones.py::test_cp_ui_34_si_el_servidor_falla_se_avisa_y_la_accion_sigue_pendiente[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s6-decisiones-py-test-cp-ui-34-si-el-servidor-falla-se-avisa-y-la-accion-sigue-pendiente-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s6_decisiones.py::test_cp_ui_34_si_el_servidor_falla_se_avisa_y_la_accion_sigue_pendiente[chromium]&#34;, &#34;duration&#34;: &#34;945 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s6_decisiones.py::test_cp_ui_34_si_el_servidor_falla_se_avisa_y_la_accion_sigue_pendiente[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;945 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s6-decisiones-py-test-cp-ui-34-si-el-servidor-falla-se-avisa-y-la-accion-sigue-pendiente-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s6_decisiones.py::test_cp_ui_35_la_decision_se_firma_con_el_usuario_de_la_sesion[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s6-decisiones-py-test-cp-ui-35-la-decision-se-firma-con-el-usuario-de-la-sesion-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s6_decisiones.py::test_cp_ui_35_la_decision_se_firma_con_el_usuario_de_la_sesion[chromium]&#34;, &#34;duration&#34;: &#34;978 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s6_decisiones.py::test_cp_ui_35_la_decision_se_firma_con_el_usuario_de_la_sesion[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;978 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s6-decisiones-py-test-cp-ui-35-la-decision-se-firma-con-el-usuario-de-la-sesion-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s7_historial_y_reportes.py::test_cp_ui_36_desplegar_el_historial_de_decisiones[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s7-historial-y-reportes-py-test-cp-ui-36-desplegar-el-historial-de-decisiones-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s7_historial_y_reportes.py::test_cp_ui_36_desplegar_el_historial_de_decisiones[chromium]&#34;, &#34;duration&#34;: &#34;414 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s7_historial_y_reportes.py::test_cp_ui_36_desplegar_el_historial_de_decisiones[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;414 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s7-historial-y-reportes-py-test-cp-ui-36-desplegar-el-historial-de-decisiones-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s7_historial_y_reportes.py::test_cp_ui_37_descargar_el_reporte_csv_con_rango_valido[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s7-historial-y-reportes-py-test-cp-ui-37-descargar-el-reporte-csv-con-rango-valido-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s7_historial_y_reportes.py::test_cp_ui_37_descargar_el_reporte_csv_con_rango_valido[chromium]&#34;, &#34;duration&#34;: &#34;496 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s7_historial_y_reportes.py::test_cp_ui_37_descargar_el_reporte_csv_con_rango_valido[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;496 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s7-historial-y-reportes-py-test-cp-ui-37-descargar-el-reporte-csv-con-rango-valido-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s7_historial_y_reportes.py::test_cp_ui_38_ver_el_reporte_json_en_una_pestana_nueva[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s7-historial-y-reportes-py-test-cp-ui-38-ver-el-reporte-json-en-una-pestana-nueva-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s7_historial_y_reportes.py::test_cp_ui_38_ver_el_reporte_json_en_una_pestana_nueva[chromium]&#34;, &#34;duration&#34;: &#34;540 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s7_historial_y_reportes.py::test_cp_ui_38_ver_el_reporte_json_en_una_pestana_nueva[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;540 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s7-historial-y-reportes-py-test-cp-ui-38-ver-el-reporte-json-en-una-pestana-nueva-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s7_historial_y_reportes.py::test_cp_ui_39_rango_de_fechas_invertido_muestra_el_error_400[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s7-historial-y-reportes-py-test-cp-ui-39-rango-de-fechas-invertido-muestra-el-error-400-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s7_historial_y_reportes.py::test_cp_ui_39_rango_de_fechas_invertido_muestra_el_error_400[chromium]&#34;, &#34;duration&#34;: &#34;532 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s7_historial_y_reportes.py::test_cp_ui_39_rango_de_fechas_invertido_muestra_el_error_400[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;532 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s7-historial-y-reportes-py-test-cp-ui-39-rango-de-fechas-invertido-muestra-el-error-400-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s8_memoria.py::test_cp_ui_40_proponer_una_leccion_valida[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s8-memoria-py-test-cp-ui-40-proponer-una-leccion-valida-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s8_memoria.py::test_cp_ui_40_proponer_una_leccion_valida[chromium]&#34;, &#34;duration&#34;: &#34;536 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s8_memoria.py::test_cp_ui_40_proponer_una_leccion_valida[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;536 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s8-memoria-py-test-cp-ui-40-proponer-una-leccion-valida-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s8_memoria.py::test_cp_ui_41_leccion_vacia_no_se_envia[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s8-memoria-py-test-cp-ui-41-leccion-vacia-no-se-envia-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s8_memoria.py::test_cp_ui_41_leccion_vacia_no_se_envia[chromium]&#34;, &#34;duration&#34;: &#34;492 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s8_memoria.py::test_cp_ui_41_leccion_vacia_no_se_envia[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;492 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s8-memoria-py-test-cp-ui-41-leccion-vacia-no-se-envia-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s8_memoria.py::test_cp_ui_42_leccion_de_401_caracteres_se_recorta_a_400[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s8-memoria-py-test-cp-ui-42-leccion-de-401-caracteres-se-recorta-a-400-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s8_memoria.py::test_cp_ui_42_leccion_de_401_caracteres_se_recorta_a_400[chromium]&#34;, &#34;duration&#34;: &#34;668 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s8_memoria.py::test_cp_ui_42_leccion_de_401_caracteres_se_recorta_a_400[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;668 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s8-memoria-py-test-cp-ui-42-leccion-de-401-caracteres-se-recorta-a-400-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s8_memoria.py::test_cp_ui_43_aprobar_una_leccion_con_confirmacion[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s8-memoria-py-test-cp-ui-43-aprobar-una-leccion-con-confirmacion-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s8_memoria.py::test_cp_ui_43_aprobar_una_leccion_con_confirmacion[chromium]&#34;, &#34;duration&#34;: &#34;601 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s8_memoria.py::test_cp_ui_43_aprobar_una_leccion_con_confirmacion[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;601 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s8-memoria-py-test-cp-ui-43-aprobar-una-leccion-con-confirmacion-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s8_memoria.py::test_cp_ui_44_rechazar_una_leccion[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s8-memoria-py-test-cp-ui-44-rechazar-una-leccion-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s8_memoria.py::test_cp_ui_44_rechazar_una_leccion[chromium]&#34;, &#34;duration&#34;: &#34;627 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s8_memoria.py::test_cp_ui_44_rechazar_una_leccion[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;627 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s8-memoria-py-test-cp-ui-44-rechazar-una-leccion-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s8_memoria.py::test_cp_ui_45_cargar_un_documento_de_2_kb[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s8-memoria-py-test-cp-ui-45-cargar-un-documento-de-2-kb-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s8_memoria.py::test_cp_ui_45_cargar_un_documento_de_2_kb[chromium]&#34;, &#34;duration&#34;: &#34;502 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s8_memoria.py::test_cp_ui_45_cargar_un_documento_de_2_kb[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;502 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s8-memoria-py-test-cp-ui-45-cargar-un-documento-de-2-kb-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s8_memoria.py::test_cp_ui_46_archivo_de_33_kb_se_rechaza[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s8-memoria-py-test-cp-ui-46-archivo-de-33-kb-se-rechaza-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s8_memoria.py::test_cp_ui_46_archivo_de_33_kb_se_rechaza[chromium]&#34;, &#34;duration&#34;: &#34;514 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s8_memoria.py::test_cp_ui_46_archivo_de_33_kb_se_rechaza[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;514 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s8-memoria-py-test-cp-ui-46-archivo-de-33-kb-se-rechaza-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s8_memoria.py::test_cp_ui_47_titulo_vacio_no_envia_el_documento[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s8-memoria-py-test-cp-ui-47-titulo-vacio-no-envia-el-documento-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s8_memoria.py::test_cp_ui_47_titulo_vacio_no_envia_el_documento[chromium]&#34;, &#34;duration&#34;: &#34;484 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s8_memoria.py::test_cp_ui_47_titulo_vacio_no_envia_el_documento[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;484 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s8-memoria-py-test-cp-ui-47-titulo-vacio-no-envia-el-documento-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_48_un_texto_hostil_se_muestra_literal_y_no_se_ejecuta[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s9-seguridad-y-usabilidad-py-test-cp-ui-48-un-texto-hostil-se-muestra-literal-y-no-se-ejecuta-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_48_un_texto_hostil_se_muestra_literal_y_no_se_ejecuta[chromium]&#34;, &#34;duration&#34;: &#34;470 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_48_un_texto_hostil_se_muestra_literal_y_no_se_ejecuta[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;470 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s9-seguridad-y-usabilidad-py-test-cp-ui-48-un-texto-hostil-se-muestra-literal-y-no-se-ejecuta-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_49_la_ayuda_se_abre_con_el_clic[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s9-seguridad-y-usabilidad-py-test-cp-ui-49-la-ayuda-se-abre-con-el-clic-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_49_la_ayuda_se_abre_con_el_clic[chromium]&#34;, &#34;duration&#34;: &#34;384 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_49_la_ayuda_se_abre_con_el_clic[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;384 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s9-seguridad-y-usabilidad-py-test-cp-ui-49-la-ayuda-se-abre-con-el-clic-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_50_la_ayuda_se_alcanza_y_se_abre_con_el_teclado[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s9-seguridad-y-usabilidad-py-test-cp-ui-50-la-ayuda-se-alcanza-y-se-abre-con-el-teclado-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_50_la_ayuda_se_alcanza_y_se_abre_con_el_teclado[chromium]&#34;, &#34;duration&#34;: &#34;401 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_50_la_ayuda_se_alcanza_y_se_abre_con_el_teclado[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;401 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s9-seguridad-y-usabilidad-py-test-cp-ui-50-la-ayuda-se-alcanza-y-se-abre-con-el-teclado-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_51_cada_severidad_tiene_siempre_la_misma_clase_y_color[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s9-seguridad-y-usabilidad-py-test-cp-ui-51-cada-severidad-tiene-siempre-la-misma-clase-y-color-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_51_cada_severidad_tiene_siempre_la_misma_clase_y_color[chromium]&#34;, &#34;duration&#34;: &#34;390 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_51_cada_severidad_tiene_siempre_la_misma_clase_y_color[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;390 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s9-seguridad-y-usabilidad-py-test-cp-ui-51-cada-severidad-tiene-siempre-la-misma-clase-y-color-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_52_los_campos_de_texto_tienen_nombre_accesible[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s9-seguridad-y-usabilidad-py-test-cp-ui-52-los-campos-de-texto-tienen-nombre-accesible-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_52_los_campos_de_texto_tienen_nombre_accesible[chromium]&#34;, &#34;duration&#34;: &#34;440 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_52_los_campos_de_texto_tienen_nombre_accesible[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;440 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s9-seguridad-y-usabilidad-py-test-cp-ui-52-los-campos-de-texto-tienen-nombre-accesible-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_53_la_tabla_muestra_como_maximo_100_incidentes[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s9-seguridad-y-usabilidad-py-test-cp-ui-53-la-tabla-muestra-como-maximo-100-incidentes-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_53_la_tabla_muestra_como_maximo_100_incidentes[chromium]&#34;, &#34;duration&#34;: &#34;469 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_53_la_tabla_muestra_como_maximo_100_incidentes[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;469 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s9-seguridad-y-usabilidad-py-test-cp-ui-53-la-tabla-muestra-como-maximo-100-incidentes-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_54_el_origen_del_analisis_se_muestra_en_el_distintivo[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Trace&#34;, &#34;format_type&#34;: &#34;url&#34;, &#34;content&#34;: &#34;trazas/tests-interfaz-test-s9-seguridad-y-usabilidad-py-test-cp-ui-54-el-origen-del-analisis-se-muestra-en-el-distintivo-chromium/trace.zip&#34;, &#34;mime_type&#34;: null, &#34;extension&#34;: null}], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_54_el_origen_del_analisis_se_muestra_en_el_distintivo[chromium]&#34;, &#34;duration&#34;: &#34;517 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_54_el_origen_del_analisis_se_muestra_en_el_distintivo[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;517 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;a target=\&#34;_blank\&#34; href=\&#34;trazas/tests-interfaz-test-s9-seguridad-y-usabilidad-py-test-cp-ui-54-el-origen-del-analisis-se-muestra-en-el-distintivo-chromium/trace.zip\&#34; class=\&#34;col-links__extra url\&#34;&gt;Trace&lt;/a&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}]}, &#34;renderCollapsed&#34;: [&#34;passed&#34;], &#34;initialSort&#34;: &#34;result&#34;, &#34;title&#34;: &#34;reporte.html&#34;}"></div>
+    <script>
+      (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+const { getCollapsedCategory, setCollapsedIds } = require('./storage.js')
+
+class DataManager {
+    setManager(data) {
+        const collapsedCategories = [...getCollapsedCategory(data.renderCollapsed)]
+        const collapsedIds = []
+        const tests = Object.values(data.tests).flat().map((test, index) => {
+            const collapsed = collapsedCategories.includes(test.result.toLowerCase())
+            const id = `test_${index}`
+            if (collapsed) {
+                collapsedIds.push(id)
+            }
+            return {
+                ...test,
+                id,
+                collapsed,
+            }
+        })
+        const dataBlob = { ...data, tests }
+        this.data = { ...dataBlob }
+        this.renderData = { ...dataBlob }
+        setCollapsedIds(collapsedIds)
+    }
+
+    get allData() {
+        return { ...this.data }
+    }
+
+    resetRender() {
+        this.renderData = { ...this.data }
+    }
+
+    setRender(data) {
+        this.renderData.tests = [...data]
+    }
+
+    toggleCollapsedItem(id) {
+        this.renderData.tests = this.renderData.tests.map((test) =>
+            test.id === id ? { ...test, collapsed: !test.collapsed } : test,
+        )
+    }
+
+    set allCollapsed(collapsed) {
+        this.renderData = { ...this.renderData, tests: [...this.renderData.tests.map((test) => (
+            { ...test, collapsed }
+        ))] }
+    }
+
+    get testSubset() {
+        return [...this.renderData.tests]
+    }
+
+    get environment() {
+        return this.renderData.environment
+    }
+
+    get initialSort() {
+        return this.data.initialSort
+    }
+}
+
+module.exports = {
+    manager: new DataManager(),
+}
+
+},{"./storage.js":8}],2:[function(require,module,exports){
+const mediaViewer = require('./mediaviewer.js')
+const templateEnvRow = document.getElementById('template_environment_row')
+const templateResult = document.getElementById('template_results-table__tbody')
+
+function htmlToElements(html) {
+    const temp = document.createElement('template')
+    temp.innerHTML = html
+    return temp.content.childNodes
+}
+
+const find = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return elem.querySelector(selector)
+}
+
+const findAll = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return [...elem.querySelectorAll(selector)]
+}
+
+const dom = {
+    getStaticRow: (key, value) => {
+        const envRow = templateEnvRow.content.cloneNode(true)
+        const isObj = typeof value === 'object' && value !== null
+        const values = isObj ? Object.keys(value).map((k) => `${k}: ${value[k]}`) : null
+
+        const valuesElement = htmlToElements(
+            values ? `<ul>${values.map((val) => `<li>${val}</li>`).join('')}<ul>` : `<div>${value}</div>`)[0]
+        const td = findAll('td', envRow)
+        td[0].textContent = key
+        td[1].appendChild(valuesElement)
+
+        return envRow
+    },
+    getResultTBody: ({ testId, id, log, extras, resultsTableRow, tableHtml, result, collapsed }) => {
+        const resultBody = templateResult.content.cloneNode(true)
+        resultBody.querySelector('tbody').classList.add(result.toLowerCase())
+        resultBody.querySelector('tbody').id = testId
+        resultBody.querySelector('.collapsible').dataset.id = id
+
+        resultsTableRow.forEach((html) => {
+            const t = document.createElement('template')
+            t.innerHTML = html
+            resultBody.querySelector('.collapsible').appendChild(t.content)
+        })
+
+        if (log) {
+            // Wrap lines starting with "E" with span.error to color those lines red
+            const wrappedLog = log.replace(/^E.*$/gm, (match) => `<span class="error">${match}</span>`)
+            resultBody.querySelector('.log').innerHTML = wrappedLog
+        } else {
+            resultBody.querySelector('.log').remove()
+        }
+
+        if (collapsed) {
+            resultBody.querySelector('.collapsible > .col-result')?.classList.add('collapsed')
+            resultBody.querySelector('.extras-row').classList.add('hidden')
+        } else {
+            resultBody.querySelector('.collapsible > .col-result')?.classList.remove('collapsed')
+        }
+
+        const media = []
+        extras?.forEach(({ name, format_type, content }) => {
+            if (['image', 'video'].includes(format_type)) {
+                media.push({ path: content, name, format_type })
+            }
+
+            if (format_type === 'html') {
+                resultBody.querySelector('.extraHTML').insertAdjacentHTML('beforeend', `<div>${content}</div>`)
+            }
+        })
+        mediaViewer.setup(resultBody, media)
+
+        // Add custom html from the pytest_html_results_table_html hook
+        tableHtml?.forEach((item) => {
+            resultBody.querySelector('td[class="extra"]').insertAdjacentHTML('beforeend', item)
+        })
+
+        return resultBody
+    },
+}
+
+module.exports = {
+    dom,
+    htmlToElements,
+    find,
+    findAll,
+}
+
+},{"./mediaviewer.js":6}],3:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const storageModule = require('./storage.js')
+
+const getFilteredSubSet = (filter) =>
+    manager.allData.tests.filter(({ result }) => filter.includes(result.toLowerCase()))
+
+const doInitFilter = () => {
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+}
+
+const doFilter = (type, show) => {
+    if (show) {
+        storageModule.showCategory(type)
+    } else {
+        storageModule.hideCategory(type)
+    }
+
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+
+    const sortColumn = storageModule.getSort()
+    doSort(sortColumn, true)
+}
+
+module.exports = {
+    doFilter,
+    doInitFilter,
+}
+
+},{"./datamanager.js":1,"./sort.js":7,"./storage.js":8}],4:[function(require,module,exports){
+const { redraw, bindEvents, renderStatic } = require('./main.js')
+const { doInitFilter } = require('./filter.js')
+const { doInitSort } = require('./sort.js')
+const { manager } = require('./datamanager.js')
+const data = JSON.parse(document.getElementById('data-container').dataset.jsonblob)
+
+function init() {
+    manager.setManager(data)
+    doInitFilter()
+    doInitSort()
+    renderStatic()
+    redraw()
+    bindEvents()
+}
+
+init()
+
+},{"./datamanager.js":1,"./filter.js":3,"./main.js":5,"./sort.js":7}],5:[function(require,module,exports){
+const { dom, find, findAll } = require('./dom.js')
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const { doFilter } = require('./filter.js')
+const {
+    getVisible,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    getSortDirection,
+    possibleFilters,
+} = require('./storage.js')
+
+const removeChildren = (node) => {
+    while (node.firstChild) {
+        node.removeChild(node.firstChild)
+    }
+}
+
+const renderStatic = () => {
+    const renderEnvironmentTable = () => {
+        const environment = manager.environment
+        const rows = Object.keys(environment).map((key) => dom.getStaticRow(key, environment[key]))
+        const table = document.getElementById('environment')
+        removeChildren(table)
+        rows.forEach((row) => table.appendChild(row))
+    }
+    renderEnvironmentTable()
+}
+
+const addItemToggleListener = (elem) => {
+    elem.addEventListener('click', ({ target }) => {
+        const id = target.parentElement.dataset.id
+        manager.toggleCollapsedItem(id)
+
+        const collapsedIds = getCollapsedIds()
+        if (collapsedIds.includes(id)) {
+            const updated = collapsedIds.filter((item) => item !== id)
+            setCollapsedIds(updated)
+        } else {
+            collapsedIds.push(id)
+            setCollapsedIds(collapsedIds)
+        }
+        redraw()
+    })
+}
+
+const renderContent = (tests) => {
+    const sortAttr = getSort(manager.initialSort)
+    const sortAsc = JSON.parse(getSortDirection())
+    const rows = tests.map(dom.getResultTBody)
+    const table = document.getElementById('results-table')
+    const tableHeader = document.getElementById('results-table-head')
+
+    const newTable = document.createElement('table')
+    newTable.id = 'results-table'
+
+    // remove all sorting classes and set the relevant
+    findAll('.sortable', tableHeader).forEach((elem) => elem.classList.remove('asc', 'desc'))
+    tableHeader.querySelector(`.sortable[data-column-type="${sortAttr}"]`)?.classList.add(sortAsc ? 'desc' : 'asc')
+    newTable.appendChild(tableHeader)
+
+    if (!rows.length) {
+        const emptyTable = document.getElementById('template_results-table__body--empty').content.cloneNode(true)
+        newTable.appendChild(emptyTable)
+    } else {
+        rows.forEach((row) => {
+            if (!!row) {
+                findAll('.collapsible td:not(.col-links', row).forEach(addItemToggleListener)
+                find('.logexpander', row).addEventListener('click',
+                    (evt) => evt.target.parentNode.classList.toggle('expanded'),
+                )
+                newTable.appendChild(row)
+            }
+        })
+    }
+
+    table.replaceWith(newTable)
+}
+
+const renderDerived = () => {
+    const currentFilter = getVisible()
+    possibleFilters.forEach((result) => {
+        const input = document.querySelector(`input[data-test-result="${result}"]`)
+        input.checked = currentFilter.includes(result)
+    })
+}
+
+const bindEvents = () => {
+    const filterColumn = (evt) => {
+        const { target: element } = evt
+        const { testResult } = element.dataset
+
+        doFilter(testResult, element.checked)
+        const collapsedIds = getCollapsedIds()
+        const updated = manager.renderData.tests.map((test) => {
+            return {
+                ...test,
+                collapsed: collapsedIds.includes(test.id),
+            }
+        })
+        manager.setRender(updated)
+        redraw()
+    }
+
+    const header = document.getElementById('environment-header')
+    header.addEventListener('click', () => {
+        const table = document.getElementById('environment')
+        table.classList.toggle('hidden')
+        header.classList.toggle('collapsed')
+    })
+
+    findAll('input[name="filter_checkbox"]').forEach((elem) => {
+        elem.addEventListener('click', filterColumn)
+    })
+
+    findAll('.sortable').forEach((elem) => {
+        elem.addEventListener('click', (evt) => {
+            const { target: element } = evt
+            const { columnType } = element.dataset
+            doSort(columnType)
+            redraw()
+        })
+    })
+
+    document.getElementById('show_all_details').addEventListener('click', () => {
+        manager.allCollapsed = false
+        setCollapsedIds([])
+        redraw()
+    })
+    document.getElementById('hide_all_details').addEventListener('click', () => {
+        manager.allCollapsed = true
+        const allIds = manager.renderData.tests.map((test) => test.id)
+        setCollapsedIds(allIds)
+        redraw()
+    })
+}
+
+const redraw = () => {
+    const { testSubset } = manager
+
+    renderContent(testSubset)
+    renderDerived()
+}
+
+module.exports = {
+    redraw,
+    bindEvents,
+    renderStatic,
+}
+
+},{"./datamanager.js":1,"./dom.js":2,"./filter.js":3,"./sort.js":7,"./storage.js":8}],6:[function(require,module,exports){
+class MediaViewer {
+    constructor(assets) {
+        this.assets = assets
+        this.index = 0
+    }
+
+    nextActive() {
+        this.index = this.index === this.assets.length - 1 ? 0 : this.index + 1
+        return [this.activeFile, this.index]
+    }
+
+    prevActive() {
+        this.index = this.index === 0 ? this.assets.length - 1 : this.index -1
+        return [this.activeFile, this.index]
+    }
+
+    get currentIndex() {
+        return this.index
+    }
+
+    get activeFile() {
+        return this.assets[this.index]
+    }
+}
+
+
+const setup = (resultBody, assets) => {
+    if (!assets.length) {
+        resultBody.querySelector('.media').classList.add('hidden')
+        return
+    }
+
+    const mediaViewer = new MediaViewer(assets)
+    const container = resultBody.querySelector('.media-container')
+    const leftArrow = resultBody.querySelector('.media-container__nav--left')
+    const rightArrow = resultBody.querySelector('.media-container__nav--right')
+    const mediaName = resultBody.querySelector('.media__name')
+    const counter = resultBody.querySelector('.media__counter')
+    const imageEl = resultBody.querySelector('img')
+    const sourceEl = resultBody.querySelector('source')
+    const videoEl = resultBody.querySelector('video')
+
+    const setImg = (media, index) => {
+        if (media?.format_type === 'image') {
+            imageEl.src = media.path
+
+            imageEl.classList.remove('hidden')
+            videoEl.classList.add('hidden')
+        } else if (media?.format_type === 'video') {
+            sourceEl.src = media.path
+
+            videoEl.classList.remove('hidden')
+            imageEl.classList.add('hidden')
+        }
+
+        mediaName.innerText = media?.name
+        counter.innerText = `${index + 1} / ${assets.length}`
+    }
+    setImg(mediaViewer.activeFile, mediaViewer.currentIndex)
+
+    const moveLeft = () => {
+        const [media, index] = mediaViewer.prevActive()
+        setImg(media, index)
+    }
+    const doRight = () => {
+        const [media, index] = mediaViewer.nextActive()
+        setImg(media, index)
+    }
+    const openImg = () => {
+        window.open(mediaViewer.activeFile.path, '_blank')
+    }
+    if (assets.length === 1) {
+        container.classList.add('media-container--fullscreen')
+    } else {
+        leftArrow.addEventListener('click', moveLeft)
+        rightArrow.addEventListener('click', doRight)
+    }
+    imageEl.addEventListener('click', openImg)
+}
+
+module.exports = {
+    setup,
+}
+
+},{}],7:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const storageModule = require('./storage.js')
+
+const genericSort = (list, key, ascending, customOrder) => {
+    let sorted
+    if (customOrder) {
+        sorted = list.sort((a, b) => {
+            const aValue = a.result.toLowerCase()
+            const bValue = b.result.toLowerCase()
+
+            const aIndex = customOrder.findIndex((item) => item.toLowerCase() === aValue)
+            const bIndex = customOrder.findIndex((item) => item.toLowerCase() === bValue)
+
+            // Compare the indices to determine the sort order
+            return aIndex - bIndex
+        })
+    } else {
+        sorted = list.sort((a, b) => a[key] === b[key] ? 0 : a[key] > b[key] ? 1 : -1)
+    }
+
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const durationSort = (list, ascending) => {
+    const parseDuration = (duration) => {
+        if (duration.includes(':')) {
+            // If it's in the format "HH:mm:ss"
+            const [hours, minutes, seconds] = duration.split(':').map(Number)
+            return (hours * 3600 + minutes * 60 + seconds) * 1000
+        } else {
+            // If it's in the format "nnn ms"
+            return parseInt(duration)
+        }
+    }
+    const sorted = list.sort((a, b) => parseDuration(a['duration']) - parseDuration(b['duration']))
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const doInitSort = () => {
+    const type = storageModule.getSort(manager.initialSort)
+    const ascending = storageModule.getSortDirection()
+    const list = manager.testSubset
+    const initialOrder = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed', 'Skipped', 'Passed']
+
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    if (type?.toLowerCase() === 'original') {
+        manager.setRender(list)
+    } else {
+        let sortedList
+        switch (type) {
+        case 'duration':
+            sortedList = durationSort(list, ascending)
+            break
+        case 'result':
+            sortedList = genericSort(list, type, ascending, initialOrder)
+            break
+        default:
+            sortedList = genericSort(list, type, ascending)
+            break
+        }
+        manager.setRender(sortedList)
+    }
+}
+
+const doSort = (type, skipDirection) => {
+    const newSortType = storageModule.getSort(manager.initialSort) !== type
+    const currentAsc = storageModule.getSortDirection()
+    let ascending
+    if (skipDirection) {
+        ascending = currentAsc
+    } else {
+        ascending = newSortType ? false : !currentAsc
+    }
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    const list = manager.testSubset
+    const sortedList = type === 'duration' ? durationSort(list, ascending) : genericSort(list, type, ascending)
+    manager.setRender(sortedList)
+}
+
+module.exports = {
+    doInitSort,
+    doSort,
+}
+
+},{"./datamanager.js":1,"./storage.js":8}],8:[function(require,module,exports){
+const possibleFilters = [
+    'passed',
+    'skipped',
+    'failed',
+    'error',
+    'xfailed',
+    'xpassed',
+    'rerun',
+]
+
+const getVisible = () => {
+    const url = new URL(window.location.href)
+    const settings = new URLSearchParams(url.search).get('visible')
+    const lower = (item) => {
+        const lowerItem = item.toLowerCase()
+        if (possibleFilters.includes(lowerItem)) {
+            return lowerItem
+        }
+        return null
+    }
+    return settings === null ?
+        possibleFilters :
+        [...new Set(settings?.split(',').map(lower).filter((item) => item))]
+}
+
+const hideCategory = (categoryToHide) => {
+    const url = new URL(window.location.href)
+    const visibleParams = new URLSearchParams(url.search).get('visible')
+    const currentVisible = visibleParams ? visibleParams.split(',') : [...possibleFilters]
+    const settings = [...new Set(currentVisible)].filter((f) => f !== categoryToHide).join(',')
+
+    url.searchParams.set('visible', settings)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const showCategory = (categoryToShow) => {
+    if (typeof window === 'undefined') {
+        return
+    }
+    const url = new URL(window.location.href)
+    const currentVisible = new URLSearchParams(url.search).get('visible')?.split(',').filter(Boolean) ||
+        [...possibleFilters]
+    const settings = [...new Set([categoryToShow, ...currentVisible])]
+    const noFilter = possibleFilters.length === settings.length || !settings.length
+
+    noFilter ? url.searchParams.delete('visible') : url.searchParams.set('visible', settings.join(','))
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getSort = (initialSort) => {
+    const url = new URL(window.location.href)
+    let sort = new URLSearchParams(url.search).get('sort')
+    if (!sort) {
+        sort = initialSort || 'result'
+    }
+    return sort
+}
+
+const setSort = (type) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('sort', type)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getCollapsedCategory = (renderCollapsed) => {
+    let categories
+    if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        const collapsedItems = new URLSearchParams(url.search).get('collapsed')
+        switch (true) {
+        case !renderCollapsed && collapsedItems === null:
+            categories = ['passed']
+            break
+        case collapsedItems?.length === 0 || /^["']{2}$/.test(collapsedItems):
+            categories = []
+            break
+        case /^all$/.test(collapsedItems) || collapsedItems === null && /^all$/.test(renderCollapsed):
+            categories = [...possibleFilters]
+            break
+        default:
+            categories = collapsedItems?.split(',').map((item) => item.toLowerCase()) || renderCollapsed
+            break
+        }
+    } else {
+        categories = []
+    }
+    return categories
+}
+
+const getSortDirection = () => JSON.parse(sessionStorage.getItem('sortAsc')) || false
+const setSortDirection = (ascending) => sessionStorage.setItem('sortAsc', ascending)
+
+const getCollapsedIds = () => JSON.parse(sessionStorage.getItem('collapsedIds')) || []
+const setCollapsedIds = (list) => sessionStorage.setItem('collapsedIds', JSON.stringify(list))
+
+module.exports = {
+    getVisible,
+    hideCategory,
+    showCategory,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    setSort,
+    getSortDirection,
+    setSortDirection,
+    getCollapsedCategory,
+    possibleFilters,
+}
+
+},{}]},{},[4]);
+    </script>
+  </footer>
+  </body>
+</html>

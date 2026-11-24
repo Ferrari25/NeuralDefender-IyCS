@@ -1,0 +1,8 @@
+# Comando: bash -c node_modules/.bin/eslint --stdin --stdin-filename services/gateway/static/ejemplo_solo_advertencias.js -f stylish < 'entregables/1.3-evidencia-reglas/prueba-de-reglas/javascript/ejemplo_solo_advertencias.js'
+
+/home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS-20261122T063425Z-1-001/NeuralDefender-IyCS/Elastic-SIEM-Project/services/gateway/static/ejemplo_solo_advertencias.js
+  4:13  warning  Function Call Object Injection Sink  security/detect-object-injection
+
+✖ 1 problem (0 errors, 1 warning)
+
+# Codigo de salida: 0

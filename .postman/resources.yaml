@@ -1,0 +1,9 @@
+# Use this workspace to collaborate
+workspace:
+  id: d588f675-6e6d-4b3e-8758-6e515f6f2aa7
+
+localResources:
+  collections:
+    - ../Elastic-SIEM-Project/tests/postman/neuraldefender.postman_collection.json
+  environments:
+    - ../Elastic-SIEM-Project/entregables/2-servicios/postman/NeuralDefender-malla.postman_environment.json

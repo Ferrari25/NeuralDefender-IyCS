@@ -1,0 +1,1 @@
+[{"code":"DL3018","column":1,"file":"backup/Dockerfile","level":"warning","line":4,"message":"Pin versions in apk add. Instead of `apk add <package>` use `apk add <package>=<version>`"}]

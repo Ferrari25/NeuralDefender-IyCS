@@ -1,0 +1,9 @@
+     88 tests/test_no_autonomy.py
+      6 tests/unit/test_agregaciones_keyword.py
+     53 tests/unit/test_contraste_de_la_interfaz.py
+     61 tests/unit/test_despliegue_compose.py
+    155 tests/unit/test_reglas_como_codigo.py
+     57 tests/unit/test_s01_inyeccion_comandos.py
+     52 tests/unit/test_s02_xss_dashboard.py
+     19 tests/unit/test_tokens_de_diseno.py
+     91 tests/unit/test_validators.py

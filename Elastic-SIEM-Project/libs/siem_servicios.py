@@ -40,7 +40,8 @@ SERVICIOS = ("auth", "audit", "collector", "classifier", "analyst", "pipeline",
              "knowledge")
 
 PUERTO_INTERNO = 8000
-ENCABEZADO_TOKEN = "X-Internal-Token"  # noqa: S105 — el NOMBRE del encabezado, no un secreto
+# El NOMBRE del encabezado, no un secreto: falso positivo de ruff S105 y bandit B105.
+ENCABEZADO_TOKEN = "X-Internal-Token"  # noqa: S105  # nosec B105
 TOKEN_MIN = 32
 
 # La sonda de salud queda abierta: Docker la consulta sin credenciales para
@@ -127,7 +128,7 @@ _transporte: Transporte = _transporte_http
 
 def instalar_transporte(transporte: Transporte | None) -> None:
     """Reemplaza el transporte HTTP (lo usan las pruebas). `None` lo restaura."""
-    global _transporte  # noqa: PLW0603 — punto de inyección deliberado
+    global _transporte  # noqa: PLW0603 # pylint: disable=global-statement
     _transporte = transporte or _transporte_http
 
 

@@ -377,6 +377,9 @@ def contexto_para(incidentes: list[dict]) -> dict[str, dict]:
     for inc in incidentes:
         if not isinstance(inc, dict) or not isinstance(inc.get("incident_id"), str):
             raise ErrorDeMemoria("cada incidente necesita un 'incident_id'")
+        for campo in ("attacker_ips", "target_hosts"):
+            if inc.get(campo) is not None and not isinstance(inc[campo], list):
+                raise ErrorDeMemoria(f"'{campo}' debe ser una lista")
         contexto[inc["incident_id"]] = {
             "lecciones": _lecciones_aplicables(inc, lecciones),
             "casos_similares": _casos_similares(inc, casos),

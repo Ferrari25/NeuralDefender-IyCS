@@ -1,0 +1,38 @@
+$kind: http-request
+name: CP-SERV-49 | La memoria refleja lo cargado
+url: "{{url_gateway}}/api/v1/memoria"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-49 | La memoria refleja lo cargado
+      // Requisito: RF-MEM-05
+      // Técnica: caja gris (verifica el efecto de CP-SERV-40 y 42)
+      // Petición: GET /api/v1/memoria
+      // Esperado: 200 con el documento de CP-SERV-40 y la lección de CP-SERV-42
+      // ============================================================
+
+      pm.test("CP-SERV-49 | Código 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      const datos = pm.response.json();
+
+      pm.test("CP-SERV-49 | Contrato: documentos y lecciones", function () {
+          pm.expect(datos).to.include.all.keys("documentos", "lecciones");
+          pm.expect(datos.documentos).to.be.an("array");
+          pm.expect(datos.lecciones).to.be.an("array");
+      });
+
+      pm.test("CP-SERV-49 | Incluye el documento de CP-SERV-40", function () {
+          pm.expect(datos.documentos.some(d => d.titulo === "Procedimiento SSH")).to.be.true;
+      });
+
+      pm.test("CP-SERV-49 | Incluye la lección aprobada de CP-SERV-42", function () {
+          const leccion = datos.lecciones.find(l => l.leccion_id === pm.environment.get("leccion_id"));
+          pm.expect(leccion).to.not.be.undefined;
+          pm.expect(leccion.estado).to.eql("aprobada");
+      });
+    language: text/javascript
+order: 11000

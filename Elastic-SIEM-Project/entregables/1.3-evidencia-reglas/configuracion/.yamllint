@@ -1,0 +1,10 @@
+# yamllint (sintaxis, sangría y claves duplicadas de la configuración YAML).
+extends: default
+rules:
+  # Los archivos de Compose y Logstash tienen líneas largas por naturaleza.
+  line-length: disable
+  # Los YAML de configuración no usan el marcador "---".
+  document-start: disable
+  # `on`/`off` no se usan como booleanos en estos archivos; se revisan solo los valores.
+  truthy:
+    check-keys: false

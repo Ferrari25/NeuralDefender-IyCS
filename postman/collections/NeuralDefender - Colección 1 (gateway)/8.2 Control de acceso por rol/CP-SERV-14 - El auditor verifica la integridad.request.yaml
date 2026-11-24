@@ -1,0 +1,45 @@
+$kind: http-request
+name: CP-SERV-14 | El auditor verifica la integridad
+url: "{{url_gateway}}/api/v1/audit/verify"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-14 | El auditor verifica la integridad
+      // Requisito: RF-AUT-02 (el auditor verifica la integridad)
+      // Técnica: tabla de decisión (rol auditor, operación verificar)
+      // Precondición: sesión de auditor
+      // Petición: GET /api/v1/audit/verify
+      // Esperado: 200 con chain_ok = true y first_broken = null
+      // Efecto: guarda la cantidad de registros en registros_antes,
+      // para compararla en CP-SERV-33 después de registrar decisiones.
+      // ============================================================
+
+      // 1. Código: el auditor SÍ puede verificar.
+      pm.test("CP-SERV-14 | Código 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      const datos = pm.response.json();
+
+      // 2. Contrato del resultado de la verificación.
+      pm.test("CP-SERV-14 | Contrato del resultado", function () {
+          pm.expect(datos).to.include.all.keys("chain_ok", "estado", "first_broken", "records");
+      });
+
+      // 3. Tipos de datos.
+      pm.test("CP-SERV-14 | Tipos de datos", function () {
+          pm.expect(datos.chain_ok).to.be.a("boolean");
+          pm.expect(datos.records).to.be.a("number");
+      });
+
+      // 4. Regla: la cadena de auditoría está íntegra, no hay ningún registro roto.
+      pm.test("CP-SERV-14 | La cadena está íntegra", function () {
+          pm.expect(datos.chain_ok).to.be.true;
+          pm.expect(datos.first_broken).to.be.null;
+      });
+
+      pm.environment.set("registros_antes", datos.records);
+    language: text/javascript
+order: 6000

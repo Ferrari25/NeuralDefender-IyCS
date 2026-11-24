@@ -1,0 +1,20 @@
+$kind: http-request
+name: Preparación | Sesión de observador
+url: "{{url_gateway}}/api/v1/login"
+method: POST
+body:
+  type: json
+  content: '{"username": "{{observador}}", "password": "{{password}}"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // Preparación: abre la sesión del rol observador (viewer) y guarda
+      // su token CSRF. No es un caso del plan: deja listo el sistema
+      // para CP-SERV-12, 13 y 17.
+      pm.test("Preparación | Sesión de observador abierta", function () {
+          pm.response.to.have.status(200);
+          pm.expect(pm.response.json().rol).to.eql("viewer");
+      });
+      pm.environment.set("csrf_token", pm.response.json().csrf_token);
+    language: text/javascript
+order: 1000

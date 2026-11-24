@@ -1,0 +1,6 @@
+
+/home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS-20261122T063425Z-1-001/NeuralDefender-IyCS/Elastic-SIEM-Project/services/gateway/static/app.js
+  338:58  warning  Generic Object Injection Sink  security/detect-object-injection
+
+✖ 1 problem (0 errors, 1 warning)
+

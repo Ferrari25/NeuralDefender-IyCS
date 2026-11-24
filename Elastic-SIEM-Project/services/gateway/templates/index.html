@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>NeuralDefender · Panel de supervisión</title>
+  <!-- H-1: sin ícono declarado, el navegador pedía /favicon.ico y recibía 404. -->
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="{{ url_for('static', filename='tokens.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='iconos.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
@@ -13,7 +15,8 @@
   <header>
     <h1><svg class="ico"><use href="#i-escudo"></use></svg> NeuralDefender · Panel de supervisión</h1>
     <div class="right">
-      <span class="about" data-accion="about"><svg class="ico"><use href="#i-info"></use></svg> Cómo funciona este panel</span>
+      <!-- H-2: era un <span>; un <button> recibe el foco con Tab y se abre con Enter o Espacio. -->
+      <button class="about" type="button" data-accion="about" aria-controls="aboutPanel"><svg class="ico"><use href="#i-info"></use></svg> Cómo funciona este panel</button>
       <span class="sesion" id="sesion"></span>
       <button class="salir" id="salir" type="button">Cerrar sesión</button>
       <span class="mode-badge" id="modeBadge">cargando…</span>
@@ -75,7 +78,8 @@
             <select id="fType" data-filtro="1">
               <option value="">Todos los tipos de ataque</option>
             </select>
-            <input id="fSearch" type="text" placeholder="Buscar por IP…" data-filtro="1">
+            <!-- H-5: el placeholder no es una etiqueta; aria-label le da nombre accesible al campo. -->
+            <input id="fSearch" type="text" placeholder="Buscar por IP…" aria-label="Buscar por IP" data-filtro="1">
           </div>
           <div id="eventsTableWrap"></div>
           <div id="detailWrap" class="detail-wrap"></div>
@@ -131,7 +135,8 @@
                   <option value="credential_harvesting">Phishing / robo de credenciales</option>
                   <option value="suspicious_auth">Autenticación sospechosa</option>
                 </select>
-                <input id="leccionIp" type="text" maxlength="64" placeholder="Solo para esta IP (opcional)">
+                <!-- H-5: sin etiqueta propia; aria-label le da nombre accesible al campo. -->
+                <input id="leccionIp" type="text" maxlength="64" placeholder="Solo para esta IP (opcional)" aria-label="Dirección IP a la que aplica la lección (opcional)">
                 <button type="submit" class="small">Proponer lección</button>
               </form>
             </details>

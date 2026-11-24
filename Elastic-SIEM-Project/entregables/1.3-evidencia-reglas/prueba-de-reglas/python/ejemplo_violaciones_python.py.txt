@@ -1,0 +1,132 @@
+# ARCHIVO DE PRUEBA: contiene violaciones intencionales. No es codigo del producto.
+# Se guarda con sufijo .txt para que ruff, bandit y test_no_autonomy no lo recorran.
+# El runner ejecutar_pruebas.sh crea una copia .py temporal, la analiza y la borra.
+import hashlib
+import marshal
+import os
+import pickle
+import shelve
+import subprocess
+import yaml
+import json
+import xml.etree.ElementTree as ET
+from typing import List
+
+import requests
+
+PASSWORD = "admin1234"  # S105 / B105: contrasena en el codigo
+
+
+def seguridad(dato, cursor, ruta=[]):  # B006: argumento mutable por defecto
+    os.system("ls " + dato)  # E8002 / S605 / B605: os.system
+    os.popen("ls")  # E8010 / S605 / B605: os.popen
+    subprocess.run(["ls"])  # W1510 / S603 / B603 / B404: subprocess.run sin check
+    subprocess.call("ls " + dato, shell=True)  # E8003 / S602 / B602: shell=True
+    eval(dato)  # E8001 / S307 / B307: eval
+    exec(dato)  # E8001 / S102 / B102: exec
+    pickle.loads(dato)  # E8013 / S301 / B301: pickle
+    marshal.loads(dato)  # E8014 / S302 / B302: marshal
+    shelve.open("estado")  # E8015: shelve
+    hashlib.md5(dato)  # S324 / B324: hash debil MD5
+    hashlib.sha1(dato)  # S324 / B324: hash debil SHA-1
+    yaml.load(dato)  # E8005 / S506 / B506: yaml.load inseguro
+    requests.get("http://example.com")  # S113 / B113: requests sin timeout
+    ET.fromstring(dato)  # S314 / B314: XML inseguro
+    assert dato  # S101 / B101: assert
+    open("/tmp/salida", "w")  # S108 / B108: archivo temporal inseguro
+    cursor.execute("SELECT * FROM t WHERE id=" + dato)  # S608 / B608: SQL concatenado
+    os.open("/tmp/f", os.O_WRONLY | os.O_CREAT, 0o777)  # modo de archivo mas permisivo que 0o600
+    os.mkdir("/tmp/d", 0o777)  # modo de directorio mas permisivo que 0o700
+    os.makedirs("/tmp/d2")  # makedirs sin modo
+    os.spawnl(os.P_WAIT, "/bin/ls", "ls")  # spawn con proceso
+    os.execl("/bin/ls", "ls")  # exec con proceso
+    os.mkfifo("/tmp/tuberia", 0o666)  # modo de fifo mas permisivo que 0o600
+    return ruta
+
+
+def sim(x):  # SIM103: devolver la condicion directamente
+    if x:
+        return True
+    else:
+        return False
+
+
+def comprension(x):  # C411: list() innecesario sobre una comprension
+    return list([i for i in x])
+
+
+def demasiados_argumentos(a, b, c, d, e, f, g, h):  # R0913 / R0917: mas de 6 argumentos
+    return a, b, c, d, e, f, g, h
+
+
+def comparacion(x):
+    if x == None:  # E711: comparar con None usando ==
+        return 1
+    return 2   
+
+
+def funcion_enorme(v):  # C901 (>10), R0912 (>15 ramas), R0914 (>25 locales), R0915 (>60 sentencias)
+    l01 = 1
+    l02 = 2
+    l03 = 3
+    l04 = 4
+    l05 = 5
+    l06 = 6
+    l07 = 7
+    l08 = 8
+    l09 = 9
+    l10 = 10
+    l11 = 11
+    l12 = 12
+    l13 = 13
+    l14 = 14
+    l15 = 15
+    l16 = 16
+    l17 = 17
+    l18 = 18
+    l19 = 19
+    l20 = 20
+    l21 = 21
+    l22 = 22
+    l23 = 23
+    l24 = 24
+    l25 = 25
+    l26 = 26
+    if v == 1:
+        l01 = 1
+    if v == 2:
+        l01 = 2
+    if v == 3:
+        l01 = 3
+    if v == 4:
+        l01 = 4
+    if v == 5:
+        l01 = 5
+    if v == 6:
+        l01 = 6
+    if v == 7:
+        l01 = 7
+    if v == 8:
+        l01 = 8
+    if v == 9:
+        l01 = 9
+    if v == 10:
+        l01 = 10
+    if v == 11:
+        l01 = 11
+    if v == 12:
+        l01 = 12
+    if v == 13:
+        l01 = 13
+    if v == 14:
+        l01 = 14
+    if v == 15:
+        l01 = 15
+    if v == 16:
+        l01 = 16
+    if v == 17:
+        l01 = 17
+    return v
+
+
+LINEA_LARGA = "esta linea supera ampliamente los cien caracteres que fija el proyecto para ruff y pylint, E501 ignorada en ruff"

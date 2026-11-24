@@ -28,7 +28,7 @@
 # ataques nuevos se suman.
 # ─────────────────────────────────────────────────────────────────────────────
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 
 export PYTHONPATH="$PWD/.devtools${PYTHONPATH:+:$PYTHONPATH}"
 
@@ -110,7 +110,7 @@ print(len(json.loads(p.read_text())['usuarios']) if p.exists() else 0)" 2>/dev/n
 
   printf '  %-34s' "Reglas de detección"
   local n_reglas
-  n_reglas=$(ls rules/ndjson/*.ndjson 2>/dev/null | wc -l)
+  n_reglas=$(find rules/ndjson -name '*.ndjson' 2>/dev/null | wc -l)
   printf '\033[32m%s versionadas\033[0m\n' "$n_reglas"
 
   printf '  %-34s' "Incidentes para mostrar"
@@ -124,6 +124,7 @@ print(len(json.loads(p.read_text())['usuarios']) if p.exists() else 0)" 2>/dev/n
 
 if $SOLO_ESTADO; then
   azul "Estado del entorno de demostración"
+  # shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
   diagnostico && echo && verde "Listo para demostrar." || { echo; rojo "Falta algo de lo de arriba."; exit 1; }
   exit 0
 fi
@@ -231,6 +232,7 @@ usuarios = json.loads(p.read_text())['usuarios'] if p.exists() else []
 sys.exit(0 if any(u['username'] == '$1' for u in usuarios) else 1)" 2>/dev/null; then
     amarillo "'$1' ya existe"
   else
+    # shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
     SIEM_NEW_PASSWORD="$3" ./scripts/siem.sh usuarios crear "$1" --rol "$2" >/dev/null 2>&1 \
       && verde "'$1' creado (rol $2)" || rojo "no se pudo crear '$1'"
   fi
@@ -257,8 +259,10 @@ paso "4/5 · Ataques simulados"
 rm -f network_logs/*.json
 amarillo "corridas anteriores de simulación limpiadas"
 
+# shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
 bash simulation/run-port-scan.sh --offline >/dev/null 2>&1 \
   && verde "escaneo de puertos  (T1046) · 26 puertos" || rojo "falló el port scan"
+# shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
 bash simulation/run-phishing.sh --offline >/dev/null 2>&1 \
   && verde "phishing            (T1566) · captura de credenciales" || rojo "falló el phishing"
 

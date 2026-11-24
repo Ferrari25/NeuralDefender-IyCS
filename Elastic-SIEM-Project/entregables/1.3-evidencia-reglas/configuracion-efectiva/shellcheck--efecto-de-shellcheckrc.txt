@@ -1,0 +1,8 @@
+# Comando: shellcheck -f gcc muestra_sin_shebang.sh   (lee .shellcheckrc: shell=bash)
+entregables/1.3-evidencia-reglas/configuracion-efectiva/muestra_sin_shebang.sh:2:8: note: Double quote to prevent globbing and word splitting. [SC2086]
+codigo de salida: 1
+
+# Comando: shellcheck --norc -f gcc muestra_sin_shebang.sh   (ignora .shellcheckrc)
+entregables/1.3-evidencia-reglas/configuracion-efectiva/muestra_sin_shebang.sh:1:1: error: Tips depend on target shell and yours is unknown. Add a shebang or a 'shell' directive. [SC2148]
+entregables/1.3-evidencia-reglas/configuracion-efectiva/muestra_sin_shebang.sh:2:8: note: Double quote to prevent globbing and word splitting. [SC2086]
+codigo de salida: 1

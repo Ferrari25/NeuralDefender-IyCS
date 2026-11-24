@@ -97,6 +97,10 @@ Mapa de carpetas y "¿dónde busco…?": `README.md` §Dónde está todo. Regla:
 - **Pruebas de performance con k6:** `./scripts/pruebas_de_performance.sh [humo|carga|estres|pico|login]`
   (k6 en contenedor, contra el panel en :5000; usuario de solo lectura `k6-carga`, credenciales
   en `.k6-credenciales`). Solo endpoints GET: nunca registra decisiones. Ver `pruebas_de_performance.md`.
+- **Pruebas de servicio con Postman:** `./scripts/pruebas_de_api_postman.sh` (Newman en contenedor,
+  113 pedidos sobre 52 de los 55 endpoints). Corre contra una **malla aislada** de los 8 servicios
+  (`tests/postman/malla_postman.py`), nunca contra el :5000 real: escribe decisiones y la auditoría
+  es inmutable. La colección se regenera con `python3 tests/postman/generar_coleccion.py`.
 - **Antes de tocar código, correr `./scripts/pruebas_completas.sh`** (linters + SAST + pruebas, ~150 s).
   La puerta falla ante cualquier hallazgo nuevo; las líneas de base están en cero.
   Incluye las **pruebas de interfaz** (`tests/interfaz/`, Chromium + Playwright, ver

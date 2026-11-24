@@ -1,0 +1,33 @@
+$kind: http-request
+name: CP-SERV-38 | Rango de fechas invertido
+url: "{{url_gateway}}/api/v1/reportes?desde=2026-02-01&hasta=2026-01-01"
+method: GET
+queryParams:
+  desde: 2026-02-01
+  hasta: 2026-01-01
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-38 | Rango de fechas invertido
+      // Requisito: RF-REP-01
+      // Técnica: partición de equivalencia, partición inválida
+      // Petición: GET /api/v1/reportes con "desde" posterior a "hasta"
+      // Esperado: 400 con el motivo
+      // ============================================================
+
+      pm.test("CP-SERV-38 | Código 400", function () {
+          pm.response.to.have.status(400);
+      });
+
+      const datos = pm.response.json();
+
+      pm.test("CP-SERV-38 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      pm.test("CP-SERV-38 | Indica que el rango está invertido", function () {
+          pm.expect(datos.error).to.eql("'desde' es posterior a 'hasta'");
+      });
+    language: text/javascript
+order: 7000

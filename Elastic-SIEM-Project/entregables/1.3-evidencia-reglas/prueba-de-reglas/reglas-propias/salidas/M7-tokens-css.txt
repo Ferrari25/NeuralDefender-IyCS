@@ -1,0 +1,29 @@
+# Propiedad: Uso de tokens de diseno en CSS (sin px sueltos)
+# Archivo mutado (en la copia): services/gateway/static/app.css
+# Pruebas: tests/unit/test_tokens_de_diseno.py
+
+## 1. Codigo sano
+...................                                                      [100%]
+19 passed in 0.16s
+
+## 2. Defecto inyectado: p='services/gateway/static/app.css'; s=open(p).read(); open(p,'w').write(s+'\n.mutacion { padding: 7px; }\n')
+...F
+=================================== FAILURES ===================================
+______ test_ninguna_propiedad_de_ritmo_usa_un_valor_en_px_suelto[app.css] ______
+tests/unit/test_tokens_de_diseno.py:95: in test_ninguna_propiedad_de_ritmo_usa_un_valor_en_px_suelto
+    assert not sueltos, f"valores en px sin token en {hoja.name}:\n" + "\n".join(
+E   AssertionError: valores en px sin token en app.css:
+E       app.css:371  padding: 7px
+E   assert not [(371, 'padding', '7px')]
+=========================== short test summary info ============================
+FAILED tests/unit/test_tokens_de_diseno.py::test_ninguna_propiedad_de_ritmo_usa_un_valor_en_px_suelto[app.css]
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 3 passed in 0.16s
+
+## 3. Diferencia entre el archivo sano y el mutado
+@@ -457,3 +457,5 @@
+ .reportes { margin-top: var(--sp-12); }
+ .reportes summary { cursor: pointer; font-size: var(--fs-sm); font-weight: 600; color: var(--accent); }
+ .reportes-ctrl { display: flex; gap: var(--sp-8); }
++
++.mutacion { padding: 7px; }

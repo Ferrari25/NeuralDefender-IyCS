@@ -1,0 +1,42 @@
+$kind: http-request
+name: CP-SERV-13 | El observador intenta decidir
+url: "{{url_gateway}}/api/v1/decision"
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+body:
+  type: json
+  content: '{"incident_id": "{{incident_id}}", "action_id": "{{action_id}}", "decision": "approved"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-13 | El observador intenta decidir
+      // Requisito: RF-AUT-02 (solo el analista decide)
+      // Técnica: tabla de decisión (rol viewer, operación decidir)
+      // Precondición: sesión de observador
+      // Petición: POST /api/v1/decision con una decisión VÁLIDA,
+      // para que el único motivo de rechazo sea el permiso.
+      // Esperado: 403 con permiso_requerido = "decidir"
+      // ============================================================
+
+      // 1. Código: autenticado pero sin permiso, 403 Forbidden.
+      pm.test("CP-SERV-13 | Código 403", function () {
+          pm.response.to.have.status(403);
+      });
+
+      const datos = pm.response.json();
+
+      // 2 y 3. Contrato y tipos: el error indica qué permiso falta.
+      pm.test("CP-SERV-13 | Contrato: error y permiso_requerido", function () {
+          pm.expect(datos).to.include.all.keys("error", "permiso_requerido");
+          pm.expect(datos.permiso_requerido).to.be.a("string");
+      });
+
+      // 4. Regla: falta el permiso decidir y el mensaje nombra el rol viewer.
+      pm.test("CP-SERV-13 | Falta el permiso decidir", function () {
+          pm.expect(datos.permiso_requerido).to.eql("decidir");
+          pm.expect(datos.error).to.include("viewer");
+      });
+    language: text/javascript
+order: 3000

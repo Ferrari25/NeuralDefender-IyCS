@@ -1,0 +1,39 @@
+$kind: http-request
+name: CP-SERV-24 | Valor de decisión no admitido
+url: "{{url_gateway}}/api/v1/decision"
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+body:
+  type: json
+  content: '{"incident_id": "{{incident_id}}", "action_id": "{{action_id}}", "decision": "ejecutar"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-24 | Valor de decisión no admitido
+      // Requisitos: RF-SUP-04, RQ-SEC-09
+      // Técnica: partición de equivalencia, partición inválida
+      // Petición: POST /api/v1/decision con decision = "ejecutar"
+      // Esperado: 400. Solo existen "approved" y "dismissed": el sistema
+      // nunca acepta una orden de ejecutar (RF-SUP-05).
+      // ============================================================
+
+      // 1. Código: 400 Bad Request.
+      pm.test("CP-SERV-24 | Código 400", function () {
+          pm.response.to.have.status(400);
+      });
+
+      const datos = pm.response.json();
+
+      // 2 y 3. Contrato y tipo del error.
+      pm.test("CP-SERV-24 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      // 4. Regla: el mensaje indica los únicos valores admitidos.
+      pm.test("CP-SERV-24 | Indica los valores admitidos", function () {
+          pm.expect(datos.error).to.eql("decision inválida (approved|dismissed)");
+      });
+    language: text/javascript
+order: 2000

@@ -1,0 +1,32 @@
+$kind: http-request
+name: CP-SERV-36 | Formato no admitido
+url: "{{url_gateway}}/api/v1/reportes?formato=xml"
+method: GET
+queryParams:
+  formato: xml
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-36 | Formato no admitido
+      // Requisito: RF-REP-01 (solo CSV o JSON)
+      // Técnica: partición de equivalencia, partición inválida
+      // Petición: GET /api/v1/reportes?formato=xml
+      // Esperado: 400 con los formatos admitidos
+      // ============================================================
+
+      pm.test("CP-SERV-36 | Código 400", function () {
+          pm.response.to.have.status(400);
+      });
+
+      const datos = pm.response.json();
+
+      pm.test("CP-SERV-36 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      pm.test("CP-SERV-36 | Indica los formatos admitidos", function () {
+          pm.expect(datos.error).to.eql("formato inválido (json|csv)");
+      });
+    language: text/javascript
+order: 6000

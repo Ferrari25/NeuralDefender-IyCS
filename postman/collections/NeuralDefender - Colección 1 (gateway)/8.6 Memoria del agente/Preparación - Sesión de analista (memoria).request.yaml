@@ -1,0 +1,18 @@
+$kind: http-request
+name: Preparación | Sesión de analista (memoria)
+url: "{{url_gateway}}/api/v1/login"
+method: POST
+body:
+  type: json
+  content: '{"username": "{{analista}}", "password": "{{password}}"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // Preparación: vuelve a la sesión del analista, que tiene el permiso
+      // decidir necesario para escribir en la memoria del agente.
+      pm.test("Preparación | Sesión de analista abierta", function () {
+          pm.response.to.have.status(200);
+      });
+      pm.environment.set("csrf_token", pm.response.json().csrf_token);
+    language: text/javascript
+order: 1000

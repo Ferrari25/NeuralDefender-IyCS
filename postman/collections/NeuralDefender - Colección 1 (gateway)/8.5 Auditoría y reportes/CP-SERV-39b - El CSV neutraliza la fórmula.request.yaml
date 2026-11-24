@@ -1,0 +1,45 @@
+$kind: http-request
+name: CP-SERV-39b | El CSV neutraliza la fórmula
+url: "{{url_gateway}}/api/v1/reportes?formato=csv&desde=2026-01-01&hasta={{hoy}}"
+method: GET
+queryParams:
+  formato: csv
+  desde: 2026-01-01
+  hasta: "{{hoy}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-39b | El CSV neutraliza la fórmula
+      // Requisito: RF-REP-03 (segunda mitad del caso)
+      // Técnica: caja gris (busca en el CSV la nota registrada en CP-SERV-39a)
+      // Por qué importa: si una celda empieza con "=", Excel la ejecuta como
+      // fórmula al abrir el archivo. Un atacante podría escribir una fórmula
+      // en un log y hacer que se ejecute en la computadora del auditor.
+      // Esperado: la celda aparece con un apóstrofo delante ('=HYPERLINK),
+      // que hace que Excel la trate como texto.
+      // ============================================================
+
+      const csv = pm.response.text();
+
+      // 1. Código: 200.
+      pm.test("CP-SERV-39b | Código 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      // 2. La nota de CP-SERV-39a está en el CSV.
+      pm.test("CP-SERV-39b | El CSV contiene la nota de 39a", function () {
+          pm.expect(csv).to.include("HYPERLINK");
+      });
+
+      // 3. Regla de seguridad: la fórmula aparece neutralizada con un apóstrofo.
+      pm.test("CP-SERV-39b | La celda empieza con apóstrofo", function () {
+          pm.expect(csv).to.include("'=HYPERLINK");
+      });
+
+      // 4. Regla de seguridad: ninguna celda empieza directamente con "=HYPERLINK".
+      pm.test("CP-SERV-39b | Ninguna celda empieza con =", function () {
+          pm.expect(csv).to.not.match(/(^|,)"?=HYPERLINK/m);
+      });
+    language: text/javascript
+order: 8000

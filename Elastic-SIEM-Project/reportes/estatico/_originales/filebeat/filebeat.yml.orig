@@ -1,0 +1,67 @@
+filebeat.inputs:
+  # Docker container logs (includes the ssh-target during simulation).
+  - type: container
+    id: docker-containers
+    enabled: true
+    paths:
+      - /var/lib/docker/containers/*/*.log
+
+  # Host system / auth logs — scoped to what the SIEM actually needs (no /var/log/*.log firehose).
+  - type: filestream
+    id: system-auth-logs
+    enabled: true
+    paths:
+      - /var/log/auth.log
+      - /var/log/syslog
+      - /var/log/messages
+    exclude_files: ['\.gz$']
+    fields:
+      source_type: system_logs
+
+  # Synthetic network traffic logs (JSON, one object per line).
+  - type: filestream
+    id: network-traffic
+    enabled: true
+    paths:
+      - /usr/share/filebeat/network_logs/*.json
+    parsers:
+      - ndjson:
+          keys_under_root: true
+          overwrite_keys: true
+          add_error_key: true
+    fields:
+      source_type: network_traffic
+    fields_under_root: true
+
+processors:
+  - add_host_metadata: ~
+  - add_docker_metadata: ~
+  # Drop desktop/GPU noise at ingest time instead of filtering it later at query time.
+  - drop_event:
+      when:
+        or:
+          - contains:
+              message: "AMDGPU"
+          - contains:
+              message: "flip done"
+          - contains:
+              log.file.path: "Xorg"
+
+output.logstash:
+  hosts: ["logstash:5044"]
+  ssl.enabled: false
+
+# Alternative direct-to-Elasticsearch output (commented out; default path is Logstash).
+#output.elasticsearch:
+#  hosts: ["elasticsearch:9200"]
+#  username: "elastic"
+#  password: "${ELASTIC_PASSWORD}"
+#  ssl.enabled: false
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644

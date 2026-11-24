@@ -1,0 +1,2 @@
+[main]	INFO	Found project level .bandit file: ./.bandit
+[main]	INFO	Using command line arg for selected targets

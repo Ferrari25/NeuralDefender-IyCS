@@ -1,0 +1,183 @@
+..F.................F.F................F..........F...........F.FF.      [100%]
+=================================== FAILURES ===================================
+___ test_cp_ui_08_login_correcto_muestra_usuario_rol_e_incidentes[chromium] ____
+/home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS/NeuralDefender-IyCS/Elastic-SIEM-Project/tests/interfaz/test_panel.py:70: in test_cp_ui_08_login_correcto_muestra_usuario_rol_e_incidentes
+    assert errores_de_consola == []
+E   AssertionError: assert ['Failed to l... (NOT FOUND)'] == []
+E     
+E     Left contains one more item: 'Failed to load resource: the server responded with a status of 404 (NOT FOUND)'
+E     Use -v to get more diff
+------------------------------ Captured log call -------------------------------
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:07:27] "GET /login HTTP/1.1" 200 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:07:27] "GET /static/iconos.css HTTP/1.1" 200 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:07:27] "GET /static/tokens.css HTTP/1.1" 200 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:07:27] "GET /static/login.css HTTP/1.1" 200 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:07:27] "GET /static/login.js HTTP/1.1" 200 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:07:27] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:07:27] "POST /api/v1/login HTTP/1.1" 200 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:07:27] "GET / HTTP/1.1" 200 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:07:27] "[36mGET /static/tokens.css HTTP/1.1[0m" 304 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:07:27] "[36mGET /static/iconos.css HTTP/1.1[0m" 304 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:07:27] "GET /static/app.js HTTP/1.1" 200 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:07:27] "GET /static/app.css HTTP/1.1" 200 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:07:27] "GET /api/v1/me HTTP/1.1" 200 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:07:27] "GET /api/v1/decisions HTTP/1.1" 200 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:07:27] "GET /api/v1/incidents HTTP/1.1" 200 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [23/Nov/2026 02:07:27] "GET /api/v1/memoria HTTP/1.1" 200 -
+________ test_cp_ui_08_el_panel_carga_completo_y_sin_errores[chromium] _________
+tests/interfaz/test_s2_acceso_y_sesion.py:31: in test_cp_ui_08_el_panel_carga_completo_y_sin_errores
+    assert page.request.get(icono).status < 400, f"el ícono del sitio responde con error: {icono}"
+E   AssertionError: el ícono del sitio responde con error: http://127.0.0.1:18080/favicon.ico
+E   assert 404 < 400
+E    +  where 404 = <APIResponse url='http://127.0.0.1:18080/favicon.ico' status=404 status_text='NOT FOUND'>.status
+E    +    where <APIResponse url='http://127.0.0.1:18080/favicon.ico' status=404 status_text='NOT FOUND'> = get('http://127.0.0.1:18080/favicon.ico')
+E    +      where get = <APIRequestContext type=APIRequestContext guid=request-context@3fb88b29efab89990201fd7909bc578c>.get
+E    +        where <APIRequestContext type=APIRequestContext guid=request-context@3fb88b29efab89990201fd7909bc578c> = <Page url='http://127.0.0.1:18080/'>.request
+__ test_cp_ui_10_sesion_cerrada_en_otro_contexto_redirige_al_login[chromium] ___
+tests/interfaz/test_s2_acceso_y_sesion.py:54: in test_cp_ui_10_sesion_cerrada_en_otro_contexto_redirige_al_login
+    expect(segunda).to_have_url(f"{URL}/login", timeout=20_000)
+E   AssertionError: Page URL expected to be 'http://127.0.0.1:18080/login'
+E   Actual value: http://127.0.0.1:18080/ 
+E   Call log:
+E     - Expect "to_have_url" with timeout 20000ms
+E       43 × locator resolved to <html lang="es">…</html>
+E          - unexpected value "http://127.0.0.1:18080/"
+E   
+E   Aria snapshot:
+E   - banner:
+E     - heading "NeuralDefender · Panel de supervisión" [level=1]:
+E       - img
+E       - text: NeuralDefender · Panel de supervisión
+E     - img
+E     - text: Cómo funciona este panel analista00analyst
+E     - button "Cerrar sesión"
+E     - text: — sin análisis todavía — actualizado 2:08:00 AM
+E   - text: 12 acciones esperan tu decisión 3 incidentes 12 acciones sugeridas
+E   - list:
+E     - listitem: 1 critical
+E     - listitem: 2 high
+E     - listitem: 0 medium
+E     - listitem: 0 low
+E   - text: ↻ auto cada 15s
+E   - heading "Eventos de Seguridad Activos" [level=2]:
+E     - img
+E     - text: Eventos de Seguridad Activos
+E   - combobox:
+E     - option "Todas las severidades" [selected]
+E     - option "Critical"
+E     - option "High"
+E     - option "Medium"
+E     - option "Low"
+E   - combobox:
+E     - option "Todos los tipos de ataque" [selected]
+E     - option "Escaneo de puertos"
+E     - option "Fuerza bruta SSH"
+E     - option "Phishing / robo de credenciales"
+E   - textbox "Buscar por IP…"
+E   - table:
+E     - rowgroup:
+E       - row "ID Severidad IP origen Tipo de ataque Regla disparada Análisis de IA":
+E         - columnheader "ID"
+E         - columnheader "Severidad"
+E         - columnheader "IP origen"
+E         - columnheader "Tipo de ataque"
+E         - columnheader "Regla disparada"
+E         - columnheader "Análisis de IA"
+E     - rowgroup:
+E       - button "Abrir el detalle del incidente INC-SCAN-172.18.0.7-8e58721f":
+E         - cell "INC-SCAN-172.18.0.7-8e58721f"
+E         - cell "HIGH"
+E         - cell "172.18.0.7"
+E         - cell "Escaneo de puertos"
+E         - cell "Port Scan – Many Distinct Ports"
+E         - cell "—"
+E       - button "Abrir el detalle del incidente INC-AUTH-172.18.0.3-1d106398":
+E         - cell "INC-AUTH-172.18.0.3-1d106398"
+E         - cell "CRITICAL"
+E         - cell "172.18.0.3"
+E         - cell "Fuerza bruta SSH"
+E         - cell "SSH Successful Login After Brute Force"
+E         - cell "—"
+E       - button "Abrir el detalle del incidente INC-PHISH-172.18.0.9-ed0c800f":
+E         - cell "INC-PHISH-172.18.0.9-ed0c800f"
+E         - cell "HIGH"
+E         - cell "172.18.0.9"
+E         - cell "Phishing / robo de credenciales"
+E         - cell "Credential Submission to Suspicious Login"
+E         - cell "—"
+E   - complementary:
+E     - heading "Ataques Recientes" [level=2]:
+E       - img
+E       - text: Ataques Recientes
+E     - text: 172.18.0.3 CRITICAL Fuerza bruta SSH hace 97d 172.18.0.7 HIGH Escaneo de puertos hace 97d 172.18.0.9 HIGH Phishing / robo de credenciales hace 97d
+E     - heading "Historial de Decisiones" [level=2]:
+E       - img
+E       - text: Historial de Decisiones
+E     - text: Todavía no se registraron decisiones.
+E     - group: Sacar un reporte
+E     - heading "Memoria del agente" [level=2]:
+E       - img
+E       - text: Memoria del agente
+E     - paragraph: El agente aprende de las decisiones y de los documentos que le cargues. Nada de lo que propone se usa hasta que un analista lo aprueba.
+E     - text: Propuestas para revisar (0) Ninguna. El agente propone una cuando un mismo patrón se decide igual dos veces. Lo que ya aprendió (0) Todavía nada aprobado. Documentos (0) Ninguno cargado.
+E     - group: Enseñarle algo al agente
+E     - group: Cargar un documento
+E   - status
+_ test_cp_ui_27_el_comando_se_muestra_como_texto_con_su_explicacion[chromium] __
+tests/interfaz/test_s5_detalle_incidente.py:96: in test_cp_ui_27_el_comando_se_muestra_como_texto_con_su_explicacion
+    expect(falso_positivo).not_to_have_text(re.compile(r"^\s*—?\s*$"))
+E   AssertionError: Locator expected not to have text 're.compile('^\\s*—?\\s*$')'
+E   Actual value: —  
+E   Call log:
+E     - Expect "not_to_have_text" locator("#detailWrap .card .grid span.k").filter(has_text="Falso pos.").locator("xpath=following-sibling::span[1]") with timeout 5000ms
+E     - waiting for locator("#detailWrap .card .grid span.k").filter(has_text="Falso pos.").locator("xpath=following-sibling::span[1]")
+E       14 × locator resolved to <span>…</span>
+E          - unexpected value "— "
+E   
+E   Aria snapshot:
+E   - text: —
+_______ test_cp_ui_38_ver_el_reporte_json_en_una_pestana_nueva[chromium] _______
+tests/interfaz/test_s7_historial_y_reportes.py:59: in test_cp_ui_38_ver_el_reporte_json_en_una_pestana_nueva
+    assert not faltan, f"al JSON le faltan {sorted(faltan)}; trae {sorted(datos)}"
+E   AssertionError: al JSON le faltan ['generated_at', 'incident_count', 'incidents']; trae ['accesos', 'actividad', 'decisiones', 'generado_en', 'integridad', 'periodo', 'resumen']
+E   assert not {'generated_at', 'incident_count', 'incidents'}
+_____ test_cp_ui_50_la_ayuda_se_alcanza_y_se_abre_con_el_teclado[chromium] _____
+tests/interfaz/test_s9_seguridad_y_usabilidad.py:61: in test_cp_ui_50_la_ayuda_se_alcanza_y_se_abre_con_el_teclado
+    raise AssertionError("la ayuda no recibe el foco con Tab: es un <span> sin tabindex ni rol (H-2)")
+E   AssertionError: la ayuda no recibe el foco con Tab: es un <span> sin tabindex ni rol (H-2)
+_____ test_cp_ui_52_los_campos_de_texto_tienen_nombre_accesible[chromium] ______
+tests/interfaz/test_s9_seguridad_y_usabilidad.py:88: in test_cp_ui_52_los_campos_de_texto_tienen_nombre_accesible
+    assert page.locator(selector).evaluate(etiquetado), f"{selector} no tiene etiqueta accesible (solo placeholder)"
+E   AssertionError: #fSearch no tiene etiqueta accesible (solo placeholder)
+E   assert False
+E    +  where False = evaluate("e => !!(e.getAttribute('aria-label') || e.getAttribute('aria-labelledby') || (e.labels && e.labels.length))")
+E    +    where evaluate = <Locator frame=<Frame name= url='http://127.0.0.1:18080/'> selector='#fSearch'>.evaluate
+E    +      where <Locator frame=<Frame name= url='http://127.0.0.1:18080/'> selector='#fSearch'> = locator('#fSearch')
+E    +        where locator = <Page url='http://127.0.0.1:18080/'>.locator
+_____ test_cp_ui_53_la_tabla_muestra_como_maximo_100_incidentes[chromium] ______
+tests/interfaz/test_s9_seguridad_y_usabilidad.py:107: in test_cp_ui_53_la_tabla_muestra_como_maximo_100_incidentes
+    assert cantidad <= 100, f"la tabla pinta {cantidad} filas (máximo 100)"
+E   AssertionError: la tabla pinta 150 filas (máximo 100)
+E   assert 150 <= 100
+=============================== warnings summary ===============================
+tests/interfaz/test_panel.py::test_cp_ui_07_sin_sesion_el_panel_manda_al_login[chromium]
+  /home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS/NeuralDefender-IyCS/Elastic-SIEM-Project/.devtools/_pytest/fixtures.py:1392: PytestRemovedIn10Warning: Session-scoped fixtures defined as instance methods are deprecated.
+  Instance attributes set in the 'base_url' fixture will NOT be visible to test methods,
+  as each test gets a new instance while the fixture runs only once per class.
+  Use a @classmethod decorator below @pytest.fixture and set attributes on cls instead.
+  See https://docs.pytest.org/en/stable/deprecations.html#class-scoped-fixture-as-instance-method
+    fixturefunc = resolve_fixture_function(fixturedef, request)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- Generated html report: file:///home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS/NeuralDefender-IyCS/Elastic-SIEM-Project/entregables/3-interfaces/reportes/corrida-1/reporte.html -
+=========================== short test summary info ============================
+FAILED tests/interfaz/test_panel.py::test_cp_ui_08_login_correcto_muestra_usuario_rol_e_incidentes[chromium]
+FAILED tests/interfaz/test_s2_acceso_y_sesion.py::test_cp_ui_08_el_panel_carga_completo_y_sin_errores[chromium]
+FAILED tests/interfaz/test_s2_acceso_y_sesion.py::test_cp_ui_10_sesion_cerrada_en_otro_contexto_redirige_al_login[chromium]
+FAILED tests/interfaz/test_s5_detalle_incidente.py::test_cp_ui_27_el_comando_se_muestra_como_texto_con_su_explicacion[chromium]
+FAILED tests/interfaz/test_s7_historial_y_reportes.py::test_cp_ui_38_ver_el_reporte_json_en_una_pestana_nueva[chromium]
+FAILED tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_50_la_ayuda_se_alcanza_y_se_abre_con_el_teclado[chromium]
+FAILED tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_52_los_campos_de_texto_tienen_nombre_accesible[chromium]
+FAILED tests/interfaz/test_s9_seguridad_y_usabilidad.py::test_cp_ui_53_la_tabla_muestra_como_maximo_100_incidentes[chromium]
+8 failed, 59 passed, 1 warning in 112.64s (0:01:52)
+fin 1

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "actualizado": "2026-11-15T17:25:34.885384+00:00",
+  "actualizado": "2026-11-23T01:18:39.420817+00:00",
   "usuarios": [
     {
       "username": "nico",
@@ -16,15 +16,15 @@
       "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$zmocy9S/qd54WBBKn7HSAQ$UMHggftTdHYy73zVjFTmBFPojMJw9128vNXBgXytN+g",
       "activo": true,
       "creado": "2026-11-12T22:37:57.236062+00:00",
-      "ultimo_acceso": "2026-11-12T23:31:42.964351+00:00"
+      "ultimo_acceso": "2026-11-20T00:48:42.252930+00:00"
     },
     {
       "username": "analista",
       "rol": "analyst",
-      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$viuxyiLV0eN+jEa6Pkn9TA$i5C+9OHAKPSzfk/rggA6jEpGfiHvXrTX/SLwnnjpZm8",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$B5OA59uJTt9v+StZL0d03w$J2icIaTlU8lxWyIUKy+uHqTM4gn9SHOqJ2FyDmULyY4",
       "activo": true,
       "creado": "2026-11-15T16:55:07.432300+00:00",
-      "ultimo_acceso": "2026-11-15T17:17:11.801947+00:00"
+      "ultimo_acceso": "2026-11-23T01:18:39.420782+00:00"
     },
     {
       "username": "observador",
@@ -33,6 +33,30 @@
       "activo": true,
       "creado": "2026-11-15T16:55:07.866771+00:00",
       "ultimo_acceso": "2026-11-15T17:25:34.885364+00:00"
+    },
+    {
+      "username": "api-analista",
+      "rol": "analyst",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$tn/hw6h6HoLtfFADZeoSDQ$PmmGnk9fjMAiWI1QY9i8CkWFUg4dd3lwqlaeJO8qui8",
+      "activo": true,
+      "creado": "2026-11-22T22:39:14.941354+00:00",
+      "ultimo_acceso": "2026-11-22T22:39:33.833521+00:00"
+    },
+    {
+      "username": "api-observador",
+      "rol": "viewer",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$wbdix7tJn1ILGeD26L+LxA$wIEeBmQBqz5Nq42HecnaByMxX26zmFzZPn/tCBysMAg",
+      "activo": true,
+      "creado": "2026-11-22T22:39:15.599378+00:00",
+      "ultimo_acceso": "2026-11-22T22:39:34.989757+00:00"
+    },
+    {
+      "username": "api-auditor",
+      "rol": "auditor",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$33Sa63YqXxjlCjskPdbdxQ$RLKFgzdpHFD+npLuY44GvPY98EIvxssY0YemM2TentY",
+      "activo": true,
+      "creado": "2026-11-22T22:39:16.168580+00:00",
+      "ultimo_acceso": "2026-11-22T22:39:35.556356+00:00"
     }
   ]
 }

@@ -1,0 +1,37 @@
+$kind: http-request
+name: CP-SERV-04 | Login con JSON mal formado
+url: "{{url_gateway}}/api/v1/login"
+method: POST
+body:
+  type: json
+  content: "{bad"
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-04 | Inicio de sesión con JSON mal formado
+      // Requisito: RQ-SEC-09 (validar toda entrada)
+      // Técnica: partición de equivalencia, partición inválida
+      // Petición: POST {{url_gateway}}/api/v1/login con body "{bad"
+      // Esperado: 400 con {"error": "se esperaba un cuerpo JSON"}
+      // ============================================================
+
+      // 1. Código: un cuerpo que no es JSON se rechaza con 400 Bad Request.
+      pm.test("CP-SERV-04 | Código 400", function () {
+          pm.response.to.have.status(400);
+      });
+
+      const datos = pm.response.json();
+
+      // 2 y 3. Contrato y tipo: el error viene en el campo "error", como texto.
+      pm.test("CP-SERV-04 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos).to.have.property("error");
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      // 4. Regla: el mensaje explica que se esperaba JSON.
+      pm.test("CP-SERV-04 | Mensaje: se esperaba un cuerpo JSON", function () {
+          pm.expect(datos.error).to.eql("se esperaba un cuerpo JSON");
+      });
+    language: text/javascript
+order: 2000

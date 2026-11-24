@@ -1,0 +1,154 @@
+[
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 14,
+      "row": 380
+    },
+    "filename": "/home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS-20261122T063425Z-1-001/NeuralDefender-IyCS/Elastic-SIEM-Project/services/classifier/classifier.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 380
+    },
+    "message": "`_playbook` is too complex (11 > 10)",
+    "name": "complex-structure",
+    "noqa_row": 380,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 26,
+      "row": 800
+    },
+    "filename": "/home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS-20261122T063425Z-1-001/NeuralDefender-IyCS/Elastic-SIEM-Project/services/classifier/classifier.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 800
+    },
+    "message": "`detect_auth_incidents` is too complex (25 > 10)",
+    "name": "complex-structure",
+    "noqa_row": 800,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 20,
+      "row": 1193
+    },
+    "filename": "/home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS-20261122T063425Z-1-001/NeuralDefender-IyCS/Elastic-SIEM-Project/services/classifier/classifier.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 1193
+    },
+    "message": "`_link_campaigns` is too complex (15 > 10)",
+    "name": "complex-structure",
+    "noqa_row": 1193,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 9,
+      "row": 130
+    },
+    "filename": "/home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS-20261122T063425Z-1-001/NeuralDefender-IyCS/Elastic-SIEM-Project/services/collector/verify-cobertura.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 130
+    },
+    "message": "`main` is too complex (12 > 10)",
+    "name": "complex-structure",
+    "noqa_row": 130,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 13,
+      "row": 65
+    },
+    "filename": "/home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS-20261122T063425Z-1-001/NeuralDefender-IyCS/Elastic-SIEM-Project/simulation/pentest.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 65
+    },
+    "message": "`imprimir` is too complex (13 > 10)",
+    "name": "complex-structure",
+    "noqa_row": 65,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 19,
+      "row": 60
+    },
+    "filename": "/home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS-20261122T063425Z-1-001/NeuralDefender-IyCS/Elastic-SIEM-Project/tests/integration/test_despliegue_de_reglas.py",
+    "fix": null,
+    "location": {
+      "column": 9,
+      "row": 60
+    },
+    "message": "`_manejador` is too complex (17 > 10)",
+    "name": "complex-structure",
+    "noqa_row": 60,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 19,
+      "row": 67
+    },
+    "filename": "/home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS-20261122T063425Z-1-001/NeuralDefender-IyCS/Elastic-SIEM-Project/tests/integration/test_respaldo_y_retencion.py",
+    "fix": null,
+    "location": {
+      "column": 9,
+      "row": 67
+    },
+    "message": "`_manejador` is too complex (16 > 10)",
+    "name": "complex-structure",
+    "noqa_row": 67,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 25,
+      "row": 82
+    },
+    "filename": "/home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS-20261122T063425Z-1-001/NeuralDefender-IyCS/Elastic-SIEM-Project/tests/integration/test_respaldo_y_retencion.py",
+    "fix": null,
+    "location": {
+      "column": 17,
+      "row": 82
+    },
+    "message": "`_atender` is too complex (13 > 10)",
+    "name": "complex-structure",
+    "noqa_row": 82,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  }
+]

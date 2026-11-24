@@ -1,0 +1,34 @@
+$kind: http-request
+name: CP-SERV-08 | Consulta de la sesión sin haber iniciado sesión
+url: "{{url_gateway}}/api/v1/me"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-08 | Consulta de la sesión sin haber iniciado sesión
+      // Requisito: RF-AUT-01 (toda ruta exige autenticación)
+      // Técnica: partición de equivalencia, partición inválida
+      // Petición: GET /api/v1/me sin cookie de sesión
+      // (las cookies se borraron en CP-SERV-11)
+      // Esperado: 401 con {"error": "se requiere autenticación"}
+      // ============================================================
+
+      // 1. Código: sin sesión, 401.
+      pm.test("CP-SERV-08 | Código 401", function () {
+          pm.response.to.have.status(401);
+      });
+
+      const datos = pm.response.json();
+
+      // 2 y 3. Contrato y tipo del error.
+      pm.test("CP-SERV-08 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      // 4. Regla: el sistema pide autenticación.
+      pm.test("CP-SERV-08 | Mensaje: se requiere autenticación", function () {
+          pm.expect(datos.error).to.eql("se requiere autenticación");
+      });
+    language: text/javascript
+order: 6000

@@ -1,0 +1,776 @@
+--- a/backup/Dockerfile
++++ b/backup/Dockerfile
+@@ -1,6 +1,9 @@
+ # Respaldo diario cifrado (RQ-SEC-05). Ver respaldo.sh.
+ FROM alpine:3.20
+ 
++# Falso positivo DL3018: la base está fijada (alpine:3.20); fijar cada paquete apk rompería el
++# build cuando Alpine rote versiones dentro de la misma rama.
++# hadolint ignore=DL3018
+ RUN apk add --no-cache bash coreutils curl findutils openssl tar tzdata
+ 
+ COPY backup/*.sh /backup/
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -185,7 +185,7 @@
+   # de la auditoría, cifrado (AES-256) y con SHA-256. Ver backup/respaldo.sh.
+   # A mano: ./scripts/siem.sh respaldo · restaurar: ./scripts/siem.sh restaurar
+   backup:
+-    build: { context: ., dockerfile: backup/Dockerfile }
++    build: {context: ., dockerfile: backup/Dockerfile}
+     container_name: siem-backup
+     restart: unless-stopped
+     mem_limit: 128m
+@@ -257,7 +257,7 @@
+ 
+   # Autenticación: dueño del almacén de usuarios (hashes Argon2id).
+   auth:
+-    build: { context: ., dockerfile: services/auth/Dockerfile }
++    build: {context: ., dockerfile: services/auth/Dockerfile}
+     container_name: siem-auth
+     restart: unless-stopped
+     mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
+@@ -277,7 +277,7 @@
+ 
+   # Auditoría: ÚNICO escritor de decisions.jsonl y analysis_history.jsonl.
+   audit:
+-    build: { context: ., dockerfile: services/audit/Dockerfile }
++    build: {context: ., dockerfile: services/audit/Dockerfile}
+     container_name: siem-audit
+     restart: unless-stopped
+     mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
+@@ -293,7 +293,7 @@
+   # Collector: el único con credenciales de Elasticsearch y el único que
+   # está en las DOS redes (elastic-net para consultar, ia-net para responder).
+   collector:
+-    build: { context: ., dockerfile: services/collector/Dockerfile }
++    build: {context: ., dockerfile: services/collector/Dockerfile}
+     container_name: siem-collector
+     restart: unless-stopped
+     mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
+@@ -318,7 +318,7 @@
+ 
+   # Agente 1: sin estado. Lee network_logs/ en solo lectura (la entrada "IDS").
+   classifier:
+-    build: { context: ., dockerfile: services/classifier/Dockerfile }
++    build: {context: ., dockerfile: services/classifier/Dockerfile}
+     container_name: siem-classifier
+     restart: unless-stopped
+     mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
+@@ -339,7 +339,7 @@
+   # Memoria del Agente 2: documentos, casos resueltos y lecciones (aprobadas a
+   # mano). Dueño de data/knowledge. No tiene secretos ni salida a internet.
+   knowledge:
+-    build: { context: ., dockerfile: services/knowledge/Dockerfile }
++    build: {context: ., dockerfile: services/knowledge/Dockerfile}
+     container_name: siem-knowledge
+     restart: unless-stopped
+     mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
+@@ -355,7 +355,7 @@
+   # Agente 2: sin estado. El único con la key de Gemini (salida HTTPS a internet).
+   # Consulta su memoria al servicio knowledge (si no responde, analiza sin ella).
+   analyst:
+-    build: { context: ., dockerfile: services/analyst/Dockerfile }
++    build: {context: ., dockerfile: services/analyst/Dockerfile}
+     container_name: siem-analyst
+     restart: unless-stopped
+     mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
+@@ -379,8 +379,8 @@
+       - SIEM_LLM_REUSO=${SIEM_LLM_REUSO:-3600}
+     networks: [ia-net, llm-net]
+     depends_on:
+-      audit: { condition: service_healthy }
+-      knowledge: { condition: service_healthy }
++      audit: {condition: service_healthy}
++      knowledge: {condition: service_healthy}
+     labels: *autoheal
+     healthcheck: *salud-interna
+ 
+@@ -415,7 +415,7 @@
+   # Orquestador: encadena collector → classifier → analyst → audit por HTTP y
+   # guarda el reporte de incidentes. Se dispara con ./scripts/siem.sh pipeline.
+   pipeline:
+-    build: { context: ., dockerfile: services/pipeline/Dockerfile }
++    build: {context: ., dockerfile: services/pipeline/Dockerfile}
+     container_name: siem-pipeline
+     restart: unless-stopped
+     mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
+@@ -428,17 +428,17 @@
+       - ./data/pipeline:/app/service/data
+     networks: [ia-net]
+     depends_on:
+-      collector: { condition: service_healthy }
+-      classifier: { condition: service_healthy }
+-      analyst: { condition: service_healthy }
+-      audit: { condition: service_healthy }
++      collector: {condition: service_healthy}
++      classifier: {condition: service_healthy}
++      analyst: {condition: service_healthy}
++      audit: {condition: service_healthy}
+     labels: *autoheal
+     healthcheck: *salud-interna
+ 
+   # Gateway: el panel de supervisión. ÚNICO puerto de la capa IA publicado al
+   # host, y solo en loopback.
+   gateway:
+-    build: { context: ., dockerfile: services/gateway/Dockerfile }
++    build: {context: ., dockerfile: services/gateway/Dockerfile}
+     container_name: siem-gateway
+     restart: unless-stopped
+     mem_limit: 256m   # RNF-RD-02 / RNF-COMP-01 · medido: ~50-60 MB
+@@ -452,10 +452,10 @@
+     networks: [ia-net]
+     labels: *autoheal
+     depends_on:
+-      auth: { condition: service_healthy }
+-      audit: { condition: service_healthy }
+-      knowledge: { condition: service_healthy }
+-      pipeline: { condition: service_healthy }
++      auth: {condition: service_healthy}
++      audit: {condition: service_healthy}
++      knowledge: {condition: service_healthy}
++      pipeline: {condition: service_healthy}
+     healthcheck:
+       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/api/v1/healthz', timeout=3)"]
+       interval: 10s
+--- a/filebeat/filebeat.yml
++++ b/filebeat/filebeat.yml
+@@ -52,7 +52,7 @@
+   ssl.enabled: false
+ 
+ # Alternative direct-to-Elasticsearch output (commented out; default path is Logstash).
+-#output.elasticsearch:
++# output.elasticsearch:
+ #  hosts: ["elasticsearch:9200"]
+ #  username: "elastic"
+ #  password: "${ELASTIC_PASSWORD}"
+--- a/libs/siem_servicios.py
++++ b/libs/siem_servicios.py
+@@ -40,7 +40,8 @@
+              "knowledge")
+ 
+ PUERTO_INTERNO = 8000
+-ENCABEZADO_TOKEN = "X-Internal-Token"  # noqa: S105 — el NOMBRE del encabezado, no un secreto
++# El NOMBRE del encabezado, no un secreto: falso positivo de ruff S105 y bandit B105.
++ENCABEZADO_TOKEN = "X-Internal-Token"  # noqa: S105  # nosec B105
+ TOKEN_MIN = 32
+ 
+ # La sonda de salud queda abierta: Docker la consulta sin credenciales para
+@@ -127,7 +128,7 @@
+ 
+ def instalar_transporte(transporte: Transporte | None) -> None:
+     """Reemplaza el transporte HTTP (lo usan las pruebas). `None` lo restaura."""
+-    global _transporte  # noqa: PLW0603 — punto de inyección deliberado
++    global _transporte  # noqa: PLW0603 # pylint: disable=global-statement
+     _transporte = transporte or _transporte_http
+ 
+ 
+--- a/libs/siem_validators.py
++++ b/libs/siem_validators.py
+@@ -76,7 +76,7 @@
+     """
+     if not isinstance(valor, str) or not valor:
+         return False
+-    return not (_METACARACTERES_SHELL & set(valor))
++    return not _METACARACTERES_SHELL & set(valor)
+ 
+ 
+ def resolver_ip_atacante(incidente_o_ips: object, respaldo: object = None) -> str | None:
+--- a/package.json
++++ b/package.json
+@@ -5,8 +5,8 @@
+   "type": "module",
+   "description": "An\u00e1lisis est\u00e1tico del JavaScript del dashboard de supervisi\u00f3n NeuralDefender",
+   "scripts": {
+-    "lint:js": "eslint --no-error-on-unmatched-pattern 'static/**/*.js'",
+-    "lint:js:report": "eslint --no-error-on-unmatched-pattern -f stylish 'static/**/*.js'"
++    "lint:js": "eslint --no-error-on-unmatched-pattern 'services/gateway/static/**/*.js'",
++    "lint:js:report": "eslint --no-error-on-unmatched-pattern -f stylish 'services/gateway/static/**/*.js'"
+   },
+   "devDependencies": {
+     "eslint": "^9.11.0",
+--- a/.pylintrc
++++ b/.pylintrc
+@@ -10,25 +10,12 @@
+ jobs=0
+ 
+ [SECURE_CODING_STANDARD]
+-# ── Ejecución de comandos: el corazón de la no-autonomía ──
+-# `os.system` queda prohibido sin excepciones.
+-os-system=True
+-# `subprocess.run(...)` debe llevar `check=` explícito (nada de fallos silenciosos).
+-subprocess-run-check=True
+-# Prohibido lanzar procesos con una shell de por medio.
+-check-on-os-popen=True
+-check-on-os-spawn=True
+-check-on-os-exec=True
+-# ── Archivos y permisos: protege el registro append-only ──
++# El plugin (v1.5.1) solo define estas tres opciones. Las demas reglas
++# (os.system, os.popen, pickle, marshal, shelve) estan siempre activas y no se
++# configuran; subprocess.run sin `check=` lo detecta pylint (W1510).
+ os-open-mode=0o600
+ os-mkdir-mode=0o700
+ os-mkfifo-mode=0o600
+-os-makedirs-mode=0o700
+-# ── Otros vectores ──
+-# `pickle`, `marshal` y `shelve` deserializan código: no se usan en el proyecto.
+-check-on-pickle=True
+-check-on-marshal=True
+-check-on-shelve=True
+ 
+ [MESSAGES CONTROL]
+ # El proyecto documenta a nivel de módulo y de función relevante, no de cada helper.
+--- a/ruff.toml
++++ b/ruff.toml
+@@ -7,9 +7,13 @@
+ src = ["libs", "services/*"]
+ 
+ [lint]
+-select = ["E", "F", "W", "I", "UP", "B", "S", "C4", "SIM"]
++select = ["E", "F", "W", "I", "UP", "B", "S", "C4", "SIM", "C901"]
+ ignore = ["E501"]
+ 
++[lint.mccabe]
++# Complejidad ciclomática máxima por función (regla C901 del plan).
++max-complexity = 10
++
+ [lint.per-file-ignores]
+ # Ningún módulo del producto necesita excepciones: desde la migración a
+ # microservicios, el orquestador habla HTTP con los servicios en vez de lanzar
+--- a/scripts/demo-ataque.sh
++++ b/scripts/demo-ataque.sh
+@@ -31,7 +31,7 @@
+ # incidentes, que de otro modo pasa desapercibida.
+ # ─────────────────────────────────────────────────────────────────────────────
+ set -uo pipefail
+-cd "$(dirname "$0")/.."
++cd "$(dirname "$0")/.." || exit 1
+ 
+ export PYTHONPATH="$PWD/.devtools${PYTHONPATH:+:$PYTHONPATH}"
+ 
+@@ -130,6 +130,7 @@
+     detalle "Es reconocimiento: busca qué servicios hay antes de elegir cuál atacar."
+     detalle "MITRE ATT&CK T1046 · Network Service Discovery"
+     pausa 3
++    # shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
+     bash simulation/run-port-scan.sh --offline --ip "$IP_ATAQUE" >/dev/null 2>&1 \
+       && ok "26 eventos de red generados" || { echo "  ✗ falló"; exit 1; }
+     ;;
+@@ -139,6 +140,7 @@
+     detalle "El usuario 'testuser' visita /login y manda usuario y contraseña."
+     detalle "MITRE ATT&CK T1566 · Phishing"
+     pausa 3
++    # shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
+     bash simulation/run-phishing.sh --offline --ip "$IP_ATAQUE" >/dev/null 2>&1 \
+       && ok "visita + envío de credenciales generados" || { echo "  ✗ falló"; exit 1; }
+     ;;
+@@ -156,6 +158,7 @@
+       docker exec hydra-attacker which hydra >/dev/null 2>&1 && break
+       sleep 5
+     done
++    # shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
+     timeout 240 bash simulation/run-brute-force.sh >/dev/null 2>&1 \
+       && ok "24 fallos de autenticación + 1 login exitoso" \
+       || { echo "  ✗ no completó (¿están los contenedores de simulación?)"; exit 1; }
+@@ -171,12 +174,14 @@
+ 
+     detalle ""
+     detalle "Fase 1 — reconocimiento (T1046): sondeo de 26 puertos"
++    # shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
+     bash simulation/run-port-scan.sh --offline --ip "$IP_ATAQUE" >/dev/null 2>&1 \
+       && ok "escaneo generado" || { echo "  ✗ falló"; exit 1; }
+     pausa 4
+ 
+     detalle ""
+     detalle "Fase 2 — explotación (T1566): captura de credenciales desde la misma IP"
++    # shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
+     bash simulation/run-phishing.sh --offline --ip "$IP_ATAQUE" >/dev/null 2>&1 \
+       && ok "captura de credenciales generada" || { echo "  ✗ falló"; exit 1; }
+     ;;
+--- a/scripts/demo-auditoria.sh
++++ b/scripts/demo-auditoria.sh
+@@ -25,7 +25,7 @@
+ #   ./scripts/demo-auditoria.sh --json       solo el antes/después, en JSON
+ # ─────────────────────────────────────────────────────────────────────────────
+ set -uo pipefail
+-cd "$(dirname "$0")/.."
++cd "$(dirname "$0")/.." || exit 1
+ 
+ export PYTHONPATH="$PWD/.devtools${PYTHONPATH:+:$PYTHONPATH}"
+ 
+@@ -89,7 +89,7 @@
+ detalle "eslabón de cualquier cadena queda expuesto hasta que otro lo cubre."
+ detalle "Se usa el append_jsonl real del proyecto, no un JSON escrito a mano."
+ 
+-TALLER="$TALLER" python3 - <<'PY'
++TALLER="$TALLER" python3 - <<'PY' || { mal "no se pudo sembrar la copia"; exit 1; }
+ import os
+ import pathlib
+ import sys
+@@ -111,7 +111,6 @@
+         "attacker_ips": ["198.51.100.10"],
+     })
+ PY
+-[[ $? -eq 0 ]] || { mal "no se pudo sembrar la copia"; exit 1; }
+ ok "$(wc -l < "$COPIA") registros en la copia"
+ 
+ # El estado al que se vuelve en el paso 4. Restaurar desde el archivo real daría
+--- a/scripts/demo-desde-cero.sh
++++ b/scripts/demo-desde-cero.sh
+@@ -37,7 +37,7 @@
+ #   ./scripts/demo-desde-cero.sh --si        no pregunta antes de limpiar
+ # ─────────────────────────────────────────────────────────────────────────────
+ set -uo pipefail
+-cd "$(dirname "$0")/.."
++cd "$(dirname "$0")/.." || exit 1
+ 
+ export PYTHONPATH="$PWD/.devtools${PYTHONPATH:+:$PYTHONPATH}"
+ 
+@@ -272,10 +272,12 @@
+ IP_ATAQUE="198.51.100.$(( (RANDOM % 200) + 20 ))"
+ 
+ detalle "Reconocimiento (T1046): sondeo de 26 puertos desde $IP_ATAQUE"
++# shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
+ bash simulation/run-port-scan.sh --offline --ip "$IP_ATAQUE" >/dev/null 2>&1 \
+   && ok "26 eventos de red" || { mal "falló el escaneo"; exit 1; }
+ 
+ detalle "Phishing (T1566): captura de credenciales hacia $IP_ATAQUE"
++# shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
+ bash simulation/run-phishing.sh --offline --ip "$IP_ATAQUE" >/dev/null 2>&1 \
+   && ok "visita + envío de credenciales" || { mal "falló el phishing"; exit 1; }
+ 
+--- a/scripts/demo.sh
++++ b/scripts/demo.sh
+@@ -28,7 +28,7 @@
+ # ataques nuevos se suman.
+ # ─────────────────────────────────────────────────────────────────────────────
+ set -uo pipefail
+-cd "$(dirname "$0")/.."
++cd "$(dirname "$0")/.." || exit 1
+ 
+ export PYTHONPATH="$PWD/.devtools${PYTHONPATH:+:$PYTHONPATH}"
+ 
+@@ -110,7 +110,7 @@
+ 
+   printf '  %-34s' "Reglas de detección"
+   local n_reglas
+-  n_reglas=$(ls rules/ndjson/*.ndjson 2>/dev/null | wc -l)
++  n_reglas=$(find rules/ndjson -name '*.ndjson' 2>/dev/null | wc -l)
+   printf '\033[32m%s versionadas\033[0m\n' "$n_reglas"
+ 
+   printf '  %-34s' "Incidentes para mostrar"
+@@ -124,6 +124,7 @@
+ 
+ if $SOLO_ESTADO; then
+   azul "Estado del entorno de demostración"
++  # shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
+   diagnostico && echo && verde "Listo para demostrar." || { echo; rojo "Falta algo de lo de arriba."; exit 1; }
+   exit 0
+ fi
+@@ -231,6 +232,7 @@
+ sys.exit(0 if any(u['username'] == '$1' for u in usuarios) else 1)" 2>/dev/null; then
+     amarillo "'$1' ya existe"
+   else
++    # shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
+     SIEM_NEW_PASSWORD="$3" ./scripts/siem.sh usuarios crear "$1" --rol "$2" >/dev/null 2>&1 \
+       && verde "'$1' creado (rol $2)" || rojo "no se pudo crear '$1'"
+   fi
+@@ -257,8 +259,10 @@
+ rm -f network_logs/*.json
+ amarillo "corridas anteriores de simulación limpiadas"
+ 
++# shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
+ bash simulation/run-port-scan.sh --offline >/dev/null 2>&1 \
+   && verde "escaneo de puertos  (T1046) · 26 puertos" || rojo "falló el port scan"
++# shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
+ bash simulation/run-phishing.sh --offline >/dev/null 2>&1 \
+   && verde "phishing            (T1566) · captura de credenciales" || rojo "falló el phishing"
+ 
+--- a/scripts/deploy.sh
++++ b/scripts/deploy.sh
+@@ -68,6 +68,7 @@
+ ok()   { printf '  \033[32m✔\033[0m %s\n' "$1"; }
+ mal()  { printf '  \033[31m✗\033[0m %s\n' "$1"; }
+ 
++# shellcheck disable=SC2154 # rc se asigna dentro del propio trap (rc=$?)
+ trap 'rc=$?; if (( rc != 0 )); then mal "deploy.sh se cortó en el paso «$PASO_ACTUAL» (código $rc). El panel NO quedó corriendo."; fi' EXIT
+ 
+ # ─── 1 · Requisitos ──────────────────────────────────────────────────────────
+@@ -109,6 +110,7 @@
+ # caso que se quiere arreglar— y con `set -e` eso cortaría el script.)
+ if [[ -n "$DE_ROOT" ]]; then
+   echo "  Hay archivos del proyecto que no son tuyos (corrida anterior con sudo); se corrigen:"
++  # shellcheck disable=SC2001 # se antepone sangría a CADA línea de un texto multilínea; ${var//} no lo hace
+   echo "$DE_ROOT" | sed 's/^/    /'
+   if ! echo "$DE_ROOT" | xargs -d '\n' sudo chown -R "$(id -u):$(id -g)"; then
+     mal "no se pudieron corregir los permisos (sudo chown falló)."
+--- a/scripts/evidencia.sh
++++ b/scripts/evidencia.sh
+@@ -27,7 +27,7 @@
+ #   ./scripts/evidencia.sh --sin-servicios   omite las pruebas contra el panel
+ # ─────────────────────────────────────────────────────────────────────────────
+ set -uo pipefail
+-cd "$(dirname "$0")/.."
++cd "$(dirname "$0")/.." || exit 1
+ 
+ export PYTHONPATH="$PWD/.devtools${PYTHONPATH:+:$PYTHONPATH}"
+ 
+@@ -70,7 +70,8 @@
+   echo; echo "══════════ ruff ══════════"
+   .devtools/bin/ruff check . 2>&1 || true
+   echo; echo "══════════ pylint + secure-coding-standard ══════════"
+-  .devtools/bin/pylint --rcfile=.pylintrc $(git ls-files '*.py' 2>/dev/null || ls *.py) 2>&1 | tail -30 || true
++  mapfile -t ARCHIVOS_PY < <(git ls-files '*.py' 2>/dev/null || find . -maxdepth 1 -name '*.py')
++  .devtools/bin/pylint --rcfile=.pylintrc "${ARCHIVOS_PY[@]}" 2>&1 | tail -30 || true
+   echo; echo "══════════ bandit ══════════"
+   .devtools/bin/bandit -r . -x ./.devtools,./tests,./node_modules -ll 2>&1 | tail -25 || true
+   echo; echo "══════════ eslint ══════════"
+@@ -222,8 +223,8 @@
+ .devtools/bin/pytest -q "${COBERTURA[@]/#/--cov=}" \
+   --cov-report=term > "$DIR/04-suite-y-cobertura.txt" 2>&1
+ TOTAL=$(grep -E '^[0-9]+ passed' "$DIR/04-suite-y-cobertura.txt" | tail -1)
+-COBERTURA=$(grep -E '^TOTAL' "$DIR/04-suite-y-cobertura.txt" | awk '{print $NF}')
+-ok "04-suite-y-cobertura.txt — $TOTAL · cobertura $COBERTURA"
++COBERTURA_PCT=$(grep -E '^TOTAL' "$DIR/04-suite-y-cobertura.txt" | awk '{print $NF}')
++ok "04-suite-y-cobertura.txt — $TOTAL · cobertura $COBERTURA_PCT"
+ 
+ # ─── 5 · No-autonomía ────────────────────────────────────────────────────────
+ 
+@@ -272,7 +273,7 @@
+ ## Números de esta corrida
+ 
+ - Suite: $TOTAL
+-- Cobertura (alcance declarado): $COBERTURA
++- Cobertura (alcance declarado): $COBERTURA_PCT
+ - Verificaciones de no-autonomía: $N_AUTO
+ - Hallazgos nuevos de análisis estático: **0** (líneas de base en cero)
+ 
+@@ -293,5 +294,5 @@
+ 
+ printf '\n\033[1m════════════════════════════════════════════════\033[0m\n'
+ ok "Evidencia completa en $DIR"
+-ls -1 "$DIR" | sed 's/^/     /'
++find "$DIR" -mindepth 1 -maxdepth 1 -printf '%f\n' | sort | sed 's/^/     /'
+ printf '\n  Empezá por %s/00-resumen.md\n\n' "$DIR"
+--- a/scripts/generate_certs.sh
++++ b/scripts/generate_certs.sh
+@@ -1,5 +1,5 @@
+ mkdir -p elasticsearch/certs
+-cd elasticsearch/certs
++cd elasticsearch/certs || exit 1
+ 
+ # Generate CA
+ openssl req -x509 -nodes -newkey rsa:2048 -keyout ca.key -out ca.crt -days 365 -subj "/CN=Elastic-CA"
+--- a/scripts/pruebas_completas.sh
++++ b/scripts/pruebas_completas.sh
+@@ -7,7 +7,7 @@
+ # Uso:  ./scripts/pruebas_completas.sh
+ # ─────────────────────────────────────────────────────────────────────────────
+ set -uo pipefail
+-cd "$(dirname "$0")/.."
++cd "$(dirname "$0")/.." || exit 1
+ 
+ FALLOS=0
+ ./scripts/pruebas_de_codigo_estatico.sh || FALLOS=$((FALLOS + 1))
+--- a/scripts/pruebas_de_codigo_estatico.sh
++++ b/scripts/pruebas_de_codigo_estatico.sh
+@@ -15,7 +15,7 @@
+ #   npm install
+ # ─────────────────────────────────────────────────────────────────────────────
+ set -uo pipefail
+-cd "$(dirname "$0")/.."
++cd "$(dirname "$0")/.." || exit 1
+ 
+ export PYTHONPATH="$PWD/.devtools${PYTHONPATH:+:$PYTHONPATH}"
+ BIN=".devtools/bin"
+--- a/scripts/pruebas_de_performance.sh
++++ b/scripts/pruebas_de_performance.sh
+@@ -45,7 +45,10 @@
+     printf 'K6_USUARIO=k6-carga\nK6_CLAVE=%s\n' "$clave" > "$CREDENCIALES"
+   fi
+   # shellcheck disable=SC1090
+-  set -a; source "$CREDENCIALES"; set +a
++  set -a
++  # shellcheck source=/dev/null # ruta variable: .k6-credenciales no se versiona
++  source "$CREDENCIALES"
++  set +a
+ fi
+ 
+ mkdir -p "$SALIDA"
+--- a/scripts/pruebas_de_servicio.sh
++++ b/scripts/pruebas_de_servicio.sh
+@@ -24,7 +24,7 @@
+ #   python3 -m pip install --upgrade --target=.devtools -r requirements.txt -r requirements-dev.txt
+ # ─────────────────────────────────────────────────────────────────────────────
+ set -uo pipefail
+-cd "$(dirname "$0")/.."
++cd "$(dirname "$0")/.." || exit 1
+ 
+ export PYTHONPATH="$PWD/.devtools${PYTHONPATH:+:$PYTHONPATH}"
+ BIN=".devtools/bin"
+--- a/scripts/pruebas_de_verificacion.sh
++++ b/scripts/pruebas_de_verificacion.sh
+@@ -23,7 +23,7 @@
+ # Requiere las dependencias de desarrollo (ver pruebas_de_linters.md §2).
+ # ─────────────────────────────────────────────────────────────────────────────
+ set -uo pipefail
+-cd "$(dirname "$0")/.."
++cd "$(dirname "$0")/.." || exit 1
+ ORIGEN="$PWD"
+ 
+ if [[ ! -x .devtools/bin/pytest || ! -x .devtools/bin/ruff ]]; then
+@@ -42,7 +42,7 @@
+   | tar -C "$COPIA" -xf -
+ ln -s "$ORIGEN/.devtools" "$COPIA/.devtools"
+ [[ -d "$ORIGEN/node_modules" ]] && ln -s "$ORIGEN/node_modules" "$COPIA/node_modules"
+-cd "$COPIA"
++cd "$COPIA" || exit 1
+ 
+ export PYTHONPATH="$PWD/.devtools"
+ BIN=".devtools/bin"
+@@ -89,20 +89,23 @@
+ EOF
+ }
+ 
++# shellcheck disable=SC2329 # se invoca por nombre desde la tabla de casos
+ bandit_altos() { # cuenta hallazgos de severidad alta; falla si hay alguno
+   local n
+-  n=$($BIN/bandit -r . -x './.devtools,./.venv,./node_modules,./tests,./elasticsearch' -f json -q 2>/dev/null \
++  n=$("$BIN"/bandit -r . -x './.devtools,./.venv,./node_modules,./tests,./elasticsearch' -f json -q 2>/dev/null \
+     | python3 -c 'import json,sys; print(sum(r["issue_severity"]=="HIGH" for r in json.load(sys.stdin)["results"]))')
+   echo "hallazgos de severidad alta: ${n:-?}"
+   [[ "${n:-1}" == "0" ]]
+ }
+ 
++# shellcheck disable=SC2329 # se invoca por nombre desde la tabla de casos
+ pylint_producto() {
+   mapfile -t CODIGO < <(find libs services -name '*.py' -not -path '*/__pycache__/*' | sort)
+-  $BIN/pylint --fail-under=9.0 \
++  "$BIN"/pylint --fail-under=9.0 \
+     --init-hook="import sys, glob; sys.path[:0] = ['libs', *sorted(glob.glob('services/*'))]" "${CODIGO[@]}"
+ }
+ 
++# shellcheck disable=SC2329 # se invoca por nombre desde la tabla de casos
+ eslint_panel() {
+   [[ -x node_modules/.bin/eslint ]] || { echo "falta npm install"; return 1; }
+   node_modules/.bin/eslint --no-error-on-unmatched-pattern 'services/gateway/static/**/*.js'
+--- a/scripts/start.sh
++++ b/scripts/start.sh
+@@ -68,14 +68,17 @@
+ }
+ 
+ # 1. Elasticsearch healthy
++# shellcheck disable=SC2016 # comillas simples a propósito: wait_for evalúa el texto después con eval
+ wait_for "Elasticsearch (healthy)" \
+   '[ "$(docker inspect -f "{{.State.Health.Status}}" elasticsearch 2>/dev/null)" = "healthy" ]' 60
+ 
+ # 2. setup completó OK
++# shellcheck disable=SC2016 # comillas simples a propósito: wait_for evalúa el texto después con eval
+ wait_for "Setup kibana_system (exit 0)" \
+   '[ "$(docker inspect -f "{{.State.Status}} {{.State.ExitCode}}" siem-setup 2>/dev/null)" = "exited 0" ]' 30
+ 
+ # 3. Kibana responde
++# shellcheck disable=SC2016 # comillas simples a propósito: wait_for evalúa el texto después con eval
+ wait_for "Kibana (HTTP 200)" \
+   '[ "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:5601/api/status)" = "200" ]' 60
+ 
+@@ -95,6 +98,7 @@
+ 
+ # 5. Capa IA: el gateway depende (healthcheck) de auth, audit y pipeline, que a
+ #    su vez dependen del resto; si responde, la malla entera está arriba.
++# shellcheck disable=SC2016 # comillas simples a propósito: wait_for evalúa el texto después con eval
+ wait_for "Panel de supervisión (gateway)" \
+   '[ "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:5000/api/v1/healthz)" = "200" ]' 60
+ 
+--- a/services/analyst/proveedores_llm.py
++++ b/services/analyst/proveedores_llm.py
+@@ -80,7 +80,8 @@
+     """
+ 
+     def __init__(self, api_key: str, modelo: str, fuente: str = "gemini"):
+-        from google import genai
++        # SDK opcional: solo se importa si el proveedor es Gemini.
++        from google import genai  # pylint: disable=import-outside-toplevel
+         self._cliente = genai.Client(api_key=api_key)
+         self.modelo = modelo
+         self.fuente = fuente
+@@ -101,7 +102,8 @@
+ 
+     def generar_json(self, sistema: str, prompt: str, esquema: dict, timeout: float) -> str:
+         del esquema  # el SDK no restringe la decodificación por esquema acá
+-        from google.genai import types
++        # SDK opcional: solo se importa si el proveedor es Gemini.
++        from google.genai import types  # pylint: disable=import-outside-toplevel
+         # Sin esto la llamada no tiene plazo: un 503/429 con reintentos podría
+         # pasarse del presupuesto del LLM y del timeout del orquestador.
+         http = types.HttpOptions(timeout=max(1000, int(timeout * 1000)))
+@@ -136,7 +138,8 @@
+         evita mandar ese incidente al fallback. El reintento usa solo lo que
+         queda del plazo, así no se pasa del presupuesto del LLM.
+         """
+-        from google.genai import errors, types
++        # SDK opcional: solo se importa si el proveedor es Gemini.
++        from google.genai import errors, types  # pylint: disable=import-outside-toplevel
+         limite = time.monotonic() + timeout
+         try:
+             resp = self._cliente.models.generate_content(model=self.modelo, contents=contenido,
+@@ -208,6 +211,6 @@
+     try:
+         print(f"[INFO] Agente 2 con {nombre} ({modelo}).")
+         return ClienteGemini(api_key, modelo, fuente=elegido)
+-    except Exception as e:  # SDK ausente o key inválida en init
++    except Exception as e:  # pylint: disable=broad-exception-caught  # SDK ausente o key inválida
+         print(f"[WARN] No se pudo inicializar el cliente Gemini ({e}). Usando fallback.")
+         return None
+--- a/services/analyst/siem_agent.py
++++ b/services/analyst/siem_agent.py
+@@ -165,7 +165,7 @@
+         if d.get("incident_id") == incident.get("incident_id"):
+             continue
+         d_ips = {d.get("source_ip")} | set(d.get("attacker_ips") or [])
+-        if not (d_ips & ips):
++        if not d_ips & ips:
+             continue
+         if d.get("action_id") in seen_actions:
+             continue
+@@ -496,7 +496,7 @@
+     if client is not None:
+         try:
+             analysis = _llm_analysis(client, incident, historical, campaign, memoria, timeout)
+-        except Exception as e:
++        except Exception as e:  # pylint: disable=broad-exception-caught  # cualquier fallo del LLM cae al fallback
+             print(f"  [WARN] LLM falló en {incident['incident_id']} ({e}). Usando fallback.")
+             analysis = _fallback_analysis(incident)
+     else:
+--- a/services/audit/audit_service.py
++++ b/services/audit/audit_service.py
+@@ -42,10 +42,16 @@
+ 
+ from flask import jsonify, request
+ 
++# pylint no resuelve los módulos hermanos del servicio y los toma por de terceros: el orden
++# lo fija ruff (isort), así que wrong-import-order es un falso positivo.
+ import reportes
+-from cadena import append_jsonl, read_jsonl, verificar_cadena
+-from siem_lib import now_iso
+-from siem_servicios import crear_servicio, cuerpo_json
++from cadena import (  # pylint: disable=wrong-import-order
++    append_jsonl,
++    read_jsonl,
++    verificar_cadena,
++)
++from siem_lib import now_iso  # pylint: disable=wrong-import-order
++from siem_servicios import crear_servicio, cuerpo_json  # pylint: disable=wrong-import-order
+ 
+ DECISIONS_FILE = "data/decisions.jsonl"
+ HISTORY_FILE = "data/analysis_history.jsonl"
+--- a/services/audit/cadena.py
++++ b/services/audit/cadena.py
+@@ -79,22 +79,19 @@
+     # O_APPEND hace que cada write vaya al final aunque otro proceso haya escrito
+     # en el medio; el modo solo aplica si el archivo se crea en esta llamada.
+     fd = os.open(p, os.O_WRONLY | os.O_CREAT | os.O_APPEND, AUDIT_FILE_MODE)
+-    try:
+-        with os.fdopen(fd, "a", encoding="utf-8") as f:
+-            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+-            try:
+-                # El hash previo se lee CON el lock tomado: si se leyera antes,
+-                # dos escrituras concurrentes encadenarían sobre el mismo eslabón.
+-                completo = dict(record)
+-                if encadenar:
+-                    completo["prev_hash"] = _ultimo_hash(p)
+-                f.write(json.dumps(completo, ensure_ascii=False) + "\n")
+-                f.flush()
+-                os.fsync(f.fileno())
+-            finally:
+-                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+-    except Exception:
+-        raise
++    with os.fdopen(fd, "a", encoding="utf-8") as f:
++        fcntl.flock(f.fileno(), fcntl.LOCK_EX)
++        try:
++            # El hash previo se lee CON el lock tomado: si se leyera antes,
++            # dos escrituras concurrentes encadenarían sobre el mismo eslabón.
++            completo = dict(record)
++            if encadenar:
++                completo["prev_hash"] = _ultimo_hash(p)
++            f.write(json.dumps(completo, ensure_ascii=False) + "\n")
++            f.flush()
++            os.fsync(f.fileno())
++        finally:
++            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+     return completo
+ 
+ 
+--- a/services/collector/get-logs.py
++++ b/services/collector/get-logs.py
+@@ -1,4 +1,5 @@
+ #!/usr/bin/env python3
++# pylint: disable=invalid-name  # el nombre del archivo es el del comando (CLI), no un módulo importable
+ """
+ Utilidad de inspección ad-hoc: imprime los últimos logs de auth fallida y las
+ alertas de seguridad desde Elasticsearch. Para el pipeline real usá
+--- a/services/collector/verify-cobertura.py
++++ b/services/collector/verify-cobertura.py
+@@ -1,4 +1,5 @@
+ #!/usr/bin/env python3
++# pylint: disable=invalid-name  # el nombre del archivo es el del comando (CLI), no un módulo importable
+ """
+ Demuestra que todo lo que disparó en el SIEM está representado en el panel.
+ 
+--- a/services/gateway/dashboard.py
++++ b/services/gateway/dashboard.py
+@@ -792,8 +792,9 @@
+     datos = _verificada(r, "el servicio audit").datos
+     if formato == "csv":
+         periodo = datos.get("periodo") or {}
+-        nombre = "reporte-neuraldefender_{}_{}.csv".format(periodo.get("desde") or "inicio",
+-                                                    periodo.get("hasta") or "hoy")
++        desde = periodo.get("desde") or "inicio"
++        hasta = periodo.get("hasta") or "hoy"
++        nombre = f"reporte-neuraldefender_{desde}_{hasta}.csv"
+         respuesta = Response(datos["csv"], mimetype="text/csv; charset=utf-8")
+         respuesta.headers["Content-Disposition"] = f'attachment; filename="{nombre}"'
+     else:
+--- a/services/gateway/static/app.js
++++ b/services/gateway/static/app.js
+@@ -335,6 +335,7 @@
+   const mode = lastData.analyst_mode;
+   const badge = document.getElementById("modeBadge");
+   if (Object.hasOwn(NOMBRE_DEL_MODELO, mode ?? "")) {
++    // eslint-disable-next-line security/detect-object-injection -- `mode` se validó con Object.hasOwn(NOMBRE_DEL_MODELO, mode) en el if de arriba
+     pintar(badge, html`<span class="punto"></span> IA (${NOMBRE_DEL_MODELO[mode]})`);
+     badge.className = "mode-badge mode-gemini";
+   } else if (mode === "fallback") {
+--- a/services/pipeline/orquestador.py
++++ b/services/pipeline/orquestador.py
+@@ -118,7 +118,8 @@
+     Lanza `CicloEnCurso` si ya hay otro corriendo y `ErrorDeEtapa` si una etapa
+     crítica falla; en ese caso el reporte anterior queda intacto.
+     """
+-    if not _en_curso.acquire(blocking=False):
++    # Candado no bloqueante que se libera en el finally de abajo: `with` no aplica.
++    if not _en_curso.acquire(blocking=False):  # pylint: disable=consider-using-with
+         raise CicloEnCurso("ya hay un ciclo de análisis en curso")
+     try:
+         etapas: list[dict] = []
+--- a/services/pipeline/programador.py
++++ b/services/pipeline/programador.py
+@@ -31,7 +31,7 @@
+ INTERVALO_MINIMO = 30
+ 
+ _parar = threading.Event()
+-_hilo: threading.Thread | None = None
++_hilo: threading.Thread | None = None  # pylint: disable=invalid-name  # estado mutable del módulo, no una constante
+ 
+ 
+ def intervalo_configurado() -> int:
+@@ -72,7 +72,7 @@
+ 
+ def iniciar() -> bool:
+     """Arranca el hilo si la corrida programada está encendida. Idempotente."""
+-    global _hilo
++    global _hilo  # pylint: disable=global-statement  # un único hilo programado por proceso
+     intervalo = intervalo_configurado()
+     if intervalo == 0 or (_hilo is not None and _hilo.is_alive()):
+         return False

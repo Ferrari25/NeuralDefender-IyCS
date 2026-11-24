@@ -1,0 +1,36 @@
+$kind: http-request
+name: CP-SERV-43 | Tipo de ataque desconocido
+url: "{{url_gateway}}/api/v1/memoria/lecciones"
+method: POST
+headers:
+  X-CSRFToken: "{{csrf_token}}"
+body:
+  type: json
+  content: '{"texto": "Leccion de prueba", "attack_type": "no-existe"}'
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-43 | Tipo de ataque desconocido
+      // Requisito: RF-MEM-03
+      // Técnica: partición de equivalencia, partición inválida
+      // Petición: POST /api/v1/memoria/lecciones con attack_type = "no-existe"
+      // Esperado: 400. Solo se admiten ssh_brute_force, port_scan,
+      // credential_harvesting y suspicious_auth.
+      // ============================================================
+
+      pm.test("CP-SERV-43 | Código 400", function () {
+          pm.response.to.have.status(400);
+      });
+
+      const datos = pm.response.json();
+
+      pm.test("CP-SERV-43 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      pm.test("CP-SERV-43 | Mensaje: tipo de ataque desconocido", function () {
+          pm.expect(datos.error).to.eql("attack_type desconocido: 'no-existe'");
+      });
+    language: text/javascript
+order: 5000

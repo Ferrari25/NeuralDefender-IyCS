@@ -1,0 +1,2 @@
+# docker compose config -q
+codigo de salida: 0

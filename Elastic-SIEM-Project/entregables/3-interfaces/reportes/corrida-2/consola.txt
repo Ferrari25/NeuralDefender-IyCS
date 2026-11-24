@@ -1,0 +1,14 @@
+...................................................................      [100%]
+=============================== warnings summary ===============================
+tests/interfaz/test_panel.py::test_cp_ui_07_sin_sesion_el_panel_manda_al_login[chromium]
+  /home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS/NeuralDefender-IyCS/Elastic-SIEM-Project/.devtools/_pytest/fixtures.py:1392: PytestRemovedIn10Warning: Session-scoped fixtures defined as instance methods are deprecated.
+  Instance attributes set in the 'base_url' fixture will NOT be visible to test methods,
+  as each test gets a new instance while the fixture runs only once per class.
+  Use a @classmethod decorator below @pytest.fixture and set attributes on cls instead.
+  See https://docs.pytest.org/en/stable/deprecations.html#class-scoped-fixture-as-instance-method
+    fixturefunc = resolve_fixture_function(fixturedef, request)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- Generated html report: file:///home/saferrari/Proyectos/NeuralDefender-IyCS-ALL/NeuralDefender-IyCS/NeuralDefender-IyCS/Elastic-SIEM-Project/entregables/3-interfaces/reportes/corrida-2/reporte.html -
+67 passed, 1 warning in 96.18s (0:01:36)
+fin 0

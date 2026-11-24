@@ -1,0 +1,7 @@
+# Comando: /tmp/claude-1000/-home-saferrari-Proyectos-NeuralDefender-IyCS-ALL/024b2b0f-57d2-4627-b394-4dc7978978d1/scratchpad/venv/bin/yamllint -f parsable entregables/1.3-evidencia-reglas/prueba-de-reglas/yaml/ejemplo_violaciones.yml
+entregables/1.3-evidencia-reglas/prueba-de-reglas/yaml/ejemplo_violaciones.yml:4:3: [error] duplication of key "puerto" in mapping (key-duplicates)
+entregables/1.3-evidencia-reglas/prueba-de-reglas/yaml/ejemplo_violaciones.yml:5:11: [error] too many spaces inside braces (braces)
+entregables/1.3-evidencia-reglas/prueba-de-reglas/yaml/ejemplo_violaciones.yml:5:20: [error] too many spaces inside braces (braces)
+entregables/1.3-evidencia-reglas/prueba-de-reglas/yaml/ejemplo_violaciones.yml:9:5: [error] wrong indentation: expected 2 but found 4 (indentation)
+entregables/1.3-evidencia-reglas/prueba-de-reglas/yaml/ejemplo_violaciones.yml:10:2: [warning] missing starting space in comment (comments)
+# Codigo de salida: 1

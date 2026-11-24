@@ -37,7 +37,7 @@
 #   ./scripts/demo-desde-cero.sh --si        no pregunta antes de limpiar
 # ─────────────────────────────────────────────────────────────────────────────
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 
 export PYTHONPATH="$PWD/.devtools${PYTHONPATH:+:$PYTHONPATH}"
 
@@ -272,10 +272,12 @@ paso "4/7 · Generar los ataques"
 IP_ATAQUE="198.51.100.$(( (RANDOM % 200) + 20 ))"
 
 detalle "Reconocimiento (T1046): sondeo de 26 puertos desde $IP_ATAQUE"
+# shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
 bash simulation/run-port-scan.sh --offline --ip "$IP_ATAQUE" >/dev/null 2>&1 \
   && ok "26 eventos de red" || { mal "falló el escaneo"; exit 1; }
 
 detalle "Phishing (T1566): captura de credenciales hacia $IP_ATAQUE"
+# shellcheck disable=SC2015 # ok/verde/detalle solo imprimen y no pueden fallar: A && B || C equivale a if/else
 bash simulation/run-phishing.sh --offline --ip "$IP_ATAQUE" >/dev/null 2>&1 \
   && ok "visita + envío de credenciales" || { mal "falló el phishing"; exit 1; }
 

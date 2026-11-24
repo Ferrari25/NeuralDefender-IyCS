@@ -52,7 +52,7 @@ output.logstash:
   ssl.enabled: false
 
 # Alternative direct-to-Elasticsearch output (commented out; default path is Logstash).
-#output.elasticsearch:
+# output.elasticsearch:
 #  hosts: ["elasticsearch:9200"]
 #  username: "elastic"
 #  password: "${ELASTIC_PASSWORD}"

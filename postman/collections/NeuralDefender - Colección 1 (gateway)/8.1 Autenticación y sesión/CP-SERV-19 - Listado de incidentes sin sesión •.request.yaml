@@ -1,0 +1,35 @@
+$kind: http-request
+name: CP-SERV-19 | Listado de incidentes sin sesión •
+url: "{{url_gateway}}/api/v1/incidents"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      // ============================================================
+      // CP-SERV-19 | Listado de incidentes sin sesión
+      // Requisito: RF-AUT-01
+      // Técnica: partición de equivalencia, partición inválida
+      // Petición: GET /api/v1/incidents sin cookie de sesión
+      // Esperado: 401. Los incidentes son datos sensibles y no se
+      // muestran a nadie sin autenticar.
+      // ============================================================
+
+      // 1. Código: 401.
+      pm.test("CP-SERV-19 | Código 401", function () {
+          pm.response.to.have.status(401);
+      });
+
+      const datos = pm.response.json();
+
+      // 2 y 3. Contrato y tipo del error.
+      pm.test("CP-SERV-19 | Contrato: campo error de tipo texto", function () {
+          pm.expect(datos.error).to.be.a("string");
+      });
+
+      // 4. Regla: no se devuelve ningún incidente.
+      pm.test("CP-SERV-19 | No devuelve incidentes", function () {
+          pm.expect(datos).to.not.have.property("incidents");
+          pm.expect(datos.error).to.eql("se requiere autenticación");
+      });
+    language: text/javascript
+order: 7000

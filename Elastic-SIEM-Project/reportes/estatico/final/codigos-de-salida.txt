@@ -1,0 +1,10 @@
+ruff 1
+pylint 0
+bandit 0
+eslint 0
+shellcheck 0
+bash-n 0
+hadolint 0
+yamllint 0
+compose-config 0
+reglas-propias 0

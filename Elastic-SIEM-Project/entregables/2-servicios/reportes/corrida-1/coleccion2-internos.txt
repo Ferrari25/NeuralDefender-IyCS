@@ -1,0 +1,708 @@
+newman
+
+NeuralDefender - Colección 2 (servicios internos)
+
+❏ 8.7 Servicios internos: contrato principal
+↳ CP-SERV-50a | Sonda de salud pública: auth
+  GET http://127.0.0.1:18001/v1/healthz [200 OK, 199B, 44ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-50a | Código 200
+  ✓  CP-SERV-50a | Contrato: status y servicio
+  ✓  CP-SERV-50a | Tipos de datos
+  ✓  CP-SERV-50a | status = ok y servicio = auth
+
+↳ CP-SERV-50b | Sonda de salud pública: audit
+  GET http://127.0.0.1:18002/v1/healthz [200 OK, 200B, 4ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-50b | Código 200
+  ✓  CP-SERV-50b | Contrato: status y servicio
+  ✓  CP-SERV-50b | Tipos de datos
+  ✓  CP-SERV-50b | status = ok y servicio = audit
+
+↳ CP-SERV-50c | Sonda de salud pública: collector
+  GET http://127.0.0.1:18003/v1/healthz [200 OK, 204B, 4ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-50c | Código 200
+  ✓  CP-SERV-50c | Contrato: status y servicio
+  ✓  CP-SERV-50c | Tipos de datos
+  ✓  CP-SERV-50c | status = ok y servicio = collector
+
+↳ CP-SERV-50d | Sonda de salud pública: classifier
+  GET http://127.0.0.1:18004/v1/healthz [200 OK, 205B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-50d | Código 200
+  ✓  CP-SERV-50d | Contrato: status y servicio
+  ✓  CP-SERV-50d | Tipos de datos
+  ✓  CP-SERV-50d | status = ok y servicio = classifier
+
+↳ CP-SERV-50e | Sonda de salud pública: analyst
+  GET http://127.0.0.1:18005/v1/healthz [200 OK, 202B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-50e | Código 200
+  ✓  CP-SERV-50e | Contrato: status y servicio
+  ✓  CP-SERV-50e | Tipos de datos
+  ✓  CP-SERV-50e | status = ok y servicio = analyst
+
+↳ CP-SERV-50f | Sonda de salud pública: pipeline
+  GET http://127.0.0.1:18006/v1/healthz [200 OK, 203B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-50f | Código 200
+  ✓  CP-SERV-50f | Contrato: status y servicio
+  ✓  CP-SERV-50f | Tipos de datos
+  ✓  CP-SERV-50f | status = ok y servicio = pipeline
+
+↳ CP-SERV-50g | Sonda de salud pública: knowledge
+  GET http://127.0.0.1:18007/v1/healthz [200 OK, 204B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-50g | Código 200
+  ✓  CP-SERV-50g | Contrato: status y servicio
+  ✓  CP-SERV-50g | Tipos de datos
+  ✓  CP-SERV-50g | status = ok y servicio = knowledge
+
+↳ CP-SERV-51a | Petición sin token: auth
+  GET http://127.0.0.1:18001/v1/users-summary [401 UNAUTHORIZED, 225B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-51a | Código 401
+  ✓  CP-SERV-51a | Contrato: el error trae el campo error
+  ✓  CP-SERV-51a | Tipos de datos
+  ✓  CP-SERV-51a | mensaje exacto y ningún dato en la respuesta
+
+↳ CP-SERV-51b | Petición sin token: audit
+  GET http://127.0.0.1:18002/v1/decisions [401 UNAUTHORIZED, 225B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-51b | Código 401
+  ✓  CP-SERV-51b | Contrato: el error trae el campo error
+  ✓  CP-SERV-51b | Tipos de datos
+  ✓  CP-SERV-51b | mensaje exacto y ningún dato en la respuesta
+
+↳ CP-SERV-51c | Petición sin token: collector
+  GET http://127.0.0.1:18003/v1/snapshots/latest [401 UNAUTHORIZED, 225B, 4ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-51c | Código 401
+  ✓  CP-SERV-51c | Contrato: el error trae el campo error
+  ✓  CP-SERV-51c | Tipos de datos
+  ✓  CP-SERV-51c | mensaje exacto y ningún dato en la respuesta
+
+↳ CP-SERV-51d | Petición sin token: classifier
+  POST http://127.0.0.1:18004/v1/classify [401 UNAUTHORIZED, 225B, 4ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-51d | Código 401
+  ✓  CP-SERV-51d | Contrato: el error trae el campo error
+  ✓  CP-SERV-51d | Tipos de datos
+  ✓  CP-SERV-51d | mensaje exacto y ningún dato en la respuesta
+
+↳ CP-SERV-51e | Petición sin token: analyst
+  POST http://127.0.0.1:18005/v1/analyze [401 UNAUTHORIZED, 225B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-51e | Código 401
+  ✓  CP-SERV-51e | Contrato: el error trae el campo error
+  ✓  CP-SERV-51e | Tipos de datos
+  ✓  CP-SERV-51e | mensaje exacto y ningún dato en la respuesta
+
+↳ CP-SERV-51f | Petición sin token: pipeline
+  GET http://127.0.0.1:18006/v1/incidents [401 UNAUTHORIZED, 225B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-51f | Código 401
+  ✓  CP-SERV-51f | Contrato: el error trae el campo error
+  ✓  CP-SERV-51f | Tipos de datos
+  ✓  CP-SERV-51f | mensaje exacto y ningún dato en la respuesta
+
+↳ CP-SERV-51g | Petición sin token: knowledge
+  GET http://127.0.0.1:18007/v1/documents [401 UNAUTHORIZED, 225B, 4ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-51g | Código 401
+  ✓  CP-SERV-51g | Contrato: el error trae el campo error
+  ✓  CP-SERV-51g | Tipos de datos
+  ✓  CP-SERV-51g | mensaje exacto y ningún dato en la respuesta
+
+↳ CP-SERV-52a | Token falso: auth
+  GET http://127.0.0.1:18001/v1/users-summary [401 UNAUTHORIZED, 225B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-52a | Código 401
+  ✓  CP-SERV-52a | Contrato: el error trae el campo error
+  ✓  CP-SERV-52a | Tipos de datos
+  ✓  CP-SERV-52a | mensaje exacto y ningún dato en la respuesta
+
+↳ CP-SERV-52b | Token falso: audit
+  GET http://127.0.0.1:18002/v1/decisions [401 UNAUTHORIZED, 225B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-52b | Código 401
+  ✓  CP-SERV-52b | Contrato: el error trae el campo error
+  ✓  CP-SERV-52b | Tipos de datos
+  ✓  CP-SERV-52b | mensaje exacto y ningún dato en la respuesta
+
+↳ CP-SERV-52c | Token falso: collector
+  GET http://127.0.0.1:18003/v1/snapshots/latest [401 UNAUTHORIZED, 225B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-52c | Código 401
+  ✓  CP-SERV-52c | Contrato: el error trae el campo error
+  ✓  CP-SERV-52c | Tipos de datos
+  ✓  CP-SERV-52c | mensaje exacto y ningún dato en la respuesta
+
+↳ CP-SERV-52d | Token falso: classifier
+  POST http://127.0.0.1:18004/v1/classify [401 UNAUTHORIZED, 225B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-52d | Código 401
+  ✓  CP-SERV-52d | Contrato: el error trae el campo error
+  ✓  CP-SERV-52d | Tipos de datos
+  ✓  CP-SERV-52d | mensaje exacto y ningún dato en la respuesta
+
+↳ CP-SERV-52e | Token falso: analyst
+  POST http://127.0.0.1:18005/v1/analyze [401 UNAUTHORIZED, 225B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-52e | Código 401
+  ✓  CP-SERV-52e | Contrato: el error trae el campo error
+  ✓  CP-SERV-52e | Tipos de datos
+  ✓  CP-SERV-52e | mensaje exacto y ningún dato en la respuesta
+
+↳ CP-SERV-52f | Token falso: pipeline
+  GET http://127.0.0.1:18006/v1/incidents [401 UNAUTHORIZED, 225B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-52f | Código 401
+  ✓  CP-SERV-52f | Contrato: el error trae el campo error
+  ✓  CP-SERV-52f | Tipos de datos
+  ✓  CP-SERV-52f | mensaje exacto y ningún dato en la respuesta
+
+↳ CP-SERV-52g | Token falso: knowledge
+  GET http://127.0.0.1:18007/v1/documents [401 UNAUTHORIZED, 225B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-52g | Código 401
+  ✓  CP-SERV-52g | Contrato: el error trae el campo error
+  ✓  CP-SERV-52g | Tipos de datos
+  ✓  CP-SERV-52g | mensaje exacto y ningún dato en la respuesta
+
+↳ CP-SERV-53 | Autenticación interna válida
+  POST http://127.0.0.1:18001/v1/authenticate [200 OK, 262B, 53ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-53 | Código 200
+  ✓  CP-SERV-53 | Contrato: usuario, rol y permisos
+  ✓  CP-SERV-53 | Tipos de datos
+  ✓  CP-SERV-53 | usuario y rol correctos, y la respuesta no trae contraseña ni hash
+
+↳ CP-SERV-54a | Consulta de un usuario existente
+  GET http://127.0.0.1:18001/v1/users/analista00 [200 OK, 278B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-54a | Código 200
+  ✓  CP-SERV-54a | Contrato: username, activo, rol y permisos
+  ✓  CP-SERV-54a | Tipos de datos
+  ✓  CP-SERV-54a | es el usuario pedido, está activo, y no se expone el hash
+
+↳ CP-SERV-54b | Consulta de un usuario inexistente
+  GET http://127.0.0.1:18001/v1/users/usuario-que-no-existe [404 NOT FOUND, 204B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-54b | Código 404
+  ✓  CP-SERV-54b | Contrato: el error trae el campo error
+  ✓  CP-SERV-54b | Tipos de datos
+  ✓  CP-SERV-54b | el mensaje es usuario inexistente
+
+↳ CP-SERV-55 | Campo no permitido en una decisión
+  POST http://127.0.0.1:18002/v1/decisions [400 BAD REQUEST, 216B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-55 | Código 400
+  ✓  CP-SERV-55 | Contrato: el error trae el campo error
+  ✓  CP-SERV-55 | Tipos de datos
+  ✓  CP-SERV-55 | rechaza el campo comando por nombre
+
+↳ CP-SERV-56 | Integridad del registro de decisiones
+  GET http://127.0.0.1:18002/v1/decisions/verify [200 OK, 243B, 4ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-56 | Código 200
+  ✓  CP-SERV-56 | Contrato: chain_ok, estado, records, first_broken y reason
+  ✓  CP-SERV-56 | Tipos de datos
+  ✓  CP-SERV-56 | la cadena está íntegra
+
+↳ CP-SERV-57 | Evento de acceso no admitido
+  POST http://127.0.0.1:18002/v1/access [400 BAD REQUEST, 260B, 2ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-57 | Código 400
+  ✓  CP-SERV-57 | Contrato: el error trae el campo error
+  ✓  CP-SERV-57 | Tipos de datos
+  ✓  CP-SERV-57 | el mensaje lista los cuatro eventos admitidos
+
+↳ CP-SERV-58 | Captura de eventos
+  POST http://127.0.0.1:18003/v1/snapshots [201 CREATED, 30.09kB, 16ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-58 | Código 201
+  ✓  CP-SERV-58 | Contrato: ok y snapshot con alerts, summary y generated_at
+  ✓  CP-SERV-58 | Tipos de datos
+  ✓  CP-SERV-58 | ok es verdadero y la fecha de generación es válida
+
+↳ CP-SERV-59 | Última captura
+  GET http://127.0.0.1:18003/v1/snapshots/latest [200 OK, 30.08kB, 4ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-59 | Código 200
+  ✓  CP-SERV-59 | Contrato: snapshot con alerts, summary y generated_at
+  ✓  CP-SERV-59 | Tipos de datos
+  ✓  CP-SERV-59 | es la misma captura que se hizo en CP-SERV-58
+
+↳ CP-SERV-60a | Identificador determinístico (primera vez)
+  POST http://127.0.0.1:18004/v1/classify [200 OK, 64.46kB, 4ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-60a | Código 200
+  ✓  CP-SERV-60a | Contrato: generated_at, incident_count e incidents
+  ✓  CP-SERV-60a | Tipos de datos
+  ✓  CP-SERV-60a | los identificadores cumplen el formato
+
+↳ CP-SERV-60b | Identificador determinístico (segunda vez)
+  POST http://127.0.0.1:18004/v1/classify [200 OK, 64.46kB, 8ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-60b | Código 200
+  ✓  CP-SERV-60b | Contrato: generated_at, incident_count e incidents
+  ✓  CP-SERV-60b | Tipos de datos
+  ✓  CP-SERV-60b | los identificadores cumplen el formato y no cambian entre corridas
+
+↳ CP-SERV-61 | Alertas con tipo inválido (defectos D1 y D2)
+  POST http://127.0.0.1:18004/v1/classify [500 INTERNAL SERVER ERROR, 365B, 86ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  1. CP-SERV-61 | Código 400
+  ✓  CP-SERV-61 | Contrato: el error trae el campo error
+  ✓  CP-SERV-61 | Tipos de datos
+  2. CP-SERV-61 | rechaza la entrada con un mensaje y no con un error del servidor
+
+↳ CP-SERV-62 | Análisis de incidentes
+  POST http://127.0.0.1:18005/v1/analyze [200 OK, 70.32kB, 8ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-62 | Código 200
+  ✓  CP-SERV-62 | Contrato: analyst_mode, analyzed_at e incidents
+  ✓  CP-SERV-62 | Tipos de datos
+  ✓  CP-SERV-62 | modo admitido, un incidente por cada uno enviado y análisis no vacío
+
+↳ CP-SERV-63 | Incidentes con tipo inválido (defecto D3)
+  POST http://127.0.0.1:18005/v1/analyze [500 INTERNAL SERVER ERROR, 365B, 5ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  3. CP-SERV-63 | Código 400
+  ✓  CP-SERV-63 | Contrato: el error trae el campo error
+  ✓  CP-SERV-63 | Tipos de datos
+  4. CP-SERV-63 | rechaza la entrada con un mensaje y no con un error del servidor
+
+↳ CP-SERV-64 | Contexto de memoria para el análisis
+  POST http://127.0.0.1:18007/v1/context [200 OK, 232B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-64 | Código 200
+  ✓  CP-SERV-64 | Contrato: la clave del incidente con casos_similares, documentos y lecciones
+  ✓  CP-SERV-64 | Tipos de datos
+  ✓  CP-SERV-64 | devuelve contexto solo para el incidente pedido
+
+↳ CP-SERV-65 | Lista de IP con tipo inválido (defecto D4)
+  POST http://127.0.0.1:18007/v1/context [500 INTERNAL SERVER ERROR, 365B, 55ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  5. CP-SERV-65 | Código 400
+  ✓  CP-SERV-65 | Contrato: el error trae el campo error
+  ✓  CP-SERV-65 | Tipos de datos
+  6. CP-SERV-65 | rechaza la entrada con un mensaje y no con un error del servidor
+
+↳ CP-SERV-66 | Ciclo completo de análisis
+  POST http://127.0.0.1:18006/v1/cycles [200 OK, 70.57kB, 29ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-66 | Código 200
+  ✓  CP-SERV-66 | Contrato: etapas y report
+  ✓  CP-SERV-66 | Tipos de datos
+  ✓  CP-SERV-66 | las cuatro etapas, en orden, terminaron ok
+
+↳ CP-SERV-67 | Último reporte de incidentes
+  GET http://127.0.0.1:18006/v1/incidents [200 OK, 70.41kB, 4ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-67 | Código 200
+  ✓  CP-SERV-67 | Contrato: incidents e incident_count
+  ✓  CP-SERV-67 | Tipos de datos
+  ✓  CP-SERV-67 | el contador coincide con la lista y cada incidente trae sus acciones
+
+↳ CP-SERV-68a | Propuesta automática de una lección (primer caso)
+  POST http://127.0.0.1:18007/v1/cases [201 CREATED, 541B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-68a | Código 201
+  ✓  CP-SERV-68a | Contrato: ok, caso y lecciones_propuestas
+  ✓  CP-SERV-68a | Tipos de datos
+  ✓  CP-SERV-68a | con un solo caso no se propone ninguna lección
+
+↳ CP-SERV-68b | Propuesta automática de una lección (segundo caso)
+  POST http://127.0.0.1:18007/v1/cases [201 CREATED, 1.06kB, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-68b | Código 201
+  ✓  CP-SERV-68b | Contrato: ok, caso y lecciones_propuestas
+  ✓  CP-SERV-68b | Tipos de datos
+  ✓  CP-SERV-68b | con dos casos iguales se propone una lección falso_positivo
+
+❏ 8.8 Cobertura de contrato
+↳ CP-SERV-69 | Pantalla de login pública
+  GET http://127.0.0.1:18080/login [200 OK, 4.09kB, 37ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-69 | Código 200
+  ✓  CP-SERV-69 | Contrato: el tipo de contenido es HTML
+  ✓  CP-SERV-69 | Tipos de datos
+  ✓  CP-SERV-69 | es la pantalla de NeuralDefender y no pide sesión
+
+↳ CP-SERV-70 | Panel sin sesión redirige al login
+  GET http://127.0.0.1:18080/ [302 FOUND, 665B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-70 | Código 302
+  ✓  CP-SERV-70 | Contrato: trae la cabecera Location
+  ✓  CP-SERV-70 | Tipos de datos
+  ✓  CP-SERV-70 | redirige a /login
+
+↳ Preparación | Iniciar sesión como analista (para CP-SERV-71 y 72)
+  POST http://127.0.0.1:18080/api/v1/login [200 OK, 876B, 56ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  Preparación | Iniciar sesión como analista (para CP-SERV-71 y 72) | Código 200
+
+↳ Preparación | Referencia de GET /api/v1/incidents (para CP-SERV-71)
+  GET http://127.0.0.1:18080/api/v1/incidents [200 OK, 73.65kB, 11ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  Preparación | Referencia de GET /api/v1/incidents (para CP-SERV-71) | Código 200
+
+↳ Preparación | Referencia de GET /api/v1/decisions (para CP-SERV-72)
+  GET http://127.0.0.1:18080/api/v1/decisions [200 OK, 2.83kB, 8ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  Preparación | Referencia de GET /api/v1/decisions (para CP-SERV-72) | Código 200
+
+↳ CP-SERV-71 | Alias GET /api/incidents
+  GET http://127.0.0.1:18080/api/incidents [200 OK, 73.65kB, 9ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-71 | Código 200
+  ✓  CP-SERV-71 | Contrato: incidents e incident_count
+  ✓  CP-SERV-71 | Tipos de datos
+  ✓  CP-SERV-71 | es idéntico a la respuesta de /api/v1/incidents
+
+↳ CP-SERV-72 | Alias GET /api/decisions
+  GET http://127.0.0.1:18080/api/decisions [200 OK, 2.83kB, 7ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-72 | Código 200
+  ✓  CP-SERV-72 | Contrato: la respuesta es una lista
+  ✓  CP-SERV-72 | Tipos de datos
+  ✓  CP-SERV-72 | es idéntica a la respuesta de /api/v1/decisions
+
+↳ CP-SERV-73 | Archivo estático app.js
+  GET http://127.0.0.1:18080/static/app.js [200 OK, 63.26kB, 96ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-73 | Código 200
+  ✓  CP-SERV-73 | Contrato: el tipo de contenido es JavaScript
+  ✓  CP-SERV-73 | Tipos de datos
+  ✓  CP-SERV-73 | el archivo no está vacío
+
+↳ CP-SERV-74 | Resumen de usuarios
+  GET http://127.0.0.1:18001/v1/users-summary [200 OK, 234B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-74 | Código 200
+  ✓  CP-SERV-74 | Contrato: total y activos_por_rol
+  ✓  CP-SERV-74 | Tipos de datos
+  ✓  CP-SERV-74 | el total es coherente con los activos por rol
+
+↳ CP-SERV-75 | Lista de decisiones registradas
+  GET http://127.0.0.1:18002/v1/decisions [200 OK, 2.38kB, 4ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-75 | Código 200
+  ✓  CP-SERV-75 | Contrato: la respuesta es una lista
+  ✓  CP-SERV-75 | Tipos de datos
+  ✓  CP-SERV-75 | cada registro trae una decisión admitida
+
+↳ CP-SERV-76 | Registrar una corrida de análisis
+  POST http://127.0.0.1:18002/v1/analysis-history [201 CREATED, 386B, 4ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-76 | Código 201
+  ✓  CP-SERV-76 | Contrato: ok y record con prev_hash y ts
+  ✓  CP-SERV-76 | Tipos de datos
+  ✓  CP-SERV-76 | prev_hash es un SHA-256 y el sello de tiempo es válido
+
+↳ CP-SERV-77 | Integridad del historial de corridas
+  GET http://127.0.0.1:18002/v1/analysis-history/verify [200 OK, 243B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-77 | Código 200
+  ✓  CP-SERV-77 | Contrato: chain_ok, estado y records
+  ✓  CP-SERV-77 | Tipos de datos
+  ✓  CP-SERV-77 | la cadena está íntegra
+
+↳ CP-SERV-78 | Registrar actividad de la memoria
+  POST http://127.0.0.1:18002/v1/activity [201 CREATED, 395B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-78 | Código 201
+  ✓  CP-SERV-78 | Contrato: ok y record con evento, actor, prev_hash y ts
+  ✓  CP-SERV-78 | Tipos de datos
+  ✓  CP-SERV-78 | el evento es uno de los admitidos y el actor es el enviado
+
+↳ CP-SERV-79 | Lista de actividad de la memoria
+  GET http://127.0.0.1:18002/v1/activity [200 OK, 1.28kB, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-79 | Código 200
+  ✓  CP-SERV-79 | Contrato: la respuesta es una lista
+  ✓  CP-SERV-79 | Tipos de datos
+  ✓  CP-SERV-79 | incluye el evento de CP-SERV-78 y todos son de un tipo admitido
+
+↳ CP-SERV-80 | Integridad del registro de actividad
+  GET http://127.0.0.1:18002/v1/activity/verify [200 OK, 243B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-80 | Código 200
+  ✓  CP-SERV-80 | Contrato: chain_ok, estado y records
+  ✓  CP-SERV-80 | Tipos de datos
+  ✓  CP-SERV-80 | la cadena está íntegra
+
+↳ CP-SERV-81 | Lista de accesos al panel
+  GET http://127.0.0.1:18002/v1/access [200 OK, 4.36kB, 10ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-81 | Código 200
+  ✓  CP-SERV-81 | Contrato: la respuesta es una lista
+  ✓  CP-SERV-81 | Tipos de datos
+  ✓  CP-SERV-81 | incluye el inicio de sesión de la preparación y todos los eventos son admitidos
+
+↳ CP-SERV-82 | Integridad del registro de accesos
+  GET http://127.0.0.1:18002/v1/access/verify [200 OK, 244B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-82 | Código 200
+  ✓  CP-SERV-82 | Contrato: chain_ok, estado y records
+  ✓  CP-SERV-82 | Tipos de datos
+  ✓  CP-SERV-82 | la cadena está íntegra
+
+↳ CP-SERV-83 | Reporte en CSV del servicio audit
+  GET http://127.0.0.1:18002/v1/reports?formato=csv [200 OK, 3.71kB, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-83 | Código 200
+  ✓  CP-SERV-83 | Contrato: csv y periodo
+  ✓  CP-SERV-83 | Tipos de datos
+  ✓  CP-SERV-83 | la primera línea del CSV es el encabezado esperado
+
+↳ CP-SERV-84a | Un incidente del pipeline
+  GET http://127.0.0.1:18006/v1/incidents/INC-AUTH-desconocida-8205255e [200 OK, 5.29kB, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-84a | Código 200
+  ✓  CP-SERV-84a | Contrato: incident_id, classification y recommended_actions
+  ✓  CP-SERV-84a | Tipos de datos
+  ✓  CP-SERV-84a | es el incidente pedido
+
+↳ CP-SERV-84b | Un incidente inexistente del pipeline
+  GET http://127.0.0.1:18006/v1/incidents/INC-NO-EXISTE [404 NOT FOUND, 224B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-84b | Código 404
+  ✓  CP-SERV-84b | Contrato: el error trae el campo error
+  ✓  CP-SERV-84b | Tipos de datos
+  ✓  CP-SERV-84b | el mensaje nombra el incidente
+
+↳ CP-SERV-86 | Cargar un documento
+  POST http://127.0.0.1:18007/v1/documents [201 CREATED, 343B, 4ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-86 | Código 201
+  ✓  CP-SERV-86 | Contrato: ok y documento con doc_id, titulo, subido_por, ts y caracteres
+  ✓  CP-SERV-86 | Tipos de datos
+  ✓  CP-SERV-86 | el identificador cumple el formato y no se devuelve el contenido
+
+↳ CP-SERV-85 | Lista de documentos (metadatos)
+  GET http://127.0.0.1:18007/v1/documents [200 OK, 455B, 4ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-85 | Código 200
+  ✓  CP-SERV-85 | Contrato: la respuesta es una lista
+  ✓  CP-SERV-85 | Tipos de datos
+  ✓  CP-SERV-85 | ningún documento trae su contenido y está el cargado en CP-SERV-86
+
+↳ CP-SERV-87 | Lista de lecciones
+  GET http://127.0.0.1:18007/v1/lessons [200 OK, 1.03kB, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-87 | Código 200
+  ✓  CP-SERV-87 | Contrato: la respuesta es una lista
+  ✓  CP-SERV-87 | Tipos de datos
+  ✓  CP-SERV-87 | todo estado es uno de los tres admitidos y la propuesta automática de CP-SERV-68b está
+
+↳ CP-SERV-88 | Proponer una lección
+  POST http://127.0.0.1:18007/v1/lessons [201 CREATED, 503B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-88 | Código 201
+  ✓  CP-SERV-88 | Contrato: ok y leccion con leccion_id, estado, attack_type, ip y propuesta_por
+  ✓  CP-SERV-88 | Tipos de datos
+  ✓  CP-SERV-88 | nace propuesta y el identificador cumple el formato
+
+↳ CP-SERV-89a | Revisar una lección propuesta
+  POST http://127.0.0.1:18007/v1/lessons/LEC-f3ab8d7a8c/review [200 OK, 535B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-89a | Código 200
+  ✓  CP-SERV-89a | Contrato: ok y leccion
+  ✓  CP-SERV-89a | Tipos de datos
+  ✓  CP-SERV-89a | queda aprobada y registra quién la revisó
+
+↳ CP-SERV-89b | Revisar de nuevo una lección ya revisada
+  POST http://127.0.0.1:18007/v1/lessons/LEC-f3ab8d7a8c/review [400 BAD REQUEST, 218B, 3ms]
+  ✓  Global | RNF-RD-01 | Responde en menos de 2 s
+  ✓  Global | RQ-SEC-18 | Sin trazas, rutas internas ni archivos .py
+  ✓  Global | Contrato | Las respuestas de /api/ y /v1/ son JSON
+  ✓  CP-SERV-89b | Código 400
+  ✓  CP-SERV-89b | Contrato: el error trae el campo error
+  ✓  CP-SERV-89b | Tipos de datos
+  ✓  CP-SERV-89b | el mensaje dice que ya fue aprobada
+
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│                         │         executed │           failed │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              iterations │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│                requests │               66 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│            test-scripts │              132 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│      prerequest-scripts │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              assertions │              453 │                6 │
+├─────────────────────────┴──────────────────┴──────────────────┤
+│ total run duration: 2s                                        │
+├───────────────────────────────────────────────────────────────┤
+│ total data received: 639.06kB (approx)                        │
+├───────────────────────────────────────────────────────────────┤
+│ average response time: 10ms [min: 2ms, max: 96ms, s.d.: 18ms] │
+└───────────────────────────────────────────────────────────────┘
+
+[31m  # [39m[31m failure        [39m[31m detail                                                                                                          [39m
+[90m    [39m[90m                [39m[90m                                                                                                                 [39m
+ 1.  AssertionError  CP-SERV-61 | Código 400                                                                                         
+                     expected response to have status code 400 but got 500                                                           
+                     at assertion:0 in test-script                                                                                   
+                     inside "8.7 Servicios internos: contrato principal / CP-SERV-61 | Alertas con tipo inválido (defectos D1 y D2)" 
+[90m    [39m[90m                [39m[90m                                                                                                                 [39m
+ 2.  AssertionError  CP-SERV-61 | rechaza la entrada con un mensaje y no con un error del servidor                                   
+                     expected 'The server encountered an internal er…' to not include 'internal error'                               
+                     at assertion:3 in test-script                                                                                   
+                     inside "8.7 Servicios internos: contrato principal / CP-SERV-61 | Alertas con tipo inválido (defectos D1 y D2)" 
+[90m    [39m[90m                [39m[90m                                                                                                                 [39m
+ 3.  AssertionError  CP-SERV-63 | Código 400                                                                                         
+                     expected response to have status code 400 but got 500                                                           
+                     at assertion:0 in test-script                                                                                   
+                     inside "8.7 Servicios internos: contrato principal / CP-SERV-63 | Incidentes con tipo inválido (defecto D3)"    
+[90m    [39m[90m                [39m[90m                                                                                                                 [39m
+ 4.  AssertionError  CP-SERV-63 | rechaza la entrada con un mensaje y no con un error del servidor                                   
+                     expected 'The server encountered an internal er…' to not include 'internal error'                               
+                     at assertion:3 in test-script                                                                                   
+                     inside "8.7 Servicios internos: contrato principal / CP-SERV-63 | Incidentes con tipo inválido (defecto D3)"    
+[90m    [39m[90m                [39m[90m                                                                                                                 [39m
+ 5.  AssertionError  CP-SERV-65 | Código 400                                                                                         
+                     expected response to have status code 400 but got 500                                                           
+                     at assertion:0 in test-script                                                                                   
+                     inside "8.7 Servicios internos: contrato principal / CP-SERV-65 | Lista de IP con tipo inválido (defecto D4)"   
+[90m    [39m[90m                [39m[90m                                                                                                                 [39m
+ 6.  AssertionError  CP-SERV-65 | rechaza la entrada con un mensaje y no con un error del servidor                                   
+                     expected 'The server encountered an internal er…' to not include 'internal error'                               
+                     at assertion:3 in test-script                                                                                   
+                     inside "8.7 Servicios internos: contrato principal / CP-SERV-65 | Lista de IP con tipo inválido (defecto D4)"   

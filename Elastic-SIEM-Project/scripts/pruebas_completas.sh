@@ -7,7 +7,7 @@
 # Uso:  ./scripts/pruebas_completas.sh
 # ─────────────────────────────────────────────────────────────────────────────
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 
 FALLOS=0
 ./scripts/pruebas_de_codigo_estatico.sh || FALLOS=$((FALLOS + 1))

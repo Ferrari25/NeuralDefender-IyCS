@@ -31,7 +31,7 @@ VARIABLE = "SIEM_PIPELINE_INTERVALO"
 INTERVALO_MINIMO = 30
 
 _parar = threading.Event()
-_hilo: threading.Thread | None = None
+_hilo: threading.Thread | None = None  # pylint: disable=invalid-name  # estado mutable del módulo, no una constante
 
 
 def intervalo_configurado() -> int:
@@ -72,7 +72,7 @@ def _bucle(intervalo: int) -> None:
 
 def iniciar() -> bool:
     """Arranca el hilo si la corrida programada está encendida. Idempotente."""
-    global _hilo
+    global _hilo  # pylint: disable=global-statement  # un único hilo programado por proceso
     intervalo = intervalo_configurado()
     if intervalo == 0 or (_hilo is not None and _hilo.is_alive()):
         return False
