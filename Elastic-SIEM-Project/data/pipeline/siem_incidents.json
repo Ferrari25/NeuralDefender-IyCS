@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-24T18:18:15.536028+00:00",
+  "generated_at": "2026-11-24T18:20:17.958556+00:00",
   "incident_count": 5,
   "incidents": [
     {
@@ -1145,10 +1145,11 @@
     {
       "alert_event_count": 34,
       "analysis": {
-        "_generado_ts": 1795544297.5356972,
+        "_generado_ts": 1795544429.3419356,
         "_huella": "c9feaafe4c2071ec90a5a643ca01c74732182ae414185c53f209a9f26c306440",
-        "_source": "fallback",
-        "accion_recomendada": "Bloquear la IP atacante en el firewall perimetral",
+        "_modelo": "gemma-4-26b-a4b-it",
+        "_source": "gemma-nube",
+        "accion_recomendada": "Priorizar (1) Bloquear la IP atacante en el firewall perimetral, dado que el volumen de intentos es claramente malicioso y no corresponde a un error humano.",
         "aprendizaje": {
           "casos_similares": [
             {
@@ -1191,12 +1192,18 @@
         },
         "contexto_campana": null,
         "contexto_historico": "Sin antecedentes previos para 198.51.100.250: es la primera vez que se registra actividad de esta IP.",
-        "contexto_riesgo": "Si alguna credencial es débil, el atacante obtiene acceso interactivo al host y puede moverse lateralmente dentro de la red.",
-        "explicacion": "Se detectaron 34 intentos de autenticación fallida contra SSH desde 198.51.100.250, apuntando a un usuario del sistema.",
+        "contexto_riesgo": "Si el atacante logra vulnerar una cuenta, tendría acceso directo por consola a nuestros servidores. Dado el volumen de intentos en tan poco tiempo, el riesgo de compromiso de credenciales es inminente si no se corta el acceso.",
+        "explicacion": "Se detectó un intento de fuerza bruta vía SSH desde la IP 198.51.100.250. En una ventana de apenas 2 minutos y 16 segundos, se registraron 34 fallos de autenticación, superando ampliamente el umbral de 20 eventos. No hay antecedentes de esta IP en nuestros registros, lo que indica un ataque dirigido o un escaneo nuevo.",
         "falso_positivo_probabilidad": "LOW",
-        "metodologia": "Un ataque de fuerza bruta automatizado (ej. Hydra o Medusa) prueba miles de contraseñas en serie hasta encontrar una válida.",
+        "metodologia": "El atacante intenta adivinar credenciales mediante intentos repetitivos de login. Suele utilizar diccionarios de usuarios y contraseñas comunes para explotar servicios expuestos directamente a internet.",
+        "puntos_de_investigacion": [
+          "¿Hubo algún evento de login exitoso para cualquier usuario desde la IP 198.51.100.250 en ese mismo rango horario?",
+          "¿Qué usuarios específicos fueron el objetivo de los 34 intentos fallidos?",
+          "¿Se detectó actividad similar desde otras IPs hacia los mismos usuarios en la última hora?"
+        ],
         "referencias": [
-          "T1110"
+          "https://attack.mitre.org/techniques/T1110/",
+          "https://attack.mitre.org/tactics/TA0006/"
         ],
         "severidad_ajustada": "HIGH"
       },
@@ -1463,6 +1470,6 @@
     }
   ],
   "source": "collector",
-  "analyzed_at": "2026-11-24T18:18:17.536052+00:00",
+  "analyzed_at": "2026-11-24T18:20:29.342348+00:00",
   "analyst_mode": "gemma-nube"
 }
